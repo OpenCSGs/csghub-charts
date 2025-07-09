@@ -147,7 +147,6 @@ spec:
   tls:
     - hosts:
         - {{ include "csghub.external.domain" . }}
-        - {{ include "csghub.external.public.domain" . | quote }}
       {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.csghub.portal.ingress.tls.secretName }}
       {{- if $secret }}
       secretName: {{ $secret }}
