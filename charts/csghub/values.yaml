@@ -11,7 +11,7 @@ global:
     ## Image repository
     # name: "opencsghq/csghub-server"
     ## Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)
-    tag: "v1.8.1"
+    tag: "v1.9.0"
     ## Image pull policy
     pullPolicy: "IfNotPresent"
     ## Kubernetes secrets for pulling images from private registry
@@ -313,7 +313,7 @@ csghub:
       endpoint: ""
       accessKey: "minio"
       secretKey: ""
-      bucket: "csghub-portal"
+      bucket: "csghub-portal-public"
       region: "cn-north-1"
       # encrypt: "false"
       # secure: "true"
@@ -346,7 +346,36 @@ csghub:
   mirror: { }
 
   ## Notification configuration
-  notification: { }
+  notification:
+    ## Set timezone
+    repoSyncTime: "Asia/Shanghai"
+    ## In the broadcast station internal message workflow,
+    ## the user service will be accessed in batches to obtain the user uuid,
+    ## and the page size for each access will be configured
+    broadcastUserPageSize: 100
+    ## When sending system broadcast email workflow,
+    ## the user email address will be obtained in batches and then sent,
+    ## controlling the number of emails obtained and sent at a time
+    broadcastEmailPageSize: 100
+    ## SMTP notify settings
+    smtp: { }
+      # host: ""
+      # port: 465
+      # username: ""
+      # password: ""
+    feiShu: { }
+      ## FeiShu bot Application Id
+      # appId: ""
+      ## FeiShu bot Application Secret
+      # appSecret: ""
+      ## used to control the interval time of batch aggregation Feishu message job
+      # batchSendMessageCronExpression: "*/10 * * * *"
+      ## limit the size of FeiShu message sent at a time (cannot exceed 30k)
+      # maxRequestContentSize: "20480"
+      ## configures the longest delay time for each message
+      # maxDelayDuration: "3600"
+      ## configures the cache expiration time of Feishu chat ids
+      # chatIdsCacheTTL: "21600"
 
   ## User configuration
   user: { }
