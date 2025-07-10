@@ -25,13 +25,16 @@ data:
 
     set +e
     {{- $ARGS := "" }}
-    {{- if $.Values.buckets.versioning }}
+    {{- if $.Values.versioning }}
     {{- $ARGS = printf "--region=%s --ignore-existing --with-versioning" $REGION }}
     {{- else }}
     {{- $ARGS = printf "--region=%s --ignore-existing" $REGION }}
     {{- end }}
     # Create buckets
-    {{- range $BUCKET := .Values.buckets.defaults }}
-    {{- printf "mc mb %s $ALIAS/%s" $ARGS $BUCKET | nindent 4 }}
+    {{- range $key, $value := .Values.buckets }}
+    {{- printf "mc mb %s $ALIAS/%s\n" $ARGS $key | nindent 4 }}
+    {{- if eq $value "public" }}
+    {{- printf "mc anonymous set download $ALIAS/%s\n" $key }}
+    {{- end }}
     {{- end }}
     {{- end }}

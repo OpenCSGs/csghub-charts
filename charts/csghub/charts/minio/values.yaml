@@ -58,14 +58,16 @@ objectStore:
 ## The region where Minio will operate, useful for configuring location-specific data replication and redundancy.
 region: "cn-north-1"
 
+## Enable bucket versioning
+versioning: false
+
 ## List of buckets to be created upon statefulset creation.
 buckets:
-  versioning: true
-  defaults:
-    - csghub-portal
-    - csghub-server
-    - csghub-registry
-    - csghub-workflow
+  csghub-portal-public: public
+  csghub-portal: private
+  csghub-server: private
+  csghub-registry: private
+  csghub-workflow: private
 
 ## Persistence settings for the Minio data.
 persistence:
