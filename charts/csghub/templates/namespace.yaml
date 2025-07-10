@@ -4,6 +4,8 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 
 {{- if .Values.global.deploy.enabled }}
+{{- $namespaceExists := lookup "v1" "Namespace" "" .Values.global.deploy.namespace }}
+{{- if not $namespaceExists }}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -13,7 +15,11 @@ metadata:
     {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
   annotations:
     helm.sh/resource-policy: keep
+{{- end }}
+
 {{- if not .Values.global.deploy.mergingNamespace }}
+{{- $imageBuilderNsExists := lookup "v1" "Namespace" "" .Values.global.deploy.imageBuilder.namespace }}
+{{- if not $imageBuilderNsExists }}
 ---
 apiVersion: v1
 kind: Namespace
@@ -24,5 +30,6 @@ metadata:
     {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
   annotations:
     helm.sh/resource-policy: keep
+{{- end }}
 {{- end }}
 {{- end }}
