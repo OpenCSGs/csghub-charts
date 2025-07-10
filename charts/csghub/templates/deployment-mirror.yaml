@@ -60,6 +60,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
+            - secretRef:
+                name: {{ include "common.names.custom" (list . "nats") }}
             {{- if not .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
@@ -69,6 +71,8 @@ spec:
                 name: {{ include "common.names.custom" (list . "minio") }}
             {{- end }}
           env:
+            - name: OPENCSG_ACCOUNTING_NATS_URL
+              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
             {{- if not .Values.global.redis.enabled }}
             - name: STARHUB_SERVER_REDIS_PASSWORD
               value: "$(REDIS_PASSWD)"
@@ -103,6 +107,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
+            - secretRef:
+                name: {{ include "common.names.custom" (list . "nats") }}
             {{- if not .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
@@ -112,6 +118,8 @@ spec:
                 name: {{ include "common.names.custom" (list . "minio") }}
             {{- end }}
           env:
+            - name: OPENCSG_ACCOUNTING_NATS_URL
+              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
             {{- if not .Values.global.redis.enabled }}
             - name: STARHUB_SERVER_REDIS_PASSWORD
               value: "$(REDIS_PASSWD)"
