@@ -319,6 +319,10 @@ csghub:
       # secure: "true"
       pathStyle: "true"
 
+    ## Additional object storage configuration, user storage authentication data
+    additionalObjectStore:
+      bucket: "csghub-portal"
+
     ## SMTP configuration
     smtp:
       host: ""

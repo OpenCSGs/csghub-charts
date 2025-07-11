@@ -82,6 +82,10 @@ spec:
               value: "$(MINIO_ROOT_USER)"
             - name: CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET
               value: "$(MINIO_ROOT_PASSWORD)"
+            - name: CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID
+              value: {{ .Values.csghub.portal.additionalObjectStore.accessKey | default "$(MINIO_ROOT_USER)" | quote }}
+            - name: CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET
+              value: {{ .Values.csghub.portal.additionalObjectStore.secretKey | default "$(MINIO_ROOT_PASSWORD)" | quote }}
             {{- end }}
             {{- with .Values.csghub.portal.environments }}
             {{- range $key, $value := . }}

@@ -35,13 +35,19 @@ data:
   CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.csghub.portal "global" .) | quote }}
   # ObjectStorage
   CSGHUB_PORTAL_S3_ENDPOINT: {{ include "minio.external.endpoint" . | trimPrefix "http://" | trimPrefix  "https://" }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.csghub.portal.additionalObjectStore.endpoint | default (include "minio.external.endpoint" . | trimPrefix "http://" | trimPrefix  "https://") }}
   {{- if not .Values.global.objectStore.enabled }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID: {{ .Values.csghub.portal.additionalObjectStore.accessKey | default $objectStoreConfig.accessKey }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET: {{ .Values.csghub.portal.additionalObjectStore.secretKey | default $objectStoreConfig.secretKey }}
   {{- end }}
   CSGHUB_PORTAL_S3_BUCKET: {{ $objectStoreConfig.bucket }}
   CSGHUB_PORTAL_S3_REGION: {{ $objectStoreConfig.region }}
   CSGHUB_PORTAL_S3_ENABLE_SSL: {{ $objectStoreConfig.secure | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ .Values.csghub.portal.additionalObjectStore.bucket | default $objectStoreConfig.bucket }}
+  CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ .Values.csghub.portal.additionalObjectStore.region | default $objectStoreConfig.region }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ .Values.csghub.portal.additionalObjectStore.secure | default $objectStoreConfig.secure | quote }}
   # SMTP
   CSGHUB_PORTAL_MAILER_HOST: {{ .Values.csghub.portal.smtp.host }}
   CSGHUB_PORTAL_MAILER_PORT: {{ .Values.csghub.portal.smtp.port | quote }}
