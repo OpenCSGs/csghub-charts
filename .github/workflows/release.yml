@@ -1,4 +1,4 @@
-name: Release CSGHub Docker Compose
+name: Release CSGHub
 
 on:
   push:
