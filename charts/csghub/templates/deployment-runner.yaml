@@ -63,7 +63,7 @@ spec:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
           imagePullPolicy: {{ .Values.csghub.server.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
+          command: [ "/bin/sh", "-c", "until wget -Sq http://{{ include "common.names.custom" (list . "server") }}:{{ include "csghub.svc.port" "server" }}/api/v1/models; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
         - name: runner
           {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.global.image.tag .Values.csghub.server.image.tag) "context" .) }}
