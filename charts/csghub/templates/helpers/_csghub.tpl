@@ -81,14 +81,12 @@ Usage: {{ include "csghub.image.tag" (dict "tag" "v1.8.0" "context" .) }}
 {{- $tag := .tag -}}
 {{- $context := .context -}}
 {{- $edition := include "csghub.edition.suffix" $context -}}
-{{- if contains "-ce" $tag -}}
-{{- $tag -}}
-{{- else if contains "-ee" $tag -}}
-{{- $tag -}}
+{{- if has $edition (list "ce" "ee") -}}
+{{- printf "%s-%s" $tag $edition -}}
 {{- else -}}
 {{- $tag -}}
 {{- end -}}
-{{- end }}
+{{- end -}}
 
 {{/*
 Check if starship should be enabled based on edition and explicit configuration
