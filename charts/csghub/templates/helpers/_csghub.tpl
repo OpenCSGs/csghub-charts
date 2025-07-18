@@ -86,7 +86,7 @@ Usage: {{ include "csghub.image.tag" (dict "tag" "v1.8.0" "context" .) }}
 {{- else if contains "-ee" $tag -}}
 {{- $tag -}}
 {{- else -}}
-{{- printf "%s" $tag -}}
+{{- $tag -}}
 {{- end -}}
 {{- end }}
 
