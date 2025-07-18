@@ -53,3 +53,25 @@ tests:
       - matchRegex:
           path: spec.template.spec.containers[0].image
           pattern: v1.8.0-ee$
+
+  - it: saas image tag should work
+    templates:
+      - deployment-gateway.yaml
+      - deployment-server.yaml
+      - deployment-portal.yaml
+      - deployment-mirror.yaml
+      - deployment-accounting.yaml
+      - deployment-user.yaml
+      - deployment-notification.yaml
+      - deployment-runner.yaml
+    set:
+      global.edition: "saas"
+      global.image.tag: "v1.8.0"
+      csghub:
+        aigateway:
+          image:
+            tag: "v1.8.1"
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: v1.8.0$
