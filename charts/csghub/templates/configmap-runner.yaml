@@ -36,7 +36,7 @@ data:
   {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
   {{- $argoWorkflowNamespace = .Values.global.deploy.namespace }}
   {{- $argoWorkflowQuotaNamespace = .Values.global.deploy.namespace }}
-  {{- else if .Values.global.deploy.mergingNamespace "Single" }}
+  {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
   {{- $argoWorkflowNamespace = .Release.Namespace }}
   {{- $argoWorkflowQuotaNamespace = .Release.Namespace }}
   {{- end }}
