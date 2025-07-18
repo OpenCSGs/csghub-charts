@@ -17,7 +17,7 @@ Define image's full path with more robust checks for subCharts
 
 {{- if $globalImage.registry -}}
   {{- $registry = $globalImage.registry -}}
-  {{- if and (regexMatch "^opencsg-registry" $registry) (not (regexMatch "^opencsghq" $repository)) }}
+  {{- if and (regexMatch "^opencsg-registry" $registry) (not (regexMatch "^(opencsghq|opencsg_public|public)" $repository)) }}
     {{- $repository = printf "opencsghq/%s" $repository -}}
   {{- end -}}
 {{- end -}}
