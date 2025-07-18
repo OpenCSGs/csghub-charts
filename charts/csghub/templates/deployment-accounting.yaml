@@ -93,6 +93,50 @@ spec:
             periodSeconds: 10
           securityContext:
             {{- .Values.csghub.accounting.podSecurityContext | toYaml | nindent 12 }}
+        {{- if not (regexMatch "^ee$|^ce$" (.Values.global.edition | toString)) }}
+        - name: payment
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.global.image.tag .Values.csghub.server.image.tag) "context" .) }}
+          {{- $_ := set .Values.csghub.server.image "tag" $tag }}
+          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
+          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.csghub.server.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "payment", "launch" ]
+          ports:
+            - containerPort: 8090
+              name: payment
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "accounting") }}
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "server") }}
+            - secretRef:
+                name: {{ include "common.names.custom" (list . "nats") }}
+          env:
+            - name: OPENCSG_ACCOUNTING_NATS_URL
+              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
+            {{- with .Values.csghub.server.environments }}
+            {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          resources:
+          {{- if .Values.csghub.autoscaling.enabled }}
+            requests:
+              cpu: "20m"
+              memory: "128Mi"
+            limits:
+              cpu: "50m"
+              memory: "256Mi"
+          {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: 8090
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          securityContext:
+            {{- .Values.csghub.accounting.podSecurityContext | toYaml | nindent 12 }}
+        {{- end }}
       {{- with .Values.csghub.accounting.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

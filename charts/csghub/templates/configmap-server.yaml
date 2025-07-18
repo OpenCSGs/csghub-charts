@@ -163,3 +163,10 @@ data:
   STARHUB_SERVER_FEISHU_CHAT_IDS_CACHE_TTL: {{ .chatIdsCacheTTL | default 21600 | quote }}
   {{- end }}
   {{- end }}
+
+  {{- if not (regexMatch "^ee$|^ce$" (.Values.global.edition | toString)) }}
+  OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
+  OPENCSG_PAYMENT_BILL_BUCKET: "csghub-billing"
+  OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "payment")) | quote }}
+  OPENCSG_PAYMENT_SERVER_PORT: {{ include "csghub.svc.port" "payment" | quote }}
+  {{- end }}

@@ -12,6 +12,7 @@ Get the port number by service name
       "server"       8080
       "user"         8080
       "accounting"   8086
+      "payment"      8090
       "aigateway"    8084
       "dataviewer"   8093
       "moderation"   8089
