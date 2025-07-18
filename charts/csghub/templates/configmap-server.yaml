@@ -102,7 +102,11 @@ data:
   {{- end }}
 
   # Deprecated
-  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" .Values.global.deploy.namespace (include "csghub.svc.port" "rproxy") | quote }}
+  {{- $spaceNamespace := .Values.global.deploy.namespace }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $spaceNamespace = .Release.Namespace }}
+  {{- end }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" $spaceNamespace (include "csghub.svc.port" "rproxy") | quote }}
 
   # Casdoor
   STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"

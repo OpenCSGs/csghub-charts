@@ -12,11 +12,13 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
 data:
   # Specify the namespace to use and select it based on the environment
-  {{- if .Values.global.deploy.mergingNamespace }}
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_NAMESPACE: {{ .Values.global.deploy.namespace }}
-  {{- else }}
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_NAMESPACE: {{ .Values.global.deploy.imageBuilder.namespace }}
+  {{- $imageBuilderNamespace := .Values.global.deploy.imageBuilder.namespace }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+    {{- $imageBuilderNamespace = .Values.global.deploy.namespace }}
+  {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
+    {{- $imageBuilderNamespace = .Release.Namespace }}
   {{- end }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_NAMESPACE: {{ $imageBuilderNamespace }}
   # The image used by the pod needs to be accessible in the pod
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: {{ include "image.fixed.prefix" (list . "alpine/git:2.36.2") }}
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: {{ include "image.fixed.prefix" (list . "bitnami/kaniko:1.23.2") }}
@@ -25,10 +27,21 @@ data:
   # Task status correction time, default is 5 minutes
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: "300"
   {{- if or .Values.global.registry.enabled .Values.global.registry.insecure }}
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: "--skip-tls-verify,--insecure,--compressed-caching=false,--single-snapshot,--build-arg=PyPI={{ .Values.csghub.runner.pipIndexUrl }},--build-arg=HF_ENDPOINT={{ printf "%s/hf" (include "csghub.external.endpoint" .) }}"
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: "--skip-tls-verify,--insecure,--compressed-caching=false,--single-snapshot,--build-arg=PyPI={{ .Values.global.deploy.pipIndexUrl }},--build-arg=HF_ENDPOINT={{ printf "%s/hf" (include "csghub.external.endpoint" .) }}"
   {{- else }}
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: "--compressed-caching=false,--single-snapshot,--build-arg=PyPI={{ .Values.global.deploy.pipIndexUrl }},--build-arg=HF_ENDPOINT={{ printf "%s/hf" (include "csghub.external.endpoint" .) }}"
   {{- end }}
+  {{- $argoWorkflowNamespace := "workflows" }}
+  {{- $argoWorkflowQuotaNamespace := "workflows-quota" }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+  {{- $argoWorkflowNamespace = .Values.global.deploy.namespace }}
+  {{- $argoWorkflowQuotaNamespace = .Values.global.deploy.namespace }}
+  {{- else if .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $argoWorkflowNamespace = .Release.Namespace }}
+  {{- $argoWorkflowQuotaNamespace = .Release.Namespace }}
+  {{- end }}
+  STARHUB_SERVER_ARGO_NAMESPACE: {{ $argoWorkflowNamespace }}
+  STARHUB_SERVER_ARGO_QUOTA_NAMESPACE: {{ $argoWorkflowQuotaNamespace }}
   {{- if .Values.global.deploy.autoConfigure }}
   configure.sh: |
     #!/bin/bash

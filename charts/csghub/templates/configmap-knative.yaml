@@ -19,6 +19,10 @@
   {{- $_ := set .Values.image "registry" "gcr.io" }}
 {{- end }}
 {{- $registryConfig := include "chart.registryConfig" (dict "service" .Values.csghub.runner "global" .) | fromYaml }}
+{{- $knativeNamespace := "knative-serving" }}
+{{- if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $knativeNamespace = .Release.Namespace }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6559,6 +6563,7 @@ data:
               jsonPath: .spec.image
     ---
   serving-core.yaml: |
+    {{- if ne .Values.global.deploy.mergingNamespace "Single" }}
     apiVersion: v1
     kind: Namespace
     metadata:
@@ -6566,12 +6571,13 @@ data:
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
+    {{- end }}
     ---
     kind: Role
     apiVersion: rbac.authorization.k8s.io/v1
     metadata:
       name: knative-serving-activator
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         serving.knative.dev/controller: "true"
         app.kubernetes.io/version: "1.16.1"
@@ -6752,7 +6758,7 @@ data:
     kind: ServiceAccount
     metadata:
       name: controller
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: knative-serving
@@ -6781,7 +6787,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: controller
-        namespace: knative-serving
+        namespace: {{ $knativeNamespace }}
     roleRef:
       kind: ClusterRole
       name: knative-serving-admin
@@ -6798,7 +6804,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: controller
-        namespace: knative-serving
+        namespace: {{ $knativeNamespace }}
     roleRef:
       kind: ClusterRole
       name: knative-serving-aggregated-addressable-resolver
@@ -6808,7 +6814,7 @@ data:
     kind: ServiceAccount
     metadata:
       name: activator
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: activator
         app.kubernetes.io/name: knative-serving
@@ -6818,7 +6824,7 @@ data:
     kind: RoleBinding
     metadata:
       name: knative-serving-activator
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: activator
         app.kubernetes.io/name: knative-serving
@@ -6826,7 +6832,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: activator
-        namespace: knative-serving
+        namespace: {{ $knativeNamespace }}
     roleRef:
       kind: Role
       name: knative-serving-activator
@@ -6843,7 +6849,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: activator
-        namespace: knative-serving
+        namespace: {{ $knativeNamespace }}
     roleRef:
       kind: ClusterRole
       name: knative-serving-activator-cluster
@@ -7003,7 +7009,7 @@ data:
       labels:
         networking.knative.dev/certificate-type: system-internal
       name: routing-serving-certs
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
     spec:
       dnsNames:
         - kn-routing
@@ -13399,7 +13405,7 @@ data:
     kind: Image
     metadata:
       name: queue-proxy
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: queue-proxy
         app.kubernetes.io/name: knative-serving
@@ -13411,7 +13417,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-autoscaler
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: autoscaler
         app.kubernetes.io/name: knative-serving
@@ -13446,7 +13452,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-certmanager
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13470,7 +13476,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-defaults
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13500,7 +13506,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-deployment
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13517,7 +13523,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-domain
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13541,7 +13547,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-features
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13564,7 +13570,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-gc
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13582,7 +13588,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-leader-election
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: controller
@@ -13600,7 +13606,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-logging
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/version: "1.16.1"
         app.kubernetes.io/component: logging
@@ -13645,7 +13651,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-network
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: networking
@@ -13676,7 +13682,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-observability
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: observability
@@ -13699,7 +13705,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-tracing
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/component: tracing
@@ -13717,7 +13723,7 @@ data:
     kind: HorizontalPodAutoscaler
     metadata:
       name: activator
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: activator
         app.kubernetes.io/name: knative-serving
@@ -13741,7 +13747,7 @@ data:
     kind: PodDisruptionBudget
     metadata:
       name: activator-pdb
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: activator
         app.kubernetes.io/name: knative-serving
@@ -13756,7 +13762,7 @@ data:
     kind: Deployment
     metadata:
       name: activator
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: activator
         app.kubernetes.io/version: "1.16.1"
@@ -13851,7 +13857,7 @@ data:
     kind: Service
     metadata:
       name: activator-service
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app: activator
         app.kubernetes.io/component: activator
@@ -13882,7 +13888,7 @@ data:
     kind: Deployment
     metadata:
       name: autoscaler
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: autoscaler
         app.kubernetes.io/name: knative-serving
@@ -13976,7 +13982,7 @@ data:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
       name: autoscaler
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
     spec:
       ports:
         - name: http-metrics
@@ -13995,7 +14001,7 @@ data:
     kind: Deployment
     metadata:
       name: controller
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: knative-serving
@@ -14087,7 +14093,7 @@ data:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
       name: controller
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
     spec:
       ports:
         - name: http-metrics
@@ -14103,7 +14109,7 @@ data:
     kind: HorizontalPodAutoscaler
     metadata:
       name: webhook
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: webhook
         app.kubernetes.io/name: knative-serving
@@ -14127,7 +14133,7 @@ data:
     kind: PodDisruptionBudget
     metadata:
       name: webhook-pdb
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: webhook
         app.kubernetes.io/name: knative-serving
@@ -14142,7 +14148,7 @@ data:
     kind: Deployment
     metadata:
       name: webhook
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: webhook
         app.kubernetes.io/version: "1.16.1"
@@ -14240,7 +14246,7 @@ data:
         app.kubernetes.io/version: "1.16.1"
         app.kubernetes.io/name: knative-serving
       name: webhook
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
     spec:
       ports:
         - name: http-metrics
@@ -14269,7 +14275,7 @@ data:
         clientConfig:
           service:
             name: webhook
-            namespace: knative-serving
+            namespace: {{ $knativeNamespace }}
         failurePolicy: Fail
         sideEffects: None
         name: config.webhook.serving.knative.dev
@@ -14296,7 +14302,7 @@ data:
         clientConfig:
           service:
             name: webhook
-            namespace: knative-serving
+            namespace: {{ $knativeNamespace }}
         failurePolicy: Fail
         sideEffects: None
         name: webhook.serving.knative.dev
@@ -14338,7 +14344,7 @@ data:
         clientConfig:
           service:
             name: webhook
-            namespace: knative-serving
+            namespace: {{ $knativeNamespace }}
         failurePolicy: Fail
         sideEffects: None
         name: validation.webhook.serving.knative.dev
@@ -14372,14 +14378,14 @@ data:
     kind: Secret
     metadata:
       name: webhook-certs
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/component: webhook
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
     ---
   kourier.yaml: |
-    {{- if not .Values.global.deploy.mergingNamespace }}
+    {{- if eq .Values.global.deploy.mergingNamespace "Disable" }}
     apiVersion: v1
     kind: Namespace
     metadata:
@@ -14395,8 +14401,8 @@ data:
     kind: ConfigMap
     metadata:
       name: kourier-bootstrap
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: knative-serving
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+      namespace: {{ $knativeNamespace }}
       {{- else }}
       namespace: kourier-system
       {{- end }}
@@ -14494,7 +14500,7 @@ data:
                     endpoint:
                       address:
                         socket_address:
-                          address: "net-kourier-controller.knative-serving"
+                          address: "net-kourier-controller.{{ $knativeNamespace }}"
                           port_value: 18000
               type: STRICT_DNS
         admin:
@@ -14511,7 +14517,7 @@ data:
     kind: ConfigMap
     metadata:
       name: config-kourier
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14532,7 +14538,7 @@ data:
     kind: ServiceAccount
     metadata:
       name: net-kourier
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14584,13 +14590,13 @@ data:
     subjects:
       - kind: ServiceAccount
         name: net-kourier
-        namespace: knative-serving
+        namespace: {{ $knativeNamespace }}
     ---
     apiVersion: apps/v1
     kind: Deployment
     metadata:
       name: net-kourier-controller
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14630,8 +14636,8 @@ data:
                 - name: METRICS_DOMAIN
                   value: "knative.dev/samples"
                 - name: KOURIER_GATEWAY_NAMESPACE
-                  {{- if .Values.global.deploy.mergingNamespace }}
-                  value: "knative-serving"
+                  {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+                  value: {{ $knativeNamespace }}
                   {{- else }}
                   value: "kourier-system"
                   {{- end }}
@@ -14681,7 +14687,7 @@ data:
     kind: Service
     metadata:
       name: net-kourier-controller
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14705,8 +14711,8 @@ data:
     kind: Deployment
     metadata:
       name: 3scale-kourier-gateway
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: knative-serving
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+      namespace: {{ $knativeNamespace }}
       {{- else }}
       namespace: kourier-system
       {{- end }}
@@ -14825,8 +14831,8 @@ data:
     kind: Service
     metadata:
       name: kourier
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: knative-serving
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+      namespace: {{ $knativeNamespace }}
       {{- else }}
       namespace: kourier-system
       {{- end }}
@@ -14834,7 +14840,7 @@ data:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
         app.kubernetes.io/version: "1.16.0"
-        app.kubernetes.io/name: knative-serving
+        app.kubernetes.io/name: knative-servin
     spec:
       ports:
         - name: http2
@@ -14857,8 +14863,8 @@ data:
     kind: Service
     metadata:
       name: kourier-internal
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: knative-serving
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+      namespace: {{ $knativeNamespace }}
       {{- else }}
       namespace: kourier-system
       {{- end }}
@@ -14885,8 +14891,8 @@ data:
     kind: HorizontalPodAutoscaler
     metadata:
       name: 3scale-kourier-gateway
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: knative-serving
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+      namespace: {{ $knativeNamespace }}
       {{- else }}
       namespace: kourier-system
       {{- end }}
@@ -14914,8 +14920,8 @@ data:
     kind: PodDisruptionBudget
     metadata:
       name: 3scale-kourier-gateway-pdb
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: knative-serving
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
+      namespace: {{ $knativeNamespace }}
       {{- else }}
       namespace: kourier-system
       {{- end }}
@@ -14935,7 +14941,7 @@ data:
     kind: Deployment
     metadata:
       name: autoscaler-hpa
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
       labels:
         autoscaling.knative.dev/autoscaler-provider: hpa
         app.kubernetes.io/component: autoscaler-hpa
@@ -15025,7 +15031,7 @@ data:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
       name: autoscaler-hpa
-      namespace: knative-serving
+      namespace: {{ $knativeNamespace }}
     spec:
       ports:
         - name: http-metrics

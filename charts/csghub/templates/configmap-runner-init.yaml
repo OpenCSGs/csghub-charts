@@ -11,6 +11,18 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
 data:
+  {{- $knativeNamespace := "knative-serving" }}
+  {{- $kourierNamespace := "kourier-system" }}
+  {{- $argoNamespace := "argo" }}
+  {{- $lwsNamespace := "lws-system" }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+    {{- $kourierNamespace = $knativeNamespace }}
+  {{- end }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
+    {{- $knativeNamespace = .Release.Namespace }}
+    {{- $argoNamespace = .Release.Namespace }}
+    {{- $lwsNamespace = .Release.Namespace }}
+  {{- end }}
   configure.sh: |
     #!/bin/bash
 
@@ -130,24 +142,24 @@ data:
       # Verify and install Argo Workflows
       argo_install
       # verify_and_install "argo" "argo-server" "argo-server" "argo_install"
-      verify_and_install "argo" "workflow-controller" "argo-server" "argo_install"
+      verify_and_install {{ $argoNamespace | quote }} "workflow-controller" "argo-server" "argo_install"
 
       # Verify and install Knative Serving
       knative_install
-      # verify_and_install "knative-serving" "activator" "activator-service" "knative_install"
-      verify_and_install "knative-serving" "autoscaler" "autoscaler" "knative_install"
-      verify_and_install "knative-serving" "controller" "controller" "knative_install"
-      verify_and_install "knative-serving" "net-kourier-controller" "net-kourier-controller" "knative_install"
-      verify_and_install "knative-serving" "webhook" "webhook" "knative_install"
+      # verify_and_install {{ $knativeNamespace | quote }} "activator" "activator-service" "knative_install"
+      verify_and_install {{ $knativeNamespace | quote }} "autoscaler" "autoscaler" "knative_install"
+      verify_and_install {{ $knativeNamespace | quote }} "controller" "controller" "knative_install"
+      verify_and_install {{ $knativeNamespace | quote }} "net-kourier-controller" "net-kourier-controller" "knative_install"
+      verify_and_install {{ $knativeNamespace | quote }} "webhook" "webhook" "knative_install"
 
       # Verify and install Kourier networking components
-      verify_and_install "kourier-system" "3scale-kourier-gateway" "kourier" "knative_install"
-      verify_and_install "kourier-system" "3scale-kourier-gateway" "kourier-internal" "knative_install"
+      verify_and_install {{ $kourierNamespace | quote }} "3scale-kourier-gateway" "kourier" "knative_install"
+      verify_and_install {{ $kourierNamespace | quote }} "3scale-kourier-gateway" "kourier-internal" "knative_install"
 
       # Verify and install LeaderWorkSet
       lws_install
       # Verify lws controller
-      verify_and_install "lws-system" "lws-controller-manager" "lws-webhook-service" "lws_install"
-      verify_and_install "lws-system" "lws-controller-manager" "lws-controller-manager-metrics-service" "lws_install"
+      verify_and_install {{ $lwsNamespace | quote }} "lws-controller-manager" "lws-webhook-service" "lws_install"
+      verify_and_install {{ $lwsNamespace | quote }} "lws-controller-manager" "lws-controller-manager-metrics-service" "lws_install"
     done
 {{- end }}
