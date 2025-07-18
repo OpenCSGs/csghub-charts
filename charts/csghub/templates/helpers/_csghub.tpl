@@ -68,14 +68,10 @@ Get the edition suffix for image tags
 */}}
 {{- define "csghub.edition.suffix" -}}
 {{- $edition := .Values.global.edition | default "ee" -}}
-{{- if eq $edition "ce" -}}
-{{- print "ce" -}}
-{{- else if eq $edition "saas" -}}
-{{- print "saas" -}}
-{{- else -}}
-{{- print "ee" -}}
+{{- if has $edition (list "ce" "ee") -}}
+{{- $edition -}}
 {{- end -}}
-{{- end }}
+{{- end -}}
 
 {{/*
 Construct image tag with edition suffix
@@ -90,7 +86,7 @@ Usage: {{ include "csghub.image.tag" (dict "tag" "v1.8.0" "context" .) }}
 {{- else if contains "-ee" $tag -}}
 {{- $tag -}}
 {{- else -}}
-{{- printf "%s-%s" $tag $edition -}}
+{{- printf "%s" $tag -}}
 {{- end -}}
 {{- end }}
 
