@@ -98,7 +98,7 @@ data:
   {{- if .Values.global.deploy.usePublicDomain }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ include "csghub.external.public.endpoint" . | trimPrefix "http://" | trimPrefix "https://" | quote }}
   {{- else }}
-  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: ""
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: " "
   {{- end }}
 
   # Deprecated
@@ -162,4 +162,11 @@ data:
   STARHUB_SERVER_FEISHU_MAX_DELAY_DURATION: {{ .maxDelayDuration | default 3600 | quote }}
   STARHUB_SERVER_FEISHU_CHAT_IDS_CACHE_TTL: {{ .chatIdsCacheTTL | default 21600 | quote }}
   {{- end }}
+  {{- end }}
+
+  {{- if not (regexMatch "^ee$|^ce$" (.Values.global.edition | toString)) }}
+  OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
+  OPENCSG_PAYMENT_BILL_BUCKET: "csghub-billing"
+  OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "payment")) | quote }}
+  OPENCSG_PAYMENT_SERVER_PORT: {{ include "csghub.svc.port" "payment" | quote }}
   {{- end }}

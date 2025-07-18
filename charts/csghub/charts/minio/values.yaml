@@ -68,6 +68,7 @@ buckets:
   csghub-server: private
   csghub-registry: private
   csghub-workflow: private
+  csghub-billing: private
 
 ## Persistence settings for the Minio data.
 persistence:

@@ -53,6 +53,25 @@ spec:
       name: accounting
   selector:
     {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "accounting") | nindent 4 }}
+{{- if not (regexMatch "^ee$|^ce$" (.Values.global.edition | toString)) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "common.names.custom" (list . "payment") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" (dict "context" . "service" "payment") | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ include "csghub.svc.port" "payment" }}
+      targetPort: 8090
+      protocol: TCP
+      name: payment
+  selector:
+    {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "payment") | nindent 4 }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
