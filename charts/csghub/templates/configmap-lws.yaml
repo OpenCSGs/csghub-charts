@@ -11,6 +11,10 @@ so all description fields are truncated using the following command:
 */}}
 
 {{- if and .Values.global.deploy.enabled .Values.global.deploy.autoConfigure }}
+{{- $lwsNamespace := "lws-system" }}
+{{- if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $lwsNamespace = .Release.Namespace }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,6 +23,7 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "runner-lws") | nindent 4 }}
 data:
   manifests.yaml: |
+    {{- if ne .Values.global.deploy.mergingNamespace "Single" }}
     apiVersion: v1
     kind: Namespace
     metadata:
@@ -30,7 +35,8 @@ data:
         app.kubernetes.io/name: namespace
         app.kubernetes.io/part-of: lws
         control-plane: controller-manager
-      name: lws-system
+      name: {{ $lwsNamespace }}
+    {{- end }}
     ---
     apiVersion: apiextensions.k8s.io/v1
     kind: CustomResourceDefinition
@@ -45,7 +51,7 @@ data:
           clientConfig:
             service:
               name: lws-webhook-service
-              namespace: lws-system
+              namespace: {{ $lwsNamespace }}
               path: /convert
           conversionReviewVersions:
             - v1
@@ -7542,7 +7548,7 @@ data:
         app.kubernetes.io/name: serviceaccount
         app.kubernetes.io/part-of: lws
       name: lws-controller-manager
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
@@ -7555,7 +7561,7 @@ data:
         app.kubernetes.io/name: role
         app.kubernetes.io/part-of: lws
       name: lws-leader-election-role
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     rules:
       - apiGroups:
           - ""
@@ -7760,7 +7766,7 @@ data:
         app.kubernetes.io/name: rolebinding
         app.kubernetes.io/part-of: lws
       name: lws-leader-election-rolebinding
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -7768,7 +7774,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: lws-controller-manager
-        namespace: lws-system
+        namespace: {{ $lwsNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -7788,7 +7794,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: lws-controller-manager
-        namespace: lws-system
+        namespace: {{ $lwsNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -7801,7 +7807,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: lws-controller-manager
-        namespace: lws-system
+        namespace: {{ $lwsNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -7820,7 +7826,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: lws-controller-manager
-        namespace: lws-system
+        namespace: {{ $lwsNamespace }}
     ---
     apiVersion: v1
     data:
@@ -7832,13 +7838,13 @@ data:
     kind: ConfigMap
     metadata:
       name: lws-manager-config
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     ---
     apiVersion: v1
     kind: Secret
     metadata:
       name: lws-webhook-server-cert
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     ---
     apiVersion: v1
     kind: Service
@@ -7848,7 +7854,7 @@ data:
         app.kubernetes.io/name: lws
         control-plane: controller-manager
       name: lws-controller-manager-metrics-service
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     spec:
       ports:
         - name: https
@@ -7869,7 +7875,7 @@ data:
         app.kubernetes.io/name: service
         app.kubernetes.io/part-of: lws
       name: lws-webhook-service
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     spec:
       ports:
         - port: 443
@@ -7890,7 +7896,7 @@ data:
         app.kubernetes.io/part-of: lws
         control-plane: controller-manager
       name: lws-controller-manager
-      namespace: lws-system
+      namespace: {{ $lwsNamespace }}
     spec:
       replicas: 2
       selector:
@@ -7970,7 +7976,7 @@ data:
         clientConfig:
           service:
             name: lws-webhook-service
-            namespace: lws-system
+            namespace: {{ $lwsNamespace }}
             path: /mutate-leaderworkerset-x-k8s-io-v1-leaderworkerset
         failurePolicy: Fail
         name: mleaderworkerset.kb.io
@@ -7990,7 +7996,7 @@ data:
         clientConfig:
           service:
             name: lws-webhook-service
-            namespace: lws-system
+            namespace: {{ $lwsNamespace }}
             path: /mutate--v1-pod
         failurePolicy: Fail
         name: mpod.kb.io
@@ -8020,7 +8026,7 @@ data:
         clientConfig:
           service:
             name: lws-webhook-service
-            namespace: lws-system
+            namespace: {{ $lwsNamespace }}
             path: /validate-leaderworkerset-x-k8s-io-v1-leaderworkerset
         failurePolicy: Fail
         name: vleaderworkerset.kb.io
@@ -8040,7 +8046,7 @@ data:
         clientConfig:
           service:
             name: lws-webhook-service
-            namespace: lws-system
+            namespace: {{ $lwsNamespace }}
             path: /validate--v1-pod
         failurePolicy: Fail
         name: vpod.kb.io

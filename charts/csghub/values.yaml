@@ -101,8 +101,9 @@ global:
     namespace: "spaces"
     ## Auto-install knative and argo
     autoConfigure: true
-    ## Reduce number of created namespaces
-    mergingNamespace: false
+    ## Namespace merging configuration
+    ## Merging mode: "Multi" (reduce namespaces) or "Single" (merge to one namespace) or "Disable" (Disable merging)
+    mergingNamespace: "Disable"
     ## Knative serving configuration
     knative:
       serving:

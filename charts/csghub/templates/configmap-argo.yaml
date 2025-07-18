@@ -9,6 +9,19 @@ SPDX-License-Identifier: APACHE-2.0
 {{- else }}
   {{- $_ := set .Values.image "registry" "quay.io" }}
 {{- end }}
+{{- $argoNamespace := "argo" }}
+{{- if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $argoNamespace = .Release.Namespace }}
+{{- end }}
+{{- $argoWorkflowNamespace := "workflows" }}
+{{- $argoWorkflowQuotaNamespace := "workflows-quota" }}
+{{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+{{- $argoWorkflowNamespace = .Values.global.deploy.namespace }}
+{{- $argoWorkflowQuotaNamespace = .Values.global.deploy.namespace }}
+{{- else if .Values.global.deploy.mergingNamespace "Single" }}
+{{- $argoWorkflowNamespace = .Release.Namespace }}
+{{- $argoWorkflowQuotaNamespace = .Release.Namespace }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -17,14 +30,16 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "runner-argo") | nindent 4 }}
 data:
   argo.yaml: |
+    {{- if ne .Values.global.deploy.mergingNamespace "Single" }}
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: argo
+      name: {{ $argoNamespace }}
       labels:
-        kubernetes.io/metadata.name: argo
+        kubernetes.io/metadata.name: {{ $argoNamespace }}
+    {{- end }}
     ---
-    {{- if not .Values.global.deploy.mergingNamespace }}
+    {{- if eq .Values.global.deploy.mergingNamespace "Disable" }}
     apiVersion: v1
     kind: Namespace
     metadata:
@@ -47,17 +62,15 @@ data:
         kubernetes.io/metadata.name: {{ .Values.global.deploy.imageBuilder.namespace }}
     {{- end }}
     ---
-    {{- if not .Values.global.deploy.mergingNamespace }}
     apiVersion: v1
     kind: ResourceQuota
     metadata:
       name: gpu-quota
-      namespace: workflows-quota
+      namespace: {{ $argoWorkflowQuotaNamespace }}
     spec:
       hard:
         requests.nvidia.com/gpu: "2"
         limits.nvidia.com/gpu: "2"
-    {{- end }}
     ---
     # This is an auto-generated file. DO NOT EDIT
     apiVersion: apiextensions.k8s.io/v1
@@ -953,19 +966,19 @@ data:
     kind: ServiceAccount
     metadata:
       name: argo
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     ---
     apiVersion: v1
     kind: ServiceAccount
     metadata:
       name: argo-server
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
       name: argo-role
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     rules:
       - apiGroups:
           - coordination.k8s.io
@@ -1259,7 +1272,7 @@ data:
     kind: RoleBinding
     metadata:
       name: argo-binding
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -1267,7 +1280,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: argo
-        namespace: argo
+        namespace: {{ $argoNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -1280,7 +1293,7 @@ data:
     subjects:
       - kind: ServiceAccount
         name: argo
-        namespace: argo
+        namespace: {{ $argoNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -1293,13 +1306,13 @@ data:
     subjects:
       - kind: ServiceAccount
         name: argo-server
-        namespace: argo
+        namespace: {{ $argoNamespace }}
     ---
     apiVersion: v1
     kind: ConfigMap
     metadata:
       name: workflow-controller-configmap
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     data:
       executor: |
         imagePullPolicy: IfNotPresent
@@ -1308,7 +1321,7 @@ data:
     kind: Service
     metadata:
       name: argo-server
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     spec:
       ports:
         - name: web
@@ -1327,7 +1340,7 @@ data:
     kind: Deployment
     metadata:
       name: argo-server
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     spec:
       selector:
         matchLabels:
@@ -1376,7 +1389,7 @@ data:
     kind: Deployment
     metadata:
       name: workflow-controller
-      namespace: argo
+      namespace: {{ $argoNamespace }}
     spec:
       selector:
         matchLabels:
@@ -1426,15 +1439,17 @@ data:
     ---
 
   rbac.yaml: |
+    {{- $rbacNamespace := "workflows" }}
+    {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+      {{- $rbacNamespace = .Values.global.deploy.namespace }}
+    {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
+      {{- $rbacNamespace = .Release.Namespace }}
+    {{- end }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
       name: executor
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: {{ .Values.global.deploy.namespace }}
-      {{- else }}
-      namespace: workflows
-      {{- end }}
+      namespace: {{ $rbacNamespace }}
     rules:
       - apiGroups:
           - argoproj.io
@@ -1443,7 +1458,7 @@ data:
         verbs:
           - create
           - patch
-      {{- if .Values.global.deploy.mergingNamespace }}
+      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
       - apiGroups:
           - ""
         resources:
@@ -1491,21 +1506,13 @@ data:
     kind: ServiceAccount
     metadata:
       name: executor
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: {{ .Values.global.deploy.namespace }}
-      {{- else }}
-      namespace: workflows
-      {{- end }}
+      namespace: {{ $rbacNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     metadata:
       name: executor
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: {{ .Values.global.deploy.namespace }}
-      {{- else }}
-      namespace: workflows
-      {{- end }}
+      namespace: {{ $rbacNamespace }}
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -1513,13 +1520,9 @@ data:
     subjects:
       - kind: ServiceAccount
         name: executor
-        {{- if .Values.global.deploy.mergingNamespace }}
-        namespace: {{ .Values.global.deploy.namespace }}
-        {{- else }}
-        namespace: workflows
-        {{- end }}
+        namespace: {{ $rbacNamespace }}
     ---
-    {{- if not .Values.global.deploy.mergingNamespace }}
+    {{- if eq .Values.global.deploy.mergingNamespace "Disable" }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
@@ -1555,15 +1558,17 @@ data:
         namespace: workflows-quota
     {{- end }}
     ---
+    {{- $imageBuilderNamespace := .Values.global.deploy.imageBuilder.namespace }}
+    {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+      {{- $imageBuilderNamespace = .Values.global.deploy.namespace }}
+    {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
+      {{- $imageBuilderNamespace = .Release.Namespace }}
+    {{- end }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
       name: argo-image-factory-secret-access
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: {{ .Values.global.deploy.namespace }}
-      {{- else }}
-      namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
-      {{- end }}
+      namespace: {{ $imageBuilderNamespace }}
     rules:
       - apiGroups:
           - ""
@@ -1577,11 +1582,7 @@ data:
     kind: RoleBinding
     metadata:
       name: argo-image-factory-secret-access
-      {{- if .Values.global.deploy.mergingNamespace }}
-      namespace: {{ .Values.global.deploy.namespace }}
-      {{- else }}
-      namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
-      {{- end }}
+      namespace: {{ $imageBuilderNamespace }}
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -1589,9 +1590,9 @@ data:
     subjects:
       - kind: ServiceAccount
         name: argo
-        namespace: argo
+        namespace: {{ $argoNamespace }}
     ---
-    {{- if not .Values.global.deploy.mergingNamespace }}
+    {{- if eq .Values.global.deploy.mergingNamespace "Disable" }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
@@ -1660,4 +1661,4 @@ data:
         name: executor
         namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
       {{- end }}
-{{- end }}
+      {{- end }}

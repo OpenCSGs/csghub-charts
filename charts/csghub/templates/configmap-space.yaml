@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 
 {{- if and .Values.global.deploy.enabled .Values.global.deploy.autoConfigure }}
+{{- if ne .Values.global.deploy.mergingNamespace "Single" }}
 {{- $registryConfig := include "chart.registryConfig" (dict "service" .Values.csghub.runner "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
@@ -32,3 +33,4 @@ data:
       .dockerconfigjson: {{ printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"auth\":\"%s\"}}}" $registryConfig.repository $registryConfig.username $registryConfig.password (printf "%s:%s" $registryConfig.username $registryConfig.password | b64enc) | b64enc }}
     ---
     {{- end }}
+{{- end }}

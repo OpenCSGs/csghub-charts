@@ -10,22 +10,33 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" (dict "context" . "service" "gateway") | nindent 4 }}
 data:
+  {{- $spaceNamespace := .Values.global.deploy.namespace }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $spaceNamespace = .Release.Namespace }}
+  {{- end }}
   {{- range .Values.global.deploy.knative.serving.services }}
   {{ .domain }}.conf: |
     server {
         listen 80;
-        server_name {{ printf "*.%s.%s" $.Values.global.deploy.namespace .domain }};
+        server_name {{ printf "*.%s.%s" $spaceNamespace .domain }};
+
+        resolver kube-dns.kube-system.svc.{{ include "cluster.domain" . }} valid=5s;
+        resolver_timeout 3s;
 
         location / {
             proxy_http_version 1.1;
+
             {{- if and .host .port }}
             proxy_pass http://{{ .host }}:{{ .port }};
             {{- else }}
               {{- $kourierNamespace := "kourier-system" }}
-              {{- if $.Values.global.deploy.mergingNamespace }}
+              {{- if eq $.Values.global.deploy.mergingNamespace "Multi" }}
                 {{- $kourierNamespace = "knative-serving" }}
+              {{- else if eq $.Values.global.deploy.mergingNamespace "Single" }}
+                {{- $kourierNamespace = $.Release.Namespace }}
               {{- end }}
-            proxy_pass http://{{ printf "kourier.%s.svc.%s" $kourierNamespace (include "cluster.domain" .)   }};
+            set $knativeBackend {{ printf "kourier.%s.svc.%s" $kourierNamespace (include "cluster.domain" .) }};
+            proxy_pass http://$knativeBackend;
             {{- end }}
 
             add_header 'Access-Control-Allow-Origin' '*';
@@ -54,7 +65,7 @@ data:
             root  /usr/share/nginx/html;
         }
     }
-  {{- end }}
+    {{- end }}
   default.conf: |
     server {
         listen       80;
