@@ -25,6 +25,7 @@ fi
 : "${INGRESS_SERVICE_TYPE:=NodePort}"
 : "${KOURIER_SERVICE_TYPE:=NodePort}"
 : "${EDITION:=ee}"
+: "${INSTALL_CN:=false}"
 
 # Get the domain from the command line argument
 : "${DOMAIN:=$1}"
@@ -420,6 +421,12 @@ if [[ "$KOURIER_SERVICE_TYPE" == "NodePort" ]]; then
   KNATIVE_INTERNAL_PORT="30213"
 fi
 
+EXTRA_ARGS=""
+if [ "$INSTALL_CN" = "true" ]; then
+  EXTRA_ARGS="\
+    --set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com"
+fi
+
 retry helm upgrade --install csghub csghub/csghub \
   --namespace csghub \
   --create-namespace \
@@ -431,7 +438,8 @@ retry helm upgrade --install csghub csghub/csghub \
   --set global.deploy.knative.serving.services[0].type="$KOURIER_SERVICE_TYPE" \
   --set global.deploy.knative.serving.services[0].domain="$KNATIVE_INTERNAL_DOMAIN" \
   --set global.deploy.knative.serving.services[0].host="$KNATIVE_INTERNAL_HOST" \
-  --set global.deploy.knative.serving.services[0].port="$KNATIVE_INTERNAL_PORT" | tee ./login.txt
+  --set global.deploy.knative.serving.services[0].port="$KNATIVE_INTERNAL_PORT" \
+  $EXTRA_ARGS | tee ./login.txt
 
 ####################################################################################
 # Configuring local domain name resolution
