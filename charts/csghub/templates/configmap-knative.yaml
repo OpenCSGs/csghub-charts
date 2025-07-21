@@ -13515,7 +13515,7 @@ data:
         knative.dev/example-checksum: "720ddb97"
     data:
       {{- if or .Values.global.registry.enabled .Values.global.registry.insecure }}
-      registries-skipping-tag-resolving: "{{ include "registry.external.endpoint" . | trimPrefix "http://" | trimPrefix "https://" }},{{ $registryConfig.repository }},{{ .Values.global.image.registry }}"
+      registries-skipping-tag-resolving: "{{ include "registry.external.endpoint" . | trimPrefix "http://" | trimPrefix "https://" }},{{ $registryConfig.registry }},{{ .Values.global.image.registry }}"
       {{- end }}
       queue-sidecar-image: {{ include "image.fixed.prefix" (list . "knative-releases/knative.dev/serving/cmd/queue:v1.16.1") }}
     ---
