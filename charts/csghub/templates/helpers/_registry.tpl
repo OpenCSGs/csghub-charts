@@ -13,8 +13,8 @@ generate registry config
 
 {{- if $global.Values.global.registry.enabled -}}
   {{/* use internal registry */}}
-  {{- $_ := set $config "repository" (include "registry.external.endpoint" $global) -}}
-  {{- $_ := set $config "namespace" $global.Release.Name -}}
+  {{- $_ := set $config "registry" (include "registry.external.endpoint" $global) -}}
+  {{- $_ := set $config "repository" $global.Release.Name -}}
 
   {{/* default credentials */}}
   {{- $defaultUser := $global.Values.registry.username }}
@@ -44,18 +44,18 @@ generate registry config
 
 {{- else -}}
   {{/* use external registry */}}
+  {{- $_ := set $config "registry" $global.Values.registry.registry -}}
   {{- $_ := set $config "repository" $global.Values.registry.repository -}}
-  {{- $_ := set $config "namespace" $global.Values.registry.namespace -}}
   {{- $_ := set $config "username" $global.Values.registry.username -}}
   {{- $_ := set $config "password" $global.Values.registry.password -}}
 {{- end -}}
 
 {{/* service level config override */}}
+{{- if $service.registry.registry -}}
+  {{- $_ := set $config "registry" $service.registry.registry -}}
+{{- end -}}
 {{- if $service.registry.repository -}}
   {{- $_ := set $config "repository" $service.registry.repository -}}
-{{- end -}}
-{{- if $service.registry.namespace -}}
-  {{- $_ := set $config "namespace" $service.registry.namespace -}}
 {{- end -}}
 {{- if $service.registry.username -}}
   {{- $_ := set $config "username" $service.registry.username -}}

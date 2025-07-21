@@ -39,8 +39,8 @@ global:
     enabled: true
     ## Disable TLS/SSL encryption
     insecure: false
-    # repository: "https://registry-1.docker.io"
-    # namespace: "csghub"
+    # registry: "https://registry-1.docker.io"
+    # repository: "csghub"
     # username: "registry"
     # password: ""
 
@@ -237,9 +237,9 @@ csghub:
     ## Docker registry configuration
     registry:
       ## Docker registry URL
-      repository: ""
+      registry: ""
       ## Image namespace/organization
-      namespace: "csghub"
+      repository: "csghub"
       ## Registry username
       username: "registry"
       ## Registry password

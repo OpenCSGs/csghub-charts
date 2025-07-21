@@ -88,7 +88,7 @@ spec:
             {{- end }}
           env:
             - name: STARHUB_SERVER_DOCKER_REG_BASE
-              value: {{ printf "%s/%s" $registryConfig.repository $registryConfig.namespace }}
+              value: {{ printf "%s/%s" $registryConfig.registry $registryConfig.repository }}
             - name: STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET
               value: {{ include "common.names.custom" (list . "registry-docker-config") }}
             - name: OPENCSG_ACCOUNTING_NATS_URL
