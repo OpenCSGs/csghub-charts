@@ -35,14 +35,14 @@ Visit the Starship admin console at the following address:
     Credential: admin/Admin@1234
 {{- end }}
 
-Visit the Temporal console at the following address:
+Visit the Temporal console at the following address (If enabled):
 
     Address: {{ include "temporal.external.endpoint" . }}
     Credentials:
         Username: $(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "common.names.custom" (list . "temporal") }} -o jsonpath="{.data.TEMPORAL_USERNAME}" | base64 -d)
         Password: $(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "common.names.custom" (list . "temporal") }} -o jsonpath="{.data.TEMPORAL_PASSWORD}" | base64 -d)
 {{ if .Values.global.objectStore.enabled }}
-Visit the Minio console at the following address:
+Visit the Minio console at the following address (If enabled):
 
     Address: {{ include "minio.external.endpoint" . }}/console/
     Credentials:

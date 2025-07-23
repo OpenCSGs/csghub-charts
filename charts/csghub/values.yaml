@@ -9,7 +9,7 @@ global:
     ## It's cannot be set to nil, comment out using original image default.
     # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
     ## Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)
-    tag: "v1.9.0"
+    tag: "v1.9.1"
     ## Image pull policy
     pullPolicy: "IfNotPresent"
     ## Kubernetes secrets for pulling images from private registry
