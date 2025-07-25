@@ -49,9 +49,11 @@ global:
     enabled: true
     ## External PostgreSQL configuration
     # host: "<pg_host>"
-    # port: 6432
+    # port: 5432
     # user: "csghub"
+    # password: ""
     # timezone: "Etc/UTC"
+    # sslMode: "prefer"
 
   ## Redis configuration
   redis:
