@@ -427,6 +427,7 @@ ingress-nginx:
     22: csghub/csghub-gitlab-shell:22
   ## NGINX Ingress Controller configuration
   controller:
+    progressDeadlineSeconds: 600
     ## Configuration for the controller image
     ## Reset digest to use third-party repository
     ## DO NOT UPDATE!!! image.digest and admissionWebhooks.patch.image.digest
