@@ -36,7 +36,7 @@ Define the internal endpoint for temporal
 Define the external domain for temporal
 */}}
 {{- define "temporal.external.domain" -}}
-{{- include "global.domain" (list . "temporal") }}
+{{- include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.temporal "temporal")) }}
 {{- end }}
 
 {{/*

@@ -7,7 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 Define the external domain for registry
 */}}
 {{- define "registry.external.domain" -}}
-{{- include "global.domain" (list . "registry") }}
+{{- include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.registry "registry")) }}
 {{- end }}
 
 {{/*
