@@ -14,6 +14,7 @@ generate object store config
 {{- if $global.Values.global.objectStore.enabled  -}}
   {{/* use internal minio */}}
   {{- $_ := set $config "endpoint" (include "minio.internal.endpoint" $global) -}}
+  {{- $_ := set $config "externalEndpoint" (include "minio.external.endpoint" $global) -}}
   {{- $_ := set $config "region" "cn-north-1" -}}
 
   {{/* random secret   */}}
@@ -39,20 +40,24 @@ generate object store config
   {{- $_ := set $config "encrypt" false -}}
   {{- $_ := set $config "secure" false -}}
   {{- $_ := set $config "pathStyle" true -}}
+  {{- $_ := set $config "directUpload" false -}}
 {{- else -}}
   {{/* use external object store */}}
-  {{- $_ := set $config "endpoint" $global.Values.objectStore.endpoint -}}
-  {{- $_ := set $config "region" $global.Values.objectStore.region -}}
-  {{- $_ := set $config "accessKey" $global.Values.objectStore.accessKey -}}
-  {{- $_ := set $config "secretKey" $global.Values.objectStore.secretKey -}}
-  {{- $_ := set $config "encrypt" $global.Values.objectStore.encrypt -}}
-  {{- $_ := set $config "secure" $global.Values.objectStore.secure -}}
-  {{- $_ := set $config "pathStyle" $global.Values.objectStore.pathStyle -}}
+  {{- $_ := set $config "endpoint" $global.Values.global.objectStore.endpoint -}}
+  {{- $_ := set $config "externalEndpoint" $global.Values.global.objectStore.endpoint -}}
+  {{- $_ := set $config "region" $global.Values.global.objectStore.region -}}
+  {{- $_ := set $config "accessKey" $global.Values.global.objectStore.accessKey -}}
+  {{- $_ := set $config "secretKey" $global.Values.global.objectStore.secretKey -}}
+  {{- $_ := set $config "encrypt" $global.Values.global.objectStore.encrypt -}}
+  {{- $_ := set $config "secure" $global.Values.global.objectStore.secure -}}
+  {{- $_ := set $config "pathStyle" $global.Values.global.objectStore.pathStyle -}}
+  {{- $_ := set $config "directUpload" $global.Values.global.objectStore.directUpload -}}
 {{- end -}}
 
 {{/* service level config override */}}
 {{- if $service.objectStore.endpoint -}}
   {{- $_ := set $config "endpoint" $service.objectStore.endpoint -}}
+  {{- $_ := set $config "externalEndpoint" $global.Values.global.objectStore.endpoint -}}
 {{- end -}}
 {{- if $service.objectStore.accessKey -}}
   {{- $_ := set $config "accessKey" $service.objectStore.accessKey -}}
@@ -68,6 +73,9 @@ generate object store config
 {{- end -}}
 {{- if hasKey $service.objectStore "pathStyle" -}}
   {{- $_ := set $config "pathStyle" $service.objectStore.pathStyle -}}
+{{- end -}}
+{{- if hasKey $service.objectStore "directUpload" -}}
+  {{- $_ := set $config "directUpload" $service.objectStore.directUpload -}}
 {{- end -}}
 
 {{/* set bucket */}}

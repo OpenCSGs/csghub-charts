@@ -1,0 +1,132 @@
+suite: postgresql test
+tests:
+  - it: should render postgresql configmap right
+    templates:
+      - charts/postgresql/templates/configmap.yaml
+    set:
+      global.postgresql.enabled: true
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["postgresql.conf"]
+          pattern: "listen_addresses = '*'"
+        documentIndex: 1
+  - it: when using internal postgresql, should render csghub-server config right
+    templates:
+      - configmap-server.yaml
+    set:
+      global.postgresql.enabled: true
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["STARHUB_DATABASE_HOST"]
+          pattern: "csghub-postgresql"
+      - matchRegex:
+          path: data["STARHUB_DATABASE_PORT"]
+          pattern: "5432"
+      - equal:
+          path: data["STARHUB_DATABASE_USERNAME"]
+          value: "csghub_server"
+      - matchRegex:
+          path: data["STARHUB_DATABASE_PASSWORD"]
+          pattern: ".*"
+      - equal:
+          path: data["STARHUB_DATABASE_NAME"]
+          value: "csghub_server"
+      - equal:
+          path: data["STARHUB_DATABASE_TIMEZONE"]
+          value: "Etc/UTC"
+  - it: when using internal postgresql, should render csghub-portal config right
+    templates:
+      - configmap-portal.yaml
+    set:
+      global.postgresql.enabled: true
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["CSGHUB_PORTAL_DATABASE_HOST"]
+          pattern: "csghub-postgresql"
+      - matchRegex:
+          path: data["CSGHUB_PORTAL_DATABASE_PORT"]
+          pattern: "5432"
+      - equal:
+          path: data["CSGHUB_PORTAL_DATABASE_USERNAME"]
+          value: "csghub_portal"
+      - matchRegex:
+          path: data["CSGHUB_PORTAL_DATABASE_PASSWORD"]
+          pattern: ".*"
+      - equal:
+          path: data["CSGHUB_PORTAL_DATABASE_NAME"]
+          value: "csghub_portal"
+
+  - it: when using internal postgresql, should render temporal config right
+    templates:
+      - charts/temporal/templates/configmap.yaml
+    set:
+      global.postgresql.enabled: true
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["POSTGRES_SEEDS"]
+          pattern: "csghub-postgresql"
+      - matchRegex:
+          path: data["DB_PORT"]
+          pattern: "5432"
+
+  - it: when using internal postgresql, should render dataflow config right
+    templates:
+      - charts/dataflow/templates/configmap.yaml
+    set:
+      global.postgresql.enabled: true
+      global.dataflow.enabled: true
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["DATABASE_PORT"]
+          pattern: "5432"
+      - matchRegex:
+          path: data["DATABASE_HOSTNAME"]
+          pattern: "csghub-postgresql"
+  - it: when using internal postgresql, should render starship config right
+    templates:
+      - charts/starship/charts/web/templates/configmap.yaml
+    set:
+      global.postgresql.enabled: true
+      starship.enabled: true
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["DATABASE_PORT"]
+          pattern: "5432"
+      - matchRegex:
+          path: data["DATABASE_HOST"]
+          pattern: "csghub-postgresql"
+
+  - it: when using external postgresql, should render csghub-server config right
+    templates:
+      - configmap-server.yaml
+    set:
+      global.postgresql.enabled: false
+      global.postgresql.host: "postgresql.opencsg-poc.com"
+      global.postgresql.port: 6432
+      global.postgresql.user: "csghub_server124"
+      global.postgresql.password: "csghub_server@2025!"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - equal:
+          path: data["STARHUB_DATABASE_HOST"]
+          value: "postgresql.opencsg-poc.com"
