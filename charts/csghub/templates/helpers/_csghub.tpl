@@ -7,7 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 Define the external domain for csghub
 */}}
 {{- define "csghub.external.domain" -}}
-{{- $domain := include "global.domain" (list . "csghub") }}
+{{- $domain := include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.portal "csghub")) }}
 {{- if hasKey .Values.global.ingress "useTop" }}
 {{- if .Values.global.ingress.useTop }}
 {{- $domain = .Values.global.ingress.domain }}
@@ -20,7 +20,7 @@ Define the external domain for csghub
 Define the external public domain for csghub
 */}}
 {{- define "csghub.external.public.domain" -}}
-{{- include "global.domain" (list . "public") -}}
+{{- include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.public "public")) -}}
 {{- end }}
 
 {{/*

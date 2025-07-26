@@ -26,6 +26,15 @@ global:
     # className: "nginx"
     ## Domain name for accessing csghub
     domain: example.com
+    ## Subdomain prefix that combines with domain to form the full access URL
+    customDomainPrefixes: { }
+      ## Others such as registry, minio, temporal, public, starship, starshipAPI can be customized in the same way
+      # portal: "csghub"
+      # casdoor: "iam"
+    ## Whether to use the top-level domain directly for access
+    ## If true, access via domain only (example.com)
+    ## If false, access via subdomain+domain (csghub.example.com)
+    useTop: false
     ## TLS configuration
     tls: { }
       # enabled: false
