@@ -185,17 +185,17 @@
               "default": "cn-north-1"
             },
             "encrypt": {
-              "type": "boolean",
+              "type": "string",
               "description": "Enable server-side encryption",
               "default": false
             },
             "secure": {
-              "type": "boolean",
+              "type": "string",
               "description": "Use HTTPS connection",
               "default": true
             },
             "pathStyle": {
-              "type": "boolean",
+              "type": "string",
               "description": "Use path-style access",
               "default": true
             }
