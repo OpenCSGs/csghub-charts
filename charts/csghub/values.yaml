@@ -60,7 +60,9 @@ global:
     # host: "<pg_host>"
     # port: 6432
     # user: "csghub"
+    # password: ""
     # timezone: "Etc/UTC"
+    # sslMode: "disable"
 
   ## Redis configuration
   redis:
@@ -197,15 +199,15 @@ csghub:
 
     ## Object storage configuration
     objectStore:
-      endpoint: ""
-      accessKey: "minio"
-      secretKey: ""
+      # endpoint: ""
+      # accessKey: "minio"
+      # secretKey: ""
       bucket: "csghub-server"
-      region: "cn-north-1"
+      # region: "cn-north-1"
       # encrypt: "false"
       # secure: "true"
-      pathStyle: "true"
-      directUpload: "false"
+      # pathStyle: "true"
+      # directUpload: "false"
 
     ## Pod annotations and labels
     podAnnotations: { }
@@ -273,14 +275,14 @@ csghub:
 
     ## Object storage configuration
     objectStore:
-      endpoint: "http://minio.<domain>"
-      accessKey: "minio"
-      secretKey: ""
+      # endpoint: "http://minio.<domain>"
+      # accessKey: "minio"
+      # secretKey: ""
       bucket: "csghub-workflow"
-      region: "cn-north-1"
+      # region: "cn-north-1"
       # encrypt: "false"
       # secure: "true"
-      pathStyle: "true"
+      # pathStyle: "true"
 
   ## Portal configuration
   portal:
@@ -318,14 +320,14 @@ csghub:
 
     ## Object storage configuration
     objectStore:
-      endpoint: ""
-      accessKey: "minio"
-      secretKey: ""
+      # endpoint: ""
+      # accessKey: "minio"
+      # secretKey: ""
       bucket: "csghub-portal-public"
-      region: "cn-north-1"
+      # region: "cn-north-1"
       # encrypt: "false"
       # secure: "true"
-      pathStyle: "true"
+      # pathStyle: "true"
 
     ## Additional object storage configuration, user storage authentication data
     additionalObjectStore:

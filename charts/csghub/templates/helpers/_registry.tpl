@@ -44,10 +44,10 @@ generate registry config
 
 {{- else -}}
   {{/* use external registry */}}
-  {{- $_ := set $config "registry" $global.Values.registry.registry -}}
-  {{- $_ := set $config "repository" $global.Values.registry.repository -}}
-  {{- $_ := set $config "username" $global.Values.registry.username -}}
-  {{- $_ := set $config "password" $global.Values.registry.password -}}
+  {{- $_ := set $config "registry" $global.Values.global.registry.registry -}}
+  {{- $_ := set $config "repository" $global.Values.global.registry.repository -}}
+  {{- $_ := set $config "username" $global.Values.global.registry.username -}}
+  {{- $_ := set $config "password" $global.Values.global.registry.password -}}
 {{- end -}}
 
 {{/* service level config override */}}

@@ -1,0 +1,87 @@
+suite: s3 test
+tests:
+  - it: when using internal minio, should render s3 config right
+    templates:
+      - configmap-server.yaml
+      - configmap-portal.yaml
+      - charts/registry/templates/configmap.yaml
+    set:
+      global.objectStore.enabled: true
+      global.ingress.domain: "opencsg-poc.com"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - equal:
+          path: data["STARHUB_SERVER_S3_ENDPOINT"]
+          value: "minio.opencsg-poc.com"
+        template: configmap-server.yaml
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_ENDPOINT"]
+          value: "minio.opencsg-poc.com"
+        template: configmap-portal.yaml
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT"]
+          value: "minio.opencsg-poc.com"
+        template: configmap-portal.yaml
+      - equal:
+          path: data["REGISTRY_STORAGE_S3_REGIONENDPOINT"]
+          value: "http://csghub-minio:9000"
+        template: charts/registry/templates/configmap.yaml
+
+  - it: when using external s3, should render s3 config right
+    templates:
+      - configmap-server.yaml
+      - configmap-portal.yaml
+      - charts/registry/templates/configmap.yaml
+    set:
+      global.objectStore.enabled: false
+      global.objectStore.endpoint: "http://s3.opencsg-poc.com"
+      global.objectStore.accessKey: "minio666"
+      global.objectStore.secretKey: "minio123"
+      global.objectStore.region: "cn-north-1"
+      global.ingress.domain: "opencsg-poc.com"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - equal:
+          path: data["STARHUB_SERVER_S3_ENDPOINT"]
+          value: "s3.opencsg-poc.com"
+        template: configmap-server.yaml
+      - equal:
+          path: data["STARHUB_SERVER_S3_ACCESS_KEY_ID"]
+          value: "minio666"
+        template: configmap-server.yaml
+      - equal:
+          path: data["STARHUB_SERVER_S3_ACCESS_KEY_SECRET"]
+          value: "minio123"
+        template: configmap-server.yaml
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_ENDPOINT"]
+          value: "s3.opencsg-poc.com"
+        template: configmap-portal.yaml
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT"]
+          value: "s3.opencsg-poc.com"
+        template: configmap-portal.yaml
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID"]
+          value: "minio666"
+        template: configmap-portal.yaml
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET"]
+          value: "minio123"
+        template: configmap-portal.yaml
+      - equal:
+          path: data["REGISTRY_STORAGE_S3_REGIONENDPOINT"]
+          value: "http://s3.opencsg-poc.com"
+        template: charts/registry/templates/configmap.yaml
+      - equal:
+          path: data["REGISTRY_STORAGE_S3_ACCESSKEY"]
+          value: "minio666"
+        template: charts/registry/templates/configmap.yaml
+      - equal:
+          path: data["REGISTRY_STORAGE_S3_SECRETKEY"]
+          value: "minio123"
+        template: charts/registry/templates/configmap.yaml

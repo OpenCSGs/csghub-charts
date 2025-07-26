@@ -527,14 +527,14 @@
                   "default": "cn-north-1"
                 },
                 "pathStyle": {
-                  "type": "string",
+                  "type": "boolean",
                   "description": "Use path-style access",
-                  "default": "true"
+                  "default": true
                 },
                 "directUpload": {
-                  "type": "string",
+                  "type": "boolean",
                   "description": "Enable direct upload",
-                  "default": "false"
+                  "default": true
                 }
               }
             },
@@ -664,8 +664,8 @@
                   "default": "cn-north-1"
                 },
                 "pathStyle": {
-                  "type": "string",
-                  "default": "true"
+                  "type": "boolean",
+                  "default": true
                 }
               }
             }
@@ -769,9 +769,9 @@
                   "default": "cn-north-1"
                 },
                 "pathStyle": {
-                  "type": "string",
+                  "type": "boolean",
                   "description": "Use path-style access",
-                  "default": "true"
+                  "default": true
                 }
               }
             },
