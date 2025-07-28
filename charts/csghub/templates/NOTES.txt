@@ -58,7 +58,7 @@ To access Registry using docker-cli:
         Password=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "common.names.custom" (list . "registry") }} -ojsonpath='{.data.REGISTRY_PASSWORD}' | base64 -d)
 
     Login to the registry:
-        echo "$Password" | docker login {{ $registry }} --username $Username ---password-stdin
+        echo "$Password" | docker login {{ $registry }} --username $Username --password-stdin
 
     Pull/Push images:
         docker pull {{ $registry }}/test:latest
