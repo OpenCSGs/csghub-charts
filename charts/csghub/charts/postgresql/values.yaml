@@ -35,13 +35,30 @@ parameters: { }
 
 ## List of databases to be created upon deployment
 databases:
-  - csghub_portal
-  - csghub_server
-  - csghub_casdoor
-  - csghub_temporal
-  - csghub_temporal_visibility
-  - csghub_dataflow
-  - starship_codegpt
+  ## Database & User postgres is default, cannot remove.
+  postgres:
+    owner: postgres
+  csghub_portal:
+    owner: csghub_portal
+    # password: ""
+  csghub_server:
+    owner: csghub_server
+    # password: ""
+  csghub_casdoor:
+    owner: csghub_casdoor
+    # password: ""
+  csghub_temporal:
+    owner: csghub_temporal
+    # password: ""
+  csghub_temporal_visibility:
+    owner: csghub_temporal
+    # password: ""
+  csghub_dataflow:
+    owner: csghub_dataflow
+    # password: ""
+  starship:
+    owner: starship
+    # password: ""
 
 ## Persistence settings for the PostgreSQL data.
 persistence:

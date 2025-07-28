@@ -11,22 +11,20 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" . | nindent 4 }}
 data:
-  {{- $secretData := (lookup "v1" "Secret" .Release.Namespace (include "common.names.custom" .)).data }}
   initialize.sql: |
-    {{- range $username := .Values.databases }}
-    {{- if ne $username "postgres" }}
-    {{- $database := $username }}
-    {{- $password := include "postgresql.initPass" $database }}
-    {{- if $secretData }}
-    {{- $secretPassword := index $secretData $username }}
-    {{- if $secretPassword }}
-    {{- $password = $secretPassword | b64dec }}
-    {{- end }}
-    {{- end }}
-    {{- if contains "temporal" $database }}
-    {{- $username = "csghub_temporal" }}
-    {{- end }}
+    {{- $secretData := (lookup "v1" "Secret" .Release.Namespace (include "common.names.custom" .)).data }}
+    {{- range $dbName, $dbConfig := .Values.databases }}
+      {{- $username := $dbConfig.owner }}
+      {{- $password := $dbConfig.password | default (include "postgresql.initPass" $username) | b64enc }}
+      {{- if $secretData }}
+        {{- $secretPassword := index $secretData $username }}
+        {{- if $secretPassword }}
+          {{- $password = $secretPassword | b64dec }}
+        {{- end }}
+      {{- end }}
+    {{- if and $username $password }}
 
+    -- Initialize user and database {{ $dbName | quote }}
     -- Create user {{ $username | quote }} if it doesn't exist
     DO $$
     BEGIN
@@ -41,11 +39,32 @@ data:
       END IF;
     END $$;
 
-    -- Create database {{ $database | quote }} if it doesn't exist
-    CREATE DATABASE {{ $database }} ENCODING 'UTF-8' OWNER {{ $username | quote }};
+    -- Create database {{ $dbName | quote }} if it doesn't exist
+    CREATE DATABASE {{ $dbName }} ENCODING 'UTF-8' OWNER {{ $username | quote }};
+    -- Grant privileges on database {{ $dbName | quote }} to user {{ $username | quote }}
+    GRANT ALL PRIVILEGES ON DATABASE {{ $dbName }} TO {{ $username | quote }};
 
-    -- Grant privileges on database {{ $database | quote }} to user {{ $username | quote }}
-    GRANT ALL PRIVILEGES ON DATABASE {{ $database }} TO {{ $username | quote }};
+    -- Connection to {{ $dbName | quote }}
+    \connect {{ $dbName | quote }}
+    -- Change owner for tables
+    DO $$
+    DECLARE
+      r RECORD;
+      new_owner TEXT := {{ $username | squote }};
+      table_count INTEGER := 0;
+    BEGIN
+      FOR r IN
+        SELECT 'ALTER TABLE ' || schemaname || '.' || tablename || ' OWNER TO ' || new_owner || ';' AS alter_cmd
+        FROM pg_tables
+        WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+      LOOP
+        EXECUTE r.alter_cmd;
+        table_count := table_count + 1;
+      END LOOP;
+
+      RAISE NOTICE 'Successfully changed ownership of % tables to %', table_count, new_owner;
+    END $$;
+
     {{- end }}
     {{- end }}
 ---
