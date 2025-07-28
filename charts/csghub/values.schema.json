@@ -526,6 +526,16 @@
                   "description": "Storage region",
                   "default": "cn-north-1"
                 },
+                "encrypt": {
+                  "type": "boolean",
+                  "description": "Enable server-side encryption",
+                  "default": false
+                },
+                "secure": {
+                  "type": "boolean",
+                  "description": "Use HTTPS connection",
+                  "default": false
+                },
                 "pathStyle": {
                   "type": "boolean",
                   "description": "Use path-style access",
@@ -534,7 +544,7 @@
                 "directUpload": {
                   "type": "boolean",
                   "description": "Enable direct upload",
-                  "default": true
+                  "default": false
                 }
               }
             },
@@ -663,8 +673,19 @@
                   "type": "string",
                   "default": "cn-north-1"
                 },
+                "encrypt": {
+                  "type": "boolean",
+                  "description": "Enable server-side encryption",
+                  "default": false
+                },
+                "secure": {
+                  "type": "boolean",
+                  "description": "Use HTTPS connection",
+                  "default": false
+                },
                 "pathStyle": {
                   "type": "boolean",
+                  "description": "Use path-style access",
                   "default": true
                 }
               }
@@ -772,6 +793,16 @@
                   "type": "string",
                   "description": "Storage region",
                   "default": "cn-north-1"
+                },
+                "encrypt": {
+                  "type": "boolean",
+                  "description": "Enable server-side encryption",
+                  "default": false
+                },
+                "secure": {
+                  "type": "boolean",
+                  "description": "Use HTTPS connection",
+                  "default": false
                 },
                 "pathStyle": {
                   "type": "boolean",
