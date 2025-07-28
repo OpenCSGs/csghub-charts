@@ -143,7 +143,7 @@ global:
     oauth: {}
       # issuer: "https://gitlab.example.com"
       # clientId: "73f1c2922f51d68fa87de8c1ef0e23e8940f3aa42f5ac7a55a1f586c597d7e9c"
-    # clientSecret: "gloas-3ba02f02b3e993664ccdda2c4d76989caa11ce6f07a805b6872d266fbd465831"
+      # clientSecret: "gloas-3ba02f02b3e993664ccdda2c4d76989caa11ce6f07a805b6872d266fbd465831"
 
   ## Dataflow configuration
   dataflow:
@@ -283,6 +283,9 @@ csghub:
       # encrypt: "false"
       # secure: "true"
       # pathStyle: "true"
+
+    ## Defined registry to pull model framework images from
+    # modelRegistry: "docker.io"
 
   ## Portal configuration
   portal:

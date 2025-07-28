@@ -92,7 +92,7 @@ data:
   STARHUB_SERVER_SPACE_BUILDER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
   STARHUB_SERVER_SPACE_RUNNER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "csghub.external.endpoint" . }}
-  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: "{{ or .Values.global.image.registry "docker.io" }}"
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: "{{ .Values.csghub.runner.modelRegistry | default (or .Values.global.image.registry "docker.io") }}"
 
   # Deprecated ==> re-enabled
   {{- if .Values.global.deploy.usePublicDomain }}

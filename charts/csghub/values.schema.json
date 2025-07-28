@@ -668,6 +668,11 @@
                   "default": true
                 }
               }
+            },
+            "modelRegistry": {
+              "type": "string",
+              "description": "Runner object storage configuration",
+              "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}((\/[a-z0-9]+)+)?$"
             }
           }
         },
