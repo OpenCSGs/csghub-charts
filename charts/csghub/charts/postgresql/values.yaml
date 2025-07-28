@@ -39,25 +39,25 @@ databases:
   postgres:
     owner: postgres
   csghub_portal:
-    owner: csghub_portal
+    owner: csghub
     # password: ""
   csghub_server:
-    owner: csghub_server
+    owner: csghub
     # password: ""
   csghub_casdoor:
-    owner: csghub_casdoor
+    owner: csghub
     # password: ""
   csghub_temporal:
-    owner: csghub_temporal
+    owner: csghub
     # password: ""
   csghub_temporal_visibility:
-    owner: csghub_temporal
+    owner: csghub
     # password: ""
   csghub_dataflow:
-    owner: csghub_dataflow
+    owner: csghub
     # password: ""
   starship:
-    owner: starship
+    owner: csghub
     # password: ""
 
 ## Persistence settings for the PostgreSQL data.

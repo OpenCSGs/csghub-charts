@@ -179,7 +179,7 @@ csghub:
     postgresql:
       # host: ""
       # port: 5432
-      user: "csghub_server"
+      user: "csghub"
       # password: ""
       database: "csghub_server"
       # timezone: "Etc/UTC"
@@ -316,7 +316,7 @@ csghub:
     postgresql:
       # host: ""
       # port: 5432
-      user: "csghub_portal"
+      user: "csghub"
       # password: ""
       database: "csghub_portal"
       # timezone: "Etc/UTC"

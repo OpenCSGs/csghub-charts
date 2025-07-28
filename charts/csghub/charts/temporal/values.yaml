@@ -70,7 +70,7 @@ postgresql:
   ## The name of the database to connect to on the PostgreSQL server.
   database: "csghub_temporal"
   ## The username used for authentication with the PostgreSQL database.
-  user: "csghub_temporal"
+  user: "csghub"
   ## The password used for authentication with the PostgreSQL database.
   ## It is empty by default for security reasons and should be set through secure means.
   # password: ""
