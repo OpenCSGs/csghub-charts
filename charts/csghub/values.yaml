@@ -168,12 +168,12 @@ csghub:
 
     ## PostgreSQL database configuration
     postgresql:
-      host: ""
-      port: 5432
+      # host: ""
+      # port: 5432
       user: "csghub_server"
-      password: ""
+      # password: ""
       database: "csghub_server"
-      timezone: "Etc/UTC"
+      # timezone: "Etc/UTC"
 
     ## Redis configuration
     redis:
@@ -302,12 +302,12 @@ csghub:
 
     ## PostgreSQL database configuration
     postgresql:
-      host: ""
-      port: 5432
+      # host: ""
+      # port: 5432
       user: "csghub_portal"
-      password: ""
+      # password: ""
       database: "csghub_portal"
-      timezone: "Etc/UTC"
+      # timezone: "Etc/UTC"
 
     ## Object storage configuration
     objectStore:
