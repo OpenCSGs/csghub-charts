@@ -421,6 +421,7 @@ if [[ "$KOURIER_SERVICE_TYPE" == "NodePort" ]]; then
   KNATIVE_INTERNAL_PORT="30213"
 fi
 
+log "INFO" "- Installing csghub helm chart..."
 EXTRA_ARGS=""
 if [ "$INSTALL_CN" = "true" ]; then
   EXTRA_ARGS="\
@@ -468,10 +469,12 @@ if [ "$HOSTS_ALIAS" == true ]; then
       }
 
     public.${DOMAIN}.server: |
-      template IN A {
-        match .*\.public\.${DOMAIN}
-        answer "{{ .Name }} 60 IN A ${IP_ADDRESS}"
-        fallthrough
+      public.${DOMAIN} {
+        template IN A public.${DOMAIN} {
+          answer "{{ .Name }} 3600 IN A ${IP_ADDRESS}"
+        }
+        log
+        errors
       }
 EOF
 
