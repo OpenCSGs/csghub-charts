@@ -36,7 +36,7 @@ Define the internal endpoint for casdoor
 Define the external http domain for casdoor
 */}}
 {{- define "casdoor.external.domain" -}}
-{{- include "global.domain" (list . "casdoor") }}
+{{- include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.casdoor "casdoor")) }}
 {{- end }}
 
 {{/*

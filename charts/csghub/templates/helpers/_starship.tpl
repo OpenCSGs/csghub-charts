@@ -7,7 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 Define the external domain for starship
 */}}
 {{- define "starship.external.domain" -}}
-{{- $domain := include "global.domain" (list . "starship") }}
+{{- $domain := include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.starship "starship")) }}
 {{- if hasKey .Values.global.ingress "useTop" }}
 {{- if .Values.global.ingress.useTop }}
 {{- $domain = .Values.global.ingress.domain }}
@@ -20,7 +20,7 @@ Define the external domain for starship
 Define the external api domain for starship
 */}}
 {{- define "starship.external.api.domain" -}}
-{{- $domain := include "global.domain" (list . "starship-api") }}
+{{- $domain := include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.starshipAPI "starship-api")) }}
 {{- $domain -}}
 {{- end }}
 
