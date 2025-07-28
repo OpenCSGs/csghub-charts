@@ -28,18 +28,18 @@ service:
 ## Specifies the location and credentials for accessing the external PostgreSQL database.
 postgresql:
   ## Specifies the host address of the PostgreSQL database server.
-  host: "csghub-postgresql"
+  # host: "csghub-postgresql"
   ## Defines the port on which the PostgreSQL server is listening.
-  port: 5432
+  # port: 5432
   ## The username used for authentication with the PostgreSQL database.
   user: "csghub_dataflow"
   ## The password used for authentication with the PostgreSQL database.
   ## It is empty by default for security reasons and should be set through secure means.
-  password: ""
+  # password: ""
   ## The name of the database to connect to on the PostgreSQL server.
   database: "csghub_dataflow"
   ## Sets the timezone for the database connection, ensuring time-based operations use the correct timezone.
-  timezone: "Etc/UTC"
+  # timezone: "Etc/UTC"
 
 ## Configure AI Service
 openAI:
