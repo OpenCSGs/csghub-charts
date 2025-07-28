@@ -11,7 +11,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["initialize.sql"]
-          pattern: 'GRANT ALL PRIVILEGES ON DATABASE csghub_server TO "csghub_server";'
+          pattern: 'GRANT ALL PRIVILEGES ON DATABASE csghub_server TO "csghub";'
         documentIndex: 0
   - it: csghub server should use default config if not specified
     templates:
@@ -33,7 +33,7 @@ tests:
           pattern: "5432"
       - equal:
           path: data["STARHUB_DATABASE_USERNAME"]
-          value: "csghub_server"
+          value: "csghub"
 
   - it: should render postgresql configmap right
     templates:
@@ -65,7 +65,7 @@ tests:
           pattern: "5432"
       - equal:
           path: data["STARHUB_DATABASE_USERNAME"]
-          value: "csghub_server"
+          value: "csghub"
       - matchRegex:
           path: data["STARHUB_DATABASE_PASSWORD"]
           pattern: ".*"
@@ -92,7 +92,7 @@ tests:
           pattern: "5432"
       - equal:
           path: data["CSGHUB_PORTAL_DATABASE_USERNAME"]
-          value: "csghub_portal"
+          value: "csghub"
       - matchRegex:
           path: data["CSGHUB_PORTAL_DATABASE_PASSWORD"]
           pattern: ".*"

@@ -15,7 +15,7 @@ data:
     {{- $secretData := (lookup "v1" "Secret" .Release.Namespace (include "common.names.custom" .)).data }}
     {{- range $dbName, $dbConfig := .Values.databases }}
       {{- $username := $dbConfig.owner }}
-      {{- $password := $dbConfig.password | default (include "postgresql.initPass" $username) | b64enc }}
+      {{- $password := $dbConfig.password | default (include "postgresql.initPass" $username) }}
       {{- if $secretData }}
         {{- $secretPassword := index $secretData $username }}
         {{- if $secretPassword }}
@@ -31,16 +31,22 @@ data:
       IF NOT EXISTS (
         SELECT 1 FROM pg_roles WHERE rolname = {{ $username | squote }}
       ) THEN
-        {{- if contains "server" $username }}
+        {{- if or (contains "server" $username) (eq "csghub" $username) }}
         CREATE USER {{ $username | quote }} WITH ENCRYPTED PASSWORD {{ $password | squote }} CREATEDB SUPERUSER;
         {{- else }}
         CREATE USER {{ $username | quote }} WITH ENCRYPTED PASSWORD {{ $password | squote }} CREATEDB;
         {{- end }}
+
+        RAISE NOTICE 'Successfully created user %', {{ $username | squote }};
+      ELSE
+        RAISE NOTICE 'User % already exists', {{ $username | squote }};
       END IF;
     END $$;
 
     -- Create database {{ $dbName | quote }} if it doesn't exist
     CREATE DATABASE {{ $dbName }} ENCODING 'UTF-8' OWNER {{ $username | quote }};
+    -- Ensure database owner correct
+    ALTER DATABASE {{ $dbName }} OWNER TO {{ $username | quote }};
     -- Grant privileges on database {{ $dbName | quote }} to user {{ $username | quote }}
     GRANT ALL PRIVILEGES ON DATABASE {{ $dbName }} TO {{ $username | quote }};
 
