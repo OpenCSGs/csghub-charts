@@ -204,10 +204,10 @@ csghub:
       # secretKey: ""
       bucket: "csghub-server"
       # region: "cn-north-1"
-      # encrypt: "false"
-      # secure: "true"
-      # pathStyle: "true"
-      # directUpload: "false"
+      # encrypt: false
+      # secure: true
+      # pathStyle: true
+      # directUpload: false
 
     ## Pod annotations and labels
     podAnnotations: { }
@@ -280,9 +280,9 @@ csghub:
       # secretKey: ""
       bucket: "csghub-workflow"
       # region: "cn-north-1"
-      # encrypt: "false"
-      # secure: "true"
-      # pathStyle: "true"
+      # encrypt: false
+      # secure: true
+      # pathStyle: true
 
     ## Defined registry to pull model framework images from
     # modelRegistry: "docker.io"
@@ -328,9 +328,9 @@ csghub:
       # secretKey: ""
       bucket: "csghub-portal-public"
       # region: "cn-north-1"
-      # encrypt: "false"
-      # secure: "true"
-      # pathStyle: "true"
+      # encrypt: false
+      # secure: true
+      # pathStyle: true
 
     ## Additional object storage configuration, user storage authentication data
     additionalObjectStore:
