@@ -1,0 +1,50 @@
+suite: registry test
+tests:
+  - it: when using external registry, should render registry secret right
+    templates:
+      - charts/registry/templates/secret.yaml
+    set:
+      global.registry.enabled: false
+      global.registry.registry: "https://registry.opencsg-poc.com"
+      global.registry.repository: "csghub"
+      global.registry.username: "registry886"
+      global.registry.password: "registry@2025!"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data[".dockerconfigjson"]
+          pattern: '"https://registry.opencsg-poc.com":{"username":"registry886","password":"registry@2025!",'
+          decodeBase64: true
+  - it: when using external registry, should render runner deployment right
+    set:
+      global.registry.enabled: false
+      global.registry.registry: "https://reg.opencsg-poc.com"
+      global.registry.repository: "csghub-namespace"
+      global.registry.username: "registry886"
+      global.registry.password: "registry@2025!"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "https://reg.opencsg-poc.com/csghub-namespace"
+        template: templates/deployment-runner.yaml
+  - it: when using internal registry, should render runner deployment right
+    templates:
+      - templates/deployment-runner.yaml
+    set:
+      global.registry.enabled: true
+      global.deploy.enabled: true
+      global.ingress.domain: "opencsg-poc.com"
+      registry.username: "registry666"
+      registry.password: "registry@2025!"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: "registry.opencsg-poc.com/csghub"

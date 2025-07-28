@@ -123,6 +123,8 @@ tests:
       global.postgresql.port: 6432
       global.postgresql.user: "csghub_server124"
       global.postgresql.password: "csghub_server@2025!"
+      global.postgresql.database: "csghub"
+      global.postgresql.timezone: "Asia/Shanghai"
     release:
       name: csghub
       namespace: csghub
@@ -130,3 +132,19 @@ tests:
       - equal:
           path: data["STARHUB_DATABASE_HOST"]
           value: "postgresql.opencsg-poc.com"
+      - equal:
+          path: data["STARHUB_DATABASE_PORT"]
+          value: "6432"
+      - equal:
+          path: data["STARHUB_DATABASE_USERNAME"]
+          value: "csghub_server124"
+        not: true
+      - equal:
+          path: data["STARHUB_DATABASE_PASSWORD"]
+          value: "csghub_server@2025!"
+      - equal:
+          path: data["STARHUB_DATABASE_NAME"]
+          value: "csghub_server"
+      - equal:
+          path: data["STARHUB_DATABASE_TIMEZONE"]
+          value: "Asia/Shanghai"

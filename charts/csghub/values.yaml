@@ -53,7 +53,7 @@ global:
     # user: "csghub"
     # password: ""
     # timezone: "Etc/UTC"
-    # sslMode: "disable"
+    # sslMode: "prefer"
 
   ## Redis configuration
   redis:
@@ -241,9 +241,9 @@ csghub:
       ## Docker registry URL
       registry: ""
       ## Image namespace/organization
-      repository: "csghub"
+      repository: ""
       ## Registry username
-      username: "registry"
+      username: ""
       ## Registry password
       password: ""
       ## Disable TLS/SSL verification

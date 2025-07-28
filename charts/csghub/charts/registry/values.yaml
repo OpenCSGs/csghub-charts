@@ -43,9 +43,9 @@ service:
 ## This subsection allows you to specify the namespace, username, and password for the Docker registry.
 registry:
   ## The namespace (or organization) under which the images are stored in the registry
-  namespace: "csghub"
+  namespace: ""
   ## The username for authenticating to the registry
-  username: "registry"
+  username: ""
   ## The password for authenticating to the registry
   password: ""
 
