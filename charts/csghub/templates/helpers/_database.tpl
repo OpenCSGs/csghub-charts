@@ -26,7 +26,7 @@ generate database config
 
   {{- $_ := set $config "user" $user -}}
   {{- $_ := set $config "password" $password -}}
-  {{- $_ := set $config "timezone" "UTC" -}}
+  {{- $_ := set $config "timezone" "Etc/UTC" -}}
   {{- $_ := set $config "sslMode" "disable" -}}
 {{- else -}}
   {{- /* use external postgresql */ -}}

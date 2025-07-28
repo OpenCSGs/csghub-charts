@@ -56,18 +56,18 @@ serviceAccount:
 ## Specifies the location and credentials for accessing the external PostgreSQL database.
 postgresql:
   ## Specifies the host address of the PostgreSQL database server.
-  host: ""
+  # host: ""
   ## Defines the port on which the PostgreSQL server is listening.
-  port: 5432
+  # port: 5432
   ## The name of the database to connect to on the PostgreSQL server.
   database: "csghub_casdoor"
   ## The username used for authentication with the PostgreSQL database.
   user: "csghub_casdoor"
   ## The password used for authentication with the PostgreSQL database.
   ## It is empty by default for security reasons and should be set through secure means.
-  password: ""
+  # password: ""
   ## Sets the timezone for the database connection, ensuring time-based operations use the correct timezone.
-  timezone: "Etc/UTC"
+  # timezone: "Etc/UTC"
 
 ## podAnnotations: Allows you to add annotations to the pods. Annotations can be used to attach arbitrary -
 ## non-identifying metadata to objects. Tools and libraries can retrieve this metadata.

@@ -17,7 +17,7 @@ generate registry config
   {{- $_ := set $config "repository" $global.Release.Name -}}
 
   {{/* default credentials */}}
-  {{- $defaultUser := $global.Values.registry.username }}
+  {{- $defaultUser := $global.Values.registry.username | default "registry" }}
   {{- $defaultPass := (include "registry.initPass" $global.Release.Name) }}
   {{- $defaultHtpasswd := htpasswd ($defaultUser | toString) $defaultPass }}
   {{- $_ := set $config "username" $defaultUser -}}
