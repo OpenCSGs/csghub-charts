@@ -2,7 +2,7 @@ suite: csghub configmap test
 templates:
   - configmap-space.yaml
 tests:
-  - it: should render registry-docker-config secret right
+  - it: should render docker-credential secret right
     set:
       global.registry.enabled: true
       global.deploy.enabled: true

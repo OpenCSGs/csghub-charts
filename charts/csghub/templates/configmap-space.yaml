@@ -24,7 +24,7 @@ data:
     apiVersion: v1
     kind: Secret
     metadata:
-      name: {{ include "common.names.custom" (list . "registry-docker-config") }}
+      name: {{ include "common.names.custom" (list . "docker-credential") }}
       namespace: {{ .Values.global.deploy.namespace }}
       annotations:
         helm.sh/resource-policy: keep
