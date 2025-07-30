@@ -23,6 +23,12 @@
 {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
   {{- $knativeNamespace = .Release.Namespace }}
 {{- end }}
+{{- $kourierNamespace := "kourier-system" }}
+{{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+  {{- $kourierNamespace = $knativeNamespace }}
+{{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $kourierNamespace = .Release.Namespace }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6567,7 +6573,7 @@ data:
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: knative-serving
+      name: {{ $knativeNamespace }}
       labels:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
@@ -14389,7 +14395,7 @@ data:
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: kourier-system
+      name: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/name: knative-serving
@@ -14401,11 +14407,7 @@ data:
     kind: ConfigMap
     metadata:
       name: kourier-bootstrap
-      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-      namespace: {{ $knativeNamespace }}
-      {{- else }}
-      namespace: kourier-system
-      {{- end }}
+      namespace: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14636,11 +14638,7 @@ data:
                 - name: METRICS_DOMAIN
                   value: "knative.dev/samples"
                 - name: KOURIER_GATEWAY_NAMESPACE
-                  {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-                  value: {{ $knativeNamespace }}
-                  {{- else }}
-                  value: "kourier-system"
-                  {{- end }}
+                  value: {{ $kourierNamespace }}
                 - name: ENABLE_SECRET_INFORMER_FILTERING_BY_CERT_UID
                   value: "false"
                 - name: KUBE_API_BURST
@@ -14711,11 +14709,7 @@ data:
     kind: Deployment
     metadata:
       name: 3scale-kourier-gateway
-      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-      namespace: {{ $knativeNamespace }}
-      {{- else }}
-      namespace: kourier-system
-      {{- end }}
+      namespace: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14831,16 +14825,12 @@ data:
     kind: Service
     metadata:
       name: kourier
-      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-      namespace: {{ $knativeNamespace }}
-      {{- else }}
-      namespace: kourier-system
-      {{- end }}
+      namespace: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
         app.kubernetes.io/version: "1.16.0"
-        app.kubernetes.io/name: knative-servin
+        app.kubernetes.io/name: knative-serving
     spec:
       ports:
         - name: http2
@@ -14863,11 +14853,7 @@ data:
     kind: Service
     metadata:
       name: kourier-internal
-      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-      namespace: {{ $knativeNamespace }}
-      {{- else }}
-      namespace: kourier-system
-      {{- end }}
+      namespace: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14891,11 +14877,7 @@ data:
     kind: HorizontalPodAutoscaler
     metadata:
       name: 3scale-kourier-gateway
-      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-      namespace: {{ $knativeNamespace }}
-      {{- else }}
-      namespace: kourier-system
-      {{- end }}
+      namespace: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier
@@ -14920,11 +14902,7 @@ data:
     kind: PodDisruptionBudget
     metadata:
       name: 3scale-kourier-gateway-pdb
-      {{- if ne .Values.global.deploy.mergingNamespace "Disable" }}
-      namespace: {{ $knativeNamespace }}
-      {{- else }}
-      namespace: kourier-system
-      {{- end }}
+      namespace: {{ $kourierNamespace }}
       labels:
         networking.knative.dev/ingress-provider: kourier
         app.kubernetes.io/component: net-kourier

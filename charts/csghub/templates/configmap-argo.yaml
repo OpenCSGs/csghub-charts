@@ -4,23 +4,40 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 
 {{- if and .Values.global.deploy.enabled .Values.global.deploy.autoConfigure }}
+  
 {{- if not .Values.image }}
   {{- $_ := set .Values "image" (dict "registry" "quay.io") }}
 {{- else }}
   {{- $_ := set .Values.image "registry" "quay.io" }}
 {{- end }}
+  
 {{- $argoNamespace := "argo" }}
 {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
   {{- $argoNamespace = .Release.Namespace }}
 {{- end }}
+
 {{- $argoWorkflowNamespace := "workflows" }}
 {{- $argoWorkflowQuotaNamespace := "workflows-quota" }}
 {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
-{{- $argoWorkflowNamespace = .Values.global.deploy.namespace }}
-{{- $argoWorkflowQuotaNamespace = .Values.global.deploy.namespace }}
+  {{- $argoWorkflowNamespace = .Values.global.deploy.namespace }}
+  {{- $argoWorkflowQuotaNamespace = .Values.global.deploy.namespace }}
 {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
-{{- $argoWorkflowNamespace = .Release.Namespace }}
-{{- $argoWorkflowQuotaNamespace = .Release.Namespace }}
+  {{- $argoWorkflowNamespace = .Release.Namespace }}
+  {{- $argoWorkflowQuotaNamespace = .Release.Namespace }}
+{{- end }}
+
+{{- $rbacNamespace := $argoWorkflowNamespace }}
+{{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+  {{- $rbacNamespace = .Values.global.deploy.namespace }}
+{{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
+  {{- $rbacNamespace = .Release.Namespace }}
+{{- end }}
+
+{{- $imageBuilderNamespace := .Values.global.deploy.imageBuilder.namespace }}
+  {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
+    {{- $imageBuilderNamespace = .Values.global.deploy.namespace }}
+  {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
+    {{- $imageBuilderNamespace = .Release.Namespace }}
 {{- end }}
 apiVersion: v1
 kind: ConfigMap
@@ -43,23 +60,23 @@ data:
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: workflows
+      name: {{ $argoWorkflowNamespace }}
       labels:
-        kubernetes.io/metadata.name: workflows
+        kubernetes.io/metadata.name: {{ $argoWorkflowNamespace }}
     ---
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: workflows-quota
+      name: {{ $argoWorkflowQuotaNamespace }}
       labels:
-        kubernetes.io/metadata.name: workflows-quota
+        kubernetes.io/metadata.name: {{ $argoWorkflowQuotaNamespace }}
     ---
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: {{ .Values.global.deploy.imageBuilder.namespace }}
+      name: {{ $imageBuilderNamespace }}
       labels:
-        kubernetes.io/metadata.name: {{ .Values.global.deploy.imageBuilder.namespace }}
+        kubernetes.io/metadata.name: {{ $imageBuilderNamespace }}
     {{- end }}
     ---
     apiVersion: v1
@@ -1439,12 +1456,6 @@ data:
     ---
 
   rbac.yaml: |
-    {{- $rbacNamespace := "workflows" }}
-    {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
-      {{- $rbacNamespace = .Values.global.deploy.namespace }}
-    {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
-      {{- $rbacNamespace = .Release.Namespace }}
-    {{- end }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
@@ -1527,7 +1538,7 @@ data:
     kind: Role
     metadata:
       name: executor
-      namespace: workflows-quota
+      namespace: {{ $argoWorkflowQuotaNamespace }}
     rules:
       - apiGroups:
           - argoproj.io
@@ -1541,13 +1552,13 @@ data:
     kind: ServiceAccount
     metadata:
       name: executor
-      namespace: workflows-quota
+      namespace: {{ $argoWorkflowQuotaNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     metadata:
       name: executor
-      namespace: workflows-quota
+      namespace: {{ $argoWorkflowQuotaNamespace }}
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -1555,15 +1566,9 @@ data:
     subjects:
       - kind: ServiceAccount
         name: executor
-        namespace: workflows-quota
+        namespace: {{ $argoWorkflowQuotaNamespace }}
     {{- end }}
     ---
-    {{- $imageBuilderNamespace := .Values.global.deploy.imageBuilder.namespace }}
-    {{- if eq .Values.global.deploy.mergingNamespace "Multi" }}
-      {{- $imageBuilderNamespace = .Values.global.deploy.namespace }}
-    {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
-      {{- $imageBuilderNamespace = .Release.Namespace }}
-    {{- end }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:
@@ -1597,7 +1602,7 @@ data:
     kind: Role
     metadata:
       name: executor
-      namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
+      namespace: {{ $imageBuilderNamespace }}
     rules:
       - apiGroups:
           - ""
@@ -1645,13 +1650,13 @@ data:
     kind: ServiceAccount
     metadata:
       name: executor
-      namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
+      namespace: {{ $imageBuilderNamespace }}
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     metadata:
       name: executor
-      namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
+      namespace: {{ $imageBuilderNamespace }}
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -1659,6 +1664,6 @@ data:
     subjects:
       - kind: ServiceAccount
         name: executor
-        namespace: {{ .Values.global.deploy.imageBuilder.namespace }}
+        namespace: {{ $imageBuilderNamespace }}
       {{- end }}
       {{- end }}
