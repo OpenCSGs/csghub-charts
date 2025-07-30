@@ -505,7 +505,7 @@ fi
 if [ "$ENABLE_K3S" == "true" ]; then
   log "INFO" "Configure insecure private container registry."
 
-  SECRET_JSON=$(kubectl -n spaces get secret csghub-registry-docker-config -ojsonpath='{.data.\.dockerconfigjson}' | base64 -d)
+  SECRET_JSON=$(kubectl -n spaces get secret csghub-docker-credential -ojsonpath='{.data.\.dockerconfigjson}' | base64 -d)
   REGISTRY=$(echo "$SECRET_JSON" | jq -r '.auths | keys[]')
   REGISTRY_USERNAME=$(echo "$SECRET_JSON" | jq -r '.auths | to_entries[] | .value | .username')
   REGISTRY_PASSWORD=$(echo "$SECRET_JSON" | jq -r '.auths | to_entries[] | .value | .password')
