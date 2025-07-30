@@ -16,6 +16,13 @@ package:
   image: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsg_public/helmpack/chart-testing:v3.13.0
   script:
     - |
+      sed -i "s/^version:.*/version: ${CI_COMMIT_TAG#v}/" $CHART_PATH/Chart.yaml
+      sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}-ce-ee\"/" $CHART_PATH/Chart.yaml
+      sed -i "s/^    tag:.*/    tag: \"${CI_COMMIT_TAG}\"/" ${CHART_PATH}/values.yaml
+      
+      echo "Verify version updated:"
+      sed -n "/${CI_COMMIT_TAG#v}/p" ${CHART_PATH}/{values.yaml,Chart.yaml} | sed 's/^    //g
+    - |
       helm package "$CHART_PATH" -d ./
       curl -v -u "${HELM_REGISTRY_USER}":"${HELM_REGISTRY_PASSWORD}" \
         --upload-file *.tgz \
