@@ -7,9 +7,9 @@ SPDX-License-Identifier: APACHE-2.0
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "common.names.custom" (list . "post-configure") }}
+  name: {{ include "common.names.custom" (list . "auto-configure") }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "post-configure") | nindent 4 }}
+  labels: {{ include "common.labels" (dict "context" . "service" "auto-configure") | nindent 4 }}
   annotations:
     helm.sh/hook: post-install, post-upgrade
     helm.sh/hook-weight: "2"
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       name: {{ include "common.names.custom" (list . "runner") }}
-      labels: {{ include "common.labels" (dict "context" . "service" "post-configure") | nindent 8 }}
+      labels: {{ include "common.labels" (dict "context" . "service" "auto-configure") | nindent 8 }}
     spec:
       {{- if .Values.csghub.server.serviceAccount.create }}
       serviceAccountName: {{ include "common.names.custom" (list . "runner") }}
@@ -35,25 +35,29 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-        - name: kubectl
-          image: {{ include "image.fixed.prefix" (list . "bitnami/kubectl:latest") }}
+        - name: resource-verify
+          image: {{ include "image.fixed.prefix" (list . "opencsghq/toolbox:1.2.4") }}
           imagePullPolicy: {{ .Values.csghub.server.image.pullPolicy }}
-          command: [ "/bin/bash", "/scripts/configure.sh" ]
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              for config in /.kube/config*; do
+                echo "Resource Verify for Cluster $config: "
+                /opt/csghub/bin/kyml -file /yamls -kubeconfig "$config" -create
+              done
           volumeMounts:
             - name: kube-configs
               mountPath: /.kube
-            - name: configure
-              mountPath: /scripts
-              readOnly: false
             - name: argo
-              mountPath: /argo
+              mountPath: /yamls/argo
             - name: knative
-              mountPath: /knative
+              mountPath: /yamls/knative
             - name: lws
-              mountPath: /lws
+              mountPath: /yamls/lws
             {{- if ne .Values.global.deploy.mergingNamespace "Single" }}
             - name: space
-              mountPath: /space
+              mountPath: /yamls/space
             {{- end }}
         - name: gpu-gather
           {{- $repository := printf "%s:%s" .Values.csghub.runner.autoLabel.image.repository .Values.csghub.runner.autoLabel.image.tag }}
@@ -81,9 +85,6 @@ spec:
         - name: kube-configs
           secret:
             secretName: {{ .Values.global.deploy.kubeSecret }}
-        - name: configure
-          configMap:
-            name: {{ include "common.names.custom" (list . "runner") }}
         - name: argo
           configMap:
             name: {{ include "common.names.custom" (list . "runner-argo") }}
