@@ -22,7 +22,7 @@ metadata:
     nginx.ingress.kubernetes.io/client-body-timeout: "900"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "900"
-    nginx.ingress.kubernetes.io/custom-http-errors: "404,500,502,503"
+    nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
     nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
     {{- if not .Values.global.deploy.usePublicDomain }}
@@ -135,7 +135,7 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "portal") | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: "/$1"
-    nginx.ingress.kubernetes.io/custom-http-errors: "404,500,502,503"
+    nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
     nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
     {{- with .Values.csghub.portal.ingress.annotations }}
