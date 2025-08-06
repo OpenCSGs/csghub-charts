@@ -24,32 +24,32 @@ data:
   {{- else }}
   CSGHUB_PORTAL_SENSITIVE_CHECK: "false"
   {{- end }}
-  CSGHUB_PORTAL_STARHUB_BASE_URL: {{ include "csghub.external.endpoint" . }}
+  CSGHUB_PORTAL_STARHUB_BASE_URL: {{ include "csghub.external.endpoint" . | quote }}
   CSGHUB_PORTAL_STARHUB_API_KEY: {{ include "server.hub.api.token" . | quote }}
   # PostgreSQL
-  CSGHUB_PORTAL_DATABASE_HOST: {{ $pgConfig.host }}
+  CSGHUB_PORTAL_DATABASE_HOST: {{ $pgConfig.host | quote }}
   CSGHUB_PORTAL_DATABASE_PORT: {{ $pgConfig.port | quote }}
-  CSGHUB_PORTAL_DATABASE_NAME: {{ $pgConfig.database }}
-  CSGHUB_PORTAL_DATABASE_USERNAME: {{ $pgConfig.user }}
-  CSGHUB_PORTAL_DATABASE_PASSWORD: {{ $pgConfig.password }}
+  CSGHUB_PORTAL_DATABASE_NAME: {{ $pgConfig.database | quote }}
+  CSGHUB_PORTAL_DATABASE_USERNAME: {{ $pgConfig.user | quote }}
+  CSGHUB_PORTAL_DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
   CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.csghub.portal "global" .) | quote }}
   # ObjectStorage
-  CSGHUB_PORTAL_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" }}
-  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.csghub.portal.additionalObjectStore.endpoint | default ($objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://") }}
+  CSGHUB_PORTAL_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.csghub.portal.additionalObjectStore.endpoint | default ($objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://") | quote }}
   {{- if not .Values.global.objectStore.enabled }}
-  CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey }}
-  CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey }}
-  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID: {{ .Values.csghub.portal.additionalObjectStore.accessKey | default $objectStoreConfig.accessKey }}
-  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET: {{ .Values.csghub.portal.additionalObjectStore.secretKey | default $objectStoreConfig.secretKey }}
+  CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
+  CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID: {{ .Values.csghub.portal.additionalObjectStore.accessKey | default $objectStoreConfig.accessKey | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET: {{ .Values.csghub.portal.additionalObjectStore.secretKey | default $objectStoreConfig.secretKey | quote }}
   {{- end }}
-  CSGHUB_PORTAL_S3_BUCKET: {{ $objectStoreConfig.bucket }}
-  CSGHUB_PORTAL_S3_REGION: {{ $objectStoreConfig.region }}
+  CSGHUB_PORTAL_S3_BUCKET: {{ $objectStoreConfig.bucket | quote }}
+  CSGHUB_PORTAL_S3_REGION: {{ $objectStoreConfig.region | quote }}
   CSGHUB_PORTAL_S3_ENABLE_SSL: {{ $objectStoreConfig.secure | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ .Values.csghub.portal.additionalObjectStore.bucket | default $objectStoreConfig.bucket }}
-  CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ .Values.csghub.portal.additionalObjectStore.region | default $objectStoreConfig.region }}
+  CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ .Values.csghub.portal.additionalObjectStore.bucket | default $objectStoreConfig.bucket | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ .Values.csghub.portal.additionalObjectStore.region | default $objectStoreConfig.region | quote }}
   CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ .Values.csghub.portal.additionalObjectStore.secure | default $objectStoreConfig.secure | quote }}
   # SMTP
-  CSGHUB_PORTAL_MAILER_HOST: {{ .Values.csghub.portal.smtp.host | default "" | quote }}
+  CSGHUB_PORTAL_MAILER_HOST: {{ .Values.csghub.portal.smtp.host | quote }}
   CSGHUB_PORTAL_MAILER_PORT: {{ .Values.csghub.portal.smtp.port | quote }}
-  CSGHUB_PORTAL_MAILER_USERNAME: {{ .Values.csghub.portal.smtp.username | default "" | quote }}
-  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .Values.csghub.portal.smtp.password | default "" | quote }}
+  CSGHUB_PORTAL_MAILER_USERNAME: {{ .Values.csghub.portal.smtp.username | quote }}
+  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .Values.csghub.portal.smtp.password | quote }}

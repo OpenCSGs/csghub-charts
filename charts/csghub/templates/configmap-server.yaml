@@ -44,40 +44,40 @@ data:
   {{- end }}
 
   # PostgreSQL Connection Info
-  STARHUB_DATABASE_HOST: {{ $pgConfig.host }}
+  STARHUB_DATABASE_HOST: {{ $pgConfig.host | quote }}
   STARHUB_DATABASE_PORT: {{ $pgConfig.port | quote }}
-  STARHUB_DATABASE_USERNAME: {{ $pgConfig.user }}
-  STARHUB_DATABASE_PASSWORD: {{ $pgConfig.password }}
-  STARHUB_DATABASE_NAME: {{ $pgConfig.database }}
-  STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timezone }}
+  STARHUB_DATABASE_USERNAME: {{ $pgConfig.user | quote }}
+  STARHUB_DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
+  STARHUB_DATABASE_NAME: {{ $pgConfig.database | quote }}
+  STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timezone | quote }}
   STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.csghub.server "global" .) | quote }}
 
   # Object Storage Connection Info
   STARHUB_SERVER_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
   {{- if not .Values.global.objectStore.enabled }}
-  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey }}
-  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey }}
+  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}
   {{- end }}
-  STARHUB_SERVER_S3_BUCKET: {{ $objectStoreConfig.bucket }}
-  STARHUB_SERVER_S3_REGION: {{ $objectStoreConfig.region }}
+  STARHUB_SERVER_S3_BUCKET: {{ $objectStoreConfig.bucket | quote }}
+  STARHUB_SERVER_S3_REGION: {{ $objectStoreConfig.region | quote }}
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $objectStoreConfig.secure | quote }}
   {{- if $objectStoreConfig.pathStyle }}
   STARHUB_SERVER_S3_BUCKET_LOOKUP: "path"
   {{- else }}
   STARHUB_SERVER_S3_BUCKET_LOOKUP: "auto"
   {{- end }}
-  STARHUB_SERVER_SKIP_LFS_FILE_VALIDATION: {{ .Values.csghub.server.objectStore.directUpload | quote }}
+  STARHUB_SERVER_SKIP_LFS_FILE_VALIDATION: {{ .Values.csghub.server.objectStore.directUpload | default false | quote }}
 
   # Gitaly Connection Info
   STARHUB_SERVER_GITSERVER_TYPE: "gitaly"
-  STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ include "csghub.gitaly.grpcEndpoint" (dict "service" .Values.csghub.server "global" .) }}
-  STARHUB_SERVER_GITALY_TOKEN: {{ $gitConfig.token }}
-  STARHUB_SERVER_GITALY_STORAGE: {{ $gitConfig.storage }}
+  STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ include "csghub.gitaly.grpcEndpoint" (dict "service" .Values.csghub.server "global" .) | quote }}
+  STARHUB_SERVER_GITALY_TOKEN: {{ $gitConfig.token | quote }}
+  STARHUB_SERVER_GITALY_STORAGE: {{ $gitConfig.storage | quote }}
   STARHUB_SERVER_CHECK_FILE_SIZE_ENABLED: {{ not $gitConfig.isCluster | quote }}
   {{- if eq (include "gitlab-shell.external.port" .) "22" }}
-  STARHUB_SERVER_SSH_DOMAIN: {{ printf "ssh://git@%s" (include "csghub.external.domain" .)}}
+  STARHUB_SERVER_SSH_DOMAIN: {{ printf "ssh://git@%s" (include "csghub.external.domain" .) | quote }}
   {{- else }}
-  STARHUB_SERVER_SSH_DOMAIN: {{ printf "ssh://git@%s:%s" (include "csghub.external.domain" .) (include "gitlab-shell.external.port" .) }}
+  STARHUB_SERVER_SSH_DOMAIN: {{ printf "ssh://git@%s:%s" (include "csghub.external.domain" .) (include "gitlab-shell.external.port" .) | quote }}
   {{- end }}
 
   # Accounting
@@ -91,8 +91,8 @@ data:
   # Space Application
   STARHUB_SERVER_SPACE_BUILDER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
   STARHUB_SERVER_SPACE_RUNNER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
-  STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "csghub.external.endpoint" . }}
-  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: "{{ .Values.csghub.runner.modelRegistry | default (or .Values.global.image.registry "docker.io") }}"
+  STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "csghub.external.endpoint" . | quote }}
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.csghub.runner.modelRegistry | default (or .Values.global.image.registry "docker.io") | quote }}
 
   # Deprecated ==> re-enabled
   {{- if .Values.global.deploy.usePublicDomain }}
@@ -112,11 +112,11 @@ data:
   STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"
 
   # Workflow
-  OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ include "temporal.internal.endpoint" . }}
+  OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ include "temporal.internal.endpoint" . | quote }}
 
   # Dataflow
   {{- if .Values.global.dataflow.enabled }}
-  OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "dataflow.internal.domain" .) }}
+  OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "dataflow.internal.domain" .) | quote }}
   OPENCSG_DATAFLOW_SERVER_PORT: {{ include "dataflow.internal.port" . | quote }}
   {{- end }}
 
@@ -137,7 +137,7 @@ data:
 
   OPENCSG_TRACING_OTLP_LOGGING: "false"
 
-  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.deploy.pipIndexUrl | quote}}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.deploy.pipIndexUrl | quote }}
 
   # Notification
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "notification")) | quote }}
@@ -148,16 +148,16 @@ data:
   STARHUB_SERVER_MAILER_USERNAME: {{ .username | quote }}
   STARHUB_SERVER_MAILER_PASSWORD: {{ .password | quote }}
   {{- end }}
-  STARHUB_SERVER_REPO_SYNC_TIMEZONE: {{ .Values.csghub.notification.repoSyncTime | default "Asia/Shanghai" }}
+  STARHUB_SERVER_REPO_SYNC_TIMEZONE: {{ .Values.csghub.notification.repoSyncTime | default "Asia/Shanghai" | quote }}
   STARHUB_SERVER_NOTIFIER_BROADCAST_USER_PAGE_SIZE: {{ .Values.csghub.notification.broadcastUserPageSize | default 100 | quote }}
   STARHUB_SERVER_NOTIFIER_BROADCAST_EMAIL_PAGE_SIZE: {{ .Values.csghub.notification.broadcastEmailPageSize | default 100 | quote }}
 
   # FeiShu Integration
   {{- if eq (include "csghub.edition.suffix" .) "ee" }}
   {{- with .Values.csghub.notification.feiShu }}
-  STARHUB_SERVER_FEISHU_APP_ID: {{ .appId }}
-  STARHUB_SERVER_FEISHU_APP_SECRET: {{ .appSecret }}
-  STARHUB_SERVER_FEISHU_BATCH_SEND_MESSAGE_CRON_EXPRESSION: {{ .batchSendMessageCronExpression | default "*/10 * * * *" }}
+  STARHUB_SERVER_FEISHU_APP_ID: {{ .appId | quote }}
+  STARHUB_SERVER_FEISHU_APP_SECRET: {{ .appSecret | quote }}
+  STARHUB_SERVER_FEISHU_BATCH_SEND_MESSAGE_CRON_EXPRESSION: {{ .batchSendMessageCronExpression | default "*/10 * * * *" | quote }}
   STARHUB_SERVER_FEISHU_MAX_REQUEST_CONTENT_SIZE: {{ .maxRequestContentSize | default 20480 | quote }}
   STARHUB_SERVER_FEISHU_MAX_DELAY_DURATION: {{ .maxDelayDuration | default 3600 | quote }}
   STARHUB_SERVER_FEISHU_CHAT_IDS_CACHE_TTL: {{ .chatIdsCacheTTL | default 21600 | quote }}

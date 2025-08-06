@@ -18,10 +18,10 @@ data:
   {{- else if eq .Values.global.deploy.mergingNamespace "Single" }}
     {{- $imageBuilderNamespace = .Release.Namespace }}
   {{- end }}
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_NAMESPACE: {{ $imageBuilderNamespace }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_NAMESPACE: {{ $imageBuilderNamespace | quote }}
   # The image used by the pod needs to be accessible in the pod
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: {{ include "image.fixed.prefix" (list . "alpine/git:2.36.2") }}
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: {{ include "image.fixed.prefix" (list . "bitnami/kaniko:1.23.2") }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: {{ include "image.fixed.prefix" (list . "alpine/git:2.36.2") | quote }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: {{ include "image.fixed.prefix" (list . "bitnami/kaniko:1.23.2") | quote }}
   # The cleanup time after the image builder task is completed, the default is 2 minutes
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL: "300"
   # Task status correction time, default is 5 minutes
@@ -40,7 +40,7 @@ data:
   {{- $argoWorkflowNamespace = .Release.Namespace }}
   {{- $argoWorkflowQuotaNamespace = .Release.Namespace }}
   {{- end }}
-  STARHUB_SERVER_ARGO_NAMESPACE: {{ $argoWorkflowNamespace }}
-  STARHUB_SERVER_ARGO_QUOTA_NAMESPACE: {{ $argoWorkflowQuotaNamespace }}
+  STARHUB_SERVER_ARGO_NAMESPACE: {{ $argoWorkflowNamespace | quote }}
+  STARHUB_SERVER_ARGO_QUOTA_NAMESPACE: {{ $argoWorkflowQuotaNamespace | quote }}
 ---
 {{- end }}
