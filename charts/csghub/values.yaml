@@ -337,11 +337,11 @@ csghub:
       bucket: "csghub-portal"
 
     ## SMTP configuration
-    smtp:
-      host: ""
-      port: 465
-      username: ""
-      password: ""
+    smtp: { }
+      # host: ""
+      # port: 465
+      # username: ""
+      # password: ""
 
     serviceAccount:
       create: false

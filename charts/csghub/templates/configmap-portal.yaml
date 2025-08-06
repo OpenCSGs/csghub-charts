@@ -49,7 +49,9 @@ data:
   CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ .Values.csghub.portal.additionalObjectStore.region | default $objectStoreConfig.region | quote }}
   CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ .Values.csghub.portal.additionalObjectStore.secure | default $objectStoreConfig.secure | quote }}
   # SMTP
-  CSGHUB_PORTAL_MAILER_HOST: {{ .Values.csghub.portal.smtp.host | quote }}
-  CSGHUB_PORTAL_MAILER_PORT: {{ .Values.csghub.portal.smtp.port | quote }}
-  CSGHUB_PORTAL_MAILER_USERNAME: {{ .Values.csghub.portal.smtp.username | quote }}
-  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .Values.csghub.portal.smtp.password | quote }}
+  {{- with .Values.csghub.portal.smtp }}
+  CSGHUB_PORTAL_MAILER_HOST: {{ .host | quote }}
+  CSGHUB_PORTAL_MAILER_PORT: {{ .port | quote }}
+  CSGHUB_PORTAL_MAILER_USERNAME: {{ .username | quote }}
+  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .password | quote }}
+  {{- end }}
