@@ -27,7 +27,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -45,7 +45,7 @@ spec:
       initContainers:
         - name: init-host-keys
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "/scripts/init_host_keys.sh" ]
           volumeMounts:
             - name: config
@@ -56,7 +56,7 @@ spec:
       containers:
         - name: gitlab-shell
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/bash", "-c", "/scripts/process-wrapper" ]
           ports:
             - containerPort: 22
@@ -124,11 +124,11 @@ spec:
             {{- toYaml . | nindent 10 }}
           {{- end }}
       spec:
-        accessModes: {{ or .Values.global.persistence.accessMode .Values.persistence.accessMode }}
+        accessModes: {{ or .Values.persistence.accessMode .Values.global.persistence.accessMode }}
         {{- if .Values.persistence.storageClass }}
-        storageClassName: {{ or .Values.global.persistence.storageClass .Values.persistence.storageClass }}
+        storageClassName: {{ or .Values.persistence.storageClass .Values.global.persistence.storageClass }}
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.persistence.size }}
+            storage: {{ or .Values.persistence.size .Values.global.persistence.size }}
 {{- end }}

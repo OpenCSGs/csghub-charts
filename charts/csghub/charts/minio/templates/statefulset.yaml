@@ -31,7 +31,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -49,7 +49,7 @@ spec:
       containers:
         - name: minio
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           args: ["server", "/data", "--console-address", ":9001"]
           ports:
             - containerPort: 9000
@@ -113,11 +113,11 @@ spec:
             {{- toYaml . | nindent 10 }}
           {{- end }}
       spec:
-        accessModes: {{ or .Values.global.persistence.accessMode .Values.persistence.accessMode }}
+        accessModes: {{ or .Values.persistence.accessMode .Values.global.persistence.accessMode }}
         {{- if .Values.persistence.storageClass }}
-        storageClassName: {{ or .Values.global.persistence.storageClass .Values.persistence.storageClass }}
+        storageClassName: {{ or .Values.persistence.storageClass .Values.global.persistence.storageClass }}
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.persistence.size }}
+            storage: {{ or .Values.persistence.size .Values.global.persistence.size }}
 {{- end }}

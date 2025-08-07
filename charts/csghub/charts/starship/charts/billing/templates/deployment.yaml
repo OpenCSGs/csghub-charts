@@ -31,7 +31,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -49,7 +49,7 @@ spec:
       containers:
         - name: billing
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "sh", "-c", "sh /tmp/config.sh && /app/billing -config=/app/config/config.yaml" ]
           ports:
             - containerPort: 8080

@@ -41,7 +41,7 @@ spec:
         options:
           - name: ndots
             value: "5"
-      {{- with (or .Values.global.image.pullSecrets .Values.csghub.server.image.pullSecrets) }}
+      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -59,14 +59,14 @@ spec:
       initContainers:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
         {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.global.image.tag .Values.csghub.server.image.tag) "context" .) }}
         {{- $_ := set .Values.csghub.server.image "tag" $tag }}
         - name: rproxy
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "update-ca-certificates && /starhub-bin/starhub start rproxy" ]
           ports:
             - containerPort: 8083
@@ -118,7 +118,7 @@ spec:
             {{- .Values.csghub.gateway.podSecurityContext | toYaml | nindent 12 }}
         - name: rproxy-nginx
           image: {{ include "image.fixed.prefix" (list . "nginx:latest") }}
-          imagePullPolicy: {{ .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "update-ca-certificates && nginx -g \"daemon off;\""]
           ports:
             - containerPort: 80
@@ -157,7 +157,7 @@ spec:
         {{- if .Values.global.moderation.enabled }}
         - name: moderation
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/starhub-bin/starhub", "moderation", "launch" ]
           ports:
             - containerPort: 8089
@@ -194,7 +194,7 @@ spec:
         {{- end }}
         - name: aigateway
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/starhub-bin/starhub", "aigateway", "launch" ]
           ports:
             - containerPort: 8084
