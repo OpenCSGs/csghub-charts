@@ -31,14 +31,3 @@ Define the internal endpoint for gitlab-shell
 {{- define "gitlab-shell.internal.endpoint" -}}
 {{- printf "http://%s:%s" (include "gitlab-shell.internal.domain" .) (include "gitlab-shell.internal.port" .) -}}
 {{- end }}
-
-{{/*
-Define the external port for gitlab-shell
-*/}}
-{{- define "gitlab-shell.external.port" -}}
-{{- if eq .Values.global.ingress.service.type "NodePort" }}
-{{- "30022" | toString }}
-{{- else }}
-{{- "22" | toString }}
-{{- end }}
-{{- end }}
