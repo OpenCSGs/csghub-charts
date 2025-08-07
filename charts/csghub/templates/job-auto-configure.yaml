@@ -55,10 +55,6 @@ spec:
               mountPath: /yamls/knative
             - name: lws
               mountPath: /yamls/lws
-            {{- if ne .Values.global.deploy.mergingNamespace "Single" }}
-            - name: space
-              mountPath: /yamls/space
-            {{- end }}
         - name: gpu-gather
           {{- $repository := printf "%s:%s" .Values.csghub.runner.autoLabel.image.repository .Values.csghub.runner.autoLabel.image.tag }}
           image: {{ include "image.fixed.prefix" (list . $repository) }}
@@ -94,9 +90,4 @@ spec:
         - name: lws
           configMap:
             name: {{ include "common.names.custom" (list . "runner-lws") }}
-        {{- if ne .Values.global.deploy.mergingNamespace "Single" }}
-        - name: space
-          configMap:
-            name: {{ include "common.names.custom" (list . "runner-space") }}
-        {{- end }}
 {{- end }}

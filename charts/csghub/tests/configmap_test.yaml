@@ -1,12 +1,11 @@
 suite: csghub configmap test
 templates:
-  - configmap-space.yaml
+  - secret.yaml
 tests:
   - it: should render docker-credential secret right
     set:
       global.registry.enabled: true
       global.deploy.enabled: true
-      global.deploy.autoConfigure: true
       global.ingress.domain: "opencsg-poc.com"
       csghub.runner.registry.username: "registry666"
       csghub.runner.registry.password: "registry@2025!"
@@ -15,6 +14,6 @@ tests:
       namespace: csghub
     asserts:
       - matchRegex:
-          path: data["space-app.yaml"]
+          path: data[".dockerconfigjson"]
           pattern: 'eyJhdXRocyI6eyJyZWdpc3RyeS5vcGVuY3NnLXBvYy5jb20iOnsidXNlcm5hbWUiOiJyZWdpc3RyeTY2NiIsInBhc3N3b3JkIjoicmVnaXN0cnlAMjAyNSEiLCJhdXRoIjoiY21WbmFYTjBjbmsyTmpZNmNtVm5hWE4wY25sQU1qQXlOU0U9In19fQ=='
 
