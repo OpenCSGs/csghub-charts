@@ -11,13 +11,12 @@ Define image's full path with more robust checks for subCharts
 {{- $globalImage := default dict $context.Values.global.image -}}
 {{- $localImage := default dict (index . 1) -}}
 
-{{- $registry := $localImage.registry -}}
-{{- $repository := $localImage.repository -}}
-{{- $tag := $localImage.tag -}}
+{{- $registry := or $localImage.registry $globalImage.registry -}}
+{{- $repository := or $localImage.repository $globalImage.repository -}}
+{{- $tag := or $localImage.tag $globalImage.tag -}}
 
-{{- if $globalImage.registry -}}
-  {{- $registry = $globalImage.registry -}}
-  {{- if and (regexMatch "^opencsg-registry" $registry) (not (regexMatch "^(opencsghq|opencsg_public|public)" $repository)) }}
+{{- if $registry -}}
+  {{- if and (regexMatch "^opencsg-registry" $registry) (not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $repository)) }}
     {{- $repository = printf "opencsghq/%s" $repository -}}
   {{- end -}}
 {{- end -}}
@@ -37,12 +36,11 @@ Define image's full path with more robust checks for subCharts with fixed image 
 {{- $globalImage := default dict $context.Values.global.image -}}
 {{- $localImage := default dict (or $context.Values.image $context.Values.csghub.server.image) -}}
 
-{{- $registry := $localImage.registry -}}
+{{- $registry := or $localImage.registry $globalImage.registry -}}
 {{- $repository := index . 1 -}}
 
-{{- if $globalImage.registry -}}
-  {{- $registry = $globalImage.registry -}}
-  {{- if and (regexMatch "^opencsg-registry" $registry) (not (regexMatch "^opencsghq" $repository)) }}
+{{- if $registry -}}
+  {{- if and (regexMatch "^opencsg-registry" $registry) (not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $repository)) }}
     {{- $repository = printf "opencsghq/%s" $repository -}}
   {{- end -}}
 {{- end -}}
