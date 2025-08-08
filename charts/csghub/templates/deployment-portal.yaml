@@ -52,7 +52,7 @@ spec:
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
         - name: portal
-          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.global.image.tag .Values.csghub.portal.image.tag) "context" .) }}
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.portal.image.tag .Values.global.image.tag) "context" .) }}
           {{- $_ := set .Values.csghub.portal.image "tag" $tag }}
           image: {{ include "image.generic.prefix" (list . .Values.csghub.portal.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}

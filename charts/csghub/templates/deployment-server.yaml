@@ -85,7 +85,7 @@ spec:
           command: [ "/bin/sh", "-c", "until nc -z {{ include "temporal.internal.domain" . }} {{ include "temporal.internal.port" . }}; do echo 'Wait for temporal to be ready'; sleep 2; done" ]
       containers:
         - name: server
-          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.global.image.tag .Values.csghub.server.image.tag) "context" .) }}
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
           {{- $_ := set .Values.csghub.server.image "tag" $tag }}
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}

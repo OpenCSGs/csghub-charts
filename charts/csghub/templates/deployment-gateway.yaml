@@ -62,7 +62,7 @@ spec:
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
-        {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.global.image.tag .Values.csghub.server.image.tag) "context" .) }}
+        {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
         {{- $_ := set .Values.csghub.server.image "tag" $tag }}
         - name: rproxy
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
