@@ -77,12 +77,12 @@ spec:
                 name: {{ include "common.names.custom" (list . "server") }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}
           env:
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - name: STARHUB_SERVER_REDIS_PASSWORD
               value: "$(REDIS_PASSWD)"
             {{- end }}
@@ -203,7 +203,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}
@@ -212,7 +212,7 @@ spec:
           env:
             - name: OPENCSG_AIGATEWAY_PORT
               value: "8084"
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - name: STARHUB_SERVER_REDIS_PASSWORD
               value: "$(REDIS_PASSWD)"
             {{- end }}
