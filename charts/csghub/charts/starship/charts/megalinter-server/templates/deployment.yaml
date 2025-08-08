@@ -57,7 +57,7 @@ spec:
               name: ml-server
               protocol: TCP
           envFrom:
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}

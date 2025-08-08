@@ -52,7 +52,7 @@ spec:
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           envFrom:
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}

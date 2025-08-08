@@ -63,7 +63,7 @@ spec:
                 name: {{ include "common.names.custom" (list . "casdoor") }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}
@@ -72,7 +72,7 @@ spec:
               value: "$(STARSHIP_SERVER_CASDOOR_CLIENT_ID)"
             - name: CASDOOR_SECRET_KEY
               value: "$(STARSHIP_SERVER_CASDOOR_CLIENT_SECRET)"
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - name: REDIS_URL
               value: {{ printf ":@%s" $redisConfig.host }}
 {{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" (include "csghub.redis.host" .) }}*/}}

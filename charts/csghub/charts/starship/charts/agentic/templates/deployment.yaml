@@ -59,12 +59,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "web") }}
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}
           env:
-            {{- if not .Values.global.redis.enabled }}
+            {{- if .Values.global.redis.enabled }}
             - name: REDIS_URL
               value: {{ printf ":@%s" $redisConfig.host }}
 {{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" (include "csghub.redis.host" .) }}*/}}
