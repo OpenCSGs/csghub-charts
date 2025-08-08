@@ -105,7 +105,7 @@ spec:
           {{- end }}
       spec:
         accessModes: {{ or .Values.persistence.accessMode .Values.global.persistence.accessMode }}
-        {{- if .Values.persistence.storageClass }}
+        {{- if (or .Values.persistence.storageClass .Values.global.persistence.storageClass) }}
         storageClassName: {{ or .Values.persistence.storageClass .Values.global.persistence.storageClass }}
         {{- end }}
         resources:

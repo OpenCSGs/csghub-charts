@@ -15,7 +15,11 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "server") | nindent 4 }}
 data:
   GIN_MODE: release
+  {{- if eq .Values.global.edition "saas" }}
+  STARHUB_SERVER_SAAS: "true"
+  {{- else }}
   STARHUB_SERVER_SAAS: "false"
+  {{- end }}
   STARHUB_SERVER_MIRRORSERVER_ENABLE: "false"
   STARHUB_SERVER_MIRRORSERVER_HOST: ""
   {{- $token := include "server.hub.api.token" . }}

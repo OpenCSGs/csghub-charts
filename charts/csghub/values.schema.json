@@ -1124,7 +1124,7 @@
     "properties": {
       "global": {
         "properties": {
-          "edition": { "const": "ee" }
+          "edition": { "enum": ["ee", "saas"] }
         },
         "required": ["edition"]
       }

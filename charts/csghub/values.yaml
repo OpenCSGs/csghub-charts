@@ -136,7 +136,7 @@ global:
   ## Persistent storage configuration
   persistence: { }
     # storageClass: ""
-  # accessMode: ["ReadWriteOnce"]
+    # accessMode: ["ReadWriteOnce"]
 
   ## Starship OAuth configuration
   starship:
@@ -208,6 +208,10 @@ csghub:
       # secure: true
       # pathStyle: true
       # directUpload: false
+
+    ## Defined gitlab-shell external ssh port
+    gitlabShell: { }
+      # sshPort: 22
 
     ## Pod annotations and labels
     podAnnotations: { }

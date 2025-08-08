@@ -54,18 +54,18 @@ spec:
           command: [ "/bin/sh", "-c", "until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} ping; do echo 'Wait for Redis to be ready'; sleep 2; done" ]
           envFrom:
             {{- if .Values.global.redis.enabled }}
-            - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
-            {{- else }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
+            {{- else }}
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "server") }}
             {{- end }}
           env:
             - name: REDISCLI_AUTH
               {{- if .Values.global.redis.enabled }}
-              value: "$(STARHUB_SERVER_REDIS_PASSWORD)"
-              {{- else }}
               value: "$(REDIS_PASSWD)"
+              {{- else }}
+              value: "$(STARHUB_SERVER_REDIS_PASSWORD)"
               {{- end }}
         - name: wait-for-postgresql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}
