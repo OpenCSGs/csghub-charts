@@ -31,7 +31,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -49,7 +49,7 @@ spec:
       containers:
         - name: celery-producer
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "sh", "-c", "cd /code/project && celery -A config beat --loglevel=INFO" ]
           envFrom:
             - configMapRef:
@@ -83,7 +83,7 @@ spec:
               subPath: codedata
         - name: celery-worker-beat
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "sh", "-c", "cd /code/project && celery -A config worker -Q high_priority_queue -c 1 --loglevel=INFO" ]
           envFrom:
             - configMapRef:
@@ -117,7 +117,7 @@ spec:
               subPath: codedata
         - name: celery-worker
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "sh", "-c", "cd /code/project && celery -A config worker --loglevel=INFO" ]
           envFrom:
             - configMapRef:

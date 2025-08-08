@@ -28,7 +28,7 @@ spec:
       automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
       {{- end }}
       restartPolicy: OnFailure
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -38,7 +38,7 @@ spec:
         {{- $_ := set .Values.image "registry" "docker.io" }}
         - name: kubectl
           image: {{ include "image.fixed.prefix" (list . "bitnami/kubectl:latest" )}}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c" ]
           args:
             - |

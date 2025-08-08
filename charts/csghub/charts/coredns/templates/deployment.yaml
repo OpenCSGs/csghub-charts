@@ -30,7 +30,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -48,7 +48,7 @@ spec:
       containers:
         - name: coredns
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           args: [ "-conf", "/var/opt/coredns/corefile" ]
           ports:
             - containerPort: 53

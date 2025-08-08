@@ -82,9 +82,11 @@ Usage: {{ include "csghub.image.tag" (dict "tag" "v1.8.0" "context" .) }}
 {{- $context := .context -}}
 {{- $edition := include "csghub.edition.suffix" $context -}}
 {{- if has $edition (list "ce" "ee") -}}
-{{- printf "%s-%s" $tag $edition -}}
-{{- else -}}
+{{- if regexMatch "(-ce|-ee)$" $tag }}
 {{- $tag -}}
+{{- else }}
+{{- printf "%s-%s" $tag $edition -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 

@@ -28,7 +28,7 @@ spec:
       automountServiceAccountToken: {{ .Values.csghub.server.serviceAccount.automount }}
       {{- end }}
       restartPolicy: OnFailure
-      {{- with (or .Values.global.image.pullSecrets .Values.csghub.server.image.pullSecrets) }}
+      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -37,7 +37,7 @@ spec:
       containers:
         - name: resource-verify
           image: {{ include "image.fixed.prefix" (list . "opencsghq/toolbox:1.2.4") }}
-          imagePullPolicy: {{ .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command:
             - "/bin/sh"
             - "-c"
@@ -58,7 +58,7 @@ spec:
         - name: gpu-gather
           {{- $repository := printf "%s:%s" .Values.csghub.runner.autoLabel.image.repository .Values.csghub.runner.autoLabel.image.tag }}
           image: {{ include "image.fixed.prefix" (list . $repository) }}
-          imagePullPolicy: {{ .Values.csghub.server.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
           args: [ "-d", "/.kube", "-n", "default", "-i", "{{ include "image.fixed.prefix" (list . .Values.csghub.runner.autoLabel.cli.image) }}", "-c", "{{ .Values.csghub.runner.autoLabel.cli.cmd }}" ]
           volumeMounts:
             - name: kube-configs

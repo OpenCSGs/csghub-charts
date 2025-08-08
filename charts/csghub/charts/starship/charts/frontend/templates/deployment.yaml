@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */}}
 
-  {{- if .Values.enabled }}
+{{- if .Values.enabled }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -32,7 +32,7 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
-      {{- with (or .Values.global.image.pullSecrets .Values.image.pullSecrets) }}
+      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -50,7 +50,7 @@ spec:
       containers:
         - name: frontend
           image: {{ include "image.generic.prefix" (list . .Values.image) }}
-          imagePullPolicy: {{ or .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "sh", "-c", "nginx -g 'daemon off;'" ]
           ports:
             - containerPort: 80
