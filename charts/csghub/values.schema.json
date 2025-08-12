@@ -25,7 +25,6 @@
             "tag": {
               "type": "string",
               "description": "Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)",
-              "pattern": "^v?\\d+\\.\\d+\\.\\d+(-(ce|ee|saas))?$",
               "default": "v1.9.0"
             },
             "pullPolicy": {
