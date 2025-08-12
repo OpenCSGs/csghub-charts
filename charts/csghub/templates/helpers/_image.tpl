@@ -11,7 +11,7 @@ Define image's full path with more robust checks for subCharts
 {{- $globalImage := default dict $context.Values.global.image -}}
 {{- $localImage := default dict (index . 1) -}}
 
-{{- $registry := or $localImage.registry $globalImage.registry -}}
+{{- $registry := or $globalImage.registry $localImage.registry -}}
 {{- $repository := or $localImage.repository $globalImage.repository -}}
 {{- $tag := or $localImage.tag $globalImage.tag -}}
 
@@ -36,7 +36,7 @@ Define image's full path with more robust checks for subCharts with fixed image 
 {{- $globalImage := default dict $context.Values.global.image -}}
 {{- $localImage := default dict (or $context.Values.image $context.Values.csghub.server.image) -}}
 
-{{- $registry := or $localImage.registry $globalImage.registry -}}
+{{- $registry := or $globalImage.registry $localImage.registry -}}
 {{- $repository := index . 1 -}}
 
 {{- if $registry -}}
