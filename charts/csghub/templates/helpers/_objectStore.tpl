@@ -39,6 +39,9 @@ generate object store config
 
   {{- $_ := set $config "encrypt" false -}}
   {{- $_ := set $config "secure" false -}}
+  {{- if eq (include "global.ingress.tls.enabled" $global) "true" }}
+    {{- $_ := set $config "secure" true -}}
+  {{- end }}
   {{- $_ := set $config "pathStyle" true -}}
   {{- $_ := set $config "directUpload" false -}}
 {{- else -}}
