@@ -60,25 +60,25 @@ serviceAccount:
 ## Specifies the location and credentials for accessing the external Object Storage (OSS) service.
 objectStore:
   ## The endpoint URL of the object storage service.
-#  endpoint: ""
+  # endpoint: ""
   ## The access key ID for authentication with the object storage service.
   ## This is empty by default and should be provided securely.
-#  accessKey: ""
+  # accessKey: ""
   ## The secret access key for authentication with the object storage service.
   ## This is also empty by default and should be provided securely.
-#  accessSecret: ""
+  # accessSecret: ""
   ## The name of the bucket within the object storage service to be used.
   bucket: "csghub-registry"
   ## The region where the bucket is located within the object storage service.
-#  region: ""
+  # region: ""
   ## If encrypted with TLS
-#  encrypt: false
+  # encrypt: false
   ## If encrypted with secure TLS certificates
-#  secure: false
+  # secure: false
   ## When set to "true", the bucket name will be part of the URL path.
   ## For example, the URL will be in the format:
   ## http://<minio-server>/<bucket-name>/<object-key>
-#  pathStyle: true
+  # pathStyle: true
 
 ## podAnnotations: Allows you to add annotations to the pods. Annotations can be used to attach arbitrary -
 ## non-identifying metadata to objects. Tools and libraries can retrieve this metadata.
