@@ -1,0 +1,73 @@
+## All modifications in this configuration file are only performed under global configuration block.
+## Any configuration outside global configuration block is an automatic adaptation configuration and should not be modified.
+
+## Global configuration will override subChart's configuration
+global:
+  image:
+    ## List of Kubernetes secrets to use for pulling images (e.g., for private registry).
+    pullSecrets: [ ]
+    ## Specify path prefix of images, no need to add the final slash `/`
+    ## You can add namespace follow registry.
+    ## eg: docker.io/minio/minio:latest ==> {{ registry }}/minio/minio:latest
+    registry: "docker.io"
+    ## Specifies the csgship-web repository name.
+    # name: "opencsghq/csgship-web"
+    ## Specifies the csgship-web-image image version.
+    ## Example: latest, v1.0.0, etc.
+    # tag: "v0.2.0"
+    ## Specifies the csgship-web-image image pull policy.
+    # pullPolicy: "IfNotPresent"
+
+  ## Define the access domain name of csghub and whether to enable encrypted access.
+  ingress:
+    ## Specify ingressClassName
+    # className: "nginx"
+    ## Ideally, it is best to have a registered domain name, +
+    ## because local domain names may require some additional configuration
+    domain: example.com
+    ## According to the characteristics of the program, +
+    ## it is not allowed to configure whether to enable TLS for each subChart separately, +
+    ## but subCharts are allowed to define their own TLS secretName.
+    tls: { }
+      # enabled: false
+      ## Specify the tls secret containing the wildcard domain name certificate. +
+    ## You need to prepare certificates and create TLS secrets yourself.
+    # secretName: ""
+    service:
+      ## `&type` is an internal anchor, do not delete it
+      ##  `ingress-nginx-controller` and `kourier` will also the same
+      ## Enums `LoadBalancer`、`NodePort`
+      type: &type LoadBalancer
+
+# Csgship-Web configuration
+web:
+  ## OpenAI Configuration
+  openai:
+    ## Specifies the default AI model to be used for OpenAI requests
+    ## Example: "csg-gpt4o-mini" (custom model) or standard OpenAI models like "gpt-4"
+    model: "csg-gpt4o-mini"
+    ## API connection settings for Azure OpenAI service
+    api:
+      ## Base endpoint URL for Azure OpenAI API
+      ## Note: This should point to your Azure OpenAI service instance
+      base: "https://opencsg-us.openai.azure.com"
+      ## API version to use for compatibility
+      ## Important: This should match the API version supported by your Azure OpenAI deployment
+      version: "2024-06-01"
+      ## API key for authentication (keep empty in version control)
+      ## Security Note: Always set this via environment variables or secrets in production
+      ## Example: "123456abcdef7890" (actual key should never be committed to source control)
+      key: ""
+  ## Persistence settings for the Csgship-Web data.
+  persistence:
+    ## Specifies the StorageClass used for provisioning the volume.
+    ## An empty value means the default StorageClass is used.
+    ## StorageClass defines the type of storage used and can affect performance and cost.
+    storageClass: ""
+    ## Defines the access modes of the volume.
+    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
+    ## This is suitable for most use cases where a single instance of Csgship-Web is running.
+    accessMode: [ "ReadWriteMany" ]
+    ## Specifies the size of the persistent volume.
+    ## This should be adjusted based on expected usage and data growth over time.
+    size: 10Gi

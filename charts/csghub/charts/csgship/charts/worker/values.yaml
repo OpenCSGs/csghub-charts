@@ -1,8 +1,12 @@
-## Default values for PostgreSQL.
+## Default values for Celery-Worker.
 ## This is a YAML-formatted file.
 ## Declare variables to be passed into your templates.
+## Enable or disable the Celery-Worker component.
+enabled: true
 
-# Configuration for images, it can be overwritten by global.images
+replicas: 1
+
+## Configuration for images, it can be overwritten by global.images
 image:
   ## List of image pull secrets.
   ## Used to pull Docker images from private repositories.
@@ -12,67 +16,21 @@ image:
   ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
   ## No need to add the final slash `/`
   registry: "docker.io"
-  ## Specifies the location of the PostgreSQL Docker image in the registry.
-  repository: "opencsghq/postgres"
-  ## Defines the specific version of the PostgreSQL image to use.
-  tag: "15.10"
+  ## Specifies the location of the Registry Docker image in the registry.
+  repository: "opencsghq/csgship-web"
+  ## Defines the specific version of the Registry image to use.
+  tag: "v0.4.0"
   ## Determines how the image should be pulled from the registry.
   pullPolicy: "IfNotPresent"
 
-service:
-  ## This determines how the PostgreSQL service is accessed within the cluster or from external sources.
-  type: ClusterIP
-  ## This is the network port where the PostgreSQL service will listen for connections.
-  port: 5432
-
-## You can pass in the parameters you want to modify by executing this parameter.
-## Currently, only hot loading parameters are supported.
-parameters: { }
-  ## Set the parameters for the PostgreSQL database
-  ## The online reload parameter can take effect automatically.
-  ## If you need to restart the database, please restart it manually.
-  # timezone: "Etc/UTC"
-
-## List of databases to be created upon deployment
-databases:
-  ## Database & User postgres is default, cannot remove.
-  postgres:
-    owner: postgres
-  csghub_portal:
-    owner: csghub
-    # password: ""
-  csghub_server:
-    owner: csghub
-    # password: ""
-  csghub_casdoor:
-    owner: csghub
-    # password: ""
-  csghub_temporal:
-    owner: csghub
-    # password: ""
-  csghub_temporal_visibility:
-    owner: csghub
-    # password: ""
-  csghub_dataflow:
-    owner: csghub
-    # password: ""
-  csgship:
-    owner: csghub
-    # password: ""
-
-## Persistence settings for the PostgreSQL data.
-persistence:
-  ## Specifies the StorageClass used for provisioning the volume.
-  ## An empty value means the default StorageClass is used.
-  ## StorageClass defines the type of storage used and can affect performance and cost.
-  storageClass: ""
-  ## Defines the access modes of the volume.
-  ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-  ## This is suitable for most use cases where a single instance of PostgreSQL is running.
-  accessMode: ["ReadWriteOnce"]
-  ## Specifies the size of the persistent volume.
-  ## This should be adjusted based on expected usage and data growth over time.
-  size: 50Gi
+## Specifies the location and credentials for accessing the external Redis cache.
+redis:
+  ## host for accessing Redis
+  host: ""
+  ## Port for accessing Redis
+  port: 6379
+  ## Password for accessing Redis
+  password: ""
 
 serviceAccount:
   ## Determines whether a service account should be created.
@@ -104,26 +62,26 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-## environments: This section is reserved for defining environment variables for the PostgreSQL container.
-## Environment variables can be used to customize the behavior of the PostgreSQL instance.
-## For example, you might use environment variables to configure logging levels or to enable certain PostgreSQL features.
+## environments: This section is reserved for defining environment variables for the Celery-Worker container.
+## Environment variables can be used to customize the behavior of the Celery-Worker instance.
+## For example, you might use environment variables to configure logging levels or to enable certain Celery-Worker features.
 ## This section is currently empty, indicating that no environment variables have been explicitly set.
 environments: {}
 
-## annotations: This section allows you to add annotations to the PostgreSQL deployment.
+## annotations: This section allows you to add annotations to the Celery-Worker deployment.
 ## Annotations are key-value pairs that can be used to store additional metadata about the deployment.
 ## This can be useful for tools and applications that interact with your Kubernetes cluster, providing them with extra -
-## information about your PostgreSQL instance.
+## information about your Celery-Worker instance.
 ## Like the environments section, this is also currently empty.
 annotations: {}
 #  helm.sh/resource-policy: keep
 
-## The 'resources' section is used to define the compute resource requirements for the PostgreSQL container.
+## The 'resources' section is used to define the compute resource requirements for the Celery-Worker container.
 ## Here, you can specify the minimum and maximum amount of CPU and memory that the container is allowed to use.
-## Leaving this section empty means that no specific resource limits or requests are set for the PostgreSQL container.
+## Leaving this section empty means that no specific resource limits or requests are set for the Celery-Worker container.
 ## This approach can be beneficial in environments with limited resources, such as development or testing environments,
 ## where you might not want to enforce strict resource constraints.
-## However, for production environments, it's recommended to uncomment and set these values to ensure that the PostgreSQL container
+## However, for production environments, it's recommended to uncomment and set these values to ensure that the Celery-Worker container
 ## has enough resources to operate efficiently and to prevent it from consuming too much of the available resources on the node.
 ## 'limits' specify the maximum amount of CPU and memory the container can use.
 ## 'requests' specify the minimum amount of CPU and memory guaranteed to the container.

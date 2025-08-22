@@ -38,8 +38,8 @@ dependencies:
 - name: dataflow
   repository: file://charts/dataflow
   version: 1.4.0
-- name: starship
-  repository: file://charts/starship
+- name: csgship
+  repository: file://charts/csgship
   version: 0.1.9
 - name: reloader
   repository: file://charts/reloader

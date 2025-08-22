@@ -50,7 +50,7 @@ generate redis config
 
 {{/*
 TODO: remove it
-backward compatibility for starship
+backward compatibility for csgship
 */}}
 {{- define "csghub.redis.host" -}}
 {{- $config := include "csghub.redis.config" (dict "service" (dict "redis" (dict)) "global" .) | fromYaml -}}

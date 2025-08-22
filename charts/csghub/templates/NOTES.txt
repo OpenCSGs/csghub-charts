@@ -28,10 +28,10 @@ Visit the Casdoor administrator console at the following address:
         Username: root
         Password: $(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "common.names.custom" (list . "init-root") }} -o jsonpath="{.data.INIT_ROOT_PASSWORD}" | base64 -d)
 
-{{- if eq (include "starship.enabled" .) "true"  }}
+{{- if eq (include "csgship.enabled" .) "true"  }}
 
-Visit the Starship admin console at the following address:
-    Address: {{ include "starship.external.api.endpoint" . }}/admin
+Visit the Csgship admin console at the following address:
+    Address: {{ include "csgship.external.api.endpoint" . }}/admin
     Credential: admin/Admin@1234
 {{- end }}
 

@@ -5,8 +5,8 @@ This guide explains how to configure CSGHub to deploy either the Community Editi
 ## Overview
 
 CSGHub supports two editions:
-- **Community Edition (CE)**: Basic features without Starship components
-- **Enterprise Edition (EE)**: Full feature set including Starship components
+- **Community Edition (CE)**: Basic features without Csgship components
+- **Enterprise Edition (EE)**: Full feature set including Csgship components
 
 ## Configuration
 
@@ -23,7 +23,7 @@ global:
 
 - **Default**: If not specified, the system defaults to "ee" (Enterprise Edition)
 - **Image Tags**: The system automatically appends the edition suffix to image tags
-- **Starship**: Automatically disabled for EE
+- **Csgship**: Automatically disabled for EE
 
 ## Usage Examples
 
@@ -85,7 +85,7 @@ helm install csghub ./charts/csghub -f values-ee.yaml
 - NATS
 
 ### Components Only in Enterprise Edition
-- Starship (including all sub-components):
+- Csgship (including all sub-components):
   - Web
   - Frontend
   - Billing
@@ -95,7 +95,7 @@ helm install csghub ./charts/csghub -f values-ee.yaml
   - MegaLinter Worker
   - Security Scanner
 
-**Note**: Starship components will only be deployed when both `global.edition=ee` AND `starship.enabled=true`.
+**Note**: Csgship components will only be deployed when both `global.edition=ee` AND `csgship.enabled=true`.
 
 ## Image Tag Behavior
 
@@ -119,40 +119,40 @@ The system automatically handles image tag suffixes:
        tag: "v1.8.0-ee"  # Will remain as-is
    ```
 
-## Starship Configuration
+## Csgship Configuration
 
 ### Enablement Requirements
-Starship will only be deployed when **BOTH** conditions are met:
+Csgship will only be deployed when **BOTH** conditions are met:
 1. `global.edition` is set to "ee" (Enterprise Edition)
-2. `starship.enabled` is explicitly set to `true`
+2. `csgship.enabled` is explicitly set to `true`
 
 ### Configuration Examples
 
-#### Enable Starship in EE
+#### Enable Csgship in EE
 ```yaml
 global:
   edition: "ee"
 
-starship:
-  enabled: true  # Explicitly enable Starship
+csgship:
+  enabled: true  # Explicitly enable Csgship
 ```
 
-#### Disable Starship in EE
+#### Disable Csgship in EE
 ```yaml
 global:
   edition: "ee"
 
-starship:
-  enabled: false  # Starship will not be deployed
+csgship:
+  enabled: false  # Csgship will not be deployed
 ```
 
-#### CE Edition (Starship Never Available)
+#### CE Edition (Csgship Never Available)
 ```yaml
 global:
   edition: "ce"
 
-starship:
-  enabled: true  # This will be ignored - Starship never deploys in CE
+csgship:
+  enabled: true  # This will be ignored - Csgship never deploys in CE
 ```
 
 ## Migration Between Editions
@@ -179,7 +179,7 @@ starship:
    helm upgrade csghub ./charts/csghub -f your-values.yaml
    ```
 
-**Note**: When downgrading from EE to CE, Starship components will be removed.
+**Note**: When downgrading from EE to CE, Csgship components will be removed.
 
 ## Troubleshooting
 
@@ -189,10 +189,10 @@ If you encounter image pull errors, verify:
 2. The image tags are properly formatted with edition suffixes
 3. Your registry credentials are correctly configured
 
-### Starship Not Starting
-If Starship components don't start in EE:
+### Csgship Not Starting
+If Csgship components don't start in EE:
 1. Check that `global.edition` is set to "ee"
-2. Verify Starship is not manually disabled
+2. Verify Csgship is not manually disabled
 3. Check resource availability for additional components
 
 ## Example Configurations
@@ -200,6 +200,6 @@ If Starship components don't start in EE:
 The `examples/` directory contains sample values files for different deployment scenarios:
 
 - `values-ce.yaml`: Community Edition deployment
-- `values-ee.yaml`: Enterprise Edition with Starship enabled
-- `values-ee-no-starship.yaml`: Enterprise Edition with Starship disabled
+- `values-ee.yaml`: Enterprise Edition with Csgship enabled
+- `values-ee-no-csgship.yaml`: Enterprise Edition with Csgship disabled
 

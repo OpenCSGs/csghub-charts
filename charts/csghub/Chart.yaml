@@ -79,10 +79,10 @@ dependencies:
     version: "1.4.0"
     repository: "file://charts/dataflow"
     condition: dataflow.enabled
-  - name: starship
+  - name: csgship
     version: "^0.1.9"
-    repository: file://charts/starship
-    condition: starship.enabled
+    repository: file://charts/csgship
+    condition: csgship.enabled
   - name: reloader
     version: "2.1.4"
     repository: "file://charts/reloader"

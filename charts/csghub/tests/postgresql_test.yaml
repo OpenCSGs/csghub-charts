@@ -132,12 +132,12 @@ tests:
       - matchRegex:
           path: data["DATABASE_HOSTNAME"]
           pattern: "csghub-postgresql"
-  - it: when using internal postgresql, should render starship config right
+  - it: when using internal postgresql, should render csgship config right
     templates:
-      - charts/starship/charts/web/templates/configmap.yaml
+      - charts/csgship/charts/web/templates/configmap.yaml
     set:
       global.postgresql.enabled: true
-      starship.enabled: true
+      csgship.enabled: true
     release:
       name: csghub
       namespace: csghub

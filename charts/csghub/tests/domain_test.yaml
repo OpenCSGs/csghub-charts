@@ -1,24 +1,24 @@
 suite: domain and subdomains test
 tests:
-  - it: should render starship ingress right if enabled
+  - it: should render csgship ingress right if enabled
     templates:
-      - charts/starship/charts/frontend/templates/ingress.yaml
+      - charts/csgship/charts/frontend/templates/ingress.yaml
     set:
       global.ingress.enabled: true
       global.ingress.domain: opencsg-poc.com
-      starship.enabled: true
+      csgship.enabled: true
     release:
       name: csghub
       namespace: csghub
     asserts:
       - equal:
           path: spec.rules[0].host
-          value: starship.opencsg-poc.com
+          value: csgship.opencsg-poc.com
   - it: subdomain should be rendered right if given
     set:
       global.ingress.enabled: true
       temporal.ui.enabled: true
-      starship.enabled: true
+      csgship.enabled: true
       global.ingress.domain: opencsg-poc.com
       global.ingress.customDomainPrefixes:
         registry: "reg"
@@ -48,12 +48,12 @@ tests:
         template: charts/temporal/templates/ingress.yaml
       - equal:
           path: spec.rules[0].host
-          value: starship.opencsg-poc.com
-        template: charts/starship/charts/frontend/templates/ingress.yaml
+          value: csgship.opencsg-poc.com
+        template: charts/csgship/charts/frontend/templates/ingress.yaml
       - equal:
           path: spec.rules[1].host
-          value: starship-api.opencsg-poc.com
-        template: charts/starship/charts/frontend/templates/ingress.yaml
+          value: csgship-api.opencsg-poc.com
+        template: charts/csgship/charts/frontend/templates/ingress.yaml
       - matchRegex:
           path: data["CSGHUB_PORTAL_STARHUB_BASE_URL"]
           pattern: "occ.opencsg-poc.com"
@@ -63,14 +63,14 @@ tests:
           pattern: "iam.opencsg-poc.com"
         documentIndex: 0
         template: charts/casdoor/templates/configmap.yaml
-  - it: starship subdomain should be rendered right if given
+  - it: csgship subdomain should be rendered right if given
     set:
       global.ingress.enabled: true
       global.ingress.domain: opencsg-poc.com
-      starship.enabled: true
+      csgship.enabled: true
       global.ingress.customDomainPrefixes:
-        starship: "ss"
-        starshipAPI: "ssa"
+        csgship: "ss"
+        csgshipAPI: "ssa"
     release:
       name: csghub
       namespace: csghub
@@ -78,8 +78,8 @@ tests:
       - equal:
           path: spec.rules[0].host
           value: ss.opencsg-poc.com
-        template: charts/starship/charts/frontend/templates/ingress.yaml
+        template: charts/csgship/charts/frontend/templates/ingress.yaml
       - equal:
           path: spec.rules[1].host
           value: ssa.opencsg-poc.com
-        template: charts/starship/charts/frontend/templates/ingress.yaml
+        template: charts/csgship/charts/frontend/templates/ingress.yaml

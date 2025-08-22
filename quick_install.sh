@@ -16,7 +16,7 @@ fi
 : "${ENABLE_K3S:=true}"
 : "${ENABLE_DYNAMIC_PV:=false}"
 : "${ENABLE_NVIDIA_GPU:=false}"
-: "${ENABLE_STARSHIP:=false}"
+: "${ENABLE_CSGSHIP:=false}"
 : "${HOSTS_ALIAS:=true}"
 : "${INSTALL_HELM:=true}"
 : "${KNATIVE_INTERNAL_DOMAIN:=app.internal}"
@@ -432,7 +432,7 @@ retry helm upgrade --install csghub csghub/csghub \
   --namespace csghub \
   --create-namespace \
   --set global.edition="$EDITION" \
-  --set starship.enabled="$ENABLE_STARSHIP" \
+  --set csgship.enabled="$ENABLE_CSGSHIP" \
   --set global.ingress.domain="$DOMAIN" \
   --set global.ingress.service.type="$INGRESS_SERVICE_TYPE" \
   --set ingress-nginx.controller.service.type="$INGRESS_SERVICE_TYPE" \
@@ -463,8 +463,8 @@ if [ "$HOSTS_ALIAS" == true ]; then
           ${IP_ADDRESS} registry.${DOMAIN} registry
           ${IP_ADDRESS} minio.${DOMAIN} minio
           ${IP_ADDRESS} temporal.${DOMAIN} temporal
-          ${IP_ADDRESS} starship.${DOMAIN} starship
-          ${IP_ADDRESS} starship-api.${DOMAIN} starship-api
+          ${IP_ADDRESS} csgship.${DOMAIN} csgship
+          ${IP_ADDRESS} csgship-api.${DOMAIN} csgship-api
         }
       }
 
@@ -488,8 +488,8 @@ EOF
     "${IP_ADDRESS} registry.${DOMAIN} registry"
     "${IP_ADDRESS} minio.${DOMAIN} minio"
     "${IP_ADDRESS} temporal.${DOMAIN} temporal"
-    "${IP_ADDRESS} starship.${DOMAIN} starship"
-    "${IP_ADDRESS} starship-api.${DOMAIN} starship-api"
+    "${IP_ADDRESS} csgship.${DOMAIN} csgship"
+    "${IP_ADDRESS} csgship-api.${DOMAIN} csgship-api"
   )
 
   for ENTRY in "${HOST_ENTRIES[@]}"; do

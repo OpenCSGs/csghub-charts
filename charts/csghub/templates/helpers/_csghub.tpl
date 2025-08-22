@@ -93,24 +93,24 @@ Usage: {{ include "csghub.image.tag" (dict "tag" "v1.8.0" "context" .) }}
 {{- end -}}
 
 {{/*
-Check if starship should be enabled based on edition and explicit configuration
-Starship is only enabled when:
+Check if csgship should be enabled based on edition and explicit configuration
+csgship is only enabled when:
 1. global.edition is "ee" (Enterprise Edition)
-2. starship.enabled is explicitly set to true
+2. csgship.enabled is explicitly set to true
 */}}
-{{- define "csghub.starship.enabled" -}}
+{{- define "csghub.csgship.enabled" -}}
 {{- $edition := .Values.global.edition | default "ee" -}}
-{{- $starshipEnabled := false -}}
+{{- $csgshipEnabled := false -}}
 {{- if eq $edition "ee" -}}
-{{- if hasKey .Values "starship" -}}
-{{- if hasKey .Values.starship "enabled" -}}
-{{- if .Values.starship.enabled -}}
-{{- $starshipEnabled = true -}}
+{{- if hasKey .Values "csgship" -}}
+{{- if hasKey .Values.csgship "enabled" -}}
+{{- if .Values.csgship.enabled -}}
+{{- $csgshipEnabled = true -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
-{{- $starshipEnabled -}}
+{{- $csgshipEnabled -}}
 {{- end }}
 
 {{/*
