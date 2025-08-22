@@ -13,29 +13,29 @@ tests:
           name: csghub-web
           apiVersion: apps/v1
           namespace: csghub
-        template: charts/starship/charts/web/templates/statefulset.yaml
+        template: charts/csgship/charts/web/templates/statefulset.yaml
       - containsDocument:
           kind: Deployment
           name: csghub-frontend
           apiVersion: apps/v1
           namespace: csghub
-        template: charts/starship/charts/frontend/templates/deployment.yaml
+        template: charts/csgship/charts/frontend/templates/deployment.yaml
       - containsDocument:
           kind: Deployment
           name: csghub-billing
           apiVersion: apps/v1
           namespace: csghub
-        template: charts/starship/charts/billing/templates/deployment.yaml
+        template: charts/csgship/charts/billing/templates/deployment.yaml
       - containsDocument:
           kind: Deployment
           name: csghub-agentic
           apiVersion: apps/v1
           namespace: csghub
-        template: charts/starship/charts/agentic/templates/deployment.yaml
+        template: charts/csgship/charts/agentic/templates/deployment.yaml
       - containsDocument:
           kind: Deployment
           name: csghub-worker
           apiVersion: apps/v1
           namespace: csghub
-        template: charts/starship/charts/worker/templates/deployment.yaml
+        template: charts/csgship/charts/worker/templates/deployment.yaml
 

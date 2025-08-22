@@ -1,7 +1,7 @@
 suite: ingress test
 templates:
   - ingress.yaml
-  - charts/starship/charts/frontend/templates/ingress.yaml
+  - charts/csgship/charts/frontend/templates/ingress.yaml
   - charts/registry/templates/ingress.yaml
 tests:
   - it: should render portal Ingress right if enabled
@@ -101,23 +101,23 @@ tests:
           path: spec.rules[1].host
           value: "*.public.opencsg-poc.com"
 
-  - it: starship.<dommain> and starship-api.<domain> should be created if starship is enabled
+  - it: csgship.<domain> and csgship-api.<domain> should be created if csgship is enabled
     set:
       global.ingress.enabled: true
       global.ingress.domain: opencsg-poc.com
       global.edition: ee
-      starship.enabled: true
+      csgship.enabled: true
       global.ingress.tls.enabled: true
       global.ingress.tls.secretName: my-tls-secret
     templates:
-      - charts/starship/charts/frontend/templates/ingress.yaml
+      - charts/csgship/charts/frontend/templates/ingress.yaml
     asserts:
       - equal:
           path: spec.rules[0].host
-          value: starship.opencsg-poc.com
+          value: csgship.opencsg-poc.com
       - equal:
           path: spec.rules[1].host
-          value: starship-api.opencsg-poc.com
+          value: csgship-api.opencsg-poc.com
       - equal:
           path: spec.tls[0].secretName
           value: my-tls-secret

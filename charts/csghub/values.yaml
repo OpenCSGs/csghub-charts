@@ -28,7 +28,7 @@ global:
     domain: example.com
     ## Subdomain prefix that combines with domain to form the full access URL
     customDomainPrefixes: { }
-      ## Others such as registry, minio, temporal, public, starship, starshipAPI can be customized in the same way
+      ## Others such as registry, minio, temporal, public, csgship, csgshipAPI can be customized in the same way
       # portal: "csghub"
       # casdoor: "iam"
     ## Whether to use the top-level domain directly for access
@@ -138,8 +138,8 @@ global:
     # storageClass: ""
     # accessMode: ["ReadWriteOnce"]
 
-  ## Starship OAuth configuration
-  starship:
+  ## Csgship OAuth configuration
+  csgship:
     oauth: {}
       # issuer: "https://gitlab.example.com"
       # clientId: "73f1c2922f51d68fa87de8c1ef0e23e8940f3aa42f5ac7a55a1f586c597d7e9c"
@@ -406,13 +406,13 @@ csghub:
 ## If necessary, you can check which parameters the subChart can configure and modify them.
 ## However, it should be noted that the current `autoscaling` is not adapted.
 
-## For Starship
-## Note: Starship is only available in EE edition
-starship:
-  ## Starship will only be deployed when BOTH conditions are met:
+## For Csgship
+## Note: Csgship is only available in EE edition
+csgship:
+  ## Csgship will only be deployed when BOTH conditions are met:
   ## 1. global.edition is set to "ee" (Enterprise Edition)
-  ## 2. starship.enabled is explicitly set to true
-  ## If global.edition is "ce", starship will never be deployed regardless of this setting
+  ## 2. csgship.enabled is explicitly set to true
+  ## If global.edition is "ce", csgship will never be deployed regardless of this setting
   enabled: false
   web:
     persistence:

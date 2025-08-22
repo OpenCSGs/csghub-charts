@@ -336,9 +336,9 @@
             }
           }
         },
-        "starship": {
+        "csgship": {
           "type": "object",
-          "description": "Starship OAuth configuration",
+          "description": "Csgship OAuth configuration",
           "properties": {
             "oauth": {
               "type": "object",
@@ -912,13 +912,13 @@
         }
       }
     },
-    "starship": {
+    "csgship": {
       "type": "object",
-      "description": "Starship service configuration (Enterprise only)",
+      "description": "Csgship service configuration (Enterprise only)",
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "Enable Starship service",
+          "description": "Enable Csgship service",
           "default": false
         },
         "web": {
@@ -1131,7 +1131,7 @@
   },
   "then": {
     "properties": {
-      "starship": {
+      "csgship": {
         "properties": {
           "enabled": {
             "type": "boolean"
@@ -1142,7 +1142,7 @@
   },
   "else": {
     "properties": {
-      "starship": {
+      "csgship": {
         "properties": {
           "enabled": {
             "const": false

@@ -1,0 +1,73 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if .Values.ingress.enabled }}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ include "common.names.custom" (list . "csgship") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" . | nindent 4 }}
+  annotations:
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4  }}
+    {{- end  }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
+  {{- if eq (include "global.ingress.tls.enabled" .) "true" }}
+  tls:
+    {{- if .Values.enabled }}
+    - hosts:
+        - {{ include "csgship.external.domain" . }}
+      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.ingress.tls.secretName.frontend }}
+      {{- if $secret }}
+      secretName: {{ $secret }}
+      {{- else }}
+      {{ fail "Csgship-Frontend ingress TLS is enabled but no secretName is provided." }}
+      {{- end }}
+    {{- end }}
+    - hosts:
+        - {{ include "csgship.external.api.domain" . }}
+      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.ingress.tls.secretName.api }}
+      {{- if $secret }}
+      secretName: {{ $secret }}
+      {{- else }}
+      {{ fail "Csgship-API ingress TLS is enabled but no secretName is provided." }}
+      {{- end }}
+  {{- end }}
+  rules:
+    {{- if .Values.enabled }}
+    - host: {{ include "csgship.external.domain" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ include "common.names.custom" . }}
+                port:
+                  number: {{ .Values.service.port }}
+            {{- else }}
+              serviceName: {{ include "common.names.custom" . }}
+              servicePort: {{ .Values.service.port }}
+            {{- end }}
+    {{- end }}
+    - host: {{ include "csgship.external.api.domain" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ include "common.names.custom" (list . "web") }}
+                port:
+                  number: 80
+            {{- else }}
+              serviceName: {{ include "common.names.custom" (list . "web") }}
+              servicePort: 80
+            {{- end }}
+{{- end }}

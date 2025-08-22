@@ -454,9 +454,9 @@ data:
           "name": "StarShip",
           "displayName": "StarShip",
           "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
-          "homepageUrl": {{ include "starship.external.endpoint" . | quote }},
+          "homepageUrl": {{ include "csgship.external.endpoint" . | quote }},
           "organization": "OpenCSG",
-          "cert": "starship-cert",
+          "cert": "csgship-cert",
           "enablePassword": true,
           "enableSignUp": true,
           "enableSigninSession": false,
@@ -677,7 +677,7 @@ data:
             "id_token"
           ],
           "redirectUris": [
-            "{{ include "starship.external.api.endpoint" . }}/api/v1/account/casdoor/login/callback"
+            "{{ include "csgship.external.api.endpoint" . }}/api/v1/account/casdoor/login/callback"
           ],
           "tokenFormat": "JWT",
           "tokenFields": [],
@@ -713,7 +713,7 @@ data:
         },
         {
           "owner": "admin",
-          "name": "starship-cert",
+          "name": "csgship-cert",
           "displayName": "StarShip Cert",
           "scope": "JWT",
           "type": "x509",
@@ -780,11 +780,11 @@ data:
           "category": "OAuth",
           "type": "Custom",
           "method": "Normal",
-          "clientId": {{ .Values.global.starship.oauth.clientId | default "" | quote }},
-          "clientSecret": {{ .Values.global.starship.oauth.clientSecret | default "" | quote }},
-          "customAuthUrl": {{ printf "%s/oauth/authorize" .Values.global.starship.oauth.issuer | default "" | quote }},
-          "customTokenUrl": {{ printf "%s/oauth/token" .Values.global.starship.oauth.issuer | default "" | quote }},
-          "customUserInfoUrl": {{ printf "%s/api/v4/user" .Values.global.starship.oauth.issuer | default "" | quote }},
+          "clientId": {{ .Values.global.csgship.oauth.clientId | default "" | quote }},
+          "clientSecret": {{ .Values.global.csgship.oauth.clientSecret | default "" | quote }},
+          "customAuthUrl": {{ printf "%s/oauth/authorize" .Values.global.csgship.oauth.issuer | default "" | quote }},
+          "customTokenUrl": {{ printf "%s/oauth/token" .Values.global.csgship.oauth.issuer | default "" | quote }},
+          "customUserInfoUrl": {{ printf "%s/api/v4/user" .Values.global.csgship.oauth.issuer | default "" | quote }},
           "customLogo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/gitlab_favicon.png",
           "scopes": "read_user openid profile email",
           "userMapping":
@@ -795,8 +795,8 @@ data:
             "id": "id",
             "username": "username"
           },
-          "issuerUrl": {{ .Values.global.starship.oauth.issuer | default "" | quote }},
-          "providerUrl": {{ .Values.global.starship.oauth.issuer | default "" | quote }}
+          "issuerUrl": {{ .Values.global.csgship.oauth.issuer | default "" | quote }},
+          "providerUrl": {{ .Values.global.csgship.oauth.issuer | default "" | quote }}
         }
       ]
     }
@@ -866,19 +866,19 @@ data:
         name = 'admin'
         AND password_type = 'plain';
 
-    {{- if and (hasKey .Values.global.starship "oauth")
-            (hasKey .Values.global.starship.oauth "clientId")
-            (hasKey .Values.global.starship.oauth "clientSecret")
-            (hasKey .Values.global.starship.oauth "issuer") }}
+    {{- if and (hasKey .Values.global.csgship "oauth")
+            (hasKey .Values.global.csgship.oauth "clientId")
+            (hasKey .Values.global.csgship.oauth "clientSecret")
+            (hasKey .Values.global.csgship.oauth "issuer") }}
     -- Update GitLab provider
     UPDATE
         provider
     SET
-        client_id = {{ .Values.global.starship.oauth.clientId | squote }},
-        client_secret = {{ .Values.global.starship.oauth.clientSecret | squote }},
-        custom_auth_url = {{ printf "%s/oauth/authorize" .Values.global.starship.oauth.issuer | squote }},
-        custom_token_url = {{ printf "%s/oauth/token" .Values.global.starship.oauth.issuer | squote }},
-        custom_user_info_url = {{ printf "%s/api/v4/user" .Values.global.starship.oauth.issuer | squote }}
+        client_id = {{ .Values.global.csgship.oauth.clientId | squote }},
+        client_secret = {{ .Values.global.csgship.oauth.clientSecret | squote }},
+        custom_auth_url = {{ printf "%s/oauth/authorize" .Values.global.csgship.oauth.issuer | squote }},
+        custom_token_url = {{ printf "%s/oauth/token" .Values.global.csgship.oauth.issuer | squote }},
+        custom_user_info_url = {{ printf "%s/api/v4/user" .Values.global.csgship.oauth.issuer | squote }}
     WHERE
         name = 'GitLab_Provider';
     {{- end }}

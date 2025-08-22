@@ -1,5 +1,5 @@
 # Example values file for Enterprise Edition (EE) deployment
-# This configuration will deploy CSGHub EE with Starship components
+# This configuration will deploy CSGHub EE with Csgship components
 
 global:
   # Set edition to EE
@@ -26,19 +26,19 @@ global:
   objectStore:
     enabled: true
 
-  # Starship OAuth configuration (for EE)
-  starship:
+  # Csgship OAuth configuration (for EE)
+  csgship:
     oauth:
       issuer: "https://gitlab.example.com"
       clientId: "your-client-id"
       clientSecret: "your-client-secret"
 
-# Starship configuration - explicitly enable for EE
-starship:
-  # Must be explicitly set to true for Starship to be deployed
+# Csgship configuration - explicitly enable for EE
+csgship:
+  # Must be explicitly set to true for Csgship to be deployed
   enabled: true
 
-  # Starship-specific configurations
+  # Csgship-specific configurations
   web:
     openai:
       model: "gpt-4"
