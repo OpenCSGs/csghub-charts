@@ -547,6 +547,28 @@
                 }
               }
             },
+            "gitlabShell": {
+              "type": "object",
+              "properties": {
+                "sshPort": {
+                  "type": "integer",
+                  "description": "Shell ssh port",
+                  "minimum": 1024,
+                  "maximum": 65535,
+                  "default": 22
+                }
+              }
+            },
+            "multiSync": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable multi-sync",
+                  "default": true
+                }
+              }
+            },
             "securityContext": {
               "type": "object",
               "properties": {

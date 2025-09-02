@@ -213,6 +213,10 @@ csghub:
     gitlabShell: { }
       # sshPort: 22
 
+    ## Enable or Disable Multi-Sync
+    multiSync:
+      enabled: true
+
     ## Pod annotations and labels
     podAnnotations: { }
     podLabels: { }

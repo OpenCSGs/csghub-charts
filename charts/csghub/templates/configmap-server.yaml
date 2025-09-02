@@ -36,8 +36,8 @@ data:
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "csghub.external.endpoint" . | quote }}
   STARHUB_JWT_SIGNING_KEY: "e2kk6awudc3620ed9a"
 
-  # Multiple-Sync Enabled
-  STARHUB_SERVER_MULTI_SYNC_ENABLED: "true"
+  # Multiple-Sync Enabled/Disabled
+  STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ .Values.csghub.server.multiSync.enabled | quote }}
   # Multiple-Sync fetch timeout
   STARHUB_SERVER_GIT_OPERATION_TIMEOUT: "120"
 
