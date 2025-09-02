@@ -99,7 +99,18 @@ global:
 
   ## Content moderation configuration
   moderation:
+    ## Flag to enable or disable the moderation service
     enabled: false
+    ## The endpoint URL of the moderation service (leave empty if not applicable)
+    # endpoint: ""
+    ## The access key ID for authentication with the moderation service
+    # accessKeyId: ""
+    ## The access key secret for authentication with the moderation service
+    # accessKeySecret: ""
+    ## The region identifier where the moderation service is hosted (e.g., "us-west-1")
+    # region: ""
+    ## Enable or disable SSL/TLS for secure communication with the moderation service
+    # enableSSL: true
 
   ## Deployment configuration for instances
   deploy:

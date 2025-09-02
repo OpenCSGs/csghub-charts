@@ -12,7 +12,9 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "gateway") | nindent 4 }}
 data:
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "true"
+  STARHUB_SERVER_SENSITIVE_CHECK_ENDPOINT: {{ .Values.global.moderation.endpoint | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_ID: {{ .Values.global.moderation.accessKeyId | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_SECRET: {{ .Values.global.moderation.accessKeySecret | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_REGION: {{ .Values.global.moderation.region | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ .Values.global.moderation.enableSSL | quote }}
 {{- end }}
