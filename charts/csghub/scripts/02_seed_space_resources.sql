@@ -24,7 +24,7 @@ SET row_security = off;
 SELECT pg_catalog.set_config('search_path', 'public', false);
 
 --
--- Seed Data for Name: space_resources; Type: TABLE DATA; Schema: public; Owner: csghub_server
+-- Seed Data for Name: space_resources; Type: TABLE DATA; Schema: public; Owner: csghub
 --
 
 WITH selected_cluster AS (
@@ -44,7 +44,7 @@ ON CONFLICT (id)
         cluster_id = EXCLUDED.cluster_id;
 
 --
--- Name: space_resources_id_seq; Type: SEQUENCE SET; Schema: public; Owner: csghub_server
+-- Name: space_resources_id_seq; Type: SEQUENCE SET; Schema: public; Owner: csghub
 --
 
 SELECT

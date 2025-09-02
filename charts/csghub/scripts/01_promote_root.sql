@@ -24,7 +24,7 @@ SET row_security = off;
 SELECT pg_catalog.set_config('search_path', 'public', false);
 
 --
--- Type: Trigger; Schema: public; Owner: csghub_server
+-- Type: Trigger; Schema: public; Owner: csghub
 --
 -- Create Trigger Function
 CREATE OR REPLACE FUNCTION promote_root_to_admin ()
