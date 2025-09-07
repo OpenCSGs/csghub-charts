@@ -228,6 +228,10 @@ csghub:
     multiSync:
       enabled: true
 
+    ## Enable Swagger API assistants
+    swagger:
+      enabled: false
+
     ## Pod annotations and labels
     podAnnotations: { }
     podLabels: { }

@@ -174,3 +174,7 @@ data:
   OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "payment")) | quote }}
   OPENCSG_PAYMENT_SERVER_PORT: {{ include "csghub.svc.port" "payment" | quote }}
   {{- end }}
+
+  {{- if .Values.csghub.server.swagger.enabled }}
+  STARHUB_SERVER_ENABLE_SWAGGER: "true"
+  {{- end }}
