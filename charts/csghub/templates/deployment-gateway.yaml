@@ -67,7 +67,7 @@ spec:
         - name: rproxy
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "update-ca-certificates && /starhub-bin/starhub start rproxy" ]
+          command: [ "/starhub-bin/starhub", "start", "rproxy", "-l", {{ .Values.csghub.server.log.level | default "info" | quote }} ]
           ports:
             - containerPort: 8083
               name: rproxy
@@ -158,7 +158,7 @@ spec:
         - name: moderation
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "moderation", "launch" ]
+          command: [ "/starhub-bin/starhub", "moderation", "launch", "-l", {{ .Values.csghub.server.log.level | default "info" | quote }} ]
           ports:
             - containerPort: 8089
               name: moderation
@@ -195,7 +195,7 @@ spec:
         - name: aigateway
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "aigateway", "launch" ]
+          command: [ "/starhub-bin/starhub", "aigateway", "launch", "-l", {{ .Values.csghub.server.log.level | default "info" | quote }} ]
           ports:
             - containerPort: 8084
               name: aigateway
