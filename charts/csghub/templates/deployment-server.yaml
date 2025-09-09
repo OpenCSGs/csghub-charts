@@ -89,7 +89,7 @@ spec:
           {{- $_ := set .Values.csghub.server.image "tag" $tag }}
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "update-ca-certificates && /starhub-bin/scripts/init.sh" ]
+          command: [ "/starhub-bin/starhub", "start", "server", "-l", {{ .Values.csghub.server.log.level | default "info" | quote }} ]
           ports:
             - containerPort: 8080
               name: server

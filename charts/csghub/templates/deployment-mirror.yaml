@@ -56,7 +56,7 @@ spec:
           {{- $_ := set .Values.csghub.server.image "tag" $tag }}
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "update-ca-certificates && /starhub-bin/starhub mirror repo-sync" ]
+          command: [ "/starhub-bin/starhub", "mirror", "repo-sync", "-l", {{ .Values.csghub.server.log.level | default "info" | quote }} ]
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
@@ -103,7 +103,7 @@ spec:
         - name: mirror-lfs
           image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
           imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "update-ca-certificates && /starhub-bin/starhub mirror lfs-sync" ]
+          command: [ "/starhub-bin/starhub", "mirror", "lfs-sync", "-l", {{ .Values.csghub.server.log.level | default "info" | quote }} ]
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}

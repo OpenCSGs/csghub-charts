@@ -232,6 +232,10 @@ csghub:
     swagger:
       enabled: false
 
+    ## Log Level, eg: info, warning, debug, error
+    log:
+      level: info
+
     ## Pod annotations and labels
     podAnnotations: { }
     podLabels: { }
