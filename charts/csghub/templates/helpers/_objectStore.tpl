@@ -60,7 +60,7 @@ generate object store config
 {{/* service level config override */}}
 {{- if $service.objectStore.endpoint -}}
   {{- $_ := set $config "endpoint" $service.objectStore.endpoint -}}
-  {{- $_ := set $config "externalEndpoint" $global.Values.global.objectStore.endpoint -}}
+  {{- $_ := set $config "externalEndpoint" $service.objectStore.endpoint -}}
 {{- end -}}
 {{- if $service.objectStore.accessKey -}}
   {{- $_ := set $config "accessKey" $service.objectStore.accessKey -}}
