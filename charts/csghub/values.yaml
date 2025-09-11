@@ -613,3 +613,65 @@ fluentd:
           </format>
         </match>
       </label>
+
+loki:
+  deploymentMode: SingleBinary
+  singleBinary:
+    extraVolumeMounts:
+      - name: storage
+        mountPath: /loki
+    extraEnv:
+      - name: GOMEMLIMIT
+        value: 3750MiB
+  lokiCanary:
+    enabled: false
+  gateway:
+    enabled: false
+  loki:
+    commonConfig:
+      replication_factor: 1
+      path_prefix: /loki
+    storage:
+      type: filesystem
+    schemaConfig:
+      configs:
+        - from: 2024-04-01
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+    ingester:
+      chunk_encoding: snappy
+    tracing:
+      enabled: false
+    querier:
+      max_concurrent: 2
+  test:
+    enabled: false
+  chunksCache:
+    writebackSizeLimit: 10MB
+    resources:
+      limits:
+        memory: 4096Mi
+      requests:
+        memory: 2048Mi
+  resultsCache:
+    resources:
+      limits:
+        memory: 1024Mi
+      requests:
+        memory: 512Mi
+
+kube-prometheus-stack:
+  crds:
+    enabled: true
+    upgradeJob:
+      enabled: true
+  alertmanager:
+    enabled: false
+  grafana:
+    enabled: false
+  nodeExporter:
+    enabled: false

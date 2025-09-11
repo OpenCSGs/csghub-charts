@@ -87,3 +87,15 @@ dependencies:
     version: "2.1.4"
     repository: "file://charts/reloader"
     condition: reloader.enabled
+  - name: loki
+    version: "6.29.0"
+    repository: "file://charts/loki"
+    condition: loki.enabled
+  - name: kube-prometheus-stack
+    version: "70.5.0"
+    repository: "file://charts/kube-prometheus-stack"
+    condition: kube-prometheus-stack.enabled
+  - name: tempo
+    version: "1.23.3"
+    repository: "file://charts/tempo"
+    condition: tempo.enabled

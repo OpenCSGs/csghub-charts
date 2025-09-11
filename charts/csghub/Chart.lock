@@ -44,5 +44,14 @@ dependencies:
 - name: reloader
   repository: file://charts/reloader
   version: 2.1.4
-digest: sha256:afabaf5a23022bf7d7dd2fb2741986ba0c75670e6efe9b24c6811b9617083f8b
-generated: "2025-07-02T18:56:01.183295+08:00"
+- name: loki
+  repository: file://charts/loki
+  version: 6.29.0
+- name: kube-prometheus-stack
+  repository: file://charts/kube-prometheus-stack
+  version: 70.5.0
+- name: tempo
+  repository: file://charts/tempo
+  version: 1.23.3
+digest: sha256:e863b49fb1d08ae24fed94f398d1ece508fb0114b36201f8eb200c9bde0ae3fa
+generated: "2025-09-11T17:51:10.637474+08:00"
