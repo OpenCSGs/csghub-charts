@@ -31,10 +31,10 @@ data:
     {{- $ARGS = printf "--region=%s --ignore-existing" $REGION }}
     {{- end }}
     # Create buckets
-    {{- range $key, $value := .Values.buckets }}
-    {{- printf "mc mb %s $ALIAS/%s\n" $ARGS $key | nindent 4 }}
-    {{- if eq $value "public" }}
-    {{- printf "mc anonymous set download $ALIAS/%s\n" $key }}
+    {{- range .Values.buckets }}
+    {{- printf "mc mb %s $ALIAS/%s\n" $ARGS .name | nindent 4 }}
+    {{- if eq .policy "public" }}
+    {{- printf "mc anonymous set download $ALIAS/%s\n" .name }}
     {{- end }}
     {{- end }}
     {{- end }}
