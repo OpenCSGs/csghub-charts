@@ -142,33 +142,6 @@ spec:
 apiVersion: {{ include "common.capabilities.hpa.apiVersion" . }}
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "common.names.custom" (list . "runner") }}
-  namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
-spec:
-  scaleTargetRef:
-    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
-    kind: Deployment
-    name: {{ include "common.names.custom" (list . "runner") }}
-  minReplicas: 1
-  maxReplicas: 2
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ .Values.csghub.autoscaling.targetCPUUtilizationPercentage | default 80 }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ .Values.csghub.autoscaling.targetMemoryUtilizationPercentage | default 80 }}
----
-apiVersion: {{ include "common.capabilities.hpa.apiVersion" . }}
-kind: HorizontalPodAutoscaler
-metadata:
   name: {{ include "common.names.custom" (list . "notification") }}
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" (dict "context" . "service" "notification") | nindent 4 }}

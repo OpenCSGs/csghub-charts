@@ -156,25 +156,6 @@ spec:
   selector:
     {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "portal") | nindent 4 }}
 ---
-{{- if .Values.global.deploy.enabled }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "common.names.custom" (list . "runner") }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
-spec:
-  type: ClusterIP
-  ports:
-    - port: {{ include "csghub.svc.port" "runner" }}
-      targetPort: 8082
-      protocol: TCP
-      name: runner
-  selector:
-    {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "runner") | nindent 4 }}
-{{- end }}
----
 {{- if or (and .Values.csghub.portal.docs.host .Values.csghub.portal.docs.port) .Values.csghub.portal.docs.domain }}
 apiVersion: v1
 kind: Service
@@ -182,7 +163,7 @@ metadata:
   name: {{ include "common.names.custom" (list . "docs") }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "service" "docs") | nindent 4 }}
 spec:
   {{- if .Values.csghub.portal.docs.domain }}
   type: ExternalName
@@ -204,11 +185,10 @@ metadata:
   name: {{ include "common.names.custom" (list . "docs") }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "service" "docs") | nindent 4 }}
 subsets:
   - addresses:
       - ip: {{ .Values.csghub.portal.docs.host }}
     ports:
       - port: {{ .Values.csghub.portal.docs.port }}
 {{- end }}
----

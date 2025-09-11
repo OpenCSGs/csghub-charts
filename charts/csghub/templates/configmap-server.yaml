@@ -93,24 +93,18 @@ data:
   OPENCSG_USER_SERVER_PORT: {{ include "csghub.svc.port" "user" | quote }}
 
   # Space Application
-  STARHUB_SERVER_SPACE_BUILDER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
-  STARHUB_SERVER_SPACE_RUNNER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "csghub.external.endpoint" . | quote }}
-  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.csghub.runner.modelRegistry | default (or .Values.global.image.registry "docker.io") | quote }}
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.csghub.server.modelRegistry | default (or .Values.global.image.registry "docker.io") | quote }}
 
   # Deprecated ==> re-enabled
-  {{- if .Values.global.deploy.usePublicDomain }}
+  {{- if .Values.global.usePublicDomain }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ include "csghub.external.public.endpoint" . | trimPrefix "http://" | trimPrefix "https://" | quote }}
   {{- else }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: ""
   {{- end }}
 
   # Deprecated
-  {{- $spaceNamespace := .Values.global.deploy.namespace }}
-  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
-  {{- $spaceNamespace = .Release.Namespace }}
-  {{- end }}
-  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" $spaceNamespace (include "csghub.svc.port" "rproxy") | quote }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" (include "namespace.spaces" .) (include "csghub.svc.port" "rproxy") | quote }}
 
   # Casdoor
   STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"
@@ -141,7 +135,7 @@ data:
 
   OPENCSG_TRACING_OTLP_LOGGING: "false"
 
-  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.deploy.pipIndexUrl | quote }}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.pipIndexUrl | quote }}
 
   # Notification
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "notification")) | quote }}

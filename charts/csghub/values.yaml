@@ -112,37 +112,33 @@ global:
     ## Enable or disable SSL/TLS for secure communication with the moderation service
     # enableSSL: true
 
-  ## Deployment configuration for instances
-  deploy:
-    enabled: true
-    ## Kubernetes secret for deployment configurations
-    kubeSecret: "csghub-kube-configs"
-    ## Namespace for deployment
-    namespace: "spaces"
-    ## Auto-install knative and argo
-    autoConfigure: true
-    ## Namespace merging configuration
-    ## Merging mode: "Multi" (reduce namespaces) or "Single" (merge to one namespace) or "Disable" (Disable merging)
-    mergingNamespace: "Disable"
-    ## Knative serving configuration
-    knative:
-      serving:
-        services:
-          ## Knative service type (LoadBalancer or NodePort)
-          - type: NodePort
-            ## Internal domain for service access
-            domain: "app.internal"
-            ## API server host address
-            # host: "192.168.18.10"
-            ## Service port (NodePort value when type is NodePort)
-            # port: "30213"
-    ## Custom pip repository URL
-    pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
-    ## Image builder configuration
-    imageBuilder:
-      namespace: "image-factory"
-    ## Use public domain for deployments
-    usePublicDomain: true
+  ## Namespace for deployment
+  namespace: "spaces"
+
+  ## Auto-install knative and argo
+  autoConfigure: true
+
+  ## Namespace merging configuration
+  ## Merging mode: "Multi" (reduce namespaces) or "Single" (merge to one namespace) or "Disable" (Disable merging)
+  mergingNamespace: "Disable"
+
+  ## Knative serving configuration
+  knative:
+    serving:
+      services:
+        ## Knative service type (LoadBalancer or NodePort)
+        - type: NodePort
+          ## Internal domain for service access
+          domain: "app.internal"
+          ## API server host address
+          # host: "192.168.18.10"
+          ## Service port (NodePort value when type is NodePort)
+          # port: "30213"
+  ## Custom pip repository URL
+  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+
+  ## Use public domain for deployments
+  usePublicDomain: true
 
   ## Persistent storage configuration
   persistence: { }
@@ -243,6 +239,9 @@ csghub:
     logging:
       level: info
 
+    ## Model Registry
+    # modelRegistry: "docker.io"
+
     ## Pod annotations and labels
     podAnnotations: { }
     podLabels: { }
@@ -276,50 +275,6 @@ csghub:
     nodeSelector: { }
     tolerations: [ ]
     affinity: { }
-
-  ## Runner configuration
-  runner:
-    ## Docker registry configuration
-    registry:
-      ## Docker registry URL
-      registry: ""
-      ## Image namespace/organization
-      repository: ""
-      ## Registry username
-      username: ""
-      ## Registry password
-      password: ""
-      ## Disable TLS/SSL verification
-      insecure: true
-
-    ## Auto-label configuration
-    autoLabel:
-      image:
-        ## Image registry path
-        registry: "docker.io"
-        ## Image repository
-        repository: "opencsghq/gpu_gather"
-        ## Image tag
-        tag: "latest"
-      cli:
-        ## CLI image for GPU detection
-        image: "nvidia/cuda:12.0.0-base-ubi8"
-        ## CLI command to detect GPUs
-        cmd: "nvidia-smi --query-gpu=name --format=csv,noheader"
-
-    ## Object storage configuration
-    objectStore:
-      # endpoint: "http://minio.<domain>"
-      # accessKey: "minio"
-      # secretKey: ""
-      bucket: "csghub-workflow"
-      # region: "cn-north-1"
-      # encrypt: false
-      # secure: true
-      # pathStyle: true
-
-    ## Defined registry to pull model framework images from
-    # modelRegistry: "docker.io"
 
   ## Portal configuration
   portal:

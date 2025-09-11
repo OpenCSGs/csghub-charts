@@ -25,7 +25,7 @@ metadata:
     nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
     nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
-    {{- if not .Values.global.deploy.usePublicDomain }}
+    {{- if not .Values.global.usePublicDomain }}
     nginx.ingress.kubernetes.io/server-snippet: |
       location ~* "^/endpoint/" {
         proxy_pass http://{{ printf "%s.%s.svc.%s" (include "common.names.custom" (list . "gateway")) .Release.Namespace (include "cluster.domain" .) }}:{{ include "csghub.svc.port" "rproxy" }};
@@ -108,7 +108,7 @@ spec:
               serviceName: {{ include "common.names.custom" (list . "server") }}
               servicePort: {{ include "csghub.svc.port" "server" }}
             {{- end }}
-    {{- if .Values.global.deploy.usePublicDomain }}
+    {{- if .Values.global.usePublicDomain }}
     - host: {{ printf "*.%s" (include "csghub.external.public.domain" .) | quote }}
       http:
         paths:

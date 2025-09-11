@@ -7,9 +7,7 @@ templates:
   - deployment-accounting.yaml
   - deployment-user.yaml
   - deployment-notification.yaml
-  - deployment-runner.yaml
   - configmap-server.yaml
-  - configmap-runner.yaml
   - configmap-proxy-nginx.
   - configmap-gateway-rproxy.yaml
   - configmap-gateway-moderation.yaml
@@ -25,7 +23,6 @@ tests:
       - deployment-accounting.yaml
       - deployment-user.yaml
       - deployment-notification.yaml
-      - deployment-runner.yaml
     set:
       global.image.tag: "v1.8.0"
     asserts:
@@ -42,7 +39,6 @@ tests:
       - deployment-accounting.yaml
       - deployment-user.yaml
       - deployment-notification.yaml
-      - deployment-runner.yaml
     set:
       global.image.tag: "v1.8.0"
       csghub:
@@ -63,7 +59,6 @@ tests:
       - deployment-accounting.yaml
       - deployment-user.yaml
       - deployment-notification.yaml
-      - deployment-runner.yaml
     set:
       global.edition: "saas"
       global.image.tag: "v1.8.0"
