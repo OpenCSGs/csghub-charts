@@ -11,52 +11,52 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "mirror") | nindent 4 }}
   annotations:
     reloader.stakater.com/auto: "true"
-    {{- with .Values.csghub.mirror.annotations }}
+    {{- with .Values.mirror.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "mirror") | nindent 6 }}
-  replicas: {{ .Values.csghub.mirror.replicas }}
+  replicas: {{ .Values.mirror.replicas }}
   revisionHistoryLimit: 1
   minReadySeconds: 30
   template:
     metadata:
       annotations:
-        {{- with .Values.csghub.mirror.podAnnotations }}
+        {{- with .Values.mirror.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
         {{- include "common.labels" (dict "context" . "service" "mirror") | nindent 8 }}
     spec:
-      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or .Values.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
         {{- end }}
       {{- end }}
-      {{- with .Values.csghub.mirror.securityContext }}
+      {{- with .Values.mirror.securityContext }}
       securityContext:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: 10
-      {{- if .Values.csghub.server.serviceAccount.create }}
+      {{- if .Values.server.serviceAccount.create }}
       serviceAccountName: {{ include "common.names.custom" (list . "mirror") }}
-      automountServiceAccountToken: {{ .Values.csghub.server.serviceAccount.automount }}
+      automountServiceAccountToken: {{ .Values.server.serviceAccount.automount }}
       {{- end }}
       initContainers:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
         - name: mirror-repo
-          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
-          {{- $_ := set .Values.csghub.server.image "tag" $tag }}
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "mirror", "repo-sync", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.server.image.tag .Values.global.image.tag) "context" .) }}
+          {{- $_ := set .Values.server.image "tag" $tag }}
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "mirror", "repo-sync", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
@@ -83,14 +83,14 @@ spec:
             - name: STARHUB_SERVER_S3_ACCESS_KEY_SECRET
               value: "$(MINIO_ROOT_PASSWORD)"
             {{- end }}
-            {{- with .Values.csghub.server.environments }}
+            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "50m"
               memory: "128Mi"
@@ -99,11 +99,11 @@ spec:
               memory: "256Mi"
             {{- end }}
           securityContext:
-            {{- .Values.csghub.mirror.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.mirror.podSecurityContext | toYaml | nindent 12 }}
         - name: mirror-lfs
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "mirror", "lfs-sync", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "mirror", "lfs-sync", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
@@ -130,14 +130,14 @@ spec:
             - name: STARHUB_SERVER_S3_ACCESS_KEY_SECRET
               value: "$(MINIO_ROOT_PASSWORD)"
             {{- end }}
-            {{- with .Values.csghub.server.environments }}
+            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "50m"
               memory: "128Mi"
@@ -146,16 +146,16 @@ spec:
               memory: "256Mi"
             {{- end }}
           securityContext:
-            {{- .Values.csghub.mirror.podSecurityContext | toYaml | nindent 12 }}
-      {{- with .Values.csghub.mirror.nodeSelector }}
+            {{- .Values.mirror.podSecurityContext | toYaml | nindent 12 }}
+      {{- with .Values.mirror.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.mirror.affinity }}
+      {{- with .Values.mirror.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.mirror.tolerations }}
+      {{- with .Values.mirror.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

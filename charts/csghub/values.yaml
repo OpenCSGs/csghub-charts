@@ -140,6 +140,10 @@ global:
   ## Use public domain for deployments
   usePublicDomain: true
 
+  ## Clearly identify the running mode, root means running as a subchart
+  chartContext:
+    isRoot: true
+
   ## Persistent storage configuration
   persistence: { }
     # storageClass: ""
@@ -157,234 +161,233 @@ global:
     enabled: false
 
 ## CSGHub self-defined service configuration
-csghub:
-  ## Autoscaling configuration
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 80
-    targetMemoryUtilizationPercentage: 80
+## Autoscaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
 
-  ## Server configuration
-  server:
-    ## Image configuration
-    image:
-      registry: "docker.io"
-      repository: "opencsghq/csghub-server"
-      # tag: "v1.1.0"
-      pullPolicy: "IfNotPresent"
-      pullSecrets: [ ]
+## Server configuration
+server:
+  ## Image configuration
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/csghub-server"
+    # tag: "v1.1.0"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: [ ]
 
-    ## Just for adaptation, no practical significance
-    serviceAccount:
-      create: false
-      automount: false
-      annotations: { }
-
-    ## PostgreSQL database configuration
-    postgresql:
-      # host: ""
-      # port: 5432
-      user: "csghub"
-      # password: ""
-      database: "csghub_server"
-      # timezone: "Etc/UTC"
-
-    ## Redis configuration
-    redis:
-      host: ""
-      port: 6379
-      password: ""
-
-    ## Gitaly configuration
-    gitaly:
-      host: ""
-      port: 8075
-      storage: "default"
-      token: ""
-
-    ## Object storage configuration
-    objectStore:
-      # endpoint: ""
-      # accessKey: "minio"
-      # secretKey: ""
-      bucket: "csghub-server"
-      # region: "cn-north-1"
-      # encrypt: false
-      # secure: true
-      # pathStyle: true
-      # directUpload: false
-
-    ## Defined gitlab-shell external ssh port
-    gitlabShell: { }
-      # sshPort: 22
-
-    ## Enable or Disable Multi-Sync
-    multiSync:
-      enabled: true
-      ## If proxy enabled
-      proxy:
-        enabled: false
-        ## Set your proxy address
-        address: ""
-        ## Follow domain will be proxied, pls keep it default.
-        hosts: "opencsg.com;sync.opencsg.com;hub.opencsg.com"
-
-    ## Enable Swagger API assistants
-    swagger:
-      enabled: false
-
-    ## Log Level, eg: info, warning, debug, error
-    logging:
-      level: info
-
-    ## Model Registry
-    # modelRegistry: "docker.io"
-
-    ## Pod annotations and labels
-    podAnnotations: { }
-    podLabels: { }
-
-    ## Security contexts
-    podSecurityContext: { }
-    securityContext: { }
-      # capabilities:
-      #   drop:
-      #   - ALL
-      # readOnlyRootFilesystem: true
-      # runAsNonRoot: true
-      # runAsUser: 1000
-
-    ## Environment variables
-    environments: { }
-
-    ## Deployment annotations
+  ## Just for adaptation, no practical significance
+  serviceAccount:
+    create: false
+    automount: false
     annotations: { }
 
-    ## Deployment resource requests
-    resources:
-       limits:
-         cpu: 100m
-         memory: 128Mi
-       requests:
-         cpu: 100m
-         memory: 128Mi
+  ## PostgreSQL database configuration
+  postgresql:
+    # host: ""
+    # port: 5432
+    user: "csghub"
+    # password: ""
+    database: "csghub_server"
+    # timezone: "Etc/UTC"
 
-    ## Node scheduling configuration
-    nodeSelector: { }
-    tolerations: [ ]
-    affinity: { }
+  ## Redis configuration
+  redis:
+    host: ""
+    port: 6379
+    password: ""
 
-  ## Portal configuration
-  portal:
-    ## Image configuration
-    image:
-      pullSecrets: [ ]
-      registry: "docker.io"
-      repository: "opencsghq/csghub-portal"
-      # tag: "v1.1.0"
-      pullPolicy: "IfNotPresent"
+  ## Gitaly configuration
+  gitaly:
+    host: ""
+    port: 8075
+    storage: "default"
+    token: ""
 
-    ## Ingress configuration
-    ingress:
-      enabled: true
-      tls:
-        enabled: false
-        secretName: ""
-      annotations: { }
+  ## Object storage configuration
+  objectStore:
+    # endpoint: ""
+    # accessKey: "minio"
+    # secretKey: ""
+    bucket: "csghub-server"
+    # region: "cn-north-1"
+    # encrypt: false
+    # secure: true
+    # pathStyle: true
+    # directUpload: false
 
-    ## Links to docs center (not for ce/ee)
-    docs: { }
-      ## If using domain, it'll create svc by ExternalName
-      # domain: ""
-      # host: "192.168.18.10"
-      # port: "8003"
+  ## Defined gitlab-shell external ssh port
+  gitlabShell: { }
+  # sshPort: 22
 
-    ## PostgreSQL database configuration
-    postgresql:
-      # host: ""
-      # port: 5432
-      user: "csghub"
-      # password: ""
-      database: "csghub_portal"
-      # timezone: "Etc/UTC"
+  ## Enable or Disable Multi-Sync
+  multiSync:
+    enabled: true
+    ## If proxy enabled
+    proxy:
+      enabled: false
+      ## Set your proxy address
+      address: ""
+      ## Follow domain will be proxied, pls keep it default.
+      hosts: "opencsg.com;sync.opencsg.com;hub.opencsg.com"
 
-    ## Object storage configuration
-    objectStore:
-      # endpoint: ""
-      # accessKey: "minio"
-      # secretKey: ""
-      bucket: "csghub-portal-public"
-      # region: "cn-north-1"
-      # encrypt: false
-      # secure: true
-      # pathStyle: true
+  ## Enable Swagger API assistants
+  swagger:
+    enabled: false
 
-    ## Additional object storage configuration, user storage authentication data
-    additionalObjectStore:
-      bucket: "csghub-portal"
+  ## Log Level, eg: info, warning, debug, error
+  logging:
+    level: info
 
-    ## SMTP configuration
-    smtp: { }
-      # host: ""
-      # port: 465
-      # username: ""
-      # password: ""
+  ## Model Registry
+  # modelRegistry: "docker.io"
 
-    serviceAccount:
-      create: false
-      automount: false
-      annotations: { }
+  ## Pod annotations and labels
+  podAnnotations: { }
+  podLabels: { }
 
-  ## The following services are all derived services of csghub-server.
-  ## For detailed configuration, please refer to csghub.server
-  ## Accounting configuration
-  accounting: { }
+  ## Security contexts
+  podSecurityContext: { }
+  securityContext: { }
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+  # runAsUser: 1000
 
-  ## Dataviewer configuration
-  dataviewer: { }
+  ## Environment variables
+  environments: { }
 
-  ## Gateway configuration
-  gateway: { }
+  ## Deployment annotations
+  annotations: { }
 
-  ## Mirror configuration
-  mirror: { }
+  ## Deployment resource requests
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
-  ## Notification configuration
-  notification:
-    ## Set timezone
-    repoSyncTime: "Asia/Shanghai"
-    ## In the broadcast station internal message workflow,
-    ## the user service will be accessed in batches to obtain the user uuid,
-    ## and the page size for each access will be configured
-    broadcastUserPageSize: 100
-    ## When sending system broadcast email workflow,
-    ## the user email address will be obtained in batches and then sent,
-    ## controlling the number of emails obtained and sent at a time
-    broadcastEmailPageSize: 100
-    ## SMTP notify settings
-    smtp: { }
-      # host: ""
-      # port: 465
-      # username: ""
-      # password: ""
-    feiShu: { }
-      ## FeiShu bot Application Id
-      # appId: ""
-      ## FeiShu bot Application Secret
-      # appSecret: ""
-      ## used to control the interval time of batch aggregation Feishu message job
-      # batchSendMessageCronExpression: "*/10 * * * *"
-      ## limit the size of FeiShu message sent at a time (cannot exceed 30k)
-      # maxRequestContentSize: "20480"
-      ## configures the longest delay time for each message
-      # maxDelayDuration: "3600"
-      ## configures the cache expiration time of Feishu chat ids
-      # chatIdsCacheTTL: "21600"
+  ## Node scheduling configuration
+  nodeSelector: { }
+  tolerations: [ ]
+  affinity: { }
 
-  ## User configuration
-  user: { }
+## Portal configuration
+portal:
+  ## Image configuration
+  image:
+    pullSecrets: [ ]
+    registry: "docker.io"
+    repository: "opencsghq/csghub-portal"
+    # tag: "v1.1.0"
+    pullPolicy: "IfNotPresent"
+
+  ## Ingress configuration
+  ingress:
+    enabled: true
+    tls:
+      enabled: false
+      secretName: ""
+    annotations: { }
+
+  ## Links to docs center (not for ce/ee)
+  docs: { }
+    ## If using domain, it'll create svc by ExternalName
+    # domain: ""
+    # host: "192.168.18.10"
+  # port: "8003"
+
+  ## PostgreSQL database configuration
+  postgresql:
+    # host: ""
+    # port: 5432
+    user: "csghub"
+    # password: ""
+    database: "csghub_portal"
+    # timezone: "Etc/UTC"
+
+  ## Object storage configuration
+  objectStore:
+    # endpoint: ""
+    # accessKey: "minio"
+    # secretKey: ""
+    bucket: "csghub-portal-public"
+    # region: "cn-north-1"
+    # encrypt: false
+    # secure: true
+    # pathStyle: true
+
+  ## Additional object storage configuration, user storage authentication data
+  additionalObjectStore:
+    bucket: "csghub-portal"
+
+  ## SMTP configuration
+  smtp: { }
+    # host: ""
+    # port: 465
+    # username: ""
+  # password: ""
+
+  serviceAccount:
+    create: false
+    automount: false
+    annotations: { }
+
+## The following services are all derived services of csghub-server.
+## For detailed configuration, please refer to csghub.server
+## Accounting configuration
+accounting: { }
+
+## Dataviewer configuration
+dataviewer: { }
+
+## Gateway configuration
+gateway: { }
+
+## Mirror configuration
+mirror: { }
+
+## Notification configuration
+notification:
+  ## Set timezone
+  repoSyncTime: "Asia/Shanghai"
+  ## In the broadcast station internal message workflow,
+  ## the user service will be accessed in batches to obtain the user uuid,
+  ## and the page size for each access will be configured
+  broadcastUserPageSize: 100
+  ## When sending system broadcast email workflow,
+  ## the user email address will be obtained in batches and then sent,
+  ## controlling the number of emails obtained and sent at a time
+  broadcastEmailPageSize: 100
+  ## SMTP notify settings
+  smtp: { }
+    # host: ""
+    # port: 465
+    # username: ""
+  # password: ""
+  feiShu: { }
+    ## FeiShu bot Application Id
+    # appId: ""
+    ## FeiShu bot Application Secret
+    # appSecret: ""
+    ## used to control the interval time of batch aggregation Feishu message job
+    # batchSendMessageCronExpression: "*/10 * * * *"
+    ## limit the size of FeiShu message sent at a time (cannot exceed 30k)
+    # maxRequestContentSize: "20480"
+    ## configures the longest delay time for each message
+    # maxDelayDuration: "3600"
+    ## configures the cache expiration time of Feishu chat ids
+  # chatIdsCacheTTL: "21600"
+
+## User configuration
+user: { }
 
 ## More subChart configuration mappings are omitted here.
 ## Under normal circumstances, these configurations are not necessary.

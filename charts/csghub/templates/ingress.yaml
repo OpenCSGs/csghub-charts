@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */}}
 
-{{- if .Values.csghub.portal.ingress.enabled }}
+{{- if .Values.portal.ingress.enabled }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -39,7 +39,7 @@ metadata:
         proxy_cookie_flags ~ nosecure samesite=lax;
       }
     {{- end }}
-    {{- with .Values.csghub.portal.ingress.annotations }}
+    {{- with .Values.portal.ingress.annotations }}
     {{- toYaml . | nindent 4  }}
     {{- end  }}
 spec:
@@ -49,7 +49,7 @@ spec:
     - hosts:
         - {{ include "csghub.external.domain" . }}
         - {{ include "csghub.external.public.domain" . | quote }}
-      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.csghub.portal.ingress.tls.secretName }}
+      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.portal.ingress.tls.secretName }}
       {{- if $secret }}
       secretName: {{ $secret }}
       {{- else }}
@@ -126,7 +126,7 @@ spec:
             {{- end }}
     {{- end }}
 ---
-{{- if or (and .Values.csghub.portal.docs.host .Values.csghub.portal.docs.port) .Values.csghub.portal.docs.domain }}
+{{- if or (and .Values.portal.docs.host .Values.portal.docs.port) .Values.portal.docs.domain }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -138,7 +138,7 @@ metadata:
     nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
     nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
-    {{- with .Values.csghub.portal.ingress.annotations }}
+    {{- with .Values.portal.ingress.annotations }}
     {{- toYaml . | nindent 4  }}
     {{- end  }}
 spec:
@@ -147,7 +147,7 @@ spec:
   tls:
     - hosts:
         - {{ include "csghub.external.domain" . }}
-      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.csghub.portal.ingress.tls.secretName }}
+      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.portal.ingress.tls.secretName }}
       {{- if $secret }}
       secretName: {{ $secret }}
       {{- else }}
@@ -165,10 +165,10 @@ spec:
               service:
                 name: {{ include "common.names.custom" (list . "docs") }}
                 port:
-                  number: {{ .Values.csghub.portal.docs.port }}
+                  number: {{ .Values.portal.docs.port }}
             {{- else }}
               serviceName: {{ include "common.names.custom" (list . "docs") }}
-              servicePort:  {{ .Values.csghub.portal.docs.port }}
+              servicePort:  {{ .Values.portal.docs.port }}
             {{- end }}
 {{- end }}
 {{- end }}
