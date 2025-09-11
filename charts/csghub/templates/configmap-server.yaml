@@ -178,3 +178,11 @@ data:
   {{- if .Values.csghub.server.swagger.enabled }}
   STARHUB_SERVER_ENABLE_SWAGGER: "true"
   {{- end }}
+
+  {{- if .Values.csghub.server.multiSync.proxy.enabled }}
+  {{- with .Values.csghub.server.multiSync.proxy }}
+  STARHUB_SERVER_PROXY_ENABLE: "true"
+  STARHUB_SERVER_PROXY_URL: {{ .address | quote }}
+  STARHUB_SERVER_PROXY_HOSTS: {{ .hosts | quote }}
+  {{- end }}
+  {{- end }}

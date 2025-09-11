@@ -8,11 +8,6 @@ Define the external domain for csgship
 */}}
 {{- define "csgship.external.domain" -}}
 {{- $domain := include "global.domain" (list . (or .Values.global.ingress.customDomainPrefixes.csgship "csgship")) }}
-{{- if hasKey .Values.global.ingress "useTop" }}
-{{- if .Values.global.ingress.useTop }}
-{{- $domain = .Values.global.ingress.domain }}
-{{- end }}
-{{- end }}
 {{- $domain -}}
 {{- end }}
 
