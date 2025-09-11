@@ -63,12 +63,18 @@ versioning: false
 
 ## List of buckets to be created upon statefulset creation.
 buckets:
-  csghub-portal-public: public
-  csghub-portal: private
-  csghub-server: private
-  csghub-registry: private
-  csghub-workflow: private
-  csghub-billing: private
+  - name: csghub-portal-public
+    policy: public
+  - name: csghub-portal
+    policy: private
+  - name: csghub-server
+    policy: private
+  - name: csghub-registry
+    policy: private
+  - name: csghub-workflow
+    policy: private
+  - name: csghub-billing
+    policy: private
 
 ## Persistence settings for the Minio data.
 persistence:
