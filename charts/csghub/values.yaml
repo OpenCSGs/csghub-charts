@@ -9,7 +9,7 @@ global:
     ## It's cannot be set to nil, comment out using original image default.
     # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
     ## Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)
-    tag: "v1.10.0"
+    tag: "v1.11.0"
     ## Image pull policy
     pullPolicy: "IfNotPresent"
     ## Kubernetes secrets for pulling images from private registry
@@ -389,6 +389,10 @@ notification:
 ## User configuration
 user: { }
 
+runner:
+  reloader:
+    enabled: false
+
 ## More subChart configuration mappings are omitted here.
 ## Under normal circumstances, these configurations are not necessary.
 ## If necessary, you can check which parameters the subChart can configure and modify them.
@@ -589,6 +593,9 @@ loki:
     commonConfig:
       replication_factor: 1
       path_prefix: /loki
+      ring:
+        kvstore:
+          store: inmemory
     storage:
       type: filesystem
     schemaConfig:

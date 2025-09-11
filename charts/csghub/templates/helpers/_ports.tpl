@@ -20,6 +20,7 @@ Get the port number by service name
       "rproxy"       8083
       "runner"       8082
       "portal"       8090
+      "loki"         3100
   -}}
 
   {{- if not (hasKey $portMap $serviceType) -}}

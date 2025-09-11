@@ -1,0 +1,47 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ include "common.names.custom" (list . "loki") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" (dict "context" . "service" "loki") | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
+    nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
+    nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
+    {{- with .Values.loki.ingress.annotations }}
+    {{- toYaml . | nindent 4  }}
+    {{- end  }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
+  {{- if eq (include "global.ingress.tls.enabled" .) "true" }}
+  tls:
+    - hosts:
+        - {{ include "loki.external.domain" . }}
+      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.portal.ingress.tls.secretName }}
+      {{- if $secret }}
+      secretName: {{ $secret }}
+      {{- else }}
+      {{ fail "Loki ingress TLS is enabled but no secretName is provided." }}
+      {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ include "loki.external.domain" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ include "common.names.custom" (list . "loki") }}
+                port:
+                  number: {{ include "csghub.svc.port" "loki" }}
+            {{- else }}
+              serviceName: {{ include "common.names.custom" (list . "loki") }}
+              servicePort:  {{ include "csghub.svc.port" "loki" }}
+            {{- end }}
