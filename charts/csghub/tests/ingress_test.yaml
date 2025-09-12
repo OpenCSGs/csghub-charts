@@ -2,6 +2,7 @@ suite: ingress test
 templates:
   - ingress.yaml
   - ingress-loki.yaml
+  - ingress-prometheus.yaml
   - charts/csgship/charts/frontend/templates/ingress.yaml
   - charts/registry/templates/ingress.yaml
 tests:
@@ -102,16 +103,29 @@ tests:
           path: spec.rules[1].host
           value: "*.public.opencsg-poc.com"
 
-  - it: loki ingress should be always created
+  - it: loki ingress should be created
     set:
       global.ingress.enabled: true
       global.ingress.domain: opencsg-poc.com
+      loki.ingress.enabled: true
     templates:
       - ingress-loki.yaml
     asserts:
       - equal:
           path: spec.rules[0].host
           value: "loki.opencsg-poc.com"
+
+  - it: prometheus ingress should be created
+    set:
+      global.ingress.enabled: true
+      global.ingress.domain: opencsg-poc.com
+      prometheus.ingress.enabled: true
+    templates:
+      - ingress-prometheus.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: "prometheus.opencsg-poc.com"
 
   - it: csgship.<domain> and csgship-api.<domain> should be created if csgship is enabled
     set:
