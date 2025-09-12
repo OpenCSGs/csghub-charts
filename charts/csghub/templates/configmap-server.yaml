@@ -133,6 +133,10 @@ data:
 
   STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
 
+  # Tracing logging
+  {{- if .Values.tempo.enabled }}
+  OPENCSG_TRACING_OTLP_ENDPOINT: {{ printf "http://%s:4317" (include "common.names.custom" (list . "tempo")) }}
+  {{- end }}
   OPENCSG_TRACING_OTLP_LOGGING: "false"
 
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.pipIndexUrl | quote }}
