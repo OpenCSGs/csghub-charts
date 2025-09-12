@@ -134,6 +134,7 @@ global:
           # host: "192.168.18.10"
           ## Service port (NodePort value when type is NodePort)
           # port: "30213"
+
   ## Custom pip repository URL
   pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
 
@@ -389,6 +390,7 @@ notification:
 ## User configuration
 user: { }
 
+## Runner configuration
 runner:
   reloader:
     enabled: false
@@ -590,6 +592,7 @@ loki:
   gateway:
     enabled: false
   loki:
+    auth_enabled: false
     commonConfig:
       replication_factor: 1
       path_prefix: /loki
@@ -629,14 +632,14 @@ loki:
       requests:
         memory: 512Mi
 
-kube-prometheus-stack:
-  crds:
-    enabled: true
-    upgradeJob:
-      enabled: true
+tempo:
+  enabled: true
+
+prometheus:
+  enabled: true
   alertmanager:
     enabled: false
-  grafana:
+  prometheus-pushgateway:
     enabled: false
-  nodeExporter:
+  prometheus-node-exporter:
     enabled: false

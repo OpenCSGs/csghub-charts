@@ -47,11 +47,11 @@ dependencies:
 - name: loki
   repository: file://charts/loki
   version: 6.29.0
-- name: kube-prometheus-stack
-  repository: file://charts/kube-prometheus-stack
-  version: 70.5.0
 - name: tempo
   repository: file://charts/tempo
   version: 1.23.3
-digest: sha256:e863b49fb1d08ae24fed94f398d1ece508fb0114b36201f8eb200c9bde0ae3fa
-generated: "2025-09-11T17:51:10.637474+08:00"
+- name: prometheus
+  repository: file://charts/prometheus
+  version: 27.37.0
+digest: sha256:df269a20c090b93cf51d79e15eea2855959e574f6dbc0bc31c0332bb65c24907
+generated: "2025-09-12T12:57:14.587491+08:00"

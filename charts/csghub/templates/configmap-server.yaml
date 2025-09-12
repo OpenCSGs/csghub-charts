@@ -180,3 +180,9 @@ data:
   STARHUB_SERVER_PROXY_HOSTS: {{ .hosts | quote }}
   {{- end }}
   {{- end }}
+
+  # Prometheus
+  {{- if .Values.prometheus.enabled }}
+  STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:80/api/v1/query" (include "common.names.custom" (list . "prometheus-server")) }}
+  STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: ""
+  {{- end }}
