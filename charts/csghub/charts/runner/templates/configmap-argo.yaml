@@ -7,6 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $argoNamespace := include "namespace.argo" . }}
 {{- $spaceNamespace := include "namespace.spaces" . }}
 {{- $registry := or .Values.global.image.registry "qury.io" }}
+{{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1278,6 +1279,17 @@ data:
     data:
       executor: |
         imagePullPolicy: IfNotPresent
+      images: |
+        opencsg-registry-vpc.cn-beijing.cr.aliyuncs.com/opencsghq/bitnami/kaniko:1.23.2:
+          cmd: ["/kaniko/executor"]
+        {{ $registryConfig.registry }}/{{ $registryConfig.repository }}/bitnami/kaniko:1.23.2:
+          cmd: ["/kaniko/executor"]
+        {{ $registryConfig.registry }}/opencsghq/bitnami/kaniko:1.23.2:
+          cmd: ["/kaniko/executor"]
+        {{ $registryConfig.registry }}/bitnami/kaniko:1.23.2:
+          cmd: ["/kaniko/executor"]
+        bitnami/kaniko:1.23.2:
+          cmd: ["/kaniko/executor"]
     ---
     apiVersion: v1
     kind: Service
