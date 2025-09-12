@@ -13,6 +13,9 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ include "common.names.custom" (list . "prome-basic-auth") }}
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - Prometheus"
     nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
     {{- with .Values.prometheus.ingress.annotations }}
     {{- toYaml . | nindent 4  }}

@@ -496,9 +496,11 @@ ingress-nginx:
       - name: custom-error-pages
         mountPath: /www
 
+## Reloader Configuration
 reloader:
   image:
     name: "opencsghq/stakater-reloader"
+
 ## This section is used to configure how to collect pod logs in the current namespace.
 ## By default, they are directly output to the fluentd standard output in json format.
 fluentd:
@@ -507,102 +509,50 @@ fluentd:
   image:
     repository: "opencsghq/fluent-fluentd-kubernetes-daemonset"
   ## Configuration for Fluentd file sources
-  fileConfigs:
-    # Configuration for sources
-    01_sources.conf: |-
-      <source>
-        @type tail
-        @id in_tail_container_logs
-        @label @KUBERNETES
-        path /var/log/containers/*.log
-        pos_file /var/log/fluentd-containers.log.pos
-        tag kubernetes.*
-        read_from_head true
-        <parse>
-          @type json
-        </parse>
-        emit_unmatched_lines false
-      </source>
-      # expose metrics in prometheus format
-      <source>
-        @type prometheus
-        bind 0.0.0.0
-        port 24231
-        metrics_path /metrics
-      </source>
-      <system>
-        log_level debug
-      </system>
-    # Configuration for filters
-    02_filters.conf: |-
-      <label @KUBERNETES>
-        <filter kubernetes.**>
-          @type kubernetes_metadata
-          @id filter_kube_metadata
-          lookup_from_k8s_field true
-          skip_namespace_metadata true
-          skip_master_url true
-        </filter>
-        <filter kubernetes.var.log.containers.**>
-          @type grep
-          <regexp>
-            key $.kubernetes.labels
-            pattern /csghub/
-          </regexp>
-        </filter>
-        <match kubernetes.var.log.containers.**fluentd**>
-          @type null
-        </match>
-        <match **>
-          @type relabel
-          @label @DISPATCH
-        </match>
-      </label>
-    # Configuration for dispatching logs
-    03_dispatch.conf: |-
-      <label @DISPATCH>
-        <match **>
-          @type relabel
-          @label @OUTPUT
-        </match>
-      </label>
-    # Configuration for outputs
-    04_outputs.conf: |-
-      <label @OUTPUT>
-        <match **>
-          @type stdout
-          <format>
-            @type json
-            localtime true
-          </format>
-        </match>
-      </label>
+  fileConfigs: { }
 
+## Loki Configuration
 loki:
+  ## Enable or disable Loki ingress
   ingress:
     enabled: false
+    ## Basic authentication configuration for Loki ingress
+    basicAuth: { }
+      # username: "loki"
+      # password: "loki"
+  ## Deployment mode for Loki (SingleBinary or MicroServices)
   deploymentMode: SingleBinary
+  ## Configuration specific to single binary deployment
   singleBinary:
+    ## Additional volume mounts for Loki container
     extraVolumeMounts:
       - name: storage
         mountPath: /loki
+    ## Additional environment variables for Loki container
     extraEnv:
       - name: GOMEMLIMIT
         value: 3750MiB
+  ## Enable or disable Loki canary for monitoring
   lokiCanary:
     enabled: false
+  ## Enable or disable Loki gateway
   gateway:
     enabled: false
+  ## Core Loki configuration
   loki:
+    ## Enable or disable authentication
     auth_enabled: false
+    ## Common configuration settings
     commonConfig:
       replication_factor: 1
       path_prefix: /loki
       ring:
         kvstore:
           store: inmemory
+    ## Storage configuration
     storage:
       type: filesystem
+    ## Schema configuration for data organization
     schemaConfig:
       configs:
         - from: 2024-04-01
@@ -612,38 +562,56 @@ loki:
           index:
             prefix: loki_index_
             period: 24h
+    ## Ingester configuration for data ingestion
     ingester:
       chunk_encoding: snappy
+    ## Enable or disable tracing
     tracing:
       enabled: false
+    ## Querier configuration for query processing
     querier:
       max_concurrent: 2
+  ## Enable or disable test configuration
   test:
     enabled: false
+  ## Chunks cache configuration
   chunksCache:
     writebackSizeLimit: 10MB
+    ## Resource limits for chunks cache
     resources:
       limits:
         memory: 4096Mi
       requests:
         memory: 2048Mi
+  ## Results cache configuration
   resultsCache:
+    ## Resource limits for results cache
     resources:
       limits:
         memory: 1024Mi
       requests:
         memory: 512Mi
 
+## Enable or disable Tempo (distributed tracing)
 tempo:
   enabled: true
 
+## Enable or disable Prometheus
 prometheus:
   enabled: true
+  ## Prometheus ingress configuration
   ingress:
     enabled: false
+    ## Basic authentication for Prometheus ingress
+    basicAuth: { }
+      # username: "prometheus"
+      # password: ""
+  ## Enable or disable Alertmanager
   alertmanager:
     enabled: false
+  ## Enable or disable Prometheus pushgateway
   prometheus-pushgateway:
     enabled: false
+  ## Enable or disable Prometheus node exporter
   prometheus-node-exporter:
     enabled: false
