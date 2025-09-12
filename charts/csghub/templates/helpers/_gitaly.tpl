@@ -21,12 +21,12 @@ generate gitaly config
   {{- $_ := set $config "scheme" "tcp" -}}
 {{- else -}}
   {{/* use external gitaly */}}
-  {{- $_ := set $config "host" $global.Values.global.gitaly.host -}}
-  {{- $_ := set $config "port" $global.Values.global.gitaly.port -}}
-  {{- $_ := set $config "storage" ($global.Values.global.gitaly.storage | default "default") -}}
-  {{- $_ := set $config "token" $global.Values.global.gitaly.token -}}
-  {{- $_ := set $config "isCluster" ($global.Values.global.gitaly.isCluster | default false) -}}
-  {{- $_ := set $config "scheme" ($global.Values.global.gitaly.scheme | default "tcp") -}}
+  {{- $_ := set $config "host" $global.Values.global.gitaly.external.host -}}
+  {{- $_ := set $config "port" $global.Values.global.gitaly.external.port -}}
+  {{- $_ := set $config "storage" ($global.Values.global.gitaly.external.storage | default "default") -}}
+  {{- $_ := set $config "token" $global.Values.global.gitaly.external.token -}}
+  {{- $_ := set $config "isCluster" ($global.Values.global.gitaly.external.isCluster | default false) -}}
+  {{- $_ := set $config "scheme" ($global.Values.global.gitaly.external.scheme | default "tcp") -}}
 {{- end -}}
 
 {{/* ensure port is string */}}
@@ -42,9 +42,5 @@ generate gitaly grpc endpoint
 {{- $service := .service -}}
 {{- $global := .global -}}
 {{- $config := include "csghub.gitaly.config" . | fromYaml -}}
-{{- if $config.tls -}}
-{{- printf "tls://%s:%s" $config.host $config.port -}}
-{{- else -}}
-{{- printf "tcp://%s:%s" $config.host $config.port -}}
-{{- end -}}
+{{- printf "%s://%s:%s" $config.scheme $config.host $config.port -}}
 {{- end }}

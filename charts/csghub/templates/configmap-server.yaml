@@ -57,7 +57,7 @@ data:
   STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.server "global" .) | quote }}
 
   # Object Storage Connection Info
-  STARHUB_SERVER_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
+  STARHUB_SERVER_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix "https://" | quote }}
   {{- if not .Values.global.objectStore.enabled }}
   STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
   STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}

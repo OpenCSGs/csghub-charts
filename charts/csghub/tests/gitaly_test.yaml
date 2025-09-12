@@ -30,9 +30,9 @@ tests:
   - it: when using external gitaly, should render gitlab-shell config right
     set:
       global.gitaly.enabled: false
-      global.gitaly.host: "gitaly.opencsg-poc.com"
-      global.gitaly.port: 8875
-      global.gitaly.token: "gitaly@2025!"
+      global.gitaly.external.host: "gitaly.opencsg-poc.com"
+      global.gitaly.external.port: 8875
+      global.gitaly.external.token: "gitaly@2025!"
     release:
       name: csghub
       namespace: csghub

@@ -30,7 +30,7 @@ global:
     customDomainPrefixes: { }
       ## Others such as registry, minio, temporal, public, csgship, csgshipAPI can be customized in the same way
       # portal: "csghub"
-      # casdoor: "iam"
+    # casdoor: "iam"
     ## Whether to use the top-level domain directly for access
     ## If true, access via domain only (example.com)
     ## If false, access via subdomain+domain (csghub.example.com)
@@ -38,65 +38,99 @@ global:
     ## TLS configuration
     tls: { }
       # enabled: false
-      # secretName: ""
+    # secretName: ""
     service:
       ## Service type for ingress (LoadBalancer or NodePort)
       type: &type LoadBalancer
 
   ## Container Registry configuration
   registry:
+    ## Use built-in (true) or external (false) container registry
     enabled: true
     ## External Container Registry configuration
-    # registry: "https://registry-1.docker.io"
-    # repository: "csghub"
-    # username: "registry"
-    # password: ""
-    ## Disable TLS/SSL encryption
-    insecure: false
+    external: { }
+      ## URL of the external container registry
+      # registry: "registry-1.docker.io"
+      ## Repository namespace in the external registry
+      # repository: "csghub"
+      ## Username for authenticating with the external registry
+      # username: "registry"
+      ## Password for authenticating with the external registry
+      # password: ""
+      ## Disable TLS/SSL encryption for the registry connection
+      # insecure: false
 
   ## PostgreSQL database configuration
   postgresql:
+    ## Use built-in (true) or external (false) postgresql
     enabled: true
     ## External PostgreSQL configuration
-    # host: "<pg_host>"
-    # port: 6432
-    # user: "csghub"
-    # password: ""
-    # timezone: "Etc/UTC"
-    # sslMode: "prefer"
+    external: { }
+      ## Hostname or IP address of the external PostgreSQL server
+      # host: "<pg_host>"
+      ## Port number for the PostgreSQL connection
+      # port: 6432
+      ## Username for PostgreSQL authentication
+      # user: "csghub"
+      ## Password for PostgreSQL authentication
+      # password: ""
+      ## Timezone setting for the database connection
+      # timezone: "Etc/UTC"
+      ## SSL mode for the database connection (prefer, require, verify-full, etc.)
+      # sslMode: "prefer"
 
   ## Redis configuration
   redis:
+    ## Use built-in (true) or external (false) redis
     enabled: true
     ## External Redis configuration
-    # host: "<redis_host>"
-    # port: 6379
-    # password: ""
+    external: { }
+      ## Hostname or IP address of the external Redis server
+      # host: "<redis_host>"
+      ## Port number for the Redis connection
+      # port: 6379
+      ## Password for Redis authentication
+      # password: ""
 
   ## Object storage configuration
   objectStore:
     ## Use built-in (true) or external (false) object storage
     enabled: true
-    ## External object storage configuration
-    # endpoint: "http://minio.<domain>"
-    # accessKey: "minio"
-    # secretKey: ""
-    # region: "cn-north-1"
-    # encrypt: false
-    # secure: false
-    # pathStyle: true
+    ## External Object Storage configuration
+    external: { }
+      ## Endpoint URL for the object storage service
+      # endpoint: "http://minio.<domain>"
+      ## Access key for object storage authentication
+      # accessKey: "minio"
+      ## Secret key for object storage authentication
+      # secretKey: ""
+      ## Region where the bucket is located
+      # region: "cn-north-1"
+      ## Enable server-side encryption for objects
+      # encrypt: false
+      ## Use HTTPS for connections to the object storage
+      # secure: false
+      ## Use path-style addressing for the bucket (vs virtual-hosted style)
+      # pathStyle: true
 
   ## Gitaly configuration
   gitaly:
     ## Use built-in (true) or external (false) gitaly
     enabled: true
-    ## Enable Gitaly cluster (EE only)
-    isCluster: false
     ## External Gitaly configuration
-    # host: "<gitaly_host>"
-    # port: 8075
-    # storage: "default"
-    # token: ""
+    external: { }
+      ## Connection scheme for Gitaly (tcp, tls, unix)
+      # scheme: "tcp"
+      ## Hostname or IP address of the external Gitaly server
+      # host: "<gitaly_host>"
+      ## Port number for the Gitaly connection
+      # port: 8075
+      ## Storage name for Gitaly repositories
+      # storage: "default"
+      ## Authentication token for Gitaly connection
+      # token: ""
+      ## Enable Gitaly cluster (EE only)
+      # isCluster: false
 
   ## Content moderation configuration
   moderation:
@@ -153,7 +187,7 @@ global:
 
   ## Csgship OAuth configuration
   csgship:
-    oauth: {}
+    oauth: { }
       # issuer: "https://gitlab.example.com"
       # clientId: "73f1c2922f51d68fa87de8c1ef0e23e8940f3aa42f5ac7a55a1f586c597d7e9c"
       # clientSecret: "gloas-3ba02f02b3e993664ccdda2c4d76989caa11ce6f07a805b6872d266fbd465831"
@@ -259,7 +293,7 @@ server:
     #   - ALL
     # readOnlyRootFilesystem: true
     # runAsNonRoot: true
-  # runAsUser: 1000
+    # runAsUser: 1000
 
   ## Environment variables
   environments: { }
@@ -304,7 +338,7 @@ portal:
     ## If using domain, it'll create svc by ExternalName
     # domain: ""
     # host: "192.168.18.10"
-  # port: "8003"
+    # port: "8003"
 
   ## PostgreSQL database configuration
   postgresql:
@@ -335,7 +369,7 @@ portal:
     # host: ""
     # port: 465
     # username: ""
-  # password: ""
+    # password: ""
 
   serviceAccount:
     create: false
@@ -373,7 +407,7 @@ notification:
     # host: ""
     # port: 465
     # username: ""
-  # password: ""
+    # password: ""
   feiShu: { }
     ## FeiShu bot Application Id
     # appId: ""
@@ -386,7 +420,7 @@ notification:
     ## configures the longest delay time for each message
     # maxDelayDuration: "3600"
     ## configures the cache expiration time of Feishu chat ids
-  # chatIdsCacheTTL: "21600"
+    # chatIdsCacheTTL: "21600"
 
 ## User configuration
 user: { }
@@ -456,12 +490,12 @@ ingress-nginx:
     config:
       ## Set the risk level for annotations; critical indicates high risk
       annotations-risk-level: Critical
-    #      http-snippet: |
-    #        limit_req_zone $binary_remote_addr zone=global:10m rate=20r/s;
-    #        limit_conn_zone $binary_remote_addr zone=addr:10m;
-    #      server-snippet: |
-    #        limit_req zone=global burst=40;
-    #        limit_conn addr 50;
+      #      http-snippet: |
+      #        limit_req_zone $binary_remote_addr zone=global:10m rate=20r/s;
+      #        limit_conn_zone $binary_remote_addr zone=addr:10m;
+      #      server-snippet: |
+      #        limit_req zone=global burst=40;
+      #        limit_conn addr 50;
       custom-http-errors: "404,500,502,503"
     ## Allow the use of server snippets in annotations
     allowSnippetAnnotations: true
@@ -599,8 +633,6 @@ loki:
 ## Enable or disable Tempo (distributed tracing)
 tempo:
   enabled: true
-#  tempo:
-#    repository: "opencsghq/grafana-tempo"
 
 ## Enable or disable Prometheus
 prometheus:
