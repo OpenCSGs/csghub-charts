@@ -1,0 +1,37 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+# --- ResourceQuota for workflows-quota namespace ---
+# This object defines the total resource limits for the entire 'workflows-quota' namespace.
+# It ensures that the sum of resources used by all pods in this namespace does not exceed the specified values.
+{{- if .Values.resourceQuota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  # The name of the ResourceQuota object.
+  name: {{ include "common.names.custom" (list . "resource-quota") }}
+  # This quota applies to the 'workflows-quota' namespace.
+  namespace: {{ include "namespace.spaces" . }}
+spec:
+  # 'hard' defines the absolute limits.
+  hard:
+    # --- Compute Resource Limits ---
+    # Total amount of CPU that can be requested by all pods in this namespace.
+    requests.cpu: "80"
+    # Total amount of memory that can be requested by all pods in this namespace.
+    requests.memory: "160Gi"
+    # Total amount of CPU that can be limited across all pods in this namespace.
+    limits.cpu: "100"
+    # Total amount of memory that can be limited across all pods in this namespace.
+    limits.memory: "200Gi"
+
+    # --- GPU Resource Limits ---
+    # Total number of GPUs that can be requested by all pods.
+    # The resource name 'nvidia.com/gpu' is standard for NVIDIA GPUs via the device plugin.
+    # If you use a different GPU vendor, this key might change.
+    requests.nvidia.com/gpu: "80"
+    # Total number of GPUs that can be limited across all pods.
+    limits.nvidia.com/gpu: "100"
+{{- end }}

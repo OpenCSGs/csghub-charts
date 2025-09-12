@@ -1,0 +1,75 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- $objectStoreConfig := include "chart.objectStoreConfig" (dict "service" .Values "global" .) | fromYaml }}
+{{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.custom" (list . "runner") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+data:
+  ## Server Configuration
+  STARHUB_SERVER_API_TOKEN: {{ or .Values.hubAPIToken (include "server.hub.api.token" .) | quote }}
+  ## Runner Configuration
+  {{- if .Values.global.chartContext.isRoot }}
+  STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ or .Values.externalUrl (include "csghub.internal.endpoint" .) | quote }}
+  STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN: {{ include "runner.external.endpoint" . | quote }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ include "loki.internal.endpoint" . | quote }}
+  {{- else }}
+  STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ or .Values.externalUrl (include "csghub.external.endpoint" .) | quote }}
+  STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN: {{ include "runner.internal.endpoint" . | quote }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ include "loki.external.endpoint" . | quote }}
+  {{- end }}
+  STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME: {{ include "common.names.custom" (list . "runner") | quote }}
+  ## Space Configuration
+  STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ .Values.global.namespace | quote }}
+  ## Root Domain Configuration
+  {{- $publicDomain := include "runner.external.public.domain" . }}
+  {{- if $publicDomain }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ $publicDomain | quote }}
+  {{- else }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: ""
+  {{- end }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.%s" .Values.global.namespace .Values.global.knative.serving.domain }}
+  ## Docker Configuration
+  STARHUB_SERVER_DOCKER_REG_BASE: {{ printf "%s/%s/" $registryConfig.registry $registryConfig.repository | quote }}
+  STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET: {{ include "common.names.custom" (list . "docker-credential") }}
+  ## PyPI Source self-defined
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.pipIndexUrl | quote }}
+  ## Argo ServiceAccount
+  STARHUB_SERVER_ARGO_SERVICE_ACCOUNT: {{ .Values.argo.serviceAccount | quote }}
+  STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ .Values.gpuModelLabel.typeLabel | quote }}, "capacity_label": {{ .Values.gpuModelLabel.capacityLabel | quote }}}]'
+  STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ or .Values.externalUrl (include "csghub.external.endpoint" .) | quote }}
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.registry.registry | quote }}
+  {{- if .Values.originClusterID }}
+  STARHUB_SERVER_CLUSTER_ID: {{ .Values.originClusterID }}
+  {{- end }}
+  ## ObjectStore Configuration
+  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}
+  STARHUB_SERVER_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | quote }}
+  STARHUB_SERVER_S3_BUCKET: {{ $objectStoreConfig.bucket | quote }}
+  STARHUB_SERVER_S3_REGION: {{ $objectStoreConfig.region | quote }}
+  STARHUB_SERVER_S3_ENABLE_SSL: {{ $objectStoreConfig.secure | quote }}
+  {{- if $objectStoreConfig.pathStyle }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: "path"
+  {{- else }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: "auto"
+  {{- end }}
+  ## ImageBuilder
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/alpine/git:2.36.2"
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/bitnami/kaniko:1.23.2"
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL: "300"
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: "300"
+  {{- if .Values.registry.insecure }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: "--skip-tls-verify,--insecure,--compressed-caching=false,--single-snapshot,--build-arg=PyPI={{ .Values.global.pipIndexUrl }},--build-arg=HF_ENDPOINT={{ printf "%s/hf" (or .Values.externalUrl (include "csghub.external.endpoint" .)) }}"
+  {{- else }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: "--compressed-caching=false,--single-snapshot,--build-arg=PyPI={{ .Values.global.pipIndexUrl }},--build-arg=HF_ENDPOINT={{ printf "%s/hf" (or .Values.externalUrl (include "csghub.external.endpoint" .)) }}"
+  {{- end }}
+
+  OPENCSG_TRACING_OTLP_ENDPOINT: {{ .Values.tempo.endpoint | quote }}
+  OPENCSG_TRACING_OTLP_LOGGING: "false"

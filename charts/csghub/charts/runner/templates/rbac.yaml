@@ -1,0 +1,264 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if .Values.rbac.create }}
+{{- $currentNamespace := .Release.Namespace }}
+{{- $spaceNamespace := include "namespace.spaces" . }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: runner-admin
+  namespace: {{ $currentNamespace }}
+---
+## --- Administrator privileges for the current namespace ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runner-namespace-admin
+  namespace: {{ $currentNamespace }}
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner-namespace-admin
+  namespace: {{ $currentNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: Role
+  name: runner-namespace-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+## --- Resourcequota and namespace management permissions for spaces namespace ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runner-spaces-admin
+  namespace: {{ $spaceNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["resourcequotas"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    resourceNames:
+      - {{ $spaceNamespace }}
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["", "apps", "serving.knative.dev", "argoproj.io"]
+    resources:
+      - pods
+      - pods/log
+      - services
+      - deployments
+      - configmaps
+      - workflows
+      - workflowtemplates
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner-spaces-admin
+  namespace: {{ $spaceNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: Role
+  name: runner-spaces-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+## --- Executor role permissions in image-factory namespace ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner-imagebuilder-executor
+  namespace: {{ $spaceNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: Role
+  name: executor
+  apiGroup: rbac.authorization.k8s.io
+---
+## --- Workflows read permissions in workflows namespace ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runner-workflows-reader
+  namespace: {{ $spaceNamespace }}
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner-workflows-reader
+  namespace: {{ $spaceNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: Role
+  name: runner-workflows-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+## --- Workflows read permissions in workflowsquota namespace ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runner-workflowsquota-reader
+  namespace: {{ $spaceNamespace }}
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner-workflowsquota-reader
+  namespace: {{ $spaceNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: Role
+  name: runner-workflowsquota-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+## --- Configmaps management permissions in imagebuilder namespace ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runner-imagebuilder-configmaps
+  namespace: {{ $spaceNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runner-imagebuilder-configmaps
+  namespace: {{ $spaceNamespace }}
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: Role
+  name: runner-imagebuilder-configmaps
+  apiGroup: rbac.authorization.k8s.io
+---
+## --- Cluster-wide nodes and pods viewing permissions ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: runner-cluster-reader
+rules:
+  - apiGroups: ["", "metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: runner-cluster-reader
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: ClusterRole
+  name: runner-cluster-reader
+  apiGroup: rbac.authorization.k8s.io
+{{- if .Values.global.autoConfigure }}
+---
+## --- Cluster-wide administration permissions for namespace and resource management ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: runner-cluster-admin
+rules:
+  ## Namespace
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  ## CustomResourceDefinition
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  ## RBAC
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  ## Core
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps", "secrets", "resourcequotas", "serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  # Apps
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  ## Autoscaling
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  ## Pdb
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  ## Scheduling
+  - apiGroups: ["scheduling.k8s.io"]
+    resources: ["priorityclasses"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  # Webhook
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  # Knative crds
+  - apiGroups: ["networking.internal.knative.dev", "serving.knative.dev", "autoscaling.internal.knative.dev", "caching.internal.knative.dev"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  # Argo Workflows crds
+  - apiGroups: ["argoproj.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  # LeaderWorkerSet crds
+  - apiGroups: ["leaderworkerset.x-k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: runner-cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: runner-admin
+    namespace: {{ $currentNamespace }}
+roleRef:
+  kind: ClusterRole
+  name: runner-cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}
