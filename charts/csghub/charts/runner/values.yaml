@@ -142,7 +142,7 @@ rbac:
 ## Container Registry Configuration
 registry:
   ## Container registry endpoint
-  registry: ""
+  # registry: ""
   ## Default repository prefix for pushed images
   repository: "csghub"
   ## Registry authentication username
