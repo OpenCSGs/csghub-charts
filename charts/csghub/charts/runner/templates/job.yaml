@@ -36,7 +36,7 @@ spec:
       {{- end }}
       containers:
         - name: resource-verify
-          image: {{ or .Values.image.registry .Values.global.image.registry "docker.io" }}/opencsghq/omnibus-csghub:toolbox-1.2.6
+          image: {{ include "image.fixed.prefix" (list . "opencsghq/omnibus-csghub:toolbox-1.2.6") }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/opt/csghub/bin/kyml", "-file", "/yamls", "-create" ]
           volumeMounts:

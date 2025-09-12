@@ -58,43 +58,43 @@ global:
       ## Options: LoadBalancer, NodePort, ClusterIP
       type: &type LoadBalancer
 
-  ## Container Registry Configuration
+  ## Container Registry configuration
   registry:
-    ## enabled -- Use built-in registry (true) or external registry (false)
+    ## Use built-in (true) or external (false) container registry
     enabled: true
-    ## External registry configuration (only used when enabled: false)
-    external:
-      ## Container registry endpoint
-      registry: "https://registry.example.com"
-      ## Default repository prefix for pushed images
-      repository: "csghub"
-      ## Registry authentication username
-      username: "csghub-access-key"
-      ## Registry authentication password/token
-      password: "csghub-secret-key"
-      ## Allow insecure registry connections (not recommended for production)
-      insecure: false
+    ## External Container Registry configuration
+    external: { }
+      ## URL of the external container registry
+      # registry: "registry-1.docker.io"
+      ## Repository namespace in the external registry
+      # repository: "csghub"
+      ## Username for authenticating with the external registry
+      # username: "registry"
+      ## Password for authenticating with the external registry
+      # password: ""
+      ## Disable TLS/SSL encryption for the registry connection
+      # insecure: false
 
-  ## Object Storage Configuration (S3-compatible)
+  ## Object storage configuration
   objectStore:
-    ## enabled -- Use built-in object storage (true) or external object storage (false)
+    ## Use built-in (true) or external (false) object storage
     enabled: true
-    ## External object storage configuration (only used when enabled: false)
-    external:
-      ## Object storage endpoint URL
-      endpoint: "https://minio.example.com"
-      ## Access key for object storage
-      accessKey: "minio-access-key"
-      ## Secret key for object storage
-      secretKey: "minio-secret-key"
-      ## Storage region
-      region: "cn-north-1"
-      ## Use HTTPS for secure connections
-      secure: true
-      ## Enable server-side encryption (if supported)
-      encrypt: false
-      ## Use path-style addressing (required for some S3 implementations like MinIO)
-      pathStyle: true
+    ## External Object Storage configuration
+    external: { }
+      ## Endpoint URL for the object storage service
+      # endpoint: "http://minio.<domain>"
+      ## Access key for object storage authentication
+      # accessKey: "minio"
+      ## Secret key for object storage authentication
+      # secretKey: ""
+      ## Region where the bucket is located
+      # region: "cn-north-1"
+      ## Enable server-side encryption for objects
+      # encrypt: false
+      ## Use HTTPS for connections to the object storage
+      # secure: false
+      ## Use path-style addressing for the bucket (vs virtual-hosted style)
+      # pathStyle: true
 
   ## Clearly identify the running mode, root means running as a subchart
   chartContext:
@@ -196,17 +196,17 @@ tempo: { }
   # endpoint: ""
 
 ## Pod Metadata
-podAnnotations: {}
+podAnnotations: { }
   ## Example: { "prometheus.io/scrape": "true", "prometheus.io/port": "9090" }
 
-podLabels: {}
+podLabels: { }
   ## Example: { "app.kubernetes.io/component": "runner", "environment": "production" }
 
 ## Security Contexts
-podSecurityContext: {}
+podSecurityContext: { }
   ## Example: { fsGroup: 2000, runAsNonRoot: true, runAsUser: 1000 }
 
-securityContext: {}
+securityContext: { }
   ## Example:
   # capabilities:
   #   drop: ["ALL"]
@@ -215,11 +215,11 @@ securityContext: {}
   # runAsUser: 1000
 
 ## Environment Variables
-environments: {}
+environments: { }
 ## Example: { DEBUG: "false", MAX_WORKERS: "10", TIMEOUT: "300" }
 
 ## Deployment Annotations
-annotations: {}
+annotations: { }
 ## Example: { "reloader.stakater.com/auto": "true" }
 
 ## Resource Quota enabled
@@ -227,7 +227,7 @@ resourceQuota:
   enabled: false
 
 ## Resource Requests and Limits
-resources: {}
+resources: { }
   ## Example:
   # requests:
   #   memory: "256Mi"
@@ -237,17 +237,17 @@ resources: {}
   #   cpu: "500m"
 
 ## Node Scheduling Configuration
-nodeSelector: {}
+nodeSelector: { }
   ## Example: { "node-type": "compute-optimized", "gpu": "true" }
 
-tolerations: []
+tolerations: [ ]
   ## Example:
   # - key: "dedicated"
   #   operator: "Equal"
   #   value: "csghub"
   #   effect: "NoSchedule"
 
-affinity: {}
+affinity: { }
   ## Example:
   # podAntiAffinity:
   #   preferredDuringSchedulingIgnoredDuringExecution:
@@ -325,5 +325,53 @@ ingress-nginx:
 
 ## Using reloader to online reload configmaps and secrets
 reloader:
+  enabled: false
   image:
     name: "opencsghq/stakater-reloader"
+
+## Enable or disable Prometheus
+prometheus:
+  enabled: false
+  ## Enable or disable Alertmanager
+  alertmanager:
+    enabled: false
+  ## Enable or disable Prometheus pushgateway
+  prometheus-pushgateway:
+    enabled: false
+  ## Enable or disable Prometheus node exporter
+  prometheus-node-exporter:
+    enabled: false
+  ## Server configuration for Prometheus
+  server:
+    ## Sending metrics to remote prometheus server
+    remoteWrite:
+      - url: ""
+        basic_auth: { }
+          # username: "<username>"
+          # password: "<password>"
+    ## Image configuration for Prometheus server
+    image:
+      ## Registry for Prometheus server image
+      registry: "quay.io"
+      ## Repository for Prometheus server image
+      repository: prometheus/prometheus
+      ## Tag for Prometheus server image
+      tag: v3.5.0
+  ## ConfigMap reload configuration for Prometheus
+  configmapReload:
+    ## Prometheus-specific configmap reload settings
+    prometheus:
+      ## Image configuration for configmap reloader
+      image:
+        ## Registry for configmap reloader image
+        registry: "quay.io"
+        ## Repository for configmap reloader image
+        repository: "prometheus-operator/prometheus-config-reloader"
+        ## Tag for configmap reloader image
+        tag: v0.85.0
+  ## Kube-state-metrics configuration
+  kube-state-metrics:
+    ## Image configuration for kube-state-metrics
+    image:
+      ## Tag for kube-state-metrics image
+      tag: v2.17.0

@@ -65,9 +65,6 @@ generate registry config
 {{- if $service.registry.password -}}
   {{- $_ := set $config "password" $service.registry.password -}}
 {{- end -}}
-{{- if $service.registry.insecure -}}
-  {{- $_ := set $config "password" $service.registry.insecure -}}
-{{- end -}}
 
 {{- $config | toYaml -}}
 {{- end -}}

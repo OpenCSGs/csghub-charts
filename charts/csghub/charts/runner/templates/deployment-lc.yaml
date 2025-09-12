@@ -50,7 +50,7 @@ spec:
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/starhub-bin/starhub", "deploy", "logcollector", "-l", "{{ .Values.logging.level }}" ]
           ports:
-            - containerPort: 8082
+            - containerPort: 8096
               name: logcollector
               protocol: TCP
           envFrom:
@@ -78,9 +78,15 @@ spec:
           {{- end }}
           livenessProbe:
             tcpSocket:
-              port: 8082
+              port: 8096
             initialDelaySeconds: 20
             periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/v1/logcollector/health
+              port: 8096
+            initialDelaySeconds: 10
+            periodSeconds: 5
           securityContext:
             {{- .Values.podSecurityContext | toYaml | nindent 12 }}
       {{- with .Values.nodeSelector }}

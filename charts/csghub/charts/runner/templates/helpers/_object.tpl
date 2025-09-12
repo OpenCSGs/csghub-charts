@@ -86,3 +86,4 @@ generate object store config
 
 {{- $config | toYaml -}}
 {{- end -}}
+
