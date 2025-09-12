@@ -63,8 +63,9 @@ spec:
         {{- range $key, $value := .Values.tempo.extraArgs }}
         - "-{{ $key }}{{ if $value }}={{ $value }}{{ end }}"
         {{- end }}
-        image: {{ .Values.tempo.repository }}:{{ .Values.tempo.tag | default .Chart.AppVersion }}
-        imagePullPolicy: {{ .Values.tempo.pullPolicy }}
+        {{- $image := dict "registry" "docker.io" "repository" .Values.tempo.repository "tag" (or .Values.tempo.tag .Chart.AppVersion) }}
+        image: {{ include "image.generic.prefix" (list . $image) }}
+        imagePullPolicy: {{ or .Values.tempo.pullPolicy .Values.global.image.pullPolicy }}
         name: tempo
         ports:
         - containerPort: 3200

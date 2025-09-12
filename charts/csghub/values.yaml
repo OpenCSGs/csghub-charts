@@ -43,15 +43,16 @@ global:
       ## Service type for ingress (LoadBalancer or NodePort)
       type: &type LoadBalancer
 
-  ## Registry configuration
+  ## Container Registry configuration
   registry:
     enabled: true
-    ## Disable TLS/SSL encryption
-    insecure: false
+    ## External Container Registry configuration
     # registry: "https://registry-1.docker.io"
     # repository: "csghub"
     # username: "registry"
     # password: ""
+    ## Disable TLS/SSL encryption
+    insecure: false
 
   ## PostgreSQL database configuration
   postgresql:
@@ -390,11 +391,6 @@ notification:
 ## User configuration
 user: { }
 
-## Runner configuration
-runner:
-  reloader:
-    enabled: false
-
 ## More subChart configuration mappings are omitted here.
 ## Under normal circumstances, these configurations are not necessary.
 ## If necessary, you can check which parameters the subChart can configure and modify them.
@@ -520,6 +516,14 @@ loki:
     basicAuth: { }
       # username: "loki"
       # password: "loki"
+  memcached:
+    image:
+      registry: "docker.io"
+  memcachedExporter:
+    enabled: false
+  sidecar:
+    image:
+      registry: "docker.io"
   ## Deployment mode for Loki (SingleBinary or MicroServices)
   deploymentMode: SingleBinary
   ## Configuration specific to single binary deployment
@@ -595,6 +599,8 @@ loki:
 ## Enable or disable Tempo (distributed tracing)
 tempo:
   enabled: true
+#  tempo:
+#    repository: "opencsghq/grafana-tempo"
 
 ## Enable or disable Prometheus
 prometheus:
@@ -615,3 +621,31 @@ prometheus:
   ## Enable or disable Prometheus node exporter
   prometheus-node-exporter:
     enabled: false
+  ## Server configuration for Prometheus
+  server:
+    ## Image configuration for Prometheus server
+    image:
+      ## Registry for Prometheus server image
+      registry: "quay.io"
+      ## Repository for Prometheus server image
+      repository: prometheus/prometheus
+      ## Tag for Prometheus server image
+      tag: v3.5.0
+  ## ConfigMap reload configuration for Prometheus
+  configmapReload:
+    ## Prometheus-specific configmap reload settings
+    prometheus:
+      ## Image configuration for configmap reloader
+      image:
+        ## Registry for configmap reloader image
+        registry: "quay.io"
+        ## Repository for configmap reloader image
+        repository: "prometheus-operator/prometheus-config-reloader"
+        ## Tag for configmap reloader image
+        tag: v0.85.0
+  ## Kube-state-metrics configuration
+  kube-state-metrics:
+    ## Image configuration for kube-state-metrics
+    image:
+      ## Tag for kube-state-metrics image
+      tag: v2.17.0

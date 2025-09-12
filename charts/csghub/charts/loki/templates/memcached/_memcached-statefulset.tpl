@@ -83,9 +83,9 @@ spec:
         {{ toYaml .extraContainers | nindent 8 }}
         {{- end }}
         - name: memcached
-          {{- with $.ctx.Values.memcached.image }}
-          image: {{ .repository }}:{{ .tag }}
-          imagePullPolicy: {{ .pullPolicy }}
+          {{- with $.ctx.Values.memcached }}
+          image: {{ include "image.generic.prefix" (list $.ctx .image )}}
+          imagePullPolicy: {{ .image.pullPolicy }}
           {{- end }}
           resources:
           {{- if .resources }}

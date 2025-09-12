@@ -84,7 +84,7 @@ spec:
           {{- if .Values.sidecar.image.sha }}
           image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}@sha256:{{ .Values.sidecar.image.sha }}"
           {{- else }}
-          image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+          image: {{ include "image.generic.prefix" (list . .Values.sidecar.image )}}
           {{- end }}
           imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
           env:
@@ -149,7 +149,7 @@ spec:
               mountPath: {{ .Values.sidecar.rules.folder | quote }}
         {{- end}}
         - name: loki
-          image: {{ include "loki.image" . }}
+          image: {{ include "image.generic.prefix" (list . .Values.loki.image )}}
           imagePullPolicy: {{ .Values.loki.image.pullPolicy }}
           args:
             - -config.file=/etc/loki/config/config.yaml
