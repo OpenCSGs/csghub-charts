@@ -17,7 +17,7 @@ metadata:
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 10
-  activeDeadlineSeconds: 600
+  activeDeadlineSeconds: 1200
   template:
     metadata:
       name: {{ include "common.names.custom" (list . "auto-configure") }}
