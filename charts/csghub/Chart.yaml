@@ -2,6 +2,7 @@ apiVersion: v2
 name: csghub
 description: CSGHub charts with CE and EE.
 home: https://opencsg.com
+icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
 sources:
   - https://github.com/OpenCSGs/csghub-charts
 
