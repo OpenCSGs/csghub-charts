@@ -458,6 +458,9 @@ runner:
   ## Clearly identify the running mode, `true` means running as a subchart
   chartContext:
     isBuiltIn: true
+  ## Disable all subCharts for install from csghub
+  reloader:
+    enabled: false
 
 ## In order to make the maintenance of csghub helm easier, the official ingress-nginx is directly referenced here as a subChart.
 ## This section of configuration is added for better adaptation, but this section of configuration is not within your modification scope.
