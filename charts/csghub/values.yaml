@@ -176,10 +176,6 @@ global:
   ## Use public domain for deployments
   usePublicDomain: true
 
-  ## Clearly identify the running mode, root means running as a subchart
-  chartContext:
-    isRoot: true
-
   ## Persistent storage configuration
   persistence: { }
     # storageClass: ""
@@ -457,6 +453,11 @@ dataflow:
     # apiVersion: ""
     ## The name of the model you want to use, e.g., "text-davinci-003"
     # model: ""
+
+runner:
+  ## Clearly identify the running mode, `true` means running as a subchart
+  chartContext:
+    isBuiltIn: true
 
 ## In order to make the maintenance of csghub helm easier, the official ingress-nginx is directly referenced here as a subChart.
 ## This section of configuration is added for better adaptation, but this section of configuration is not within your modification scope.
