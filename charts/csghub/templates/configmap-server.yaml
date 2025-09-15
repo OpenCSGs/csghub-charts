@@ -192,3 +192,5 @@ data:
   STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
   {{- end }}
   {{- end }}
+
+  STARHUB_SERVER_LFS_SYNC_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "mirror-lfs")) }}

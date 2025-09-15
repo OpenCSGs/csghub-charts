@@ -104,6 +104,10 @@ spec:
           image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
           imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/starhub-bin/starhub", "mirror", "lfs-sync", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
+          ports:
+            - containerPort: 8092
+              name: mirror-lfs
+              protocol: TCP
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
@@ -145,6 +149,11 @@ spec:
               cpu: "100m"
               memory: "256Mi"
             {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: 8092
+            initialDelaySeconds: 20
+            periodSeconds: 10
           securityContext:
             {{- .Values.mirror.podSecurityContext | toYaml | nindent 12 }}
       {{- with .Values.mirror.nodeSelector }}
