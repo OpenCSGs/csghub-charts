@@ -94,7 +94,7 @@ data:
 
   # Space Application
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "csghub.external.endpoint" . | quote }}
-  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.server.modelRegistry | default (or .Values.global.image.registry "docker.io") | quote }}
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.server.model.registry | default (or .Values.global.image.registry "docker.io") | quote }}
 
   # Deprecated ==> re-enabled
   {{- if .Values.global.usePublicDomain }}

@@ -279,7 +279,9 @@ server:
     level: info
 
   ## Model Registry
-  # modelRegistry: "docker.io"
+  model: { }
+    ## Defined model image registry, inference instance will pull images from
+    # registry: "docker.io"
 
   ## Pod annotations and labels
   podAnnotations: { }
