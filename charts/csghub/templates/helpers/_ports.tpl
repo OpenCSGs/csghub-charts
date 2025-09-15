@@ -21,6 +21,7 @@ Get the port number by service name
       "runner"       8082
       "portal"       8090
       "loki"         3100
+      "mirror-lfs"   8092
   -}}
 
   {{- if not (hasKey $portMap $serviceType) -}}
