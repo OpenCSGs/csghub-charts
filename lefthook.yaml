@@ -1,0 +1,142 @@
+# lefthook.yml - Helm Charts Pre-commit Hooks Configuration
+# Save this file in the project root directory and run: lefthook install
+
+pre-commit:
+  parallel: true
+  commands:
+    # Check Helm chart syntax and structure
+    helm-lint:
+      glob: "charts/{csghub,runner,dataflow}/**"  # Only run when chart files change
+      run: |
+        echo "🔍 Running Helm lint..."
+        for chart_dir in charts/*/; do
+          if [ -f "${chart_dir}Chart.yaml" ]; then
+            echo "Linting ${chart_dir}"
+            if ! helm lint "${chart_dir}"; then
+              echo "❌ Helm lint failed for ${chart_dir}"
+              exit 1
+            fi
+          fi
+        done
+        echo "✅ All charts passed linting"
+
+    # Check Helm template rendering
+    helm-template:
+      glob: "charts/{csghub,runner,dataflow}/**"
+      run: |
+        echo "🔍 Running Helm template dry-run..."
+        
+        for chart_dir in charts/*/; do
+          if [ -f "${chart_dir}Chart.yaml" ]; then
+            chart_name=$(basename "${chart_dir}")
+            echo "Testing template rendering for ${chart_name}"
+        
+            # Test with default values
+            if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run > /dev/null 2>&1; then
+              echo "❌ Template rendering failed for ${chart_name}"
+              helm template "test-${chart_name}" "${chart_dir}" --dry-run
+              exit 1
+            fi
+          fi
+        done
+        echo "✅ All charts passed template rendering"
+
+    # Run Helm unittest
+    helm-unittest:
+      glob: "charts/{csghub,runner,dataflow}/**"
+      run: |
+        echo "🔍 Running Helm unittest..."
+        
+        # Check if helm unittest plugin is installed
+        if ! helm plugin list | grep -q unittest; then
+          echo "❌ Helm unittest plugin not installed. Install with:"
+          echo "   helm plugin install https://github.com/helm-unittest/helm-unittest"
+          exit 1
+        fi
+        
+        # Run unit tests for each chart
+        exit_code=0
+        for chart_dir in charts/*/; do
+          if [ -f "${chart_dir}Chart.yaml" ] && [ -d "${chart_dir}tests" ]; then
+            echo "Running tests for $(basename "${chart_dir}")"
+            if ! helm unittest "${chart_dir}"; then
+              exit_code=1
+            fi
+          fi
+        done
+        
+        if [ $exit_code -ne 0 ]; then
+          echo "❌ Some unit tests failed"
+          exit 1
+        fi
+        echo "✅ All unit tests passed"
+
+    # Validate YAML syntax
+    yaml-validate:
+      glob: "**/*.yaml"
+      run: |
+        echo "🔍 Validating YAML syntax..."
+        
+        # Check if yamllint is available
+        if ! command -v yamllint &> /dev/null; then
+          echo "⚠️ yamllint not installed, skipping YAML validation"
+          echo "Install with: pip install yamllint"
+          exit 0
+        fi
+        
+        # Run yamllint with custom configuration if exists
+        config_file="lintconf.yaml"
+        if [ -f "$config_file" ]; then
+          yamllint -c "$config_file" .
+        else
+          yamllint .
+        fi
+
+# Commit message validation
+commit-msg:
+  commands:
+    conventional-commit:
+      run: |
+        echo "🔍 Checking commit message format..."
+        commit_msg=$(cat {1})
+        
+        # Check Conventional Commits format
+        if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)(\([a-zA-Z0-9_-]+\))?: .+"; then
+          echo "❌ Commit message should follow Conventional Commits format:"
+          echo "   feat: add new feature"
+          echo "   fix: fix bug"
+          echo "   docs: update documentation"
+          echo "   style: formatting changes"
+          echo "   refactor: code refactoring"
+          echo "   test: add tests"
+          echo "   chore: maintenance tasks"
+          echo "   build: build system changes"
+          echo "   ci: CI configuration changes"
+          echo "   perf: performance improvements"
+          echo ""
+          echo "Your message: $commit_msg"
+          exit 1
+        fi
+        
+        # Check message length
+        if [ ${#commit_msg} -gt 100 ]; then
+          echo "❌ Commit message should be less than 100 characters"
+          echo "Current length: ${#commit_msg}"
+          exit 1
+        fi
+        
+        echo "✅ Commit message format is valid"
+
+## Pre-push hooks (optional)
+#pre-push:
+#  commands:
+#    helm-dependency-update:
+#      glob: "charts/{csghub,runner,dataflow}/**"
+#      run: |
+#        echo "📦 Checking Helm dependencies..."
+#        for chart_dir in charts/*/; do
+#          if [ -f "${chart_dir}Chart.yaml" ] && [ -f "${chart_dir}requirements.yaml" ] || [ -f "${chart_dir}Chart.yaml" ] && grep -q "dependencies:" "${chart_dir}Chart.yaml"; then
+#            echo "Updating dependencies for $(basename "${chart_dir}")"
+#            helm dependency update "${chart_dir}"
+#          fi
+#        done
