@@ -44,5 +44,5 @@ dependencies:
 - name: reloader
   repository: file://charts/reloader
   version: 2.1.4
-digest: sha256:afabaf5a23022bf7d7dd2fb2741986ba0c75670e6efe9b24c6811b9617083f8b
-generated: "2025-07-02T18:56:01.183295+08:00"
+digest: sha256:531d3e58ca3067c15783b5add45b9f15776087acaee5506f0f18ff7a150cf15c
+generated: "2025-09-16T15:22:13.312383+08:00"

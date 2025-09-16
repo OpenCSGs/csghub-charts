@@ -10,19 +10,16 @@ target-branch: main
 # Chart directories to be tested
 # List of directories containing charts to test
 chart-dirs:
-  - charts/csghub    # CSGHub related charts
-  - charts/runner    # Runner related charts
-  - charts/dataflow  # Dataflow related charts
+  - charts
 
 # Helm chart repositories for dependency resolution
+skip-dependency-update: true
+
 # Add repositories required for chart dependencies
+chart-repos: {}
 # Example: Add additional repositories if needed
 # - bitnami=https://charts.bitnami.com/bitnami
 # - prometheus-community=https://prometheus-community.github.io/helm-charts
-chart-repos:
-  - csghub=https://github.com/OpenCSGs/csghub.git
-  - runner=https://github.com/OpenCSGs/csghub.git
-  - dataflow=https://github.com/OpenCSGs/csghub-dataflow.git
 
 # Additional arguments for helm commands
 # Passed to helm install/upgrade commands
@@ -40,8 +37,11 @@ validate-maintainers: false
 kubernetes-version: "1.28"
 
 # Optional: Namespace for tests
-namespace: csghub
+namespace: ct-csghub
+release-label: ct-csghub
 
 # Linting configuration file
+validate-yaml: true
+
 # Custom configuration for chart linting rules
-lint-conf: lintconf.yaml
+lint-conf: lint-conf.yaml

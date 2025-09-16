@@ -5,19 +5,26 @@ pre-commit:
   parallel: true
   commands:
     # Check Helm chart syntax and structure
-    helm-lint:
+    ct-lint:
       glob: "charts/{csghub,runner,dataflow}/**"  # Only run when chart files change
       run: |
-        echo "🔍 Running Helm lint..."
-        for chart_dir in charts/*/; do
-          if [ -f "${chart_dir}Chart.yaml" ]; then
-            echo "Linting ${chart_dir}"
-            if ! helm lint "${chart_dir}"; then
-              echo "❌ Helm lint failed for ${chart_dir}"
-              exit 1
-            fi
-          fi
-        done
+        echo "🔍 Running ct lint..."
+        
+        # Check if ct is available
+        if ! command -v ct &> /dev/null; then
+          echo "❌ ct (chart-testing) not installed"
+          echo "Install with:"
+          echo "  brew install chart-testing (macOS)"
+          echo "  or see: https://github.com/helm/chart-testing"
+          exit 1
+        fi
+        
+        if ! ct lint --all --config ct.yaml; then
+          echo "❌ ct lint failed for ${chart_dir}"
+          exit 1
+        fi
+        
+        rm -rf charts/*/charts/*.tgz
         echo "✅ All charts passed linting"
 
     # Check Helm template rendering
@@ -71,26 +78,68 @@ pre-commit:
         fi
         echo "✅ All unit tests passed"
 
-    # Validate YAML syntax
+    # Validate YAML syntax for all charts
     yaml-validate:
-      glob: "**/*.yaml"
+      glob: "charts/{csghub,runner,dataflow}/**"
       run: |
-        echo "🔍 Validating YAML syntax..."
+        echo "🔍 Validating YAML syntax for all charts..."
         
-        # Check if yamllint is available
         if ! command -v yamllint &> /dev/null; then
-          echo "⚠️ yamllint not installed, skipping YAML validation"
-          echo "Install with: pip install yamllint"
+          echo "⚠️ yamllint not installed, skipping"
           exit 0
         fi
         
-        # Run yamllint with custom configuration if exists
-        config_file="lintconf.yaml"
-        if [ -f "$config_file" ]; then
-          yamllint -c "$config_file" .
-        else
-          yamllint .
+        # Error patterns to ignore
+        IGNORE_PATTERNS="expected the node content|too many spaces inside braces"
+        
+        exit_code=0
+        for chart_dir in charts/*/; do
+          if [ -f "${chart_dir}Chart.yaml" ]; then
+            chart_name=$(basename "${chart_dir}")
+            echo "Validating ${chart_name}"
+        
+            # Run yamllint and get the output
+            lint_output=$(yamllint -c ./lint-conf.yaml "${chart_dir}" 2>&1)
+        
+            # Separate the file name and error message, and then filter them separately
+            real_errors=""
+            current_file=""
+        
+            while IFS= read -r line; do
+              # Check if it is a file name line (usually contains .yaml or .yml)
+              if echo "$line" | grep -q -E "\.ya?ml"; then
+                current_file="$line"
+              elif [ -n "$line" ]; then
+                # Check if it is an error that should be ignored
+                if ! echo "$line" | grep -q -E "$IGNORE_PATTERNS"; then
+                  # If it is not an ignored error, keep the file name and error message
+                  if [ -n "$current_file" ]; then
+                    real_errors+="$current_file"$'\n'
+                    current_file=""
+                  fi
+                  real_errors+="$line"$'\n'
+                fi
+              fi
+            done <<< "$lint_output"
+        
+            # Report an error only if there are non-ignored errors
+            if [ -n "$real_errors" ]; then
+              echo "❌ ${chart_name} validation failed:"
+              echo "$real_errors"
+              exit_code=1
+            else
+              echo "✅ ${chart_name} YAML syntax is valid."
+              echo "✅ Ignored expected template errors:"
+              echo $IGNORE_PATTERNS | tr '|' '\n'
+            fi
+          fi
+        done
+        
+        if [ $exit_code -ne 0 ]; then
+          echo "❌ Some charts failed YAML validation"
+          exit 1
         fi
+        echo "✅ All charts passed YAML validation"
 
 # Commit message validation
 commit-msg:

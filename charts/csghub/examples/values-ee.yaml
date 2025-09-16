@@ -4,7 +4,7 @@
 global:
   # Set edition to EE
   edition: "ee"
-  
+
   image:
     #registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
     # Base tag without suffix - will become v1.8.0-ee automatically
@@ -19,10 +19,10 @@ global:
   # External services configuration (optional)
   postgresql:
     enabled: true
-  
+
   redis:
     enabled: true
-  
+
   objectStore:
     enabled: true
 
@@ -71,4 +71,3 @@ csghub:
 
   portal:
     replicas: 1
-

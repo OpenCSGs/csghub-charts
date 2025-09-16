@@ -93,13 +93,16 @@ data:
             FROM public.socialaccount_socialapp_sites), TRUE);
 
     -- Change django_site to the correct domain
-    UPDATE django_site SET domain = '{{ include "csgship.external.api.domain" . }}', name = '{{ include "csgship.external.api.domain" . }}' WHERE id = 1;
+    UPDATE django_site
+      SET domain = '{{ include "csgship.external.api.domain" . }}', name = '{{ include "csgship.external.api.domain" . }}' WHERE id = 1;
 
     -- Init Admin user
     INSERT INTO accounts_user
       (password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined)
     VALUES
-      ('pbkdf2_sha256$720000$ADQralA3c5ajFecfQBZONu$uNE3YstFZ3Ezq9LQGHyPsA2Lj/k6w4QlSpq5apqH6p4=', 't', 'admin', '','', 'admin@example.com', 't', 't', now())
+      (
+        'pbkdf2_sha256$720000$ADQralA3c5ajFecfQBZONu$uNE3YstFZ3Ezq9LQGHyPsA2Lj/k6w4QlSpq5apqH6p4=',
+        't', 'admin', '','', 'admin@example.com', 't', 't', now())
     ON CONFLICT (username) DO NOTHING;
 
     SELECT

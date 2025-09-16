@@ -34,7 +34,15 @@ spec:
         - name: wait-for-minio
           image: {{ include "image.fixed.prefix" (list . "busybox:latest")}}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until wget --spider {{ include "minio.internal.endpoint" . }}/minio/health/live; do echo 'Wait for minio to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until wget --spider {{ include "minio.internal.endpoint" . }}/minio/health/live;
+              do
+                echo 'Wait for minio to be ready';
+                sleep 2;
+              done
       containers:
         - name: mc
           image: {{ include "image.fixed.prefix" (list . "minio/mc:RELEASE.2024-06-01T15-03-35Z")}}

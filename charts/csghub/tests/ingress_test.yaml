@@ -22,9 +22,9 @@ tests:
       - equal:
           path: spec.rules[0]
           value:
-              host: csghub.opencsg-poc.com
-              http:
-                paths:
+            host: csghub.opencsg-poc.com
+            http:
+              paths:
                 - backend:
                     service:
                       name: csghub-portal

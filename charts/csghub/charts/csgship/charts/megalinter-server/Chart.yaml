@@ -1,6 +1,8 @@
 apiVersion: v2
 name: megalinter-server
-description: MegaLinter Server is a centralized, server-based solution for running MegaLinter, a powerful linter aggregator that automatically detects and fixes issues in your source code, documentation, and infrastructure files. It supports 100+ linters across multiple languages, formats, and tools, ensuring consistent code quality and adherence to best practices.
+description: MegaLinter Server is a centralized, server-based solution for running MegaLinter,
+  a powerful linter aggregator that automatically detects and fixes issues in your source code, documentation, and infrastructure files.
+  It supports 100+ linters across multiple languages, formats, and tools, ensuring consistent code quality and adherence to best practices.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

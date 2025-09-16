@@ -51,7 +51,15 @@ spec:
         - name: wait-for-postgresql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest")  }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until psql {{ include "csghub.postgresql.dsn" (dict "service" .Values "global" .) | quote }} -c 'SELECT 1';
+              do
+                echo 'Wait for PostgreSQL to be ready';
+                sleep 2;
+              done
       containers:
         - name: dataflow
           image: {{ include "image.generic.prefix" (list . .Values.image) }}

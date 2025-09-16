@@ -33,11 +33,27 @@ spec:
         - name: wait-for-postgresql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}
           imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values.server "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until psql {{ include "csghub.postgresql.dsn" (dict "service" .Values.server "global" .) | quote }} -c 'SELECT 1';
+              do
+                echo 'Wait for PostgreSQL to be ready';
+                sleep 2;
+              done
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
           imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }};
+              do
+                echo 'Wait for csghub-server to be ready';
+                sleep 2;
+              done
       containers:
         - name: psql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}

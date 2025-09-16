@@ -34,7 +34,16 @@ spec:
         - name: psql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest")  }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until pg_isready; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done; psql -f /scripts/initialize.sql" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until pg_isready;
+              do
+                echo 'Wait for PostgreSQL to be ready';
+                sleep 2;
+              done;
+              psql -f /scripts/initialize.sql
           env:
             - name: PGHOST
               value: {{ include "postgresql.internal.domain" . }}

@@ -12,12 +12,12 @@ metadata:
   labels:
     {{- include "common.labels" . | nindent 4 }}
 spec:
-  {{- if .Values.global.pdb.minAvailable }}
+{{- if .Values.global.pdb.minAvailable }}
   minAvailable: {{ .Values.global.pdb.minAvailable }}
-  {{- end }}
-  {{- if or .Values.global.pdb.maxUnavailable ( not .Values.global.pdb.minAvailable ) }}
+{{- end }}
+{{- if or .Values.global.pdb.maxUnavailable ( not .Values.global.pdb.minAvailable ) }}
   maxUnavailable: {{ .Values.global.pdb.maxUnavailable | default 1 }}
-  {{- end }}
+{{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/instance: {{ .Release.Name }}

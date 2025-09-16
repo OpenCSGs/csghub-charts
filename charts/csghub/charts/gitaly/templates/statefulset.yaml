@@ -21,9 +21,9 @@ spec:
   template:
     metadata:
       annotations:
-        {{- with .Values.podAnnotations }}
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- with .Values.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
