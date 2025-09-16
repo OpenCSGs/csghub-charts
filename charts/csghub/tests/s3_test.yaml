@@ -36,10 +36,10 @@ tests:
       - charts/registry/templates/configmap.yaml
     set:
       global.objectStore.enabled: false
-      global.objectStore.endpoint: "http://s3.opencsg-poc.com"
-      global.objectStore.accessKey: "minio666"
-      global.objectStore.secretKey: "minio123"
-      global.objectStore.region: "cn-north-1"
+      global.objectStore.external.endpoint: "http://s3.opencsg-poc.com"
+      global.objectStore.external.accessKey: "minio666"
+      global.objectStore.external.secretKey: "minio123"
+      global.objectStore.external.region: "cn-north-1"
       global.ingress.domain: "opencsg-poc.com"
     release:
       name: csghub

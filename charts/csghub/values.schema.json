@@ -1,41 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "CSGHub Helm Values",
   "type": "object",
   "properties": {
     "global": {
       "type": "object",
-      "description": "Global configuration will override subChart's configuration",
       "properties": {
         "edition": {
           "type": "string",
-          "description": "Deployment edition: \"ce\" (Community) or \"ee\" (Enterprise)",
-          "enum": ["ce", "ee", "saas"],
-          "default": "ee"
+          "enum": ["ce", "ee", "saas"]
         },
         "image": {
           "type": "object",
           "properties": {
-            "registry": {
-              "type": "string",
-              "pattern": "^.*[^/]$",
-              "errorMessage": "Registry must not end with a slash",
-              "default": "docker.io"
-            },
             "tag": {
-              "type": "string",
-              "description": "Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)",
-              "default": "v1.9.0"
+              "type": "string"
             },
             "pullPolicy": {
               "type": "string",
-              "description": "Kubernetes image pull policy",
-              "enum": ["Always", "IfNotPresent", "Never"],
-              "default": "IfNotPresent"
+              "enum": ["Always", "IfNotPresent", "Never"]
             },
             "pullSecrets": {
               "type": "array",
-              "description": "List of Kubernetes secret names for private registry access",
               "items": {
                 "type": "string"
               }
@@ -46,20 +31,10 @@
           "type": "object",
           "properties": {
             "create": {
-              "type": "boolean",
-              "description": "Whether to create PodDisruptionBudget",
-              "default": false
+              "type": "boolean"
             },
             "minAvailable": {
-              "type": "integer",
-              "description": "Minimum available pods for PodDisruptionBudget",
-              "minimum": 1,
-              "default": 1
-            },
-            "maxUnavailable": {
-              "type": "integer",
-              "description": "Maximum number of unavailable pods",
-              "minimum": 0
+              "type": "integer"
             }
           }
         },
@@ -67,28 +42,25 @@
           "type": "object",
           "properties": {
             "className": {
-              "type": "string",
-              "description": "Ingress class name (e.g., nginx, traefik)",
-              "default": "nginx"
+              "type": "string"
             },
             "domain": {
-              "type": "string",
-              "description": "Domain name for accessing csghub",
-              "pattern": "^([a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}$",
-              "errorMessage": "Domain must be like 'example.com'",
-              "default": "example.com"
+              "type": "string"
+            },
+            "customDomainPrefixes": {
+              "type": "object"
+            },
+            "useTop": {
+              "type": "boolean"
             },
             "tls": {
               "type": "object",
-              "description": "TLS/SSL configuration",
               "properties": {
                 "enabled": {
-                  "type": "boolean",
-                  "default": false
+                  "type": "boolean"
                 },
                 "secretName": {
-                  "type": "string",
-                  "description": "Kubernetes secret name for TLS certificate"
+                  "type": "string"
                 }
               }
             },
@@ -97,838 +69,684 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "description": "Service type for ingress",
-                  "enum": ["LoadBalancer", "NodePort"],
-                  "default": "LoadBalancer"
+                  "enum": ["LoadBalancer", "NodePort"]
                 }
-              },
-              "required": ["type"]
+              }
             }
-          },
-          "required": ["domain", "service"]
+          }
         },
         "registry": {
           "type": "object",
-          "description": "Container registry configuration",
           "properties": {
             "enabled": {
-              "type": "boolean",
-              "description": "Enable internal Registry deployment",
-              "default": true
+              "type": "boolean"
             },
-            "insecure": {
-              "type": "boolean",
-              "description": "Allow insecure registry connections",
-              "default": false
+            "external": {
+              "type": "object",
+              "properties": {
+                "registry": {
+                  "type": "string"
+                },
+                "repository": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                },
+                "insecure": {
+                  "type": "boolean"
+                }
+              }
             }
           }
         },
         "postgresql": {
           "type": "object",
-          "description": "PostgreSQL database configuration",
           "properties": {
             "enabled": {
-              "type": "boolean",
-              "description": "Enable internal PostgreSQL deployment",
-              "default": true
+              "type": "boolean"
             },
-            "port": {
-              "type": "integer",
-              "description": "Database server port",
-              "minimum": 1024,
-              "maximum": 65535,
-              "default": 5432
-            },
-            "user": {
-              "type": "string",
-              "description": "Database username",
-              "default": "csghub"
-            },
-            "timezone": {
-              "type": "string",
-              "description": "Database timezone",
-              "default": "Etc/UTC"
-            }
-          }
-        },
-        "redis": {
-          "type": "object",
-          "description": "Redis configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable internal Redis deployment",
-              "default": true
-            },
-            "port": {
-              "type": "integer",
-              "description": "Redis server port",
-              "minimum": 1024,
-              "maximum": 65535,
-              "default": 6379
-            }
-          }
-        },
-        "objectStore": {
-          "type": "object",
-          "description": "Object storage configuration (e.g. S3/MinIO)",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable internal object storage",
-              "default": true
-            },
-            "region": {
-              "type": "string",
-              "description": "Storage region",
-              "default": "cn-north-1"
-            },
-            "encrypt": {
-              "type": "boolean",
-              "description": "Enable server-side encryption",
-              "default": false
-            },
-            "secure": {
-              "type": "boolean",
-              "description": "Use HTTPS connection",
-              "default": true
-            },
-            "pathStyle": {
-              "type": "boolean",
-              "description": "Use path-style access",
-              "default": true
-            }
-          }
-        },
-        "gitaly": {
-          "type": "object",
-          "description": "Gitaly (Git storage) configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable internal Gitaly deployment",
-              "default": true
-            },
-            "isCluster": {
-              "type": "boolean",
-              "description": "If external Gitaly cluster is used",
-              "default": false
-            },
-            "port": {
-              "type": "integer",
-              "description": "Gitaly server port",
-              "minimum": 1024,
-              "maximum": 65535,
-              "default": 8075
-            },
-            "storage": {
-              "type": "string",
-              "description": "Storage name",
-              "default": "default"
-            }
-          }
-        },
-        "moderation": {
-          "type": "object",
-          "description": "Content moderation configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable content moderation",
-              "default": false
-            }
-          }
-        },
-        "deploy": {
-          "type": "object",
-          "description": "Deployment configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable deployment features",
-              "default": true
-            },
-            "kubeSecret": {
-              "type": "string",
-              "default": "csghub-kube-configs"
-            },
-            "namespace": {
-              "type": "string",
-              "description": "Default deployment namespace",
-              "default": "spaces"
-            },
-            "autoConfigure": {
-              "type": "boolean",
-              "description": "Auto-configure argo workflow/knative-serving/leaderWorkSet",
-              "default": true
-            },
-            "mergingNamespace": {
-              "type": "string",
-              "description": "Namespace merging strategy",
-              "enum": ["Multi", "Single", "Disable"],
-              "default": "Disable"
-            },
-            "knative": {
-              "type": "object",
-              "description": "Knative serving configuration",
-              "properties": {
-                "serving": {
-                  "type": "object",
-                  "properties": {
-                    "services": {
-                      "type": "array",
-                      "description": "List of Knative services",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "description": "Service type for kourier service",
-                            "enum": ["LoadBalancer", "NodePort"],
-                            "default": "LoadBalancer"
-                          },
-                          "domain": {
-                            "type": "string",
-                            "description": "Internal domain for service access",
-                            "default": "app.internal"
-                          }
-                        },
-                        "required": ["type", "domain"]
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "pipIndexUrl": {
-              "type": "string",
-              "default": "https://pypi.tuna.tsinghua.edu.cn/simple/"
-            },
-            "imageBuilder": {
-              "type": "object",
-              "description": "Image builder configuration",
-              "properties": {
-                "namespace": {
-                  "type": "string",
-                  "description": "Namespace for image builder",
-                  "default": "image-factory"
-                }
-              }
-            },
-            "usePublicDomain": {
-              "type": "boolean",
-              "description": "Use public domain for deployment or use endpoint",
-              "default": true
-            }
-          }
-        },
-        "persistence": {
-          "type": "object",
-          "description": "Persistent storage configuration",
-          "properties": {
-            "accessMode": {
-              "type": "array",
-              "description": "Access modes for volumes",
-              "items": {
-                "type": "string",
-                "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
-              }
-            }
-          }
-        },
-        "csgship": {
-          "type": "object",
-          "description": "Csgship OAuth configuration",
-          "properties": {
-            "oauth": {
-              "type": "object",
-              "properties": {
-              }
-            }
-          }
-        },
-        "dataflow": {
-          "type": "object",
-          "description": "Dataflow service configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable internal Dataflow service",
-              "default": false
-            }
-          }
-        }
-      },
-      "required": ["edition", "image", "ingress"]
-    },
-    "csghub": {
-      "type": "object",
-      "description": "CSGHub core service configurations",
-      "properties": {
-        "autoscaling": {
-          "type": "object",
-          "description": "Autoscaling configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "default": false
-            },
-            "minReplicas": {
-              "type": "integer",
-              "description": "Minimum replica count",
-              "minimum": 1,
-              "default": 1
-            },
-            "maxReplicas": {
-              "type": "integer",
-              "description": "Maximum replica count",
-              "minimum": 1,
-              "default": 10
-            },
-            "targetCPUUtilizationPercentage": {
-              "type": "integer",
-              "description": "Target CPU utilization percentage",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 80
-            },
-            "targetMemoryUtilizationPercentage": {
-              "type": "integer",
-              "description": "Target memory utilization percentage",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 80
-            }
-          }
-        },
-        "server": {
-          "type": "object",
-          "description": "CSGHub server configuration",
-          "properties": {
-            "image": {
-              "type": "object",
-              "properties": {
-                "registry": {
-                  "type": "string",
-                  "default": "docker.io"
-                },
-                "repository": {
-                  "type": "string",
-                  "description": "Image repository path",
-                  "default": "opencsghq/csghub-server"
-                },
-                "tag": {
-                  "type": "string"
-                },
-                "pullPolicy": {
-                  "type": "string",
-                  "description": "Image pull policy",
-                  "enum": ["Always", "IfNotPresent", "Never"],
-                  "default": "IfNotPresent"
-                },
-                "pullSecrets": {
-                  "type": "array",
-                  "description": "Pull secrets for private registry",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "serviceAccount": {
-              "type": "object",
-              "properties": {
-                "create": {
-                  "type": "boolean",
-                  "default": false
-                },
-                "automount": {
-                  "type": "boolean",
-                  "default": false
-                }
-              }
-            },
-            "postgresql": {
+            "external": {
               "type": "object",
               "properties": {
                 "host": {
                   "type": "string"
                 },
                 "port": {
-                  "type": "integer",
-                  "description": "Database port",
-                  "minimum": 1024,
-                  "maximum": 65535,
-                  "default": 5432
+                  "type": "integer"
                 },
                 "user": {
-                  "type": "string",
-                  "description": "Database username",
-                  "default": "csghub_server"
+                  "type": "string"
                 },
-                "database": {
-                  "type": "string",
-                  "description": "Database name",
-                  "default": "csghub_server"
+                "password": {
+                  "type": "string"
                 },
                 "timezone": {
-                  "type": "string",
-                  "description": "Database timezone",
-                  "default": "Etc/UTC"
-                }
-              }
-            },
-            "redis": {
-              "type": "object",
-              "properties": {
-                "port": {
-                  "type": "integer",
-                  "description": "Redis port",
-                  "minimum": 1024,
-                  "maximum": 65535,
-                  "default": 6379
-                }
-              }
-            },
-            "gitaly": {
-              "type": "object",
-              "properties": {
-                "port": {
-                  "type": "integer",
-                  "description": "Gitaly port",
-                  "minimum": 1024,
-                  "maximum": 65535,
-                  "default": 8075
+                  "type": "string"
                 },
-                "storage": {
-                  "type": "string",
-                  "description": "Storage name",
-                  "default": "default"
+                "sslMode": {
+                  "type": "string"
                 }
               }
+            }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
             },
-            "objectStore": {
+            "external": {
               "type": "object",
               "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer"
+                },
+                "password": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "external": {
+              "type": "object",
+              "properties": {
+                "endpoint": {
+                  "type": "string"
+                },
                 "accessKey": {
-                  "type": "string",
-                  "description": "Access key",
-                  "default": "minio"
+                  "type": "string"
                 },
-                "bucket": {
-                  "type": "string",
-                  "description": "Bucket name",
-                  "default": "csghub-server"
+                "secretKey": {
+                  "type": "string"
                 },
                 "region": {
-                  "type": "string",
-                  "description": "Storage region",
-                  "default": "cn-north-1"
+                  "type": "string"
                 },
                 "encrypt": {
-                  "type": "boolean",
-                  "description": "Enable server-side encryption",
-                  "default": false
+                  "type": "boolean"
                 },
                 "secure": {
-                  "type": "boolean",
-                  "description": "Use HTTPS connection",
-                  "default": false
+                  "type": "boolean"
                 },
                 "pathStyle": {
-                  "type": "boolean",
-                  "description": "Use path-style access",
-                  "default": true
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "gitaly": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "external": {
+              "type": "object",
+              "properties": {
+                "scheme": {
+                  "type": "string"
                 },
-                "directUpload": {
-                  "type": "boolean",
-                  "description": "Enable direct upload",
-                  "default": false
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer"
+                },
+                "storage": {
+                  "type": "string"
+                },
+                "token": {
+                  "type": "string"
+                },
+                "isCluster": {
+                  "type": "boolean"
                 }
               }
+            }
+          }
+        },
+        "moderation": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
             },
-            "gitlabShell": {
+            "endpoint": {
+              "type": "string"
+            },
+            "accessKeyId": {
+              "type": "string"
+            },
+            "accessKeySecret": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "enableSSL": {
+              "type": "boolean"
+            }
+          }
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "autoConfigure": {
+          "type": "boolean"
+        },
+        "mergingNamespace": {
+          "type": "string",
+          "enum": ["Multi", "Single", "Disable"]
+        },
+        "knative": {
+          "type": "object",
+          "properties": {
+            "serving": {
               "type": "object",
               "properties": {
-                "sshPort": {
-                  "type": "integer",
-                  "description": "Shell ssh port",
-                  "minimum": 1024,
-                  "maximum": 65535,
-                  "default": 22
-                }
-              }
-            },
-            "multiSync": {
-              "type": "object",
-              "properties": {
-                "enabled": {
-                  "type": "boolean",
-                  "description": "Enable multi-sync",
-                  "default": true
-                }
-              }
-            },
-            "securityContext": {
-              "type": "object",
-              "properties": {
-                "capabilities": {
-                  "type": "object",
-                  "properties": {
-                    "drop": {
-                      "type": "array",
-                      "items": {
+                "services": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["LoadBalancer", "NodePort"]
+                      },
+                      "domain": {
+                        "type": "string"
+                      },
+                      "host": {
+                        "type": "string"
+                      },
+                      "port": {
                         "type": "string"
                       }
                     }
                   }
                 }
               }
+            }
+          }
+        },
+        "pipIndexUrl": {
+          "type": "string"
+        },
+        "usePublicDomain": {
+          "type": "boolean"
+        },
+        "chartContext": {
+          "type": "object",
+          "properties": {
+            "isRoot": {
+              "type": "boolean"
+            }
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "storageClass": {
+              "type": "string"
             },
-            "resources": {
+            "accessMode": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "csgship": {
+          "type": "object",
+          "properties": {
+            "oauth": {
               "type": "object",
               "properties": {
-                "limits": {
-                  "type": "object",
-                  "properties": {
-                    "cpu": {
-                      "type": "string",
-                      "default": "100m"
-                    },
-                    "memory": {
-                      "type": "string",
-                      "default": "128Mi"
-                    }
-                  }
+                "issuer": {
+                  "type": "string"
                 },
-                "requests": {
-                  "type": "object",
-                  "properties": {
-                    "cpu": {
-                      "type": "string",
-                      "default": "100m"
-                    },
-                    "memory": {
-                      "type": "string",
-                      "default": "128Mi"
-                    }
-                  }
+                "clientId": {
+                  "type": "string"
+                },
+                "clientSecret": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "runner": {
+        "dataflow": {
           "type": "object",
-          "description": "Runner service configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "minReplicas": {
+          "type": "integer"
+        },
+        "maxReplicas": {
+          "type": "integer"
+        },
+        "targetCPUUtilizationPercentage": {
+          "type": "integer"
+        },
+        "targetMemoryUtilizationPercentage": {
+          "type": "integer"
+        }
+      }
+    },
+    "server": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "object",
           "properties": {
             "registry": {
-              "type": "object",
-              "properties": {
-                "namespace": {
-                  "type": "string",
-                  "default": "csghub"
-                },
-                "username": {
-                  "type": "string",
-                  "default": "registry"
-                },
-                "insecure": {
-                  "type": "boolean",
-                  "description": "Allow insecure registry",
-                  "default": true
-                }
-              }
+              "type": "string"
             },
-            "autoLabel": {
-              "type": "object",
-              "description": "Auto-labeling configuration",
-              "properties": {
-                "image": {
-                  "type": "object",
-                  "properties": {
-                    "registry": {
-                      "type": "string",
-                      "default": "docker.io"
-                    },
-                    "repository": {
-                      "type": "string",
-                      "default": "opencsghq/gpu_gather"
-                    },
-                    "tag": {
-                      "type": "string",
-                      "default": "latest"
-                    }
-                  }
-                },
-                "cli": {
-                  "type": "object",
-                  "properties": {
-                    "image": {
-                      "type": "string",
-                      "description": "CLI container image",
-                      "default": "nvidia/cuda:12.0.0-base-ubi8"
-                    },
-                    "cmd": {
-                      "type": "string",
-                      "description": "CLI command to detect GPUs",
-                      "default": "nvidia-smi --query-gpu=name --format=csv,noheader"
-                    }
-                  }
-                }
-              }
+            "repository": {
+              "type": "string"
             },
-            "objectStore": {
-              "type": "object",
-              "description": "Runner object storage configuration",
-              "properties": {
-                "accessKey": {
-                  "type": "string",
-                  "default": "minio"
-                },
-                "bucket": {
-                  "type": "string",
-                  "default": "csghub-workflow"
-                },
-                "region": {
-                  "type": "string",
-                  "default": "cn-north-1"
-                },
-                "encrypt": {
-                  "type": "boolean",
-                  "description": "Enable server-side encryption",
-                  "default": false
-                },
-                "secure": {
-                  "type": "boolean",
-                  "description": "Use HTTPS connection",
-                  "default": false
-                },
-                "pathStyle": {
-                  "type": "boolean",
-                  "description": "Use path-style access",
-                  "default": true
-                }
-              }
+            "tag": {
+              "type": "string"
             },
-            "modelRegistry": {
+            "pullPolicy": {
               "type": "string",
-              "description": "Runner object storage configuration",
-              "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}((\/[a-z0-9]+)+)?$"
+              "enum": ["Always", "IfNotPresent", "Never"]
+            },
+            "pullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
-        "portal": {
+        "postgresql": {
           "type": "object",
-          "description": "Portal service configuration",
           "properties": {
-            "image": {
-              "type": "object",
-              "description": "Portal image configuration",
-              "properties": {
-                "pullSecrets": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "registry": {
-                  "type": "string",
-                  "default": "docker.io"
-                },
-                "repository": {
-                  "type": "string",
-                  "default": "opencsghq/csghub-portal"
-                },
-                "pullPolicy": {
-                  "type": "string",
-                  "description": "Image pull policy",
-                  "enum": ["Always", "IfNotPresent", "Never"],
-                  "default": "IfNotPresent"
-                }
-              }
+            "host": {
+              "type": "string"
             },
-            "ingress": {
+            "port": {
+              "type": "integer"
+            },
+            "user": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "database": {
+              "type": "string"
+            },
+            "timezone": {
+              "type": "string"
+            }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        },
+        "gitaly": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "storage": {
+              "type": "string"
+            },
+            "token": {
+              "type": "string"
+            }
+          }
+        },
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "string"
+            },
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "encrypt": {
+              "type": "boolean"
+            },
+            "secure": {
+              "type": "boolean"
+            },
+            "pathStyle": {
+              "type": "boolean"
+            },
+            "directUpload": {
+              "type": "boolean"
+            }
+          }
+        },
+        "gitlabShell": {
+          "type": "object",
+          "properties": {
+            "sshPort": {
+              "type": "integer"
+            }
+          }
+        },
+        "multiSync": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "proxy": {
               "type": "object",
-              "description": "Portal ingress configuration",
               "properties": {
                 "enabled": {
-                  "type": "boolean",
-                  "description": "Enable ingress",
-                  "default": true
+                  "type": "boolean"
                 },
-                "tls": {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean",
-                      "description": "Enable TLS",
-                      "default": false
-                    }
-                  }
-                }
-              }
-            },
-            "postgresql": {
-              "type": "object",
-              "description": "Documentation links configuration",
-              "properties": {
-                "port": {
-                  "type": "integer",
-                  "description": "Database port",
-                  "minimum": 1024,
-                  "maximum": 65535,
-                  "default": 5432
+                "address": {
+                  "type": "string"
                 },
-                "user": {
-                  "type": "string",
-                  "description": "Database username",
-                  "default": "csghub_portal"
-                },
-                "database": {
-                  "type": "string",
-                  "description": "Database name",
-                  "default": "csghub_portal"
-                },
-                "timezone": {
-                  "type": "string",
-                  "description": "Database timezone",
-                  "default": "Etc/UTC"
-                }
-              }
-            },
-            "objectStore": {
-              "type": "object",
-              "properties": {
-                "accessKey": {
-                  "type": "string",
-                  "description": "Access key",
-                  "default": "minio"
-                },
-                "bucket": {
-                  "type": "string",
-                  "description": "Bucket name",
-                  "default": "csghub-portal-public"
-                },
-                "region": {
-                  "type": "string",
-                  "description": "Storage region",
-                  "default": "cn-north-1"
-                },
-                "encrypt": {
-                  "type": "boolean",
-                  "description": "Enable server-side encryption",
-                  "default": false
-                },
-                "secure": {
-                  "type": "boolean",
-                  "description": "Use HTTPS connection",
-                  "default": false
-                },
-                "pathStyle": {
-                  "type": "boolean",
-                  "description": "Use path-style access",
-                  "default": true
-                }
-              }
-            },
-            "additionalObjectStore": {
-              "type": "object",
-              "description": "Additional storage configuration",
-              "properties": {
-                "bucket": {
-                  "type": "string",
-                  "default": "csghub-portal"
-                }
-              }
-            },
-            "smtp": {
-              "type": "object",
-              "description": "SMTP email configuration",
-              "properties": {
-                "port": {
-                  "type": "integer",
-                  "description": "SMTP server port",
-                  "minimum": 1,
-                  "maximum": 65535,
-                  "default": 465
-                }
-              }
-            },
-            "serviceAccount": {
-              "type": "object",
-              "properties": {
-                "create": {
-                  "type": "boolean",
-                  "default": false
-                },
-                "automount": {
-                  "type": "boolean",
-                  "default": false
+                "hosts": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "notification": {
+        "swagger": {
           "type": "object",
-          "description": "Notification service configuration",
           "properties": {
-            "repoSyncTime": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        "logging": {
+          "type": "object",
+          "properties": {
+            "level": {
               "type": "string",
-              "description": "Repository synchronization timezone",
-              "default": "Asia/Shanghai"
-            },
-            "broadcastUserPageSize": {
-              "type": "integer",
-              "description": "User pagination size for broadcasts",
-              "minimum": 1,
-              "default": 100
-            },
-            "broadcastEmailPageSize": {
-              "type": "integer",
-              "description": "Email pagination size for broadcasts",
-              "minimum": 1,
-              "default": 100
-            },
-            "smtp": {
+              "enum": ["info", "warning", "debug", "error"]
+            }
+          }
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "registry": {
+              "type": "string"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "limits": {
               "type": "object",
-              "description": "Notification SMTP configuration",
               "properties": {
-                "port": {
-                  "type": "integer",
-                  "description": "SMTP port",
-                  "minimum": 1,
-                  "maximum": 65535
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
                 }
               }
             },
-            "feiShu": {
+            "requests": {
               "type": "object",
-              "description": "FeiShu (Lark) notification configuration",
               "properties": {
-                "batchSendMessageCronExpression": {
-                  "type": "string",
-                  "description": "Cron expression for batch sending",
-                  "default": "*/10 * * * *"
+                "cpu": {
+                  "type": "string"
                 },
-                "maxRequestContentSize": {
-                  "type": "integer",
-                  "description": "Max content size per request",
-                  "maximum": 30720,
-                  "default": 20480
-                },
-                "maxDelayDuration": {
-                  "type": "integer",
-                  "description": "Max message delay duration",
-                  "default": 3600
-                },
-                "chatIdsCacheTTL": {
-                  "type": "integer",
-                  "description": "Chat IDs cache TTL",
-                  "default": 21600
+                "memory": {
+                  "type": "string"
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "portal": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "object",
+          "properties": {
+            "registry": {
+              "type": "string"
+            },
+            "repository": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": ["Always", "IfNotPresent", "Never"]
+            },
+            "pullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "ingress": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "tls": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "secretName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "docs": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "string"
+            }
+          }
+        },
+        "postgresql": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "user": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "database": {
+              "type": "string"
+            },
+            "timezone": {
+              "type": "string"
+            }
+          }
+        },
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "string"
+            },
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "encrypt": {
+              "type": "boolean"
+            },
+            "secure": {
+              "type": "boolean"
+            },
+            "pathStyle": {
+              "type": "boolean"
+            }
+          }
+        },
+        "additionalObjectStore": {
+          "type": "object",
+          "properties": {
+            "bucket": {
+              "type": "string"
+            }
+          }
+        },
+        "smtp": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "notification": {
+      "type": "object",
+      "properties": {
+        "repoSyncTime": {
+          "type": "string"
+        },
+        "broadcastUserPageSize": {
+          "type": "integer"
+        },
+        "broadcastEmailPageSize": {
+          "type": "integer"
+        },
+        "smtp": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        },
+        "feiShu": {
+          "type": "object",
+          "properties": {
+            "appId": {
+              "type": "string"
+            },
+            "appSecret": {
+              "type": "string"
+            },
+            "batchSendMessageCronExpression": {
+              "type": "string"
+            },
+            "maxRequestContentSize": {
+              "type": "string"
+            },
+            "maxDelayDuration": {
+              "type": "string"
+            },
+            "chatIdsCacheTTL": {
+              "type": "string"
             }
           }
         }
@@ -936,29 +754,45 @@
     },
     "csgship": {
       "type": "object",
-      "description": "Csgship service configuration (Enterprise only)",
       "properties": {
         "enabled": {
-          "type": "boolean",
-          "description": "Enable Csgship service",
-          "default": false
+          "type": "boolean"
         },
         "web": {
           "type": "object",
           "properties": {
             "persistence": {
               "type": "object",
-              "description": "Persistence configuration",
               "properties": {
                 "accessMode": {
                   "type": "array",
-                  "description": "Access modes for persistent volume",
                   "items": {
-                    "type": "string",
-                    "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+                    "type": "string"
                   }
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "dataflow": {
+      "type": "object",
+      "properties": {
+        "openAI": {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "string"
+            },
+            "apiKey": {
+              "type": "string"
+            },
+            "apiVersion": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
             }
           }
         }
@@ -966,155 +800,40 @@
     },
     "ingress-nginx": {
       "type": "object",
-      "description": "Ingress-NGINX controller configuration",
       "properties": {
         "enabled": {
-          "type": "boolean",
-          "description": "Enable ingress-nginx",
-          "default": true
-        },
-        "tcp": {
-          "type": "object",
-          "description": "TCP service mappings",
-          "properties": {
-            "22": {
-              "type": "string",
-              "description": "Git SSH service mapping",
-              "default": "csghub/csghub-gitlab-shell:22"
-            }
-          }
+          "type": "boolean"
         },
         "controller": {
           "type": "object",
           "properties": {
-            "image": {
-              "type": "object",
-              "properties": {
-                "image": {
-                  "type": "string",
-                  "default": "opencsghq/ingress-nginx-controller"
-                },
-                "digest": {
-                  "type": "string",
-                  "description": "Image digest (must be empty)",
-                  "enum": [""],
-                  "default": "",
-                  "errorMessage": "Digest must be empty string"
-                }
-              }
-            },
-            "admissionWebhooks": {
-              "type": "object",
-              "properties": {
-                "patch": {
-                  "type": "object",
-                  "properties": {
-                    "image": {
-                      "type": "object",
-                      "properties": {
-                        "image": {
-                          "type": "string",
-                          "default": "opencsghq/ingress-nginx-kube-webhook-certgen"
-                        },
-                        "digest": {
-                          "type": "string",
-                          "description": "Webhook image digest (must be empty)",
-                          "enum": [""],
-                          "default": "",
-                          "errorMessage": "Digest must be empty string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "config": {
-              "type": "object",
-              "description": "NGINX configuration",
-              "properties": {
-                "annotations-risk-level": {
-                  "type": "string",
-                  "description": "Risk level for annotations",
-                  "default": "Critical"
-                },
-                "custom-http-errors": {
-                  "type": "string",
-                  "description": "Custom HTTP error codes",
-                  "default": "404,500,502,503"
-                }
-              }
-            },
-            "allowSnippetAnnotations": {
-              "type": "boolean",
-              "description": "Allow snippet annotations",
-              "default": true
-            },
             "service": {
               "type": "object",
               "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["LoadBalancer", "NodePort"]
+                },
                 "nodePorts": {
                   "type": "object",
                   "properties": {
                     "http": {
-                      "type": "integer",
-                      "default": 30080
+                      "type": "integer"
                     },
                     "https": {
-                      "type": "integer",
-                      "default": 30443
+                      "type": "integer"
                     },
                     "tcp": {
                       "type": "object",
                       "properties": {
                         "22": {
-                          "type": "integer",
-                          "default": 30022
+                          "type": "integer"
                         }
                       }
                     }
                   }
                 }
               }
-            }
-          }
-        },
-        "defaultBackend": {
-          "type": "object",
-          "description": "Default backend configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable default backend",
-              "default": true
-            },
-            "image": {
-              "type": "object",
-              "properties": {
-                "image": {
-                  "type": "string",
-                  "default": "opencsghq/ingress-nginx-custom-error-pages"
-                },
-                "tag": {
-                  "type": "string",
-                  "default": "v1.2.0"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "reloader": {
-      "type": "object",
-      "description": "Reloader configuration",
-      "properties": {
-        "image": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "default": "opencsghq/stakater-reloader"
             }
           }
         }
@@ -1122,21 +841,9 @@
     },
     "fluentd": {
       "type": "object",
-      "description": "Fluentd logging configuration",
       "properties": {
         "enabled": {
-          "type": "boolean",
-          "description": "Enable Fluentd",
-          "default": false
-        },
-        "image": {
-          "type": "object",
-          "properties": {
-            "repository": {
-              "type": "string",
-              "default": "opencsghq/fluent-fluentd-kubernetes-daemonset"
-            }
-          }
+          "type": "boolean"
         }
       }
     }
