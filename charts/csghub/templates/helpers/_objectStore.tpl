@@ -46,15 +46,15 @@ generate object store config
   {{- $_ := set $config "directUpload" false -}}
 {{- else -}}
   {{/* use external object store */}}
-  {{- $_ := set $config "endpoint" $global.Values.global.objectStore.endpoint -}}
-  {{- $_ := set $config "externalEndpoint" $global.Values.global.objectStore.endpoint -}}
-  {{- $_ := set $config "region" $global.Values.global.objectStore.region -}}
-  {{- $_ := set $config "accessKey" $global.Values.global.objectStore.accessKey -}}
-  {{- $_ := set $config "secretKey" $global.Values.global.objectStore.secretKey -}}
-  {{- $_ := set $config "encrypt" $global.Values.global.objectStore.encrypt -}}
-  {{- $_ := set $config "secure" $global.Values.global.objectStore.secure -}}
-  {{- $_ := set $config "pathStyle" $global.Values.global.objectStore.pathStyle -}}
-  {{- $_ := set $config "directUpload" $global.Values.global.objectStore.directUpload -}}
+  {{- $_ := set $config "endpoint" $global.Values.global.objectStore.external.endpoint -}}
+  {{- $_ := set $config "externalEndpoint" $global.Values.global.objectStore.external.endpoint -}}
+  {{- $_ := set $config "region" $global.Values.global.objectStore.external.region -}}
+  {{- $_ := set $config "accessKey" $global.Values.global.objectStore.external.accessKey -}}
+  {{- $_ := set $config "secretKey" $global.Values.global.objectStore.external.secretKey -}}
+  {{- $_ := set $config "encrypt" $global.Values.global.objectStore.external.encrypt -}}
+  {{- $_ := set $config "secure" $global.Values.global.objectStore.external.secure -}}
+  {{- $_ := set $config "pathStyle" $global.Values.global.objectStore.external.pathStyle -}}
+  {{- $_ := set $config "directUpload" $global.Values.global.objectStore.external.directUpload -}}
 {{- end -}}
 
 {{/* service level config override */}}

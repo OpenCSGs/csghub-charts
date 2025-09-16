@@ -154,12 +154,12 @@ tests:
       - configmap-server.yaml
     set:
       global.postgresql.enabled: false
-      global.postgresql.host: "postgresql.opencsg-poc.com"
-      global.postgresql.port: 6432
-      global.postgresql.user: "csghub_server124"
-      global.postgresql.password: "csghub_server@2025!"
-      global.postgresql.database: "csghub"
-      global.postgresql.timezone: "Asia/Shanghai"
+      global.postgresql.external.host: "postgresql.opencsg-poc.com"
+      global.postgresql.external.port: 6432
+      global.postgresql.external.user: "csghub_server124"
+      global.postgresql.external.password: "csghub_server@2025!"
+      global.postgresql.external.database: "csghub"
+      global.postgresql.external.timezone: "UTC"
     release:
       name: csghub
       namespace: csghub
@@ -182,4 +182,4 @@ tests:
           value: "csghub_server"
       - equal:
           path: data["STARHUB_DATABASE_TIMEZONE"]
-          value: "Asia/Shanghai"
+          value: "UTC"

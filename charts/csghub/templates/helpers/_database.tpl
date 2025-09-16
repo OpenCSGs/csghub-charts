@@ -30,12 +30,12 @@ generate database config
   {{- $_ := set $config "sslMode" "disable" -}}
 {{- else -}}
   {{- /* use external postgresql */ -}}
-  {{- $_ := set $config "host" $global.Values.global.postgresql.host -}}
-  {{- $_ := set $config "port" $global.Values.global.postgresql.port -}}
-  {{- $_ := set $config "user" $global.Values.global.postgresql.user -}}
-  {{- $_ := set $config "password" $global.Values.global.postgresql.password -}}
-  {{- $_ := set $config "timezone" ($global.Values.global.postgresql.timezone | default "UTC") -}}
-  {{- $_ := set $config "sslMode" ($global.Values.global.postgresql.sslMode | default "require") -}}
+  {{- $_ := set $config "host" $global.Values.global.postgresql.external.host -}}
+  {{- $_ := set $config "port" $global.Values.global.postgresql.external.port -}}
+  {{- $_ := set $config "user" $global.Values.global.postgresql.external.user -}}
+  {{- $_ := set $config "password" $global.Values.global.postgresql.external.password -}}
+  {{- $_ := set $config "timezone" ($global.Values.global.postgresql.external.timezone | default "UTC") -}}
+  {{- $_ := set $config "sslMode" ($global.Values.global.postgresql.external.sslMode | default "require") -}}
 {{- end -}}
 
 {{/* service-level config override */}}

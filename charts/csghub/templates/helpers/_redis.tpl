@@ -13,9 +13,9 @@ generate redis config
   {{- $_ := set $config "password" (or $global.Values.redis.password (randAlphaNum 15)) -}}
 {{- else -}}
   {{- /* user external redis */ -}}
-  {{- $_ := set $config "host" $global.Values.global.redis.host -}}
-  {{- $_ := set $config "port" $global.Values.global.redis.port -}}
-  {{- $_ := set $config "password" $global.Values.global.redis.password -}}
+  {{- $_ := set $config "host" $global.Values.global.redis.external.host -}}
+  {{- $_ := set $config "port" $global.Values.global.redis.external.port -}}
+  {{- $_ := set $config "password" $global.Values.global.redis.external.password -}}
 {{- end -}}
 
 {{/* service-level config override */}}

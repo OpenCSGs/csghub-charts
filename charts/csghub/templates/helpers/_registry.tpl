@@ -23,6 +23,7 @@ generate registry config
   {{- $_ := set $config "username" $defaultUser -}}
   {{- $_ := set $config "password" $defaultPass -}}
   {{- $_ := set $config "htpasswd" $defaultHtpasswd -}}
+  {{- $_ := set $config "insecure" "true" -}}
 
   {{/* use secrets if exists */}}
   {{- $secret := (include "common.names.custom" (list $global "registry")) -}}
@@ -44,10 +45,11 @@ generate registry config
 
 {{- else -}}
   {{/* use external registry */}}
-  {{- $_ := set $config "registry" $global.Values.global.registry.registry -}}
-  {{- $_ := set $config "repository" $global.Values.global.registry.repository -}}
-  {{- $_ := set $config "username" $global.Values.global.registry.username -}}
-  {{- $_ := set $config "password" $global.Values.global.registry.password -}}
+  {{- $_ := set $config "registry" $global.Values.global.registry.external.registry -}}
+  {{- $_ := set $config "repository" $global.Values.global.registry.external.repository -}}
+  {{- $_ := set $config "username" $global.Values.global.registry.external.username -}}
+  {{- $_ := set $config "password" $global.Values.global.registry.external.password -}}
+  {{- $_ := set $config "insecure" $global.Values.global.registry.external.insecure -}}
 {{- end -}}
 
 {{/* service level config override */}}
