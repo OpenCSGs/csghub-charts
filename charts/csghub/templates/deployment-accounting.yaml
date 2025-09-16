@@ -11,52 +11,52 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "accounting") | nindent 4 }}
   annotations:
     reloader.stakater.com/auto: "true"
-    {{- with .Values.csghub.accounting.annotations }}
+    {{- with .Values.accounting.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "accounting")  | nindent 6 }}
-  replicas: {{ .Values.csghub.accounting.replicas }}
+  replicas: {{ .Values.accounting.replicas }}
   revisionHistoryLimit: 1
   minReadySeconds: 30
   template:
     metadata:
       annotations:
-        {{- with .Values.csghub.accounting.podAnnotations }}
+        {{- with .Values.accounting.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
         {{- include "common.labels" (dict "context" . "service" "accounting") | nindent 8 }}
     spec:
-      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or .Values.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
         {{- end }}
       {{- end }}
-      {{- with .Values.csghub.accounting.securityContext }}
+      {{- with .Values.accounting.securityContext }}
       securityContext:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: 10
-      {{- if .Values.csghub.server.serviceAccount.create }}
+      {{- if .Values.server.serviceAccount.create }}
       serviceAccountName: {{ include "common.names.custom" (list . "accounting") }}
-      automountServiceAccountToken: {{ .Values.csghub.server.serviceAccount.automount }}
+      automountServiceAccountToken: {{ .Values.server.serviceAccount.automount }}
       {{- end }}
       initContainers:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
         - name: accounting
-          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
-          {{- $_ := set .Values.csghub.server.image "tag" $tag }}
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "accounting", "launch", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.server.image.tag .Values.global.image.tag) "context" .) }}
+          {{- $_ := set .Values.server.image "tag" $tag }}
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "accounting", "launch", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           ports:
             - containerPort: 8086
               name: accounting
@@ -71,14 +71,14 @@ spec:
           env:
             - name: OPENCSG_ACCOUNTING_NATS_URL
               value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
-            {{- with .Values.csghub.server.environments }}
+            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "20m"
               memory: "128Mi"
@@ -92,14 +92,14 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.accounting.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.accounting.podSecurityContext | toYaml | nindent 12 }}
         {{- if not (regexMatch "^ee$|^ce$" (.Values.global.edition | toString)) }}
         - name: payment
-          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
-          {{- $_ := set .Values.csghub.server.image "tag" $tag }}
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "payment", "launch", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.server.image.tag .Values.global.image.tag) "context" .) }}
+          {{- $_ := set .Values.server.image "tag" $tag }}
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "payment", "launch", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           ports:
             - containerPort: 8090
               name: payment
@@ -114,14 +114,14 @@ spec:
           env:
             - name: OPENCSG_ACCOUNTING_NATS_URL
               value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
-            {{- with .Values.csghub.server.environments }}
+            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
           resources:
-          {{- if .Values.csghub.autoscaling.enabled }}
+          {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "20m"
               memory: "128Mi"
@@ -135,17 +135,17 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.accounting.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.accounting.podSecurityContext | toYaml | nindent 12 }}
         {{- end }}
-      {{- with .Values.csghub.accounting.nodeSelector }}
+      {{- with .Values.accounting.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.accounting.affinity }}
+      {{- with .Values.accounting.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.accounting.tolerations }}
+      {{- with .Values.accounting.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

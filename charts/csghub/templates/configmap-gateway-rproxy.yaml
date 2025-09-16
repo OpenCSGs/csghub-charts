@@ -10,11 +10,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" (dict "context" . "service" "gateway") | nindent 4 }}
 data:
-  {{- $spaceNamespace := .Values.global.deploy.namespace }}
-  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
-  {{- $spaceNamespace = .Release.Namespace }}
-  {{- end }}
-  {{- range .Values.global.deploy.knative.serving.services }}
+  {{- $spaceNamespace := include "namespace.spaces" . }}
+  {{- range .Values.global.knative.serving.services }}
   {{ .domain }}.conf: |
     server {
         listen 80;
@@ -29,12 +26,7 @@ data:
             {{- if and .host .port }}
             proxy_pass http://{{ .host }}:{{ .port }};
             {{- else }}
-              {{- $kourierNamespace := "kourier-system" }}
-              {{- if eq $.Values.global.deploy.mergingNamespace "Multi" }}
-                {{- $kourierNamespace = "knative-serving" }}
-              {{- else if eq $.Values.global.deploy.mergingNamespace "Single" }}
-                {{- $kourierNamespace = $.Release.Namespace }}
-              {{- end }}
+              {{- $kourierNamespace := include "namespace.kourier" $ }}
             set $knativeBackend {{ printf "kourier.%s.svc.%s" $kourierNamespace (include "cluster.domain" .) }};
             proxy_pass http://$knativeBackend;
             {{- end }}

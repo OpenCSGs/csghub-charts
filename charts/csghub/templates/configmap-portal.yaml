@@ -3,8 +3,8 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */}}
 
-{{- $objectStoreConfig := include "chart.objectStoreConfig" (dict "service" .Values.csghub.portal "global" .) | fromYaml }}
-{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.csghub.portal "global" .) | fromYaml }}
+{{- $objectStoreConfig := include "chart.objectStoreConfig" (dict "service" .Values.portal "global" .) | fromYaml }}
+{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.portal "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -32,24 +32,24 @@ data:
   CSGHUB_PORTAL_DATABASE_NAME: {{ $pgConfig.database | quote }}
   CSGHUB_PORTAL_DATABASE_USERNAME: {{ $pgConfig.user | quote }}
   CSGHUB_PORTAL_DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
-  CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.csghub.portal "global" .) | quote }}
+  CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.portal "global" .) | quote }}
   # ObjectStorage
   CSGHUB_PORTAL_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.csghub.portal.additionalObjectStore.endpoint | default ($objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://") | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.portal.additionalObjectStore.endpoint | default ($objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://") | quote }}
   {{- if not .Values.global.objectStore.enabled }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID: {{ .Values.csghub.portal.additionalObjectStore.accessKey | default $objectStoreConfig.accessKey | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET: {{ .Values.csghub.portal.additionalObjectStore.secretKey | default $objectStoreConfig.secretKey | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID: {{ .Values.portal.additionalObjectStore.accessKey | default $objectStoreConfig.accessKey | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET: {{ .Values.portal.additionalObjectStore.secretKey | default $objectStoreConfig.secretKey | quote }}
   {{- end }}
   CSGHUB_PORTAL_S3_BUCKET: {{ $objectStoreConfig.bucket | quote }}
   CSGHUB_PORTAL_S3_REGION: {{ $objectStoreConfig.region | quote }}
   CSGHUB_PORTAL_S3_ENABLE_SSL: {{ $objectStoreConfig.secure | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ .Values.csghub.portal.additionalObjectStore.bucket | default $objectStoreConfig.bucket | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ .Values.csghub.portal.additionalObjectStore.region | default $objectStoreConfig.region | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ .Values.csghub.portal.additionalObjectStore.secure | default $objectStoreConfig.secure | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ .Values.portal.additionalObjectStore.bucket | default $objectStoreConfig.bucket | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ .Values.portal.additionalObjectStore.region | default $objectStoreConfig.region | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ .Values.portal.additionalObjectStore.secure | default $objectStoreConfig.secure | quote }}
   # SMTP
-  {{- with .Values.csghub.portal.smtp }}
+  {{- with .Values.portal.smtp }}
   CSGHUB_PORTAL_MAILER_HOST: {{ .host | quote }}
   CSGHUB_PORTAL_MAILER_PORT: {{ .port | quote }}
   CSGHUB_PORTAL_MAILER_USERNAME: {{ .username | quote }}
