@@ -180,6 +180,15 @@ spec:
               port: 8080
             initialDelaySeconds: 20
             periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
           securityContext:
             {{- .Values.server.podSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
