@@ -122,6 +122,15 @@ spec:
               port: 8083
             initialDelaySeconds: 20
             periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8083
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
           securityContext:
             {{- .Values.gateway.podSecurityContext | toYaml | nindent 12 }}
         - name: rproxy-nginx
@@ -197,6 +206,15 @@ spec:
               port: 8089
             initialDelaySeconds: 20
             periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8089
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
           securityContext:
             {{- .Values.gateway.podSecurityContext | toYaml | nindent 12 }}
         {{- end }}
