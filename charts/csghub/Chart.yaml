@@ -88,3 +88,15 @@ dependencies:
     version: "2.1.4"
     repository: "file://charts/reloader"
     condition: reloader.enabled
+  - name: loki
+    version: "6.29.0"
+    repository: "file://charts/loki"
+    condition: loki.enabled
+  - name: tempo
+    version: "1.23.3"
+    repository: "file://charts/tempo"
+    condition: tempo.enabled
+  - name: prometheus
+    version: "27.37.0"
+    repository: "file://charts/prometheus"
+    condition: prometheus.enabled

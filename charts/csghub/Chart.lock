@@ -44,5 +44,14 @@ dependencies:
 - name: reloader
   repository: file://charts/reloader
   version: 2.1.4
-digest: sha256:531d3e58ca3067c15783b5add45b9f15776087acaee5506f0f18ff7a150cf15c
-generated: "2025-09-16T15:22:13.312383+08:00"
+- name: loki
+  repository: file://charts/loki
+  version: 6.29.0
+- name: tempo
+  repository: file://charts/tempo
+  version: 1.23.3
+- name: prometheus
+  repository: file://charts/prometheus
+  version: 27.37.0
+digest: sha256:df269a20c090b93cf51d79e15eea2855959e574f6dbc0bc31c0332bb65c24907
+generated: "2025-09-16T20:21:37.725364+08:00"

@@ -1,0 +1,78 @@
+## This section is used to configure how to collect pod logs in the current namespace.
+## By default, they are directly output to the fluentd standard output in json format.
+fluentd:
+  enabled: false
+  ## Image configuration
+  image:
+    repository: "opencsghq/fluent-fluentd-kubernetes-daemonset"
+  ## Configuration for Fluentd file sources
+  fileConfigs:
+    # Configuration for sources
+    01_sources.conf: |-
+      <source>
+        @type tail
+        @id in_tail_container_logs
+        @label @KUBERNETES
+        path /var/log/containers/*.log
+        pos_file /var/log/fluentd-containers.log.pos
+        tag kubernetes.*
+        read_from_head true
+        <parse>
+          @type json
+        </parse>
+        emit_unmatched_lines false
+      </source>
+      # expose metrics in prometheus format
+      <source>
+        @type prometheus
+        bind 0.0.0.0
+        port 24231
+        metrics_path /metrics
+      </source>
+      <system>
+        log_level debug
+      </system>
+    # Configuration for filters
+    02_filters.conf: |-
+      <label @KUBERNETES>
+        <filter kubernetes.**>
+          @type kubernetes_metadata
+          @id filter_kube_metadata
+          lookup_from_k8s_field true
+          skip_namespace_metadata true
+          skip_master_url true
+        </filter>
+        <filter kubernetes.var.log.containers.**>
+          @type grep
+          <regexp>
+            key $.kubernetes.labels
+            pattern /csghub/
+          </regexp>
+        </filter>
+        <match kubernetes.var.log.containers.**fluentd**>
+          @type null
+        </match>
+        <match **>
+          @type relabel
+          @label @DISPATCH
+        </match>
+      </label>
+    # Configuration for dispatching logs
+    03_dispatch.conf: |-
+      <label @DISPATCH>
+        <match **>
+          @type relabel
+          @label @OUTPUT
+        </match>
+      </label>
+    # Configuration for outputs
+    04_outputs.conf: |-
+      <label @OUTPUT>
+        <match **>
+          @type stdout
+          <format>
+            @type json
+            localtime true
+          </format>
+        </match>
+      </label>

@@ -133,6 +133,10 @@ data:
 
   STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
 
+  # Tracing logging
+  {{- if .Values.tempo.enabled }}
+  OPENCSG_TRACING_OTLP_ENDPOINT: {{ printf "http://%s:4317" (include "common.names.custom" (list . "tempo")) }}
+  {{- end }}
   OPENCSG_TRACING_OTLP_LOGGING: "false"
 
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.pipIndexUrl | quote }}
@@ -180,3 +184,13 @@ data:
   STARHUB_SERVER_PROXY_HOSTS: {{ .hosts | quote }}
   {{- end }}
   {{- end }}
+
+  # Prometheus
+  {{- if .Values.prometheus.enabled }}
+  STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:80/api/v1/query" (include "common.names.custom" (list . "prometheus-server")) }}
+  {{- with .Values.prometheus.ingress.basicAuth }}
+  STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
+  {{- end }}
+  {{- end }}
+
+  STARHUB_SERVER_LFS_SYNC_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "mirror-lfs")) }}
