@@ -1,0 +1,46 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if not .Values.chartContext.isBuiltIn }}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ include "common.names.custom" (list . "runner") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
+    nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
+    nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
+spec:
+  ingressClassName: {{ .Values.ingress.className | default "nginx" }}
+  {{- if eq (include "global.ingress.tls.enabled" .) "true" }}
+  tls:
+    - hosts:
+        - {{ include "runner.external.domain" . }}
+      {{- $secret := coalesce (include "global.ingress.tls.secret" .) .Values.ingress.tls.secretName }}
+      {{- if $secret }}
+      secretName: {{ $secret }}
+      {{- else }}
+      {{ fail "Runner ingress TLS is enabled but no secretName is provided." }}
+      {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ include "runner.external.domain" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ include "common.names.custom" (list . "runner") }}
+                port:
+                  number: 8082
+            {{- else }}
+              serviceName: {{ include "common.names.custom" (list . "runner") }}
+              servicePort:  8082
+            {{- end }}
+{{- end }}

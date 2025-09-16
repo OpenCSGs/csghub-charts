@@ -1,0 +1,61 @@
+# tests/rbac_test.yaml
+suite: rbac testing
+templates:
+  - rbac.yaml
+release:
+  name: runner
+  namespace: csghub
+tests:
+  - it: should create multiple rbac with autoConfigure = false and global.namespace <> Release.Namespace
+    set:
+      global:
+        autoConfigure: false
+        namespace: "spaces"
+      rbac.create: true
+    asserts:
+      - hasDocuments:
+          count: 14
+      - exists:
+          path: metadata
+          docSelector:
+            kind: ClusterRole
+            name: runner-cluster-reader
+        name: ClusterRole should be created
+      - exists:
+          path: metadata
+          docSelector:
+            kind: ClusterRoleBinding
+            name: runner-cluster-reader
+        name: ClusterRoleBinding should be created
+
+  - it: should create multiple rbac with autoConfigure = false and global.namespace = Release.Namespace
+    set:
+      global:
+        autoConfigure: false
+        namespace: "csghub"
+      rbac.create: true
+    asserts:
+      - hasDocuments:
+          count: 12
+
+  - it: should create multiple rbac with autoConfigure = true and global.namespace = Release.Namespace
+    set:
+      global:
+        autoConfigure: true
+        namespace: "csghub"
+      rbac.create: true
+    asserts:
+      - hasDocuments:
+          count: 14
+      - exists:
+          path: metadata
+          docSelector:
+            kind: ClusterRole
+            name: runner-cluster-admin
+        name: ClusterRole should be created
+      - exists:
+          path: metadata
+          docSelector:
+            kind: ClusterRoleBinding
+            name: runner-cluster-admin
+        name: ClusterRoleBinding should be created
