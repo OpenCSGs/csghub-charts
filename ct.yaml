@@ -1,10 +1,47 @@
-remote: origin
-target-branch: main-ee
-chart-dirs:
-  - helm/charts/csghub
-chart-repos:
-helm-extra-args: --timeout 600s
-check-version-increment: true
-validate-maintainers: false
-lint-conf: lintconf.yaml
+# Chart Testing configuration file
+# Used to define chart testing and linting configurations
 
+# Git remote repository configuration
+remote: origin
+
+# Target branch for comparison
+target-branch: main
+
+# Chart directories to be tested
+# List of directories containing charts to test
+chart-dirs:
+  - charts/csghub    # CSGHub related charts
+  - charts/runner    # Runner related charts
+  - charts/dataflow  # Dataflow related charts
+
+# Helm chart repositories for dependency resolution
+# Add repositories required for chart dependencies
+# Example: Add additional repositories if needed
+# - bitnami=https://charts.bitnami.com/bitnami
+# - prometheus-community=https://prometheus-community.github.io/helm-charts
+chart-repos:
+  - csghub=https://github.com/OpenCSGs/csghub.git
+  - runner=https://github.com/OpenCSGs/csghub.git
+  - dataflow=https://github.com/OpenCSGs/csghub-dataflow.git
+
+# Additional arguments for helm commands
+# Passed to helm install/upgrade commands
+helm-extra-args: --timeout 600s  # Increase timeout to 10 minutes for complex charts
+
+# Version increment validation
+# Ensure chart versions are incremented when changes are made
+check-version-increment: true
+
+# Maintainer validation
+# Disable maintainer checks in Chart.yaml
+validate-maintainers: false
+
+# Optional: Kubernetes version for testing
+kubernetes-version: "1.28"
+
+# Optional: Namespace for tests
+namespace: csghub
+
+# Linting configuration file
+# Custom configuration for chart linting rules
+lint-conf: lintconf.yaml

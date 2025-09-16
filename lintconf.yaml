@@ -1,32 +1,60 @@
-rules:
-  colons:
-    max-spaces-before: -1
-    max-spaces-after: 1
-  commas:
-    max-spaces-before: -1
-    min-spaces-after: 1
-    max-spaces-after: 1
-  comments: disable
-  comments-indentation: disable
-  document-start: disable
-  empty-lines:
-    max: 3
-    max-start: 0
-    max-end: 0
-  hyphens:
-    max-spaces-after: 1
-  indentation:
-    spaces: consistent
-    indent-sequences: true
-    check-multi-line-strings: false
-  key-duplicates: enable
-  line-length:
-    max: 150
-    allow-non-breakable-words: true
-    allow-non-breakable-inline-mappings: false
-  new-line-at-end-of-file: disable
-  trailing-spaces: enable
-  truthy:
-    allowed-values: ['true', 'false']
-    check-keys: false
+# YAML linting rules configuration
+# Based on yamllint configuration standards
 
+rules:
+  # Colon spacing rules
+  # Format: key: value
+  colons:
+    max-spaces-before: -1  # No spaces allowed before colon
+    max-spaces-after: 1    # Maximum 1 space after colon
+
+  # Comma spacing rules
+  # Format: [item1, item2, item3]
+  commas:
+    max-spaces-before: -1  # No spaces allowed before comma
+    min-spaces-after: 1    # Minimum 1 space after comma
+    max-spaces-after: 1    # Maximum 1 space after comma
+
+  # Comment rules
+  comments: false        # Disable comment content validation
+  comments-indentation: false  # Disable comment indentation validation
+
+  # Document start rule
+  document-start: disable  # Disable requirement for document start marker
+
+  # Empty lines rules
+  empty-lines:
+    max: 2                 # Maximum 2 consecutive empty lines
+    max-start: 0           # No empty lines at start of file
+    max-end: 0             # No empty lines at end of file
+
+  # Hyphen spacing rules (for list items)
+  # Format: - item
+  hyphens:
+    max-spaces-after: 1    # Maximum 1 space after hyphen
+
+  # Indentation rules
+  indentation:
+    spaces: consistent     # Use consistent indentation style
+    indent-sequences: true # Indent sequence elements
+    check-multi-line-strings: false  # Don't check multi-line string indentation
+
+  # Key duplication validation
+  key-duplicates: enable   # Enable duplicate key detection
+
+  # Line length rules
+  line-length:
+    max: 150               # Maximum line length 150 characters
+    allow-non-breakable-words: true  # Allow long unbreakable words
+    allow-non-breakable-inline-mappings: false  # Don't allow long inline mappings
+
+  # File ending rules
+  new-line-at-end-of-file: true  # Disable requirement for newline at EOF
+
+  # Trailing spaces validation
+  trailing-spaces: enable  # Enable trailing spaces detection
+
+  # Truthy values validation
+  truthy:
+    allowed-values: ['true', 'false']  # Only allow these boolean values
+    check-keys: false      # Don't check key names for truthy values
