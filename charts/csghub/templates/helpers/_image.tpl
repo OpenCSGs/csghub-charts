@@ -34,7 +34,7 @@ Define image's full path with more robust checks for subCharts with fixed image 
 {{- define "image.fixed.prefix" -}}
 {{- $context := index . 0 -}}
 {{- $globalImage := default dict $context.Values.global.image -}}
-{{- $localImage := default dict (or $context.Values.image $context.Values.csghub.server.image) -}}
+{{- $localImage := default dict (or $context.Values.image $context.Values.server.image) -}}
 
 {{- $registry := or $globalImage.registry $localImage.registry -}}
 {{- $repository := index . 1 -}}

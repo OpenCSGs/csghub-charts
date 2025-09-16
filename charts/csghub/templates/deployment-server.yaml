@@ -4,8 +4,8 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
-{{- $gitConfig := include "csghub.gitaly.config" (dict "service" .Values.csghub.server "global" .) | fromYaml }}
-{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values.csghub.server "global" .) | fromYaml }}
+{{- $gitConfig := include "csghub.gitaly.config" (dict "service" .Values.server "global" .) | fromYaml }}
+{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values.server "global" .) | fromYaml }}
 kind: Deployment
 metadata:
   name: {{ include "common.names.custom" (list . "server") }}
@@ -13,44 +13,44 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "server") | nindent 4 }}
   annotations:
     reloader.stakater.com/auto: "true"
-    {{- with .Values.csghub.server.annotations }}
+    {{- with .Values.server.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "server") | nindent 6 }}
-  replicas: {{ .Values.csghub.server.replicas }}
+  replicas: {{ .Values.server.replicas }}
   revisionHistoryLimit: 1
   minReadySeconds: 30
   template:
     metadata:
       annotations:
-        {{- with .Values.csghub.server.podAnnotations }}
+        {{- with .Values.server.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
         {{- include "common.labels" (dict "context" . "service" "server") | nindent 8 }}
     spec:
-      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or .Values.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
         {{- end }}
       {{- end }}
-      {{- with .Values.csghub.server.securityContext }}
+      {{- with .Values.server.securityContext }}
       securityContext:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: 10
-      {{- if .Values.csghub.server.serviceAccount.create }}
+      {{- if .Values.server.serviceAccount.create }}
       serviceAccountName: {{ include "common.names.custom" (list . "server") }}
-      automountServiceAccountToken: {{ .Values.csghub.server.serviceAccount.automount }}
+      automountServiceAccountToken: {{ .Values.server.serviceAccount.automount }}
       {{- end }}
       initContainers:
         - name: wait-for-redis
           image: {{ include "image.fixed.prefix" (list . "redis:7.2.5") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} ping; do echo 'Wait for Redis to be ready'; sleep 2; done" ]
           envFrom:
             {{- if .Values.global.redis.enabled }}
@@ -69,27 +69,27 @@ spec:
               {{- end }}
         - name: wait-for-postgresql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values.csghub.server "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values.server "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
         - name: wait-for-gitaly
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ $gitConfig.host }} {{ $gitConfig.port }}; do echo 'Wait for gitaly to be ready'; sleep 2; done" ]
         - name: wait-for-nats
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "nats.internal.domain" . }} {{ include "nats.internal.ports.api" . }}; do echo 'Wait for nats to be ready'; sleep 2; done" ]
         - name: wait-for-temporal
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "temporal.internal.domain" . }} {{ include "temporal.internal.port" . }}; do echo 'Wait for temporal to be ready'; sleep 2; done" ]
       containers:
         - name: server
-          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
-          {{- $_ := set .Values.csghub.server.image "tag" $tag }}
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "start", "server", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.server.image.tag .Values.global.image.tag) "context" .) }}
+          {{- $_ := set .Values.server.image "tag" $tag }}
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "start", "server", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           ports:
             - containerPort: 8080
               name: server
@@ -120,20 +120,20 @@ spec:
             - name: STARHUB_SERVER_S3_ACCESS_KEY_SECRET
               value: "$(MINIO_ROOT_PASSWORD)"
             {{- end }}
-            {{- with .Values.csghub.server.environments }}
+            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
-              cpu: {{ .Values.csghub.server.resources.requests.cpu | default "100m" }}
-              memory: {{ .Values.csghub.server.resources.requests.memory | default "256Mi" }}
+              cpu: {{ .Values.server.resources.requests.cpu | default "100m" }}
+              memory: {{ .Values.server.resources.requests.memory | default "256Mi" }}
             limits:
-              cpu: {{ .Values.csghub.server.resources.limits.cpu | default "300m" }}
-              memory: {{ .Values.csghub.server.resources.limits.memory | default "512Mi" }}
+              cpu: {{ .Values.server.resources.limits.cpu | default "300m" }}
+              memory: {{ .Values.server.resources.limits.memory | default "512Mi" }}
             {{- end }}
           livenessProbe:
             tcpSocket:
@@ -141,7 +141,7 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.server.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.server.podSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
             - name: jwt-token-crt
               mountPath: /starhub-bin/casdoor
@@ -149,15 +149,15 @@ spec:
         - name: jwt-token-crt
           secret:
             secretName: {{ include "common.names.custom" (list . "casdoor") }}
-      {{- with .Values.csghub.server.nodeSelector }}
+      {{- with .Values.server.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.server.affinity }}
+      {{- with .Values.server.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.server.tolerations }}
+      {{- with .Values.server.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -156,59 +156,39 @@ spec:
   selector:
     {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "portal") | nindent 4 }}
 ---
-{{- if .Values.global.deploy.enabled }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "common.names.custom" (list . "runner") }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
-spec:
-  type: ClusterIP
-  ports:
-    - port: {{ include "csghub.svc.port" "runner" }}
-      targetPort: 8082
-      protocol: TCP
-      name: runner
-  selector:
-    {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "runner") | nindent 4 }}
-{{- end }}
----
-{{- if or (and .Values.csghub.portal.docs.host .Values.csghub.portal.docs.port) .Values.csghub.portal.docs.domain }}
+{{- if or (and .Values.portal.docs.host .Values.portal.docs.port) .Values.portal.docs.domain }}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "common.names.custom" (list . "docs") }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "service" "docs") | nindent 4 }}
 spec:
-  {{- if .Values.csghub.portal.docs.domain }}
+  {{- if .Values.portal.docs.domain }}
   type: ExternalName
-  externalName: {{ .Values.csghub.portal.docs.domain | trimPrefix "https://" | trimPrefix "http://" }}
+  externalName: {{ .Values.portal.docs.domain | trimPrefix "https://" | trimPrefix "http://" }}
   {{- else }}
   type: ClusterIP
   ports:
-    - port: {{ .Values.csghub.portal.docs.port }}
-      targetPort: {{ .Values.csghub.portal.docs.port }}
+    - port: {{ .Values.portal.docs.port }}
+      targetPort: {{ .Values.portal.docs.port }}
       protocol: TCP
       name: docs
   {{- end }}
 {{- end }}
 ---
-{{- if and .Values.csghub.portal.docs.host .Values.csghub.portal.docs.port }}
+{{- if and .Values.portal.docs.host .Values.portal.docs.port }}
 apiVersion: v1
 kind: Endpoints
 metadata:
   name: {{ include "common.names.custom" (list . "docs") }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "service" "docs") | nindent 4 }}
 subsets:
   - addresses:
-      - ip: {{ .Values.csghub.portal.docs.host }}
+      - ip: {{ .Values.portal.docs.host }}
     ports:
-      - port: {{ .Values.csghub.portal.docs.port }}
+      - port: {{ .Values.portal.docs.port }}
 {{- end }}
----

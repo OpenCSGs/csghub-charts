@@ -11,13 +11,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" . | nindent 4 }}
 data:
-  {{- $spaceNamespace := .Values.global.deploy.namespace }}
-  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
-  {{- $spaceNamespace = .Release.Namespace }}
-  {{- end }}
+  {{- $spaceNamespace := include "namespace.spaces" . }}
   corefile: |
     .:53 {
-        {{- range .Values.global.deploy.knative.serving.services }}
+        {{- range .Values.global.knative.serving.services }}
         forward {{ printf "%s.%s." $spaceNamespace .domain }} /etc/resolv.conf
         {{- end  }}
         forward . {{ include "system.coredns.ip" . }}
@@ -27,14 +24,14 @@ data:
         reload
         loadbalance
     }
-    {{- range .Values.global.deploy.knative.serving.services }}
+    {{- range .Values.global.knative.serving.services }}
     {{ .domain }}:53 {
         file /var/opt/coredns/{{ .domain }}
         log
         errors
     }
     {{- end }}
-  {{- range .Values.global.deploy.knative.serving.services }}
+  {{- range .Values.global.knative.serving.services }}
   {{ .domain }}: |
     {{- $domain := (printf "%s.%s." $spaceNamespace .domain) }}
     $ORIGIN {{ $domain }}

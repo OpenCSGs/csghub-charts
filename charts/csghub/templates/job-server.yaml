@@ -3,7 +3,6 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */}}
 
-{{- if .Values.global.deploy.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -24,7 +23,7 @@ spec:
       labels: {{ include "common.labels" (dict "context" . "service" "server") | nindent 8 }}
     spec:
       restartPolicy: OnFailure
-      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or .Values.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
@@ -33,16 +32,16 @@ spec:
       initContainers:
         - name: wait-for-postgresql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values.csghub.server "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values.server "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
         - name: psql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "for sql_file in /scripts/*.sql; do echo Executing $$sql_file; psql -f $$sql_file; done" ]
           envFrom:
             - configMapRef:
@@ -65,4 +64,3 @@ spec:
         - name: init
           configMap:
             name: {{ include "common.names.custom" (list . "server-init") }}
-{{- end }}

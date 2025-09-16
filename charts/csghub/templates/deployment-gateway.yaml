@@ -11,20 +11,20 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "gateway") | nindent 4 }}
   annotations:
     reloader.stakater.com/auto: "true"
-    {{- with .Values.csghub.gateway.annotations }}
+    {{- with .Values.gateway.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "gateway") | nindent 6 }}
-  replicas: {{ .Values.csghub.gateway.replicas }}
+  replicas: {{ .Values.gateway.replicas }}
   revisionHistoryLimit: 1
   minReadySeconds: 30
   template:
     metadata:
       annotations:
-        {{- with .Values.csghub.gateway.podAnnotations }}
+        {{- with .Values.gateway.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
@@ -41,33 +41,33 @@ spec:
         options:
           - name: ndots
             value: "5"
-      {{- with (or .Values.csghub.server.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or .Values.server.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
         {{- range . }}
         - name: {{ . }}
         {{- end }}
       {{- end }}
-      {{- with .Values.csghub.gateway.securityContext }}
+      {{- with .Values.gateway.securityContext }}
       securityContext:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: 10
-      {{- if .Values.csghub.server.serviceAccount.create }}
+      {{- if .Values.server.serviceAccount.create }}
       serviceAccountName: {{ include "common.names.custom" (list . "gateway") }}
-      automountServiceAccountToken: {{ .Values.csghub.server.serviceAccount.automount }}
+      automountServiceAccountToken: {{ .Values.server.serviceAccount.automount }}
       {{- end }}
       initContainers:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
       containers:
-        {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.csghub.server.image.tag .Values.global.image.tag) "context" .) }}
-        {{- $_ := set .Values.csghub.server.image "tag" $tag }}
+        {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.server.image.tag .Values.global.image.tag) "context" .) }}
+        {{- $_ := set .Values.server.image "tag" $tag }}
         - name: rproxy
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "start", "rproxy", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "start", "rproxy", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           ports:
             - containerPort: 8083
               name: rproxy
@@ -94,14 +94,14 @@ spec:
             - name: STARHUB_SERVER_ENABLE_HTTPS
               value: "true"
             {{- end }}
-            {{- with .Values.csghub.server.environments }}
+            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "20m"
               memory: "128Mi"
@@ -115,10 +115,10 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.gateway.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.gateway.podSecurityContext | toYaml | nindent 12 }}
         - name: rproxy-nginx
           image: {{ include "image.fixed.prefix" (list . "nginx:latest") }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "update-ca-certificates && nginx -g \"daemon off;\""]
           ports:
             - containerPort: 80
@@ -127,7 +127,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "gateway-rproxy-nginx") }}
-          {{- with .Values.csghub.server.environments }}
+          {{- with .Values.server.environments }}
           env:
             {{- range $key, $value := . }}
             - name: {{ $key }}
@@ -135,7 +135,7 @@ spec:
             {{- end }}
           {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "20m"
               memory: "128Mi"
@@ -149,16 +149,16 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.gateway.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.gateway.podSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
             - name: rproxy-nginx-config
               mountPath: /etc/nginx/conf.d
               readOnly: false
         {{- if .Values.global.moderation.enabled }}
         - name: moderation
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "moderation", "launch", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "moderation", "launch", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           ports:
             - containerPort: 8089
               name: moderation
@@ -168,7 +168,7 @@ spec:
                 name: {{ include "common.names.custom" (list . "gateway-moderation") }}
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "server") }}
-          {{- with .Values.csghub.server.environments }}
+          {{- with .Values.server.environments }}
           env:
             {{- range $key, $value := . }}
             - name: {{ $key }}
@@ -176,7 +176,7 @@ spec:
             {{- end }}
           {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "20m"
               memory: "128Mi"
@@ -190,12 +190,12 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.gateway.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.gateway.podSecurityContext | toYaml | nindent 12 }}
         {{- end }}
         - name: aigateway
-          image: {{ include "image.generic.prefix" (list . .Values.csghub.server.image) }}
-          imagePullPolicy: {{ or .Values.csghub.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/starhub-bin/starhub", "aigateway", "launch", "-l", {{ .Values.csghub.server.logging.level | default "info" | quote }} ]
+          image: {{ include "image.generic.prefix" (list . .Values.server.image) }}
+          imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/starhub-bin/starhub", "aigateway", "launch", "-l", {{ .Values.server.logging.level | default "info" | quote }} ]
           ports:
             - containerPort: 8084
               name: aigateway
@@ -218,14 +218,14 @@ spec:
             {{- end }}
             - name: OPENCSG_ACCOUNTING_NATS_URL
               value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
-          {{- with .Values.csghub.server.environments }}
+          {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
           {{- end }}
           resources:
-            {{- if .Values.csghub.autoscaling.enabled }}
+            {{- if .Values.autoscaling.enabled }}
             requests:
               cpu: "20m"
               memory: "128Mi"
@@ -239,20 +239,20 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           securityContext:
-            {{- .Values.csghub.gateway.podSecurityContext | toYaml | nindent 12 }}
+            {{- .Values.gateway.podSecurityContext | toYaml | nindent 12 }}
       volumes:
         - name: rproxy-nginx-config
           configMap:
             name: {{ include "common.names.custom" (list . "gateway-rproxy-nginx") }}
-      {{- with .Values.csghub.gateway.nodeSelector }}
+      {{- with .Values.gateway.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.gateway.affinity }}
+      {{- with .Values.gateway.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.csghub.gateway.tolerations }}
+      {{- with .Values.gateway.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

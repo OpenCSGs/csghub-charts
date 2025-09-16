@@ -3,10 +3,10 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */}}
 
-{{- $objectStoreConfig := include "chart.objectStoreConfig" (dict "service" .Values.csghub.server "global" .) | fromYaml }}
-{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values.csghub.server "global" .) | fromYaml }}
-{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.csghub.server "global" .) | fromYaml }}
-{{- $gitConfig := include "csghub.gitaly.config" (dict "service" .Values.csghub.server "global" .) | fromYaml }}
+{{- $objectStoreConfig := include "chart.objectStoreConfig" (dict "service" .Values.server "global" .) | fromYaml }}
+{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values.server "global" .) | fromYaml }}
+{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.server "global" .) | fromYaml }}
+{{- $gitConfig := include "csghub.gitaly.config" (dict "service" .Values.server "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -37,7 +37,7 @@ data:
   STARHUB_JWT_SIGNING_KEY: "e2kk6awudc3620ed9a"
 
   # Multiple-Sync Enabled/Disabled
-  STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ .Values.csghub.server.multiSync.enabled | quote }}
+  STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ .Values.server.multiSync.enabled | quote }}
   # Multiple-Sync fetch timeout
   STARHUB_SERVER_GIT_OPERATION_TIMEOUT: "120"
 
@@ -54,10 +54,10 @@ data:
   STARHUB_DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
   STARHUB_DATABASE_NAME: {{ $pgConfig.database | quote }}
   STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timezone | quote }}
-  STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.csghub.server "global" .) | quote }}
+  STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.server "global" .) | quote }}
 
   # Object Storage Connection Info
-  STARHUB_SERVER_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
+  STARHUB_SERVER_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix "https://" | quote }}
   {{- if not .Values.global.objectStore.enabled }}
   STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
   STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}
@@ -70,11 +70,11 @@ data:
   {{- else }}
   STARHUB_SERVER_S3_BUCKET_LOOKUP: "auto"
   {{- end }}
-  STARHUB_SERVER_SKIP_LFS_FILE_VALIDATION: {{ .Values.csghub.server.objectStore.directUpload | default false | quote }}
+  STARHUB_SERVER_SKIP_LFS_FILE_VALIDATION: {{ .Values.server.objectStore.directUpload | default false | quote }}
 
   # Gitaly Connection Info
   STARHUB_SERVER_GITSERVER_TYPE: "gitaly"
-  STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ include "csghub.gitaly.grpcEndpoint" (dict "service" .Values.csghub.server "global" .) | quote }}
+  STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ include "csghub.gitaly.grpcEndpoint" (dict "service" .Values.server "global" .) | quote }}
   STARHUB_SERVER_GITALY_TOKEN: {{ $gitConfig.token | quote }}
   STARHUB_SERVER_GITALY_STORAGE: {{ $gitConfig.storage | quote }}
   STARHUB_SERVER_CHECK_FILE_SIZE_ENABLED: {{ not $gitConfig.isCluster | quote }}
@@ -93,24 +93,18 @@ data:
   OPENCSG_USER_SERVER_PORT: {{ include "csghub.svc.port" "user" | quote }}
 
   # Space Application
-  STARHUB_SERVER_SPACE_BUILDER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
-  STARHUB_SERVER_SPACE_RUNNER_ENDPOINT: {{ printf "http://%s:%s" (include "common.names.custom" (list . "runner")) (include "csghub.svc.port" "runner") | quote }}
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "csghub.external.endpoint" . | quote }}
-  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.csghub.runner.modelRegistry | default (or .Values.global.image.registry "docker.io") | quote }}
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ .Values.server.modelRegistry | default (or .Values.global.image.registry "docker.io") | quote }}
 
   # Deprecated ==> re-enabled
-  {{- if .Values.global.deploy.usePublicDomain }}
+  {{- if .Values.global.usePublicDomain }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ include "csghub.external.public.endpoint" . | trimPrefix "http://" | trimPrefix "https://" | quote }}
   {{- else }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: ""
   {{- end }}
 
   # Deprecated
-  {{- $spaceNamespace := .Values.global.deploy.namespace }}
-  {{- if eq .Values.global.deploy.mergingNamespace "Single" }}
-  {{- $spaceNamespace = .Release.Namespace }}
-  {{- end }}
-  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" $spaceNamespace (include "csghub.svc.port" "rproxy") | quote }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" (include "namespace.spaces" .) (include "csghub.svc.port" "rproxy") | quote }}
 
   # Casdoor
   STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"
@@ -141,24 +135,24 @@ data:
 
   OPENCSG_TRACING_OTLP_LOGGING: "false"
 
-  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.deploy.pipIndexUrl | quote }}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ .Values.global.pipIndexUrl | quote }}
 
   # Notification
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "notification")) | quote }}
   STARHUB_SERVER_NOTIFIER_PORT: {{ include "csghub.svc.port" "notification" | quote }}
-  {{- with .Values.csghub.notification.smtp }}
+  {{- with .Values.notification.smtp }}
   STARHUB_SERVER_MAILER_HOST: {{ .host | quote }}
   STARHUB_SERVER_MAILER_PORT: {{ .port | quote }}
   STARHUB_SERVER_MAILER_USERNAME: {{ .username | quote }}
   STARHUB_SERVER_MAILER_PASSWORD: {{ .password | quote }}
   {{- end }}
-  STARHUB_SERVER_REPO_SYNC_TIMEZONE: {{ .Values.csghub.notification.repoSyncTime | default "Asia/Shanghai" | quote }}
-  STARHUB_SERVER_NOTIFIER_BROADCAST_USER_PAGE_SIZE: {{ .Values.csghub.notification.broadcastUserPageSize | default 100 | quote }}
-  STARHUB_SERVER_NOTIFIER_BROADCAST_EMAIL_PAGE_SIZE: {{ .Values.csghub.notification.broadcastEmailPageSize | default 100 | quote }}
+  STARHUB_SERVER_REPO_SYNC_TIMEZONE: {{ .Values.notification.repoSyncTime | default "Asia/Shanghai" | quote }}
+  STARHUB_SERVER_NOTIFIER_BROADCAST_USER_PAGE_SIZE: {{ .Values.notification.broadcastUserPageSize | default 100 | quote }}
+  STARHUB_SERVER_NOTIFIER_BROADCAST_EMAIL_PAGE_SIZE: {{ .Values.notification.broadcastEmailPageSize | default 100 | quote }}
 
   # FeiShu Integration
   {{- if eq (include "csghub.edition.suffix" .) "ee" }}
-  {{- with .Values.csghub.notification.feiShu }}
+  {{- with .Values.notification.feiShu }}
   STARHUB_SERVER_FEISHU_APP_ID: {{ .appId | quote }}
   STARHUB_SERVER_FEISHU_APP_SECRET: {{ .appSecret | quote }}
   STARHUB_SERVER_FEISHU_BATCH_SEND_MESSAGE_CRON_EXPRESSION: {{ .batchSendMessageCronExpression | default "*/10 * * * *" | quote }}
@@ -175,12 +169,12 @@ data:
   OPENCSG_PAYMENT_SERVER_PORT: {{ include "csghub.svc.port" "payment" | quote }}
   {{- end }}
 
-  {{- if .Values.csghub.server.swagger.enabled }}
+  {{- if .Values.server.swagger.enabled }}
   STARHUB_SERVER_ENABLE_SWAGGER: "true"
   {{- end }}
 
-  {{- if .Values.csghub.server.multiSync.proxy.enabled }}
-  {{- with .Values.csghub.server.multiSync.proxy }}
+  {{- if .Values.server.multiSync.proxy.enabled }}
+  {{- with .Values.server.multiSync.proxy }}
   STARHUB_SERVER_PROXY_ENABLE: "true"
   STARHUB_SERVER_PROXY_URL: {{ .address | quote }}
   STARHUB_SERVER_PROXY_HOSTS: {{ .hosts | quote }}
