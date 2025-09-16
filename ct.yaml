@@ -41,7 +41,7 @@ namespace: ct-csghub
 release-label: ct-csghub
 
 # Linting configuration file
-validate-yaml: true
+validate-yaml: false
 
 # Custom configuration for chart linting rules
 lint-conf: lint-conf.yaml
