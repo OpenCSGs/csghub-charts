@@ -49,7 +49,7 @@ rules:
     allow-non-breakable-inline-mappings: false  # Don't allow long inline mappings
 
   # File ending rules
-  new-line-at-end-of-file: true  # Disable requirement for newline at EOF
+  new-line-at-end-of-file: enable  # Disable requirement for newline at EOF
 
   # Trailing spaces validation
   trailing-spaces: enable  # Enable trailing spaces detection
@@ -58,3 +58,18 @@ rules:
   truthy:
     allowed-values: ['true', 'false']  # Only allow these boolean values
     check-keys: false      # Don't check key names for truthy values
+
+extends: default
+# Ignore paths
+ignore:
+    - charts/*/charts/ingress-nginx
+    - charts/*/charts/fluentd
+    - charts/*/charts/loki
+    - charts/*/charts/reloader
+    - charts/*/charts/prometheus
+    - charts/*/charts/tempo
+    - charts/csghub/charts/gitlab-shell/templates/configmap.yaml
+    - charts/csghub/charts/casdoor/templates/configmap.yaml
+    - charts/csghub/charts/casdoor/templates/secret.yaml
+    - charts/csghub/charts/csgship/charts/frontend/templates/configmap.yaml
+

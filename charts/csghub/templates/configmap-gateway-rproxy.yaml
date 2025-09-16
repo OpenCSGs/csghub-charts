@@ -10,8 +10,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" (dict "context" . "service" "gateway") | nindent 4 }}
 data:
-  {{- $spaceNamespace := include "namespace.spaces" . }}
-  {{- range .Values.global.knative.serving.services }}
+{{- $spaceNamespace := include "namespace.spaces" . }}
+{{- range .Values.global.knative.serving.services }}
   {{ .domain }}.conf: |
     server {
         listen 80;
@@ -57,7 +57,7 @@ data:
             root  /usr/share/nginx/html;
         }
     }
-    {{- end }}
+{{- end }}
   default.conf: |
     server {
         listen       80;

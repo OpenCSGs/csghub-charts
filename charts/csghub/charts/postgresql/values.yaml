@@ -27,7 +27,7 @@ service:
 
 ## You can pass in the parameters you want to modify by executing this parameter.
 ## Currently, only hot loading parameters are supported.
-parameters: { }
+parameters: {}
   ## Set the parameters for the PostgreSQL database
   ## The online reload parameter can take effect automatically.
   ## If you need to restart the database, please restart it manually.

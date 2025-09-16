@@ -11,9 +11,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" . | nindent 4 }}
   annotations:
-    {{- with .Values.ingress.annotations }}
-    {{- toYaml . | nindent 4  }}
-    {{- end  }}
+  {{- with .Values.ingress.annotations }}
+  {{- toYaml . | nindent 4  }}
+  {{- end  }}
 spec:
   ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
   {{- if eq (include "global.ingress.tls.enabled" .) "true" }}

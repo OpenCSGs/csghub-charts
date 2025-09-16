@@ -45,7 +45,7 @@ ingress:
     ## If this configuration is enabled, a tls secret needs to be provided
     ## It cannot be overwritten by global
     secretName: ""
-  annotations: { }
+  annotations: {}
 
 service:
   ## This determines how the Temporal service is accessed within the cluster or from external sources.

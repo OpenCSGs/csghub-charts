@@ -23,10 +23,10 @@ spec:
       name: {{ include "common.names.custom" . }}
       labels: {{ include "common.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.serviceAccount.create }}
+    {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ include "common.names.custom" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
-      {{- end }}
+    {{- end }}
       restartPolicy: OnFailure
       {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:

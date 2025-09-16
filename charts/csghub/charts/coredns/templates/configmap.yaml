@@ -11,7 +11,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" . | nindent 4 }}
 data:
-  {{- $spaceNamespace := include "namespace.spaces" . }}
+{{- $spaceNamespace := include "namespace.spaces" . }}
   corefile: |
     .:53 {
         {{- range .Values.global.knative.serving.services }}
@@ -43,5 +43,5 @@ data:
         86400      ; Minimum TTL
     )
     *   3600 IN A  {{ include "rproxy.nginx.ip" . }}
-  {{- end }}
+{{- end }}
 {{- end }}

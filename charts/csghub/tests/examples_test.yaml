@@ -38,4 +38,3 @@ tests:
           apiVersion: apps/v1
           namespace: csghub
         template: charts/csgship/charts/worker/templates/deployment.yaml
-

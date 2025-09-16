@@ -49,7 +49,15 @@ spec:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
           imagePullPolicy: {{ or .Values.server.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }};
+              do
+                echo 'Wait for csghub-server to be ready';
+                sleep 2;
+              done
       containers:
         - name: notification
           {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.server.image.tag .Values.global.image.tag) "context" .) }}

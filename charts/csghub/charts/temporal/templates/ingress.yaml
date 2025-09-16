@@ -11,7 +11,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "common.labels" . | nindent 4 }}
   annotations:
-    {{- include "common.annotations.ingress.nginx" (dict "auth" (dict "secret" (include "common.names.custom" .) "realm" "Authentication Required - temporal") "custom" .Values.ingress.annotations) | nindent 4 }}
+    {{- include "common.annotations.ingress.nginx" (dict
+      "auth" (dict
+        "secret" (include "common.names.custom" .)
+        "realm" "Authentication Required - temporal"
+      )
+      "custom" .Values.ingress.annotations
+    ) | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
   {{- if eq (include "global.ingress.tls.enabled" .) "true" }}

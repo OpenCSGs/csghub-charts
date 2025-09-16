@@ -38,7 +38,7 @@ ingress:
     secretName:
       frontend: ""
       api: ""
-  annotations: { }
+  annotations: {}
 
 service:
   ## This determines how the Accounting service is accessed within the cluster or from external sources.

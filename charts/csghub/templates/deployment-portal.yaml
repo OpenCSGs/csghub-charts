@@ -49,14 +49,29 @@ spec:
         - name: wait-for-server
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
           imagePullPolicy: {{ or .Values.portal.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }}; do echo 'Wait for csghub-server to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until nc -z {{ include "common.names.custom" (list . "server") }} {{ include "csghub.svc.port" "server" }};
+              do
+                echo 'Wait for csghub-server to be ready';
+                sleep 2;
+              done
       containers:
         - name: portal
           {{- $tag := include "csghub.image.tag" (dict "tag" (or .Values.portal.image.tag .Values.global.image.tag) "context" .) }}
           {{- $_ := set .Values.portal.image "tag" $tag }}
           image: {{ include "image.generic.prefix" (list . .Values.portal.image) }}
           imagePullPolicy: {{ or .Values.portal.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "./csghub-portal migration init && ./csghub-portal migration migrate && ./csghub-portal db seed && ./csghub-portal start server" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ./csghub-portal migration init && \
+              ./csghub-portal migration migrate && \
+              ./csghub-portal db seed && \
+              ./csghub-portal start server
           ports:
             - containerPort: 8090
               name: portal
@@ -76,7 +91,10 @@ spec:
             {{- end }}
           env:
             - name: CSGHUB_PORTAL_LOGIN_URL
-              value: "{{ include "casdoor.external.endpoint" . }}/login/oauth/authorize?client_id=$(STARHUB_SERVER_CASDOOR_CLIENT_ID)&response_type=code&redirect_uri=$(CSGHUB_PORTAL_STARHUB_BASE_URL)/api/v1/callback/casdoor&scope=read&state=casdoor"
+              {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "casdoor.external.endpoint" .) }}
+              {{- $clientID := "client_id=$(STARHUB_SERVER_CASDOOR_CLIENT_ID)" }}
+              {{- $redirectURI := "redirect_uri=$(CSGHUB_PORTAL_STARHUB_BASE_URL)/api/v1/callback/casdoor&scope=read&state=casdoor" }}
+              value: "{{ printf "%s?%s&response_type=code&%s" $authorizeAPI $clientID $redirectURI }}"
             {{- if .Values.global.objectStore.enabled }}
             - name: CSGHUB_PORTAL_S3_ACCESS_KEY_ID
               value: "$(MINIO_ROOT_USER)"

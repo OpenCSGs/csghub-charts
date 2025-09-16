@@ -33,16 +33,39 @@ spec:
         - name: wait-for-postgresql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest")  }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values "global" .) }}\" -c 'SELECT 1'; do echo 'Wait for PostgreSQL to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until psql {{ include "csghub.postgresql.dsn" (dict "service" .Values "global" .) | quote }} -c 'SELECT 1';
+              do
+                echo 'Wait for PostgreSQL to be ready';
+                sleep 2;
+              done
         - name: wait-for-web
           image: {{ include "image.fixed.prefix" (list . "busybox:latest") }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "until nc -z {{ include "web.internal.domain" . }} {{ include "web.internal.port" . }}; do echo 'Wait for csgship-web to be ready'; sleep 2; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until nc -z {{ include "web.internal.domain" . }} {{ include "web.internal.port" . }};
+              do
+                echo 'Wait for csgship-web to be ready';
+                sleep 2;
+              done
       containers:
         - name: psql
           image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest")  }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/bin/sh", "-c", "for sql_file in /scripts/*.sql; do echo Executing $$sql_file; psql \"{{ include "csghub.postgresql.dsn" (dict "service" .Values "global" .) }}\" -f $$sql_file; done" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              for sql_file in /scripts/*.sql;
+              do
+                echo Executing $$sql_file; psql {{ include "csghub.postgresql.dsn" (dict "service" .Values "global" .) | quote }} -f $$sql_file;
+              done
           volumeMounts:
             - name: init
               mountPath: /scripts

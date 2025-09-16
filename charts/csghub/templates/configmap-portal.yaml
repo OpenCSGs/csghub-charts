@@ -35,7 +35,8 @@ data:
   CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.url" (dict "service" .Values.portal "global" .) | quote }}
   # ObjectStorage
   CSGHUB_PORTAL_S3_ENDPOINT: {{ $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
-  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.portal.additionalObjectStore.endpoint | default ($objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://") | quote }}
+  {{- $s3DefaultEndpoint := $objectStoreConfig.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ .Values.portal.additionalObjectStore.endpoint | default $s3DefaultEndpoint | quote }}
   {{- if not .Values.global.objectStore.enabled }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $objectStoreConfig.accessKey | quote }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $objectStoreConfig.secretKey | quote }}

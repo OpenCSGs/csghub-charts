@@ -1,6 +1,8 @@
 apiVersion: v2
 name: temporal
-description: Temporal is a durable execution platform that enables developers to build scalable applications without sacrificing productivity or reliability. The Temporal server executes units of application logic called Workflows in a resilient manner that automatically handles intermittent failures, and retries failed operations.
+description: Temporal is a durable execution platform that enables developers to build scalable applications without
+  sacrificing productivity or reliability. The Temporal server executes units of application logic called Workflows
+  in a resilient manner that automatically handles intermittent failures, and retries failed operations.
 home: https://temporal.io/
 sources:
   - https://github.com/temporalio/temporal

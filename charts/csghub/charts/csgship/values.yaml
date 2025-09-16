@@ -5,7 +5,7 @@
 global:
   image:
     ## List of Kubernetes secrets to use for pulling images (e.g., for private registry).
-    pullSecrets: [ ]
+    pullSecrets: []
     ## Specify path prefix of images, no need to add the final slash `/`
     ## You can add namespace follow registry.
     ## eg: docker.io/minio/minio:latest ==> {{ registry }}/minio/minio:latest
@@ -28,7 +28,7 @@ global:
     ## According to the characteristics of the program, +
     ## it is not allowed to configure whether to enable TLS for each subChart separately, +
     ## but subCharts are allowed to define their own TLS secretName.
-    tls: { }
+    tls: {}
       # enabled: false
       ## Specify the tls secret containing the wildcard domain name certificate. +
     ## You need to prepare certificates and create TLS secrets yourself.
@@ -67,7 +67,7 @@ web:
     ## Defines the access modes of the volume.
     ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
     ## This is suitable for most use cases where a single instance of Csgship-Web is running.
-    accessMode: [ "ReadWriteMany" ]
+    accessMode: ["ReadWriteMany"]
     ## Specifies the size of the persistent volume.
     ## This should be adjusted based on expected usage and data growth over time.
     size: 10Gi
