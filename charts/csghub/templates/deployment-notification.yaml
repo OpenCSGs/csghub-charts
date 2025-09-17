@@ -79,14 +79,6 @@ spec:
                 name: {{ include "common.names.custom" (list . "redis") }}
             {{- end }}
           env:
-            - name: STARHUB_SERVER_MAILER_HOST
-              value: ""
-            - name: STARHUB_SERVER_MAILER_PORT
-              value: "465"
-            - name: STARHUB_SERVER_MAILER_USERNAME
-              value: ""
-            - name: STARHUB_SERVER_MAILER_PASSWORD
-              value: ""
             {{- if .Values.global.redis.enabled }}
             - name: STARHUB_SERVER_REDIS_PASSWORD
               value: "$(REDIS_PASSWD)"
