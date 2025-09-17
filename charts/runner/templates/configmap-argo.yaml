@@ -6,7 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- if .Values.global.autoConfigure }}
 {{- $argoNamespace := include "namespace.argo" . }}
 {{- $spaceNamespace := include "namespace.spaces" . }}
-{{- $registry := or .Values.global.image.registry "qury.io" }}
+{{- $registry := or .Values.global.image.registry "quay.io" }}
 {{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
