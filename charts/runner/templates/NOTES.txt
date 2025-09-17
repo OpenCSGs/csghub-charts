@@ -8,4 +8,4 @@ Visit CSGHub-Runner using following endpoint:
     endpoint: {{ include "runner.external.endpoint" . }}
 
 For more details, visit:
-    https://github.com/OpenCSGs/runner-charts
+    https://github.com/OpenCSGs/csghub-charts

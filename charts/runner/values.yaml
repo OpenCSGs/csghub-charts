@@ -96,12 +96,8 @@ global:
       ## Use path-style addressing for the bucket (vs virtual-hosted style)
       # pathStyle: true
 
-  ## Clearly identify the running mode, root means running as a subchart
-  chartContext:
-    isBuiltIn: false
-
 ######################################################
-## For CSGHub Local Configuration
+## For CSGHub Runner Local Configuration
 ######################################################
 ## External CSGHub URL for accessing the hub interface
 externalUrl: "https://csghub.example.com"

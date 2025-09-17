@@ -5,7 +5,7 @@ description: Responsible for deploying and managing application instances in the
 home: https://opencsg.com
 icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
 sources:
-  - https://github.com/OpenCSGs/runner-charts
+  - https://github.com/OpenCSGs/csghub-charts
 
 # A chart can be either an 'application' or a 'library' chart.
 #
