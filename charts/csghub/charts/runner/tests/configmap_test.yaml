@@ -1,0 +1,51 @@
+# tests/configmap_test.yaml
+suite: configmap testing
+templates:
+  - configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+tests:
+  - it: should create with correct structure
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - hasDocuments:
+          count: 1
+
+  - it: should create configmap correct within isBuiltIn = true
+    set:
+      chartContext.isBuiltIn: true
+    asserts:
+      - equal:
+          path: data["STARHUB_SERVER_API_TOKEN"]
+          value: "4f71deadef7db1880384df3edbfa7c54bc6bee0d9e91bcf4ecf5e894a37345914f71deadef7db1880384df3edbfa7c54bc6bee0d9e91bcf4ecf5e894a3734591"
+      - equal:
+          path: data["STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT"]
+          value: "http://csghub-server:8080"
+      - equal:
+          path: data["STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN"]
+          value: "http://csghub-runner:8082"
+      - equal:
+          path: data["STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL"]
+          value: "http://csghub-loki:3100"
+
+  - it: should create configmap correct within isBuiltIn = false
+    set:
+      global.ingress.tls.enabled: false
+      ingress.tls.enabled: false
+      hubAPIToken: "4f71deadef7db1880384df3edbfa7c54bc6bee0d9e91bcf4ecf5e894a37345914f71deadef7db1880384df3edbfa7c54bc6bee0d9e91bcf4ecf5e894a3734592"
+      chartContext.isBuiltIn: false
+    asserts:
+      - equal:
+          path: data["STARHUB_SERVER_API_TOKEN"]
+          value: "4f71deadef7db1880384df3edbfa7c54bc6bee0d9e91bcf4ecf5e894a37345914f71deadef7db1880384df3edbfa7c54bc6bee0d9e91bcf4ecf5e894a3734592"
+      - equal:
+          path: data["STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT"]
+          value: "https://csghub.example.com"
+      - equal:
+          path: data["STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN"]
+          value: "http://runner.example.com"
+      - equal:
+          path: data["STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL"]
+          value: "https://loki.example.com"

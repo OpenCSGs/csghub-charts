@@ -53,5 +53,8 @@ dependencies:
 - name: prometheus
   repository: file://charts/prometheus
   version: 27.37.0
-digest: sha256:df269a20c090b93cf51d79e15eea2855959e574f6dbc0bc31c0332bb65c24907
-generated: "2025-09-16T20:21:37.725364+08:00"
+- name: runner
+  repository: file://charts/runner
+  version: 1.11.0
+digest: sha256:1c92e5335f4dc0cac684661f8acf120aef61e4fdf25f29583f51659d2aee5652
+generated: "2025-09-16T21:46:58.109599+08:00"
