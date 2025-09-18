@@ -1,0 +1,114 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if and .Values.global.redis.enabled (not .Values.chartContext.isBuiltIn) }}
+{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values "global" .) | fromYaml }}
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: StatefulSet
+metadata:
+  name: {{ include "common.names.custom" (list . "redis") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    {{- with .Values.redis.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labels.selector" . | nindent 6 }}
+  serviceName: {{ include "common.names.custom" (list . "redis") }}
+  replicas: 1
+  minReadySeconds: 30
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.redis.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+      {{- include "common.labels" . | nindent 8 }}
+    spec:
+      {{- with (or .Values.redis.image.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.redis.securityContext }}
+      securityContext:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: redis
+          image: {{ include "image.generic.prefix" (list . .Values.redis.image) }}
+          imagePullPolicy: {{ or .Values.redis.image.pullPolicy .Values.image.pullPolicy .Values.global.image.pullPolicy }}
+          {{- if .Values.redis.requirePass }}
+          args: [ "--requirepass", "$(REDIS_PASSWD)", "--save", "60 1000", "--appendonly", "yes" ]
+          {{- else }}
+          args: [ "--save", "60 1000", "--appendonly", "yes" ]
+          {{- end }}
+          ports:
+            - containerPort: 6379
+              name: redis
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ include "common.names.custom" (list . "redis") }}
+          {{- with .Values.redis.environments }}
+          env:
+          {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- .Values.redis.resources | toYaml | nindent 12 }}
+          livenessProbe:
+            exec:
+              command: [ "redis-cli", "-h", "localhost", "-p", "6379", "-a", "$(REDIS_PASSWD)", "ping" ]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          securityContext:
+            {{- .Values.redis.podSecurityContext | toYaml | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      {{- with .Values.redis.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        namespace: {{ .Release.Namespace }}
+        labels:
+          {{- include "common.labels" . | nindent 10 }}
+        annotations:
+          helm.sh/resource-policy: keep
+          {{- with .Values.redis.annotations }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+      spec:
+        accessModes: {{ or .Values.redis.persistence.accessMode .Values.global.persistence.accessMode }}
+        {{- if (or .Values.redis.persistence.storageClass .Values.global.persistence.storageClass) }}
+        storageClassName: {{ or .Values.redis.persistence.storageClass .Values.global.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ or .Values.redis.persistence.size .Values.global.persistence.size }}
+{{- end }}

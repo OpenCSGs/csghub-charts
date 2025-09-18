@@ -20,7 +20,7 @@ pre-commit:
         fi
         
         if ! ct lint --all --config ct.yaml; then
-          echo "❌ ct lint failed for ${chart_dir}"
+          echo "❌ ct lint failed."
           exit 1
         fi
         

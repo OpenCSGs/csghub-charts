@@ -192,10 +192,6 @@ global:
       # clientId: "73f1c2922f51d68fa87de8c1ef0e23e8940f3aa42f5ac7a55a1f586c597d7e9c"
       # clientSecret: "gloas-3ba02f02b3e993664ccdda2c4d76989caa11ce6f07a805b6872d266fbd465831"
 
-  ## Dataflow configuration
-  dataflow:
-    enabled: false
-
 ## CSGHub self-defined service configuration
 ## Autoscaling configuration
 autoscaling:
@@ -453,19 +449,14 @@ csgship:
     persistence:
       accessMode: ["ReadWriteOnce"]
 
-## For Dataflow
+## Dataflow Configuration
 dataflow:
-  ## You can only define configuration here， Control whether enabled in global.dataflow
-  ## Configure AI Service
-  openAI: {}
-    ## The API endpoint address, e.g., "https://api.openai.com/v1/"
-    # endpoint: ""
-    ##  Your OpenAI API key used for authentication
-    # apiKey: ""
-    ## The version of the API being used, e.g., "v1"
-    # apiVersion: ""
-    ## The name of the model you want to use, e.g., "text-davinci-003"
-    # model: ""
+  ## Clearly identify the running mode, `true` means running as a subchart
+  chartContext:
+    isBuiltIn: true
+  ## Disable all subCharts for install from csghub
+  reloader:
+    enabled: false
 
 ## In order to make the maintenance of csghub helm easier, the official ingress-nginx is directly referenced here as a subChart.
 ## This section of configuration is added for better adaptation, but this section of configuration is not within your modification scope.

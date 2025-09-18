@@ -1,0 +1,119 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.global.mongo.enabled }}
+{{- $mongoConfig := include "csghub.mongo.config" (dict "service" .Values "global" .) | fromYaml }}
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: StatefulSet
+metadata:
+  name: {{ include "common.names.custom" (list . "mongo") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    {{- with .Values.mongo.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labels.selector" . | nindent 6 }}
+  serviceName: {{ include "common.names.custom" (list . "mongo") }}
+  replicas: 1
+  minReadySeconds: 30
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.mongo.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+      {{- include "common.labels" . | nindent 8 }}
+    spec:
+      {{- with (or .Values.mongo.image.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.mongo.securityContext }}
+      securityContext:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: mongo
+          image: {{ include "image.generic.prefix" (list . .Values.mongo.image) }}
+          imagePullPolicy: {{ or .Values.mongo.image.pullPolicy .Values.image.pullPolicy .Values.global.image.pullPolicy }}
+          ports:
+            - containerPort: 27017
+              name: mongo
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ include "common.names.custom" (list . "mongo") }}
+          {{- with .Values.mongo.environments }}
+          env:
+          {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- .Values.mongo.resources | toYaml | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            {{- .Values.mongo.podSecurityContext | toYaml | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      {{- with .Values.mongo.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mongo.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mongo.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        namespace: {{ .Release.Namespace }}
+        labels:
+          {{- include "common.labels" . | nindent 10 }}
+        annotations:
+          helm.sh/resource-policy: keep
+          {{- with .Values.mongo.annotations }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+      spec:
+        accessModes: {{ or .Values.mongo.persistence.accessMode .Values.global.persistence.accessMode }}
+        {{- if (or .Values.mongo.persistence.storageClass .Values.global.persistence.storageClass) }}
+        storageClassName: {{ or .Values.mongo.persistence.storageClass .Values.global.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ or .Values.mongo.persistence.size .Values.global.persistence.size }}
+{{- end }}

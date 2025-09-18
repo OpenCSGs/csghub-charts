@@ -113,10 +113,8 @@ data:
   OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ include "temporal.internal.endpoint" . | quote }}
 
   # Dataflow
-  {{- if .Values.global.dataflow.enabled }}
-  OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "dataflow.internal.domain" .) | quote }}
-  OPENCSG_DATAFLOW_SERVER_PORT: {{ include "dataflow.internal.port" . | quote }}
-  {{- end }}
+  OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "dataflow")) | quote }}
+  OPENCSG_DATAFLOW_SERVER_PORT: {{ include "csghub.svc.port" "dataflow" | quote }}
 
   # Dataviewer
   OPENCSG_DATAVIEWER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . "dataviewer")) | quote }}

@@ -1,0 +1,11 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+You have successfully installed CSGHub-Dataflow!
+
+Visit CSGHub-Dataflow using following endpoint:
+    endpoint: {{ include "dataflow.external.endpoint" . }}
+
+For more details, visit:
+    https://github.com/OpenCSGs/csghub-charts
