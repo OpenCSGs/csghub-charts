@@ -22,6 +22,11 @@ Get the port number by service name
       "portal"       8090
       "loki"         3100
       "mirror-lfs"   8092
+      "redis"        6379
+      "postgresql"   5432
+      "mongo"        27017
+      "label-studio" 8002
+      "dataflow"     8000
   -}}
 
   {{- if not (hasKey $portMap $serviceType) -}}
