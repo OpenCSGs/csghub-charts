@@ -14,7 +14,7 @@ Define the internal domain for csghub
 Define the internal port for csghub
 */}}
 {{- define "runner.internal.port" -}}
-{{- $port := "8082" }}
+{{- $port := include "csghub.svc.port" "runner" }}
 {{- if hasKey .Values.global "runner" }}
   {{- if hasKey .Values.global.runner "service" }}
     {{- if hasKey .Values.global.runner.service "port" }}

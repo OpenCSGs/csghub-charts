@@ -164,7 +164,7 @@ global:
         ## Knative service type (LoadBalancer or NodePort)
         - type: NodePort
           ## Internal domain for service access
-          domain: "app.internal"
+          domain: "example.com"
           ## API server host address
           # host: "192.168.18.10"
           ## Service port (NodePort value when type is NodePort)
@@ -426,6 +426,15 @@ notification:
 
 ## User configuration
 user: {}
+
+## Runner configuration
+runner:
+  ## Clearly identify the running mode, `true` means running as a subchart
+  chartContext:
+    isBuiltIn: true
+  ## Disable all subCharts for install from csghub
+  reloader:
+    enabled: false
 
 ## More subChart configuration mappings are omitted here.
 ## Under normal circumstances, these configurations are not necessary.

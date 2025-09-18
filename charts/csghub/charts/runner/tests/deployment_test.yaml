@@ -1,0 +1,58 @@
+# tests/deployment_test.yaml
+suite: deployment testing
+templates:
+  - deployment.yaml
+  - deployment-lc.yaml
+release:
+  name: runner
+  namespace: csghub
+tests:
+  - it: should render images correct when default
+    set:
+      global.image.registry: ""
+      global.image.tag: "v1.11.0"
+      image.repository: "opencsghq/csghub-server"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v1.11.0-ee"
+
+  - it: should render images correct when global.image.registry is acr
+    set:
+      global.image.registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      global.image.tag: "v1.11.0"
+      image.repository: "opencsghq/csghub-server"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v1.11.0-ee"
+
+  - it: should render images correct when global.image.registry is acr and image namespace is empty
+    set:
+      global.image.registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      global.image.tag: "v1.11.0"
+      image.repository: "csghub-server"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v1.11.0-ee"
+
+  - it: should render images correct when global.image.registry is not acr
+    set:
+      global.image.registry: "registry.example.com"
+      global.image.tag: "v1.11.0"
+      image.repository: "opencsghq/csghub-server"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/opencsghq/csghub-server:v1.11.0-ee"
+
+  - it: should render images correct when global.image.registry is not acr and image namespace is empty
+    set:
+      global.image.registry: "registry.example.com"
+      global.image.tag: "v1.11.0"
+      image.repository: "csghub-server"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/csghub-server:v1.11.0-ee"
