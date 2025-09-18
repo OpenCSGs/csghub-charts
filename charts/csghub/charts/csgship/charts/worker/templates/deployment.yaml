@@ -3,6 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */}}
 
+{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -60,8 +61,8 @@ spec:
           env:
             {{- if .Values.global.redis.enabled }}
             - name: REDIS_URL
-{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" (include "csghub.redis.host" .) }}*/}}
-              value: {{ printf ":@%s" (include "csghub.redis.host" .) }}
+              value: {{ printf ":@%s" $redisConfig.host }}
+{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" $redisConfig.host }}*/}}
             {{- end }}
             {{- with .Values.environments }}
             {{- range $key, $value := . }}
@@ -94,8 +95,8 @@ spec:
           env:
             {{- if .Values.global.redis.enabled }}
             - name: REDIS_URL
-              value: {{ printf ":@%s" (include "csghub.redis.host" .) }}
-{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" (include "csghub.redis.host" .) }}*/}}
+              value: {{ printf ":@%s" $redisConfig.host }}
+{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" $redisConfig.host }}*/}}
             {{- end }}
             {{- with .Values.environments }}
             {{- range $key, $value := . }}
@@ -128,8 +129,8 @@ spec:
           env:
             {{- if .Values.global.redis.enabled }}
             - name: REDIS_URL
-              value: {{ printf ":@%s" (include "csghub.redis.host" .) }}
-{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" (include "csghub.redis.host" .) }}*/}}
+              value: {{ printf ":@%s" $redisConfig.host }}
+{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" $redisConfig.host }}*/}}
             {{- end }}
             {{- with .Values.environments }}
             {{- range $key, $value := . }}

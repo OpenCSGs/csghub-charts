@@ -77,7 +77,7 @@ global:
       ## Timezone setting for the database connection
       # timezone: "Etc/UTC"
       ## SSL mode for the database connection (prefer, require, verify-full, etc.)
-      # sslMode: "prefer"
+      # sslmode: "prefer"
 
   ## Redis configuration
   redis:

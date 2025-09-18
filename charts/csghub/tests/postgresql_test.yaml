@@ -159,7 +159,7 @@ tests:
       global.postgresql.external.user: "csghub_server124"
       global.postgresql.external.password: "csghub_server@2025!"
       global.postgresql.external.database: "csghub"
-      global.postgresql.external.timezone: "UTC"
+      global.postgresql.external.timezone: "Etc/UTC"
     release:
       name: csghub
       namespace: csghub
@@ -182,4 +182,4 @@ tests:
           value: "csghub_server"
       - equal:
           path: data["STARHUB_DATABASE_TIMEZONE"]
-          value: "UTC"
+          value: "Etc/UTC"

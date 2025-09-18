@@ -74,7 +74,7 @@ spec:
             {{- if .Values.global.redis.enabled }}
             - name: REDIS_URL
               value: {{ printf ":@%s" $redisConfig.host }}
-{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" (include "csghub.redis.host" .) }}*/}}
+{{/*              value: {{ printf ":$(REDIS_PASSWD)@%s" $redisConfig.host }}*/}}
             {{- end }}
             - name: NATS_URL
               value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
