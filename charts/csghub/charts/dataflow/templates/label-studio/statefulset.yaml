@@ -1,0 +1,120 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: StatefulSet
+metadata:
+  name: {{ include "common.names.custom" (list . "label-studio") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" . | nindent 4 }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    {{- with .Values.labelStudio.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labels.selector" . | nindent 6 }}
+  serviceName: {{ include "common.names.custom" (list . "label-studio") }}
+  replicas: 1
+  minReadySeconds: 30
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.labelStudio.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+      {{- include "common.labels" . | nindent 8 }}
+    spec:
+      {{- with (or .Values.labelStudio.image.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.labelStudio.securityContext }}
+      securityContext:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10
+      initContainers:
+        - name: wait-for-postgresql
+          image: {{ include "image.fixed.prefix" (list . "opencsghq/psql:latest") }}
+          imagePullPolicy: {{ or .Values.labelStudio.image.pullPolicy .Values.global.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until psql {{ include "csghub.postgresql.dsn" (dict "service" .Values.labelStudio "global" .) | quote }} -c 'SELECT 1';
+              do
+                echo 'Wait for PostgreSQL to be ready';
+                sleep 2;
+              done
+      containers:
+        - name: label-studio
+          image: {{ include "image.generic.prefix" (list . .Values.labelStudio.image) }}
+          imagePullPolicy: {{ or .Values.labelStudio.image.pullPolicy .Values.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: ["label-studio"]
+          ports:
+            - containerPort: 8002
+              name: label-studio
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "label-studio") }}
+          {{- with .Values.labelStudio.environments }}
+          env:
+          {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- .Values.labelStudio.resources | toYaml | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          securityContext:
+            {{- .Values.labelStudio.podSecurityContext | toYaml | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /label-studio/data
+      {{- with .Values.labelStudio.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.labelStudio.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.labelStudio.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        namespace: {{ .Release.Namespace }}
+        labels:
+          {{- include "common.labels" . | nindent 10 }}
+        annotations:
+          helm.sh/resource-policy: keep
+          {{- with .Values.labelStudio.annotations }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+      spec:
+        accessModes: {{ or .Values.labelStudio.persistence.accessMode .Values.global.persistence.accessMode }}
+        {{- if (or .Values.labelStudio.persistence.storageClass .Values.global.persistence.storageClass) }}
+        storageClassName: {{ or .Values.labelStudio.persistence.storageClass .Values.global.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ or .Values.labelStudio.persistence.size .Values.global.persistence.size }}
