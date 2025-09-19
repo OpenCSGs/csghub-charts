@@ -1279,17 +1279,6 @@ data:
     data:
       executor: |
         imagePullPolicy: IfNotPresent
-      images: |
-        opencsg-registry-vpc.cn-beijing.cr.aliyuncs.com/opencsghq/bitnami/kaniko:1.23.2:
-          cmd: ["/kaniko/executor"]
-        {{ $registryConfig.registry }}/{{ $registryConfig.repository }}/bitnami/kaniko:1.23.2:
-          cmd: ["/kaniko/executor"]
-        {{ $registryConfig.registry }}/opencsghq/bitnami/kaniko:1.23.2:
-          cmd: ["/kaniko/executor"]
-        {{ $registryConfig.registry }}/bitnami/kaniko:1.23.2:
-          cmd: ["/kaniko/executor"]
-        bitnami/kaniko:1.23.2:
-          cmd: ["/kaniko/executor"]
     ---
     apiVersion: v1
     kind: Service
