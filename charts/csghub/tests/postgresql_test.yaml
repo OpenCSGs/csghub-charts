@@ -118,10 +118,10 @@ tests:
 
   - it: when using internal postgresql, should render dataflow config right
     templates:
-      - charts/dataflow/templates/configmap.yaml
+      - charts/dataflow/templates/dataflow/configmap.yaml
     set:
       global.postgresql.enabled: true
-      global.dataflow.enabled: true
+      dataflow.enabled: true
     release:
       name: csghub
       namespace: csghub

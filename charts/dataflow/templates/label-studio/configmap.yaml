@@ -1,0 +1,28 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.labelStudio "global" .) | fromYaml }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.custom" (list . "label-studio") }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "common.labels" (dict "context" . "service" "label-studio") | nindent 4 }}
+data:
+{{- if .Values.chartContext.isBuiltIn }}
+  CSG_HUB_ENDPOINT: {{ include "csghub.internal.endpoint" . | quote }}
+{{- else }}
+  CSG_HUB_ENDPOINT: {{ .Values.externalUrl | quote }}
+{{- end }}
+  LABEL_STUDIO_HOST: "http://0.0.0.0"
+  LABEL_STUDIO_PORT: "8002"
+  DJANGO_DB: "default"
+  JSON_LOG: "1"
+  POSTGRE_HOST: {{ $pgConfig.host | quote }}
+  POSTGRE_PORT: {{ $pgConfig.port | quote }}
+  POSTGRE_NAME: {{ $pgConfig.database | quote }}
+  POSTGRE_USER: {{ $pgConfig.user | quote }}
+  POSTGRE_PASSWORD: {{ $pgConfig.password | quote }}
+  SSLMODE: {{ $pgConfig.sslmode }}

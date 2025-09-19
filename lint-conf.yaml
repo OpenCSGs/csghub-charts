@@ -69,6 +69,7 @@ ignore:
     - charts/*/charts/prometheus
     - charts/*/charts/tempo
     - charts/*/charts/runner/charts
+    - charts/*/charts/dataflow/charts
     - charts/*/charts/runner/templates/configmap-lws.yaml
     - charts/*/charts/runner/templates/configmap-argo.yaml
     - charts/*/charts/runner/templates/configmap-knative.yaml
