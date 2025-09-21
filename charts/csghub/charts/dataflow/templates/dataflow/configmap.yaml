@@ -14,9 +14,9 @@ metadata:
   labels: {{ include "common.labels" (dict "context" . "service" "dataflow") | nindent 4 }}
 data:
 {{- if .Values.chartContext.isBuiltIn }}
-  CSG_HUB_ENDPOINT: {{ include "csghub.internal.endpoint" . | quote }}
+  CSGHUB_ENDPOINT: {{ include "csghub.internal.endpoint" . | quote }}
 {{- else }}
-  CSG_HUB_ENDPOINT: {{ .Values.externalUrl | quote }}
+  CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
 {{- end }}
   DATA_DIR: "/data/dataflow"
   MAX_WORKERS: "99"
@@ -33,7 +33,7 @@ data:
   DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
   {{- $labelStudioHost := include "common.names.custom" (list . "label-studio") }}
   {{- $labelStudioPort := include "csghub.svc.port" "label-studio" }}
-  STUDIO_JUMP_URL: {{ printf "http://%s:%s" $labelStudioHost $labelStudioPort | quote }}
+  STUDIO_JUMP_URL: {{ include "label-studio.external.endpoint" . | quote }}
   {{- $redisHost := $redisConfig.host }}
   {{- $redisPort := $redisConfig.port }}
   REDIS_HOST_URL: {{ printf "redis://%s:%s" $redisHost $redisPort | quote }}
