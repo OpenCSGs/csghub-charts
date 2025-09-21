@@ -16,7 +16,7 @@ data:
 {{- else }}
   CSG_HUB_ENDPOINT: {{ .Values.externalUrl | quote }}
 {{- end }}
-  LABEL_STUDIO_HOST: "http://0.0.0.0"
+  LABEL_STUDIO_HOST: {{ include "label-studio.external.domain" . | quote }}
   LABEL_STUDIO_PORT: "8002"
   DJANGO_DB: "default"
   JSON_LOG: "1"
