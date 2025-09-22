@@ -27,6 +27,21 @@ package:
       curl -v -u "${HELM_REGISTRY_USER}":"${HELM_REGISTRY_PASSWORD}" \
         --upload-file *.tgz \
         "${HELM_REGISTRY}"
+
+    - |
+      CHART_PATH: "charts/runner"
+      helm package "$CHART_PATH" -d ./
+            curl -v -u "${HELM_REGISTRY_USER}":"${HELM_REGISTRY_PASSWORD}" \
+              --upload-file *.tgz \
+              "${HELM_REGISTRY}"
+
+    - |
+      CHART_PATH: "charts/dataflow"
+      helm package "$CHART_PATH" -d ./
+            curl -v -u "${HELM_REGISTRY_USER}":"${HELM_REGISTRY_PASSWORD}" \
+              --upload-file *.tgz \
+              "${HELM_REGISTRY}"
+
   artifacts:
     paths:
       - "*.tgz"
