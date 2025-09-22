@@ -82,7 +82,7 @@ spec:
             {{- .Values.mongo.podSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
             - name: data
-              mountPath: /data
+              mountPath: /data/db
       {{- with .Values.mongo.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
