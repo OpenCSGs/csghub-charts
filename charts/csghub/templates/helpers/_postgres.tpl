@@ -18,7 +18,7 @@ Generate PostgreSQL Connection Configuration
   "host" $postgresqlName
   "port" (include "csghub.svc.port" "postgresql")
   "user" ($service.postgresql.user | default "postgres")
-  "password" (include "common.randomPassword" "postgresql")
+  "password" (include "common.randomPassword" ($service.postgresql.user | default "postgres"))
   "database" ($service.postgresql.database | default "postgres")
   "timezone" "Etc/UTC"
   "sslmode" "disable"

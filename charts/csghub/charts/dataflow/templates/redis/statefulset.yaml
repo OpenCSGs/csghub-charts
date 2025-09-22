@@ -56,9 +56,11 @@ spec:
             - containerPort: 6379
               name: redis
               protocol: TCP
+          {{- if .Values.redis.requirePass }}
           envFrom:
             - secretRef:
                 name: {{ include "common.names.custom" (list . "redis") }}
+          {{- end }}
           {{- with .Values.redis.environments }}
           env:
           {{- range $key, $value := . }}
