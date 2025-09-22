@@ -96,7 +96,7 @@ Define the kaniko args for runner
 {{- $pypi := printf "--build-arg=PyPI=%s" .Values.global.pipIndexUrl }}
 {{- $hf := printf "--build-arg=HF_ENDPOINT=%s/hf" (or .Values.externalUrl (include "csghub.external.endpoint" .)) }}
 {{- $insecure := "" }}
-{{- if .Values.registry.insecure }}
+{{- if or .Values.global.registry.enabled .Values.registry.insecure .Values.global.registry.external.insecure }}
 {{- $insecure = "--skip-tls-verify,--skip-tls-verify-pull,--insecure,--insecure-pull" }}
 {{- end }}
 {{- printf "%s,%s,%s,%s" $speedUpArgs $pypi $hf $insecure | trimSuffix "," -}}

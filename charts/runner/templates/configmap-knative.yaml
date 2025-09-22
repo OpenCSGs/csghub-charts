@@ -16,6 +16,7 @@
 {{- $knativeNamespace := include "namespace.knative" . }}
 {{- $kourierNamespace := include "namespace.kourier" . }}
 {{- $registry := or .Values.global.image.registry "gcr.io" }}
+{{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13507,8 +13508,8 @@ data:
       annotations:
         knative.dev/example-checksum: "720ddb97"
     data:
-      {{- if .Values.registry.insecure }}
-      registries-skipping-tag-resolving: "{{ .Values.registry.registry }}, {{ .Values.global.image.registry }}"
+      {{- if or .Values.global.registry.enabled .Values.registry.insecure .Values.global.registry.external.insecure }}
+      registries-skipping-tag-resolving: "{{ $registryConfig.registry }}{{ if .Values.global.image.registry }}, {{ .Values.global.image.registry }}{{ end }}"
       {{- end }}
       queue-sidecar-image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/queue:v1.16.1" $registry }}
     ---
