@@ -36,7 +36,7 @@ global:
   ## PostgreSQL database configuration
   postgresql:
     ## Use built-in (true) or external (false) postgresql
-    enabled: false
+    enabled: true
     ## External PostgreSQL configuration
     external:
       ## Hostname or IP address of the external PostgreSQL server

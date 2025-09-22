@@ -24,18 +24,3 @@ Define the internal port for postgresql
 {{- end }}
 {{- $port | toString -}}
 {{- end }}
-
-{{/*
-Random Password for which password not set
-*/}}
-{{- define "postgresql.initPass" -}}
-{{- printf "%s@%s" (now | date "15/04") . | b64enc | sha256sum | trunc 16 -}}
-{{- end }}
-
-{{/*
-Define a custom urlencode function.
-*/}}
-{{- define "postgresql.encode" -}}
-{{- $value := . -}}
-{{- $value | replace "@" "%40" | replace ":" "%3A" -}}
-{{- end -}}

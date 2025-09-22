@@ -15,7 +15,7 @@ data:
     {{- $secretData := (lookup "v1" "Secret" .Release.Namespace (include "common.names.custom" .)).data }}
     {{- range $dbName, $dbConfig := .Values.databases }}
       {{- $username := $dbConfig.owner }}
-      {{- $password := $dbConfig.password | default (include "postgresql.initPass" $username) }}
+      {{- $password := $dbConfig.password | default (include "common.randomPassword" $username) }}
       {{- if $secretData }}
         {{- $secretPassword := index $secretData $username }}
         {{- if $secretPassword }}
