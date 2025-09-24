@@ -1,0 +1,80 @@
+global:
+  ## Global image settings
+  image:
+    ## Image registry URL (without trailing slash)
+    # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    ## Image tag format: {{version}}-{{edition}} (eg: v1.8.1-ee)
+    tag: "v1.11.0"
+    ## Image pull policy (Always, IfNotPresent, Never)
+    pullPolicy: "IfNotPresent"
+    ## Secrets for private registry authentication
+    pullSecrets: []
+
+  ## Persistent volume settings
+  persistence:
+    ## StorageClass name (empty for default)
+    # storageClass: ""
+    ## Volume access modes
+    accessModes: ["ReadWriteOnce"]
+    ## Default storage capacity
+    size: 10Gi
+
+  ## Database configuration
+  postgresql:
+    ## Use embedded PostgreSQL (true) or external (false)
+    enabled: true
+    ## External PostgreSQL connection settings
+    external: {}
+      # host: "<pg_host>"
+      # port: 6432
+      # user: "csghub"
+      # password: ""
+      # timezone: "Etc/UTC"
+      # sslmode: "prefer"
+
+## Embedded PostgreSQL configuration
+postgresql:
+  ## Resource name prefix
+  name: "postgresql"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "docker.io"
+    ## PostgreSQL image repository
+    repository: "opencsghq/postgres"
+    ## Image version tag
+    tag: "15.10"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 5432
+    ## Network protocol
+    protocol: TCP
+
+  ## Databases to create on startup
+  databases: ["db1", "db2"]
+  ## Format:
+  ## - databaseName
+
+  ## PostgreSQL runtime parameters
+  parameters: {}
+    ## Dynamic parameters (it will trigger recreate)
+    # max_connections: 400
+    # shared_buffers: "128MB"
+
+  ## Data persistence settings
+  persistence:
+    ## StorageClass for dynamic provisioning
+    # storageClass: ""
+    ## Volume access permissions
+    # accessMode: ["ReadWriteOnce"]
+    ## Disk space allocation
+    size: 50Gi
