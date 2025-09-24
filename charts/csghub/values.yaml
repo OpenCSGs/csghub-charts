@@ -32,6 +32,19 @@ global:
       # timezone: "Etc/UTC"
       # sslmode: "prefer"
 
+  ## Redis configuration
+  redis:
+    ## Use built-in (true) or external (false) redis
+    enabled: true
+    ## External Redis configuration
+    external: {}
+      ## Hostname or IP address of the external Redis server
+      # host: "<redis_host>"
+      ## Port number for the Redis connection
+      # port: 6379
+      ## Password for Redis authentication
+      # password: ""
+
 ## Embedded PostgreSQL configuration
 postgresql:
   ## Resource name prefix
@@ -78,3 +91,51 @@ postgresql:
     # accessMode: ["ReadWriteOnce"]
     ## Disk space allocation
     size: 50Gi
+
+## Built-in Redis Configuration
+redis:
+  ## Resource name prefix
+  name: "redis"
+
+  ## Configuration for images, it will overwrite global.images
+  image:
+    ## List of image pull secrets.
+    ## Used to pull Docker images from private repositories.
+    ## This array is empty by default, meaning no secrets are required by default.
+    pullSecrets: []
+    ## Specify path prefix relative to docker.io
+    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
+    ## No need to add the final slash `/`
+    registry: "docker.io"
+    ## Specifies the location of the Redis Docker image in the registry.
+    repository: "redis"
+    ## Defines the specific version of the Redis image to use.
+    tag: "7.2.5"
+    ## Determines how the image should be pulled from the registry.
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 6379
+    ## Network protocol
+    protocol: TCP
+
+  ## Password required
+  requirePass: false
+
+  ## Persistence settings for the Redis data.
+  persistence:
+    ## Specifies the StorageClass used for provisioning the volume.
+    ## An empty value means the default StorageClass is used.
+    ## StorageClass defines the type of storage used and can affect performance and cost.
+    # storageClass: ""
+    ## Defines the access modes of the volume.
+    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
+    ## This is suitable for most use cases where a single instance of Redis is running.
+    # accessMode: ["ReadWriteOnce"]
+    ## Specifies the size of the persistent volume.
+    ## This should be adjusted based on expected usage and data growth over time.
+    size: 10Gi
