@@ -56,7 +56,7 @@ data:
   {{- $id := $casdoorConfig.STARHUB_SERVER_CASDOOR_CLIENT_ID }}
   {{- $clientID := printf "client_id=%s" $id }}
   {{- $redirectURI := printf "redirect_uri=%s/api/v1/callback/casdoor&scope=read&state=casdoor" (include "csghub.external.endpoint" .) }}
-  CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?%s&%s" $authorizeAPI $clientID $redirectURI | quote }}
+  CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?%s&response_type=code&%s" $authorizeAPI $clientID $redirectURI | quote }}
   # Portal PostgreSQL
   CSGHUB_PORTAL_DATABASE_HOST: {{ $portalPgConfig.host | quote }}
   CSGHUB_PORTAL_DATABASE_PORT: {{ $portalPgConfig.port | quote }}
