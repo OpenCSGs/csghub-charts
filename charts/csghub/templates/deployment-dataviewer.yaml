@@ -71,36 +71,16 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
+                name: {{ include "common.names.custom" (list . "core") }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if .Values.global.redis.enabled }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "redis") }}
-            {{- end }}
-            {{- if .Values.global.objectStore.enabled }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "minio") }}
-            {{- end }}
+          {{- with .Values.server.environments }}
           env:
-            - name: OPENCSG_ACCOUNTING_NATS_URL
-              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
-            {{- if .Values.global.redis.enabled }}
-            - name: STARHUB_SERVER_REDIS_PASSWORD
-              value: "$(REDIS_PASSWD)"
-            {{- end }}
-            {{- if .Values.global.objectStore.enabled }}
-            - name: STARHUB_SERVER_S3_ACCESS_KEY_ID
-              value: "$(MINIO_ROOT_USER)"
-            - name: STARHUB_SERVER_S3_ACCESS_KEY_SECRET
-              value: "$(MINIO_ROOT_PASSWORD)"
-            {{- end }}
-            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-            {{- end }}
+          {{- end }}
           resources:
             {{- if .Values.autoscaling.enabled }}
             requests:
