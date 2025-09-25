@@ -239,3 +239,8 @@ minio:
     # accessMode: ["ReadWriteOnce"]
     ## Disk space allocation
     size: 500Gi
+
+## Reloader Configuration
+reloader:
+  image:
+    name: "opencsghq/stakater-reloader"

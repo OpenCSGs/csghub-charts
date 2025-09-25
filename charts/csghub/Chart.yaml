@@ -32,3 +32,7 @@ dependencies:
   - name: common
     version: 0.1.0
     repository: file://charts/common
+  - name: reloader
+    version: "2.1.4"
+    repository: "file://charts/reloader"
+    condition: reloader.enabled

@@ -2,5 +2,8 @@ dependencies:
 - name: common
   repository: file://charts/common
   version: 0.1.0
-digest: sha256:7db88603224eda21d9e93ddefa6ca80e5622eec41eeb186ab454e36cc31197c1
-generated: "2025-09-24T18:05:57.705002+08:00"
+- name: reloader
+  repository: file://charts/reloader
+  version: 2.1.4
+digest: sha256:1adbbe486c054aa6d4f25d886977168e1413998931289752115bfcb4fb8c8ad5
+generated: "2025-09-25T23:34:06.764383+08:00"
