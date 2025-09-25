@@ -104,7 +104,7 @@ tests:
           path: spec.ports[0].name
           value: "postgresql"
 
-  - it: Should render deployment with global correctly
+  - it: Should render statefulset with global correctly
     template: postgresql/statefulset.yaml
     asserts:
       - equal:

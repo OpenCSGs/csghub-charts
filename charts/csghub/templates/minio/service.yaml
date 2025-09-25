@@ -1,0 +1,35 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.global.objectStore.enabled }}
+{{- $service := .Values.minio }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: {{ $service.service.type }}
+  clusterIP: None
+  ports:
+    - port: {{ $service.service.port }}
+      targetPort: 9000
+      protocol: {{ $service.service.protocol }}
+      name: {{ $service.name }}
+    {{- if $service.console.enabled }}
+    {{- $serviceConsole := $service.console.service }}
+    - port: {{ $serviceConsole.port}}
+      targetPort: 9001
+      protocol: {{ $serviceConsole.protocol }}
+      name: {{ printf "%s-console" $service.name }}
+    {{- end }}
+  selector:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}

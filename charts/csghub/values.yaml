@@ -1,4 +1,24 @@
 global:
+  ## Ingress Configuration
+  ingress:
+    ## Define other ingressClass types compatible with ingress-nginx
+    # className: "nginx"
+    ## Domain name for accessing csghub
+    domain: example.com
+    ## Whether to use the top-level domain directly for access
+    ## If true, access via domain only (example.com)
+    ## If false, access via subdomain+domain (csghub.example.com)
+    useTop: false
+    ## TLS Configuration
+    tls: {}
+      ## Enable or disable TLS.
+      # enabled: false
+      ## If tls enabled, a secret needs to be provided
+      # secretName: ""
+    service:
+      ## Service type for ingress (LoadBalancer or NodePort)
+      type: &type LoadBalancer
+
   ## Global image settings
   image:
     ## Image registry URL (without trailing slash)
@@ -45,6 +65,27 @@ global:
       ## Password for Redis authentication
       # password: ""
 
+  ## Object storage configuration
+  objectStore:
+    ## Use built-in (true) or external (false) object storage
+    enabled: true
+    ## External Object Storage configuration
+    external: {}
+      ## Endpoint URL for the object storage service
+      # endpoint: "http://minio.<domain>"
+      ## Access key for object storage authentication
+      # accessKey: "minio"
+      ## Secret key for object storage authentication
+      # secretKey: ""
+      ## Region where the bucket is located
+      # region: "cn-north-1"
+      ## Enable server-side encryption for objects
+      # encrypt: false
+      ## Use HTTPS for connections to the object storage
+      # secure: false
+      ## Use path-style addressing for the bucket (vs virtual-hosted style)
+      # pathStyle: true
+
 ## Embedded PostgreSQL configuration
 postgresql:
   ## Resource name prefix
@@ -73,7 +114,7 @@ postgresql:
     protocol: TCP
 
   ## Databases to create on startup
-  databases: ["db1", "db2"]
+  databases: ["csghub"]
   ## Format:
   ## - databaseName
 
@@ -97,21 +138,17 @@ redis:
   ## Resource name prefix
   name: "redis"
 
-  ## Configuration for images, it will overwrite global.images
+  ## Image settings (overrides global.image)
   image:
-    ## List of image pull secrets.
-    ## Used to pull Docker images from private repositories.
-    ## This array is empty by default, meaning no secrets are required by default.
+    ## Docker registry secrets
     pullSecrets: []
-    ## Specify path prefix relative to docker.io
-    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
-    ## No need to add the final slash `/`
+    ## Container registry URL
     registry: "docker.io"
-    ## Specifies the location of the Redis Docker image in the registry.
+    ## PostgreSQL image repository
     repository: "redis"
-    ## Defines the specific version of the Redis image to use.
+    ## Image version tag
     tag: "7.2.5"
-    ## Determines how the image should be pulled from the registry.
+    ## Image pull behavior
     pullPolicy: "IfNotPresent"
 
   ## Service configuration
@@ -126,16 +163,79 @@ redis:
   ## Password required
   requirePass: false
 
-  ## Persistence settings for the Redis data.
+  ## Data persistence settings
   persistence:
-    ## Specifies the StorageClass used for provisioning the volume.
-    ## An empty value means the default StorageClass is used.
-    ## StorageClass defines the type of storage used and can affect performance and cost.
+    ## StorageClass for dynamic provisioning
     # storageClass: ""
-    ## Defines the access modes of the volume.
-    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-    ## This is suitable for most use cases where a single instance of Redis is running.
+    ## Volume access permissions
     # accessMode: ["ReadWriteOnce"]
-    ## Specifies the size of the persistent volume.
-    ## This should be adjusted based on expected usage and data growth over time.
+    ## Disk space allocation
     size: 10Gi
+
+## Built-in Redis Configuration
+minio:
+  ## Resource name prefix
+  name: "minio"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "docker.io"
+    ## PostgreSQL image repository
+    repository: "minio/minio"
+    ## Image version tag
+    tag: "RELEASE.2024-12-18T13-15-44Z"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 9000
+    ## Network protocol
+    protocol: TCP
+
+  ## Console configuration
+  console:
+    ## If enabled console UI
+    enabled: true
+    ## Console Service configuration
+    service:
+      ## Database service port
+      port: 9001
+      ## Network protocol
+      protocol: TCP
+
+  ## Configuration for ingress.
+  ingress:
+    ## Enable or disable ingress.
+    enabled: true
+    ## TLS settings for ingress.
+    tls: {}
+      ## Enable or disable TLS.
+      # enabled: false
+      ## If tls enabled, a secret needs to be provided
+      # secretName: ""
+    ## Ingress-nginx annotations
+    annotations: {}
+
+  ## Region
+  region: "cn-north-1"
+
+  ## Buckets to be created
+  ## Add new bucket eg: <bucket_name>: <policy>
+  ## Policy: https://docs.min.io/community/minio-object-store/reference/minio-mc/mc-anonymous-set.html#mc.anonymous.set
+  buckets: {}
+
+  ## Data persistence settings
+  persistence:
+    ## StorageClass for dynamic provisioning
+    # storageClass: ""
+    ## Volume access permissions
+    # accessMode: ["ReadWriteOnce"]
+    ## Disk space allocation
+    size: 500Gi

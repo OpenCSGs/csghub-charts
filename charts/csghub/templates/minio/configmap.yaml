@@ -1,0 +1,22 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.global.objectStore.enabled }}
+{{- $service := .Values.minio }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  {{- range $path, $_ := .Files.Glob "scripts/minio/*.sh" }}
+  {{ base $path }}: |
+  {{- $.Files.Get $path | nindent 4 }}
+  {{- end }}
+  {{- end }}

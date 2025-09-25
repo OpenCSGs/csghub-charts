@@ -113,7 +113,7 @@ tests:
           path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
           value: "25Gi"
 
-  - it: Should render deployment with local correctly
+  - it: Should render statefulset with local correctly
     template: redis/statefulset.yaml
     set:
       redis:
