@@ -71,11 +71,7 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include  "common.names.custom" (list . "casdoor") }}
-            - configMapRef:
                 name: {{ include  "common.names.custom" (list . "core") }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "nats") }}
           {{- with .Values.server.environments }}
           env:
             {{- range $key, $value := . }}

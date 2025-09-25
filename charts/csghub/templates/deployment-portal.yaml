@@ -79,10 +79,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
-            - configMapRef:
-                name: {{ include "common.names.custom" (list . "casdoor") }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "nats") }}
           {{- with .Values.portal.environments }}
           env:
             {{- range $key, $value := . }}
