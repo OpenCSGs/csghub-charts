@@ -18,9 +18,8 @@ data:
   OPENCSG_ACCOUNTING_CHARGING_ENABLE: "true"
 
   # Accounting Nats
-  {{- $natsHost := include "nats.internal.domain" .  }}
-  {{- $natsPort := include "nats.internal.ports.api" .  }}
-  OPENCSG_ACCOUNTING_NATS_URL: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ $natsHost }}:{{ $natsPort }}"
+  {{- $natsConfig := include "nats.config" . | fromYaml }}
+  OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
 
   {{- if .Values.global.moderation.enabled }}
   # Moderation config
@@ -53,8 +52,10 @@ data:
   CSGHUB_PORTAL_STARHUB_API_KEY: {{ include "server.hub.api.token" . | quote }}
 
   {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "casdoor.external.endpoint" .) }}
-  {{- $clientID := "client_id=$(STARHUB_SERVER_CASDOOR_CLIENT_ID)" }}
-  {{- $redirectURI := "redirect_uri=$(CSGHUB_PORTAL_STARHUB_BASE_URL)/api/v1/callback/casdoor&scope=read&state=casdoor" }}
+  {{- $casdoorConfig := (lookup "v1" "ConfigMap" .Release.Namespace (include "common.names.custom" (list . "casdoor"))).data }}
+  {{- $id := $casdoorConfig.STARHUB_SERVER_CASDOOR_CLIENT_ID }}
+  {{- $clientID := printf "client_id=%s" $id }}
+  {{- $redirectURI := printf "redirect_uri=%s/api/v1/callback/casdoor&scope=read&state=casdoor" (include "csghub.external.endpoint" .) }}
   CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?%s&%s" $authorizeAPI $clientID $redirectURI | quote }}
   # Portal PostgreSQL
   CSGHUB_PORTAL_DATABASE_HOST: {{ $portalPgConfig.host | quote }}
@@ -151,7 +152,6 @@ data:
   STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ include "csghub.gitaly.grpcEndpoint" (dict "service" .Values.server "global" .) | quote }}
   STARHUB_SERVER_GITALY_TOKEN: {{ $serverGitConfig.token | quote }}
   STARHUB_SERVER_GITALY_STORAGE: {{ $serverGitConfig.storage | quote }}
-  STARHUB_SERVER_CHECK_FILE_SIZE_ENABLED: {{ not $serverGitConfig.isCluster | quote }}
   {{- if eq (include "gitlab-shell.external.port" .) "22" }}
   STARHUB_SERVER_SSH_DOMAIN: {{ printf "ssh://git@%s" (include "csghub.external.domain" .) | quote }}
   {{- else }}
