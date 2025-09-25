@@ -28,8 +28,9 @@ metadata:
     {{- if not .Values.global.usePublicDomain }}
     nginx.ingress.kubernetes.io/server-snippet: |
       location ~* "^/endpoint/" {
-        {{- $fullSvcName := printf "%s.%s.svc" (include "common.names.custom" (list . "gateway")) .Release.Namespace (include "cluster.domain" .) }}
-        proxy_pass http://{{ printf "%s.%s" $fullSvcName }}:{{ include "csghub.svc.port" "rproxy" }};
+        {{- $suffix := include "cluster.domain" . }}
+        {{- $fullSvcName := printf "%s.%s.svc.%s" (include "common.names.custom" (list . "gateway")) .Release.Namespace $suffix }}
+        proxy_pass http://{{ printf "%s:%s" $fullSvcName (include "csghub.svc.port" "rproxy") }};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
