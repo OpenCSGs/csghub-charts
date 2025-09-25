@@ -1,0 +1,28 @@
+suite: configmap test
+
+tests:
+  - it: should render configmap right
+    templates:
+      - configmap-core.yaml
+      - charts/casdoor/templates/configmap.yaml
+      - charts/nats/templates/configmap.yaml
+    set:
+      global.ingress.domain: "opencsg-poc.com"
+    release:
+      name: csghub
+      namespace: csghub
+    asserts:
+      - matchRegex:
+          path: data["OPENCSG_ACCOUNTING_NATS_URL"]
+          pattern: "nats://natsadmin:[a-zA-Z0-9_-]{15}@csghub-nats:4222"
+        template: configmap-core.yaml
+      - matchRegex:
+          path: data["STARHUB_SERVER_CASDOOR_ENDPOINT"]
+          pattern: "casdoor.opencsg-poc.com"
+        template: charts/casdoor/templates/configmap.yaml
+        documentIndex: 0
+      - equal:
+          path: data["STARHUB_SERVER_CASDOOR_CLIENT_ID"]
+          value: "7a97bc5168cb75ffc514"
+        template: charts/casdoor/templates/configmap.yaml
+        documentIndex: 0

@@ -61,7 +61,7 @@ spec:
           command: [ "/bin/sh", "-c", "for sql_file in /scripts/*.sql; do echo Executing $$sql_file; psql -f $$sql_file; done" ]
           envFrom:
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
+                name: {{ include "common.names.custom" (list . "core") }}
           env:
             - name: PGHOST
               value: "$(STARHUB_DATABASE_HOST)"

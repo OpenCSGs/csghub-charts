@@ -57,7 +57,7 @@ tests:
       - matchRegex:
           path: data["CSGHUB_PORTAL_STARHUB_BASE_URL"]
           pattern: "occ.opencsg-poc.com"
-        template: configmap-portal.yaml
+        template: configmap-core.yaml
       - matchRegex:
           path: data["STARHUB_SERVER_CASDOOR_ENDPOINT"]
           pattern: "iam.opencsg-poc.com"
