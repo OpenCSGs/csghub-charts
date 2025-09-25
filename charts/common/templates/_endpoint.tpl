@@ -7,35 +7,25 @@ SPDX-License-Identifier: APACHE-2.0
 Construct the external endpoint for csghub with flexible configuration.
 
 Priority:
-1. Service-specific ingress configuration (in .Values.ingress)
-2. Global ingress configuration (in .Values.global.ingress)
+1. Service-specific ingress configuration
+2. Global ingress configuration
 
 Parameters can be passed as a dict with:
-- context: The Helm context
-- subDomain: Subdomain for the endpoint (optional, passed to csghub.external.domain)
+- ctx: The Helm context
+- service: Service-specific values (optional)
+- domain: Domain for the endpoint
 
-Usage: 
-1. {{ include "common.endpoint" . }}
-2. {{ include "common.endpoint" (dict "ctx" . "domain" "test.example.com") }}
+Usage:
+{{ include "common.endpoint" (dict "ctx" . "service" .Values.webapp "domain" "app.example.com") }}
 */}}
 {{- define "common.endpoint" -}}
   {{- /* Parse parameters */ -}}
   {{- $ctx := .ctx -}}
+  {{- $service := .service | default dict -}}
   {{- $domain := .domain -}}
-  
-  {{- /* Determine which ingress configuration to use */ -}}
-  {{- $ingressConfig := $ctx.Values.ingress -}}
-  {{- if not $ingressConfig -}}
-    {{- $ingressConfig = $ctx.Values.global.ingress -}}
-  {{- else -}}
-    {{- /* If service has ingress config but missing some fields, fallback to global */ -}}
-    {{- if not (hasKey $ingressConfig "tls") -}}
-      {{- $ingressConfig = merge $ingressConfig (dict "tls" $ctx.Values.global.ingress.tls) -}}
-    {{- end -}}
-    {{- if not (hasKey $ingressConfig.service "type") -}}
-      {{- $ingressConfig = merge $ingressConfig (dict "service" $ctx.Values.global.ingress.service) -}}
-    {{- end -}}
-  {{- end -}}
+
+  {{- /* Get merged ingress configuration using common.ingress.config */ -}}
+  {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" $ctx) | fromYaml -}}
   
   {{- /* Determine protocol and port based on configuration */ -}}
   {{- $protocol := "http" -}}

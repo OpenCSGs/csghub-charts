@@ -44,40 +44,42 @@ Returns: Full image path in format "registry/repository:tag"
 Generate full image path with fixed image name
 
 Usage:
-{{ include "common.image.fixed" (list . "image-name") }}
+{{ include "common.image.fixed" (dict "ctx" . "service" "minio" "image" "busybox:latest") }}
 
 Parameters:
-- context: Chart context (usually .)
-- repository: Fixed image repository name
+- ctx: Chart context (usually .)
+- service: Service name (e.g., "minio")
+- image: Fixed image repository name (e.g., "busybox:latest")
 
 Returns: Full image path in format "registry/repository"
 */}}
 {{- define "common.image.fixed" -}}
-  {{- $context := index . 0 -}}
-  {{- $repository := index . 1 -}}
-  {{- $globalImage := default dict $context.Values.global.image -}}
+  {{- $ctx := .ctx -}}
+  {{- $service := .service -}}
+  {{- $image := .image -}}
+  {{- $globalImage := default dict $ctx.Values.global.image -}}
 
   {{- /* Support multiple image configuration paths */ -}}
   {{- $localImage := dict -}}
-  {{- if $context.Values.image -}}
-    {{- $localImage = $context.Values.image -}}
-  {{- else if $context.Values.server.image -}}
-    {{- $localImage = $context.Values.server.image -}}
+  {{- if index $ctx.Values $service -}}
+    {{- if index $ctx.Values $service "image" -}}
+      {{- $localImage = index $ctx.Values $service "image" -}}
+    {{- end -}}
   {{- end -}}
 
   {{- $registry := or $localImage.registry $globalImage.registry -}}
 
   {{- /* Adjust repository path for OpenCSG registry */ -}}
   {{- if and $registry (regexMatch "^opencsg-registry" $registry) -}}
-    {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $repository) -}}
-      {{- $repository = printf "opencsghq/%s" $repository -}}
+    {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $image) -}}
+      {{- $image = printf "opencsghq/%s" $image -}}
     {{- end -}}
   {{- end -}}
 
   {{- /* Validate and return full image path */ -}}
-  {{- if and $registry $repository -}}
-    {{- printf "%s/%s" $registry $repository -}}
+  {{- if and $registry $image -}}
+    {{- printf "%s/%s" $registry $image -}}
   {{- else -}}
-    {{- fail "Invalid image configuration - registry and repository are required" -}}
+    {{- fail "Invalid image configuration - registry and image are required" -}}
   {{- end -}}
 {{- end -}}
