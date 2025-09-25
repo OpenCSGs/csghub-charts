@@ -78,39 +78,18 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "portal") }}
-            - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
+                name: {{ include "common.names.custom" (list . "core") }}
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "casdoor") }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if .Values.global.objectStore.enabled }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "minio") }}
-            {{- end }}
+          {{- with .Values.portal.environments }}
           env:
-            - name: CSGHUB_PORTAL_LOGIN_URL
-              {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "casdoor.external.endpoint" .) }}
-              {{- $clientID := "client_id=$(STARHUB_SERVER_CASDOOR_CLIENT_ID)" }}
-              {{- $redirectURI := "redirect_uri=$(CSGHUB_PORTAL_STARHUB_BASE_URL)/api/v1/callback/casdoor&scope=read&state=casdoor" }}
-              value: "{{ printf "%s?%s&response_type=code&%s" $authorizeAPI $clientID $redirectURI }}"
-            {{- if .Values.global.objectStore.enabled }}
-            - name: CSGHUB_PORTAL_S3_ACCESS_KEY_ID
-              value: "$(MINIO_ROOT_USER)"
-            - name: CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET
-              value: "$(MINIO_ROOT_PASSWORD)"
-            - name: CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID
-              value: {{ .Values.portal.additionalObjectStore.accessKey | default "$(MINIO_ROOT_USER)" | quote }}
-            - name: CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET
-              value: {{ .Values.portal.additionalObjectStore.secretKey | default "$(MINIO_ROOT_PASSWORD)" | quote }}
-            {{- end }}
-            {{- with .Values.portal.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-            {{- end }}
+          {{- end }}
           resources:
             {{- if .Values.autoscaling.enabled }}
             requests:

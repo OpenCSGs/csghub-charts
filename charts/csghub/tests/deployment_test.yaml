@@ -7,12 +7,9 @@ templates:
   - deployment-accounting.yaml
   - deployment-user.yaml
   - deployment-notification.yaml
-  - configmap-server.yaml
+  - configmap-core.yaml
   - configmap-proxy-nginx.
   - configmap-gateway-rproxy.yaml
-  - configmap-gateway-moderation.yaml
-  - configmap-portal.yaml
-  - configmap-accounting.yaml
 tests:
   - it: global image should work and default ee
     templates:
