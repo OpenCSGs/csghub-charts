@@ -22,13 +22,14 @@ Returns: YAML configuration object with PostgreSQL connection parameters
   {{- /* Configuration priority: internal PostgreSQL (if enabled) > service-level external > global external */ -}}
 
   {{- /* Default configuration for internal PostgreSQL */ -}}
-  {{- $postgresqlName := include "common.names.custom" (list $global "postgresql") -}}
+  {{- $postgresSvc := $global.Values.postgresql }}
+  {{- $postgresqlName := include "common.names.custom" (list $global $postgresSvc.name) -}}
   {{- $postgresqlConfig := dict
     "host" $postgresqlName
-    "port" (include "csghub.svc.port" "postgresql")
-    "user" ($service.postgresql.user | default "postgres")
-    "password" (include "common.randomPassword" ($service.postgresql.user | default "postgres"))
-    "database" ($service.postgresql.database | default "postgres")
+    "port" ($postgresSvc.service.port)
+    "user" ($service.postgresql.user | default "csghub")
+    "password" (include "common.randomPassword" ($service.postgresql.user | default "csghub"))
+    "database" ($service.postgresql.database | default "csghub")
     "timezone" "Etc/UTC"
     "sslmode" "prefer"
   -}}
