@@ -35,7 +35,7 @@ data:
 
     ## storage configuration, expected in $HOME
     [[storage]]
-    name = "default"
+    name = {{ $service.storage | default "default" | quote }}
     path = "/var/opt/gitaly/repositories"
 
     [logging]

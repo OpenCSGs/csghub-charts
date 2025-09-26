@@ -375,6 +375,9 @@ gitaly:
     ## Network protocol
     protocol: TCP
 
+  ## Define gitaly storage
+  storage: "default"
+
   ## Log output level
   logging:
     level: "info"
