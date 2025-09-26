@@ -9,7 +9,7 @@ release:
 set:
   global:
     image:
-      registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      registry: ""
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
@@ -21,14 +21,14 @@ set:
   redis:
     name: "redis"
     image:
-      registry: ""
+      registry: "docker.io"
       repository: "redis"
       tag: "8.0.0"
       pullPolicy: ""
     service:
       type: "NodePort"
       port: 6378
-      protocol: UDP
+      protocol: TCP
     persistence:
       size: ""
 tests:
@@ -68,7 +68,7 @@ tests:
           value: 6378
       - equal:
           path: spec.ports[0].protocol
-          value: "UDP"
+          value: "TCP"
       - equal:
           path: spec.ports[0].name
           value: "redis"
@@ -99,7 +99,7 @@ tests:
           value: "acr-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/redis:8.0.0"
+          value: "docker.io/redis:8.0.0"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
@@ -116,11 +116,11 @@ tests:
   - it: Should render statefulset with local correctly
     template: redis/statefulset.yaml
     set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
       redis:
         image:
-          registry: "docker.io"
-          repository: "redis"
-          tag: "7.2.5"
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
         persistence:
@@ -135,7 +135,7 @@ tests:
           value: "docker-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/redis:7.2.5"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/redis:8.0.0"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"

@@ -20,7 +20,7 @@ set:
       service:
         type: LoadBalancer
     image:
-      registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      registry: ""
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
@@ -32,7 +32,7 @@ set:
   minio:
     name: "minio"
     image:
-      registry: ""
+      registry: "docker.io"
       repository: "minio/minio"
       tag: "2025.10.01"
       pullPolicy: ""
@@ -123,10 +123,10 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/busybox:latest"
+          value: "docker.io/busybox:latest"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/minio/minio:2025.10.01"
+          value: "docker.io/minio/minio:2025.10.01"
       - equal:
           path: spec.template.spec.volumes[0].configMap.defaultMode
           value: 0744
@@ -203,7 +203,7 @@ tests:
           value: "acr-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/minio/minio:2025.10.01"
+          value: "docker.io/minio/minio:2025.10.01"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
@@ -220,9 +220,11 @@ tests:
   - it: Should render deployment with local correctly
     template: minio/statefulset.yaml
     set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
       minio:
         image:
-          registry: "docker.io"
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
         persistence:
@@ -237,7 +239,7 @@ tests:
           value: "docker-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/minio/minio:2025.10.01"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/minio/minio:2025.10.01"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"

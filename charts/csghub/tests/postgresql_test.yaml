@@ -10,7 +10,7 @@ release:
 set:
   global:
     image:
-      registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      registry: ""
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
@@ -22,7 +22,7 @@ set:
   postgresql:
     name: "postgresql"
     image:
-      registry: ""
+      registry: "docker.io"
       repository: "opencsghq/postgres"
       tag: "17.0"
       pullPolicy: ""
@@ -132,7 +132,7 @@ tests:
           value: "acr-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:17.0"
+          value: "docker.io/opencsghq/postgres:17.0"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
@@ -152,11 +152,11 @@ tests:
   - it: Should render deployment with local correctly
     template: postgresql/statefulset.yaml
     set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
       postgresql:
         image:
-          registry: "docker.io"
-          repository: "opencsghq/postgres"
-          tag: "16.10"
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
         environments:
@@ -173,7 +173,7 @@ tests:
           value: "docker-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/postgres:16.10"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:17.0"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"

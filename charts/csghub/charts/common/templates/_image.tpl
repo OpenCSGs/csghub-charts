@@ -21,7 +21,7 @@ Returns: Full image path in format "registry/repository:tag"
   {{- $globalImage := default dict $context.Values.global.image -}}
 
   {{- /* Merge global and local image configuration with priority */ -}}
-  {{- $registry := or $localImage.registry $globalImage.registry -}}
+  {{- $registry := or $globalImage.registry $localImage.registry -}}
   {{- $repository := or $localImage.repository $globalImage.repository -}}
   {{- $tag := or $localImage.tag $globalImage.tag -}}
 
@@ -67,7 +67,7 @@ Returns: Full image path in format "registry/repository"
     {{- end -}}
   {{- end -}}
 
-  {{- $registry := or $localImage.registry $globalImage.registry -}}
+  {{- $registry := or $globalImage.registry $localImage.registry -}}
 
   {{- /* Adjust repository path for OpenCSG registry */ -}}
   {{- if and $registry (regexMatch "^opencsg-registry" $registry) -}}

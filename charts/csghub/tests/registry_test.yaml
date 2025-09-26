@@ -19,7 +19,7 @@ set:
       service:
         type: LoadBalancer
     image:
-      registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      registry: ""
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     objectStore:
@@ -35,7 +35,7 @@ set:
   registry:
     name: "registry"
     image:
-      registry: ""
+      registry: "docker.io"
       repository: "registry"
       tag: "2.8.5"
       pullPolicy: ""
@@ -218,7 +218,7 @@ tests:
           value: "acr-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/registry:2.8.5"
+          value: "docker.io/registry:2.8.5"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
@@ -226,6 +226,9 @@ tests:
   - it: Should render deployment with local correctly
     template: registry/deployment.yaml
     set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
       registry:
         image:
           registry: "docker.io"
@@ -239,7 +242,7 @@ tests:
           value: "docker-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/registry:2.8.5"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/registry:2.8.5"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
