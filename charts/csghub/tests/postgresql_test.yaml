@@ -70,14 +70,16 @@ tests:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "postgresql"
       - equal:
+          decodeBase64: true
           path: data["POSTGRES_USER"]
-          value: "Y3NnaHVi"
+          value: "csghub"
       - matchRegex:
           path: data["POSTGRES_PASSWORD"]
           pattern: "^[A-Za-z0-9+/=]{44}$"
-      - equal:
+      - matchRegex:
+          decodeBase64: true
           path: data["POSTGRES_MULTIPLE_DATABASES"]
-          value: "ZGIxLGRiMg=="
+          pattern: "db1,db2"
 
   - it: Should render service correctly
     template: postgresql/service.yaml

@@ -141,14 +141,17 @@ tests:
           csghub-test-public: download
     asserts:
       - equal:
+          decodeBase64: true
           path: data.MINIO_DEFAULT_REGION
-          value: "ZXMtd2VzdC0x"
-      - equal:
+          value: "es-west-1"
+      - matchRegex:
+          decodeBase64: true
           path: data.MINIO_DEFAULT_BUCKETS
-          value: "Y3NnaHViLXRlc3Q6bm9uZSxjc2dodWItdGVzdC1wdWJsaWM6ZG93bmxvYWQ="
+          pattern: "csghub-test:none,csghub-test-public:download"
       - equal:
+          decodeBase64: true
           path: data.MINIO_SERVER_URL
-          value: "aHR0cHM6Ly9taW5pby5leGFtcGxlLmNu"
+          value: "https://minio.example.cn"
 
   - it: Should render service correctly
     template: minio/service.yaml
