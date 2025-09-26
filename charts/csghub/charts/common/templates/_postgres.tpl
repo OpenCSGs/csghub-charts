@@ -7,7 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 Generate PostgreSQL Connection Configuration
 
 Usage:
-{{ include "csghub.postgresql.config" (dict "service" .Values.servicename "global" .) }}
+{{ include "common.postgresql.config" (dict "service" .Values.servicename "global" .) }}
 
 Parameters:
 - service: Service-specific configuration values (e.g., .Values.api)
@@ -15,7 +15,7 @@ Parameters:
 
 Returns: YAML configuration object with PostgreSQL connection parameters
 */}}
-{{- define "csghub.postgresql.config" -}}
+{{- define "common.postgresql.config" -}}
   {{- $service := .service -}}
   {{- $global := .global -}}
 
@@ -101,6 +101,6 @@ Returns: PostgreSQL connection string in DSN format
 {{- define "csghub.postgresql.dsn" -}}
   {{- $service := .service -}}
   {{- $global := .global -}}
-  {{- $config := include "csghub.postgresql.config" (dict "service" $service "global" $global) | fromYaml -}}
+  {{- $config := include "common.postgresql.config" (dict "service" $service "global" $global) | fromYaml -}}
   {{- printf "host=%s port=%s user=%s password=%s dbname=%s sslmode=%s" $config.host $config.port $config.user $config.password $config.database $config.sslmode -}}
 {{- end -}}
