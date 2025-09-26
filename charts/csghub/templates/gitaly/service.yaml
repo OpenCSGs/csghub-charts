@@ -1,0 +1,28 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.global.gitaly.enabled }}
+{{- $service := .Values.gitaly }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: {{ $service.service.type }}
+  clusterIP: None
+  ports:
+    - port: {{ $service.service.port }}
+      targetPort: 8075
+      protocol: {{ $service.service.protocol }}
+      name: {{ $service.name }}
+  selector:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}

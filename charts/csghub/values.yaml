@@ -4,7 +4,7 @@ global:
     ## Define other ingressClass types compatible with ingress-nginx
     # className: "nginx"
     ## Domain name for accessing csghub
-    domain: example.com
+    domain: msens.cn
     ## Whether to use the top-level domain directly for access
     ## If true, access via domain only (example.com)
     ## If false, access via subdomain+domain (csghub.example.com)
@@ -22,6 +22,7 @@ global:
   ## Global image settings
   image:
     ## Image registry URL (without trailing slash)
+    ## 【 CAUTION 】THIS WILL OVERWRITE LOCAL IMAGE REGISTRY
     # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
     ## Image tag format: {{version}}-{{edition}} (eg: v1.8.1-ee)
     tag: "v1.11.0"
@@ -102,6 +103,23 @@ global:
       # password: ""
       ## Disable TLS/SSL encryption for the registry connection
       # insecure: false
+
+  ## Gitaly configuration
+  gitaly:
+    ## Use built-in (true) or external (false) gitaly
+    enabled: true
+    ## External Gitaly configuration
+    external: {}
+      ## Connection scheme for Gitaly (tcp, tls, unix)
+      # scheme: "tcp"
+      ## Hostname or IP address of the external Gitaly server
+      # host: "<gitaly_host>"
+      ## Port number for the Gitaly connection
+      # port: 8075
+      ## Authentication token for Gitaly connection
+      # token: ""
+      ## Storage name for Gitaly repositories
+      # storage: "default"
 
 ## Embedded PostgreSQL configuration
 postgresql:
@@ -329,6 +347,57 @@ registry:
     ## URL format: http://endpoint/bucket/object-key
     ## When false: http://bucket.endpoint/object-key
     # pathStyle: true
+
+## Built-in Gitaly Configuration
+gitaly:
+  ## Resource name prefix
+  name: "gitaly"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "registry.gitlab.com"
+    ## PostgreSQL image repository
+    repository: "gitlab-org/build/cng/gitaly"
+    ## Image version tag
+    tag: "v17.5.0"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 8075
+    ## Network protocol
+    protocol: TCP
+
+  ## Log output level
+  logging:
+    level: "info"
+
+  ## Data persistence settings
+  persistence:
+    ## StorageClass for dynamic provisioning
+    # storageClass: ""
+    ## Volume access permissions
+    # accessMode: ["ReadWriteOnce"]
+    ## Disk space allocation
+    size: 200Gi
+
+## Built-in CSGHub Server Configuration
+server:
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 8080
+    ## Network protocol
+    protocol: TCP
 
 ## Reloader Configuration
 reloader:
