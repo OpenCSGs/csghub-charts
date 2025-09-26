@@ -1,0 +1,156 @@
+suite: Test Gitlab-Shell Resources
+templates:
+  - gitlab-shell/configmap.yaml
+  - gitlab-shell/rbac.yaml
+  - gitlab-shell/job.yaml
+  - gitlab-shell/service.yaml
+  - gitlab-shell/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      enabled: true
+      domain: example.cn
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+  gitlabShell:
+    name: "gitlab-shell"
+    image:
+      registry: "registry.gitlab.com"
+      repository: "gitlab-org/build/cng/gitlab-shell"
+      tag: "v17.6.0"
+      pullPolicy: ""
+    service:
+      type: "ClusterIP"
+      port: 2222
+      protocol: TCP
+    rbac:
+      create: true
+    securityContext:
+      runAsUser: 0
+tests:
+  - it: Should render all resources correctly
+    templates:
+      - gitlab-shell/configmap.yaml
+      - gitlab-shell/job.yaml
+      - gitlab-shell/service.yaml
+      - gitlab-shell/deployment.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+
+  - it: Should render configmap correctly
+    template: gitlab-shell/configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isNotNullOrEmpty:
+          path: data[".gitaly_token"]
+          documentSelector:
+            path: metadata.name
+            value: "csghub-gitlab-shell"
+      - isNotNullOrEmpty:
+          path: data["config.yaml"]
+          documentSelector:
+            path: metadata.name
+            value: "csghub-gitlab-shell"
+      - isNotNullOrEmpty:
+          path: data["generate_ssh_keys.sh"]
+          documentSelector:
+            path: metadata.name
+            value: "csghub-gitlab-shell-init"
+
+  - it: Should render rbac correctly
+    template: gitlab-shell/rbac.yaml
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: Should render rbac correctly
+    template: gitlab-shell/rbac.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: Role
+      - contains:
+          path: rules[0].resources
+          content: "secrets"
+      - contains:
+          path: rules[0].verbs
+          content: "get"
+      - contains:
+          path: rules[0].verbs
+          content: "patch"
+      - contains:
+          path: rules[0].verbs
+          content: "create"
+
+  - it: Should render job correctly
+    template: gitlab-shell/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 0
+
+  - it: Should render deployment with global correctly
+    template: gitlab-shell/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.gitlab.com/gitlab-org/build/cng/gitlab-shell:v17.6.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+
+  - it: Should render deployment with local correctly
+    template: gitlab-shell/deployment.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      gitlabShell:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/gitlab-org/build/cng/gitlab-shell:v17.6.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"

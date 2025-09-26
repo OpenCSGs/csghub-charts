@@ -1,0 +1,134 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := .Values.gitlabShell }}
+{{- if $service.rbac.create }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    helm.sh/hook: pre-install, pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  parallelism: 1
+  completions: 1
+  activeDeadlineSeconds: 300
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  completionMode: "Indexed"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/service: {{ $service.name }}
+        {{- if $service.podLabels }}
+          {{- toYaml $service.podLabels | nindent 8 }}
+        {{- else }}
+          {{- include "common.labels" . | nindent 8 }}
+        {{- end }}
+      annotations:
+      {{- if $service.podAnnotations }}
+        {{- toYaml $service.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: "OnFailure"
+      terminationGracePeriodSeconds: {{ $service.terminationGracePeriodSeconds | default 30 }}
+      {{- if $service.rbac.create }}
+      serviceAccountName: {{ $serviceName }}
+      automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
+      {{- end }}
+      {{- with (or $service.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ $serviceName }}
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "redis" "image" "bitnami/kubectl:latest") }}
+          imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
+          command: [ "/scripts/generate_ssh_keys.sh" ]
+          {{- with $service.environments }}
+          env:
+          {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if $service.resources }}
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $service.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if $service.startupProbe }}
+          startupProbe:
+            {{- toYaml $service.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if $service.securityContext }}
+          securityContext:
+            {{- toYaml $service.securityContext | nindent 12 }}
+          {{- end }}
+          {{- if $service.lifecycle }}
+          lifecycle:
+            {{- toYaml $service.lifecycle | nindent 12 }}
+          {{- end }}
+          {{- if $service.stdin }}
+          stdin: {{ $service.stdin }}
+          {{- end }}
+          {{- if $service.tty }}
+          tty: {{ $service.tty }}
+          {{- end }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ printf "%s-init" $serviceName }}
+            defaultMode: 0744
+      {{- if $service.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $service.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $service.tolerations }}
+      tolerations:
+        {{- toYaml $service.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if $service.affinity }}
+      affinity:
+        {{- toYaml $service.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $service.podSecurityContext }}
+      securityContext:
+        {{- toYaml $service.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if $service.hostname }}
+      hostname: {{ $service.hostname }}
+      {{- end }}
+      {{- if $service.subdomain }}
+      subdomain: {{ $service.subdomain }}
+      {{- end }}
+{{- end }}

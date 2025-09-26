@@ -4,7 +4,7 @@ global:
     ## Define other ingressClass types compatible with ingress-nginx
     # className: "nginx"
     ## Domain name for accessing csghub
-    domain: msens.cn
+    domain: example.com
     ## Whether to use the top-level domain directly for access
     ## If true, access via domain only (example.com)
     ## If false, access via subdomain+domain (csghub.example.com)
@@ -391,8 +391,47 @@ gitaly:
     ## Disk space allocation
     size: 200Gi
 
+## Built-in Gitaly Configuration
+gitlabShell:
+  ## Resource name prefix
+  name: "gitlab-shell"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "registry.gitlab.com"
+    ## PostgreSQL image repository
+    repository: "gitlab-org/build/cng/gitlab-shell"
+    ## Image version tag
+    tag: "v17.5.0"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 22
+    ## Network protocol
+    protocol: TCP
+
+  ## RBAC configuration
+  ## Enable to patch ingress tcp configuration
+  rbac:
+    create: true
+
+  ## securityContext configuration
+  securityContext:
+    runAsUser: 0
+
 ## Built-in CSGHub Server Configuration
 server:
+  ## Resource name prefix
+  name: "server"
+
   ## Service configuration
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)

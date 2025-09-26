@@ -198,7 +198,7 @@ tests:
           path: spec.ports[0].port
           value: 5001
 
-  - it: Should render statefulset with global correctly
+  - it: Should render deployment with global correctly
     template: registry/deployment.yaml
     asserts:
       - equal:
@@ -231,7 +231,6 @@ tests:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
       registry:
         image:
-          registry: "docker.io"
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
         nodeSelector:
