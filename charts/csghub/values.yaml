@@ -86,6 +86,23 @@ global:
       ## Use path-style addressing for the bucket (vs virtual-hosted style)
       # pathStyle: true
 
+  ## Container Registry configuration
+  registry:
+    ## Use built-in (true) or external (false) container registry
+    enabled: true
+    ## External Container Registry configuration
+    external: {}
+      ## URL of the external container registry
+      # registry: "registry-1.docker.io"
+      ## Repository namespace in the external registry
+      # repository: "csghub"
+      ## Username for authenticating with the external registry
+      # username: "registry"
+      ## Password for authenticating with the external registry
+      # password: ""
+      ## Disable TLS/SSL encryption for the registry connection
+      # insecure: false
+
 ## Embedded PostgreSQL configuration
 postgresql:
   ## Resource name prefix
@@ -214,14 +231,14 @@ minio:
   ingress:
     ## Enable or disable ingress.
     enabled: true
+    ## Ingress-nginx annotations
+    annotations: {}
     ## TLS settings for ingress.
     tls: {}
       ## Enable or disable TLS.
       # enabled: false
       ## If tls enabled, a secret needs to be provided
       # secretName: ""
-    ## Ingress-nginx annotations
-    annotations: {}
 
   ## Region
   region: "cn-north-1"
@@ -229,7 +246,8 @@ minio:
   ## Buckets to be created
   ## Add new bucket eg: <bucket_name>: <policy>
   ## Policy: https://docs.min.io/community/minio-object-store/reference/minio-mc/mc-anonymous-set.html#mc.anonymous.set
-  buckets: {}
+  buckets:
+    csghub-registry: "none"
 
   ## Data persistence settings
   persistence:
@@ -239,6 +257,78 @@ minio:
     # accessMode: ["ReadWriteOnce"]
     ## Disk space allocation
     size: 500Gi
+
+## Built-in Registry Configuration
+registry:
+  ## Resource name prefix
+  name: "registry"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "docker.io"
+    ## PostgreSQL image repository
+    repository: "registry"
+    ## Image version tag
+    tag: "2.8.3"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 5000
+    ## Network protocol
+    protocol: TCP
+
+  ## Configuration for ingress.
+  ingress:
+    ## Enable or disable ingress.
+    enabled: true
+    ## Ingress-nginx annotations
+    annotations: {}
+    ## TLS settings for ingress.
+    tls: {}
+      ## Enable or disable TLS.
+      # enabled: false
+      ## If tls enabled, a secret needs to be provided
+      # secretName: ""
+
+  ## Configuration for logging
+  logging:
+    ## log level, enums error, warn, info, and debug
+    level: "info"
+    ## Formatter log, enums json, text, logstash
+    formatter: "json"
+    ## Enable access log
+    accesslog: true
+
+  ## External Object Storage Service Configuration (OSS/S3 Compatible)
+  objectStore: {}
+    ## Endpoint URL for accessing the object storage service
+    ## Example: "https://oss-cn-beijing.aliyuncs.com" or "http://minio.example.com:9000"
+    # endpoint: ""
+    ## Access Key ID for authentication
+    # accessKey: ""
+    ## Secret Access Key for authentication
+    # accessSecret: ""
+    ## Bucket name to be used in the object storage service
+    # bucket: "csghub-registry"
+    ## Region where the bucket is located
+    ## Example: "us-east-1", "cn-beijing"
+    # region: ""
+    ## Use secure TLS certificates (skip certificate verification if false)
+    # secure: false
+    ## Enable TLS encryption for connections
+    # encrypt: false
+    ## When true, bucket name is included in URL path
+    ## URL format: http://endpoint/bucket/object-key
+    ## When false: http://bucket.endpoint/object-key
+    # pathStyle: true
 
 ## Reloader Configuration
 reloader:

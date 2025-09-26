@@ -1,0 +1,35 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.global.registry.enabled }}
+{{- $service := .Values.registry }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $s3Config := include "common.s3.config" (dict "service" $service "global" .) | fromYaml }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  REGISTRY_AUTH: "htpasswd"
+  REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+  REGISTRY_AUTH_HTPASSWD_PATH: "/auth/htpasswd"
+  REGISTRY_LOG_LEVEL: {{ $service.logging.level | default "info" }}
+  REGISTRY_LOG_FORMATTER: {{ $service.logging.formatter | default "json" }}
+  REGISTRY_LOG_ACCESSLOG_DISABLED: {{ not $service.logging.accesslog | quote }}
+  REGISTRY_STORAGE: s3
+  REGISTRY_STORAGE_REDIRECT_DISABLE: "true"
+  REGISTRY_STORAGE_S3_REGIONENDPOINT: {{ $s3Config.endpoint | quote }}
+  REGISTRY_STORAGE_S3_ACCESSKEY: {{ $s3Config.accessKey | quote }}
+  REGISTRY_STORAGE_S3_SECRETKEY: {{ $s3Config.secretKey | quote }}
+  REGISTRY_STORAGE_S3_REGION: {{ $s3Config.region | quote }}
+  REGISTRY_STORAGE_S3_BUCKET: {{ $s3Config.bucket | quote }}
+  REGISTRY_STORAGE_S3_ENCRYPT: {{ $s3Config.encrypt | quote }}
+  REGISTRY_STORAGE_S3_SECURE: {{ $s3Config.secure | quote }}
+  REGISTRY_STORAGE_S3_FORCEPATHSTYLE: {{ $s3Config.pathStyle | quote }}
+{{- end }}
