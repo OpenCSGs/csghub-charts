@@ -6,6 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- if .Values.global.gitaly.enabled }}
 {{- $service := .Values.gitaly }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,6 +16,11 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
+  {{- $defaultPass := include "common.randomPassword" $service.name }}
+  {{- $secretPass := "" }}
+  {{- with and $existingSecret $existingSecret.data }}
+    {{- $secretPass = index $existingSecret.data "GITALY_TOKEN" | b64dec }}
+  {{- end }}
   config.toml: |
     ## Gitaly configuration (default)
     ## The directory where Gitaly's executables are stored
@@ -38,11 +44,11 @@ data:
     dir = "/var/log/gitaly"
 
     [auth]
-    token = {{ include "common.randomPassword" $service.name | quote }}
+    token = {{ $secretPass | default $defaultPass | quote }}
 
     [gitlab]
     ## URL of the GitLab server.
-    {{- $serverSvc := include "common.names.custom" (list . "server") }}
+    {{- $serverSvc := include "common.names.custom" (list . .Values.server.name) }}
     url = {{ printf "http://%s:%s" $serverSvc (.Values.server.service.port | toString) | quote }}
     ## 'relative_url_root' is only needed if a UNIX socket is used in 'url' and GitLab is configured to
     ## use a relative path. For example, '/gitlab'.
