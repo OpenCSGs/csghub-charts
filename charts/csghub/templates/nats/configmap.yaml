@@ -1,0 +1,56 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := .Values.nats }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  nats-server.conf: |
+    ## Logging
+    trace:   true
+    logtime: true
+
+    ## Client port of 4222 on all interfaces
+    port: 4222
+
+    # HTTP monitoring port
+    monitor_port: 8222
+
+    jetstream: enabled
+    jetstream {
+      store_dir: /data/jetstream
+      max_mem: 8G
+      max_file: 10G
+    }
+
+    authorization {
+      ADMIN = {
+        publish = ">"
+        subscribe = ">"
+      }
+      {{- $defaultUser := "natsadmin" }}
+      {{- $defaultPass := include "common.randomPassword" $service.name }}
+      {{- $secretUser := "" }}
+      {{- $secretPass := "" }}
+      {{- with and $existingSecret $existingSecret.data }}
+        {{- $secretUser = index $existingSecret.data "NATS_USERNAME" | b64dec }}
+        {{- $secretPass = index $existingSecret.data "NATS_PASSWORD" | b64dec }}
+      {{- end }}
+      users = [
+        {
+          user: {{ $secretUser | default $defaultUser | quote }},
+          password: {{ $secretPass | default $defaultPass | quote }},
+          permissions: $ADMIN
+        }
+      ]
+    }

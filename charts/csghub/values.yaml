@@ -427,6 +427,42 @@ gitlabShell:
   securityContext:
     runAsUser: 0
 
+## Built-in NATS Configuration
+nats:
+  ## Resource name prefix
+  name: "nats"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "docker.io"
+    ## PostgreSQL image repository
+    repository: "nats"
+    ## Image version tag
+    tag: "2.10.16"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 4222
+    ## Network protocol
+    protocol: TCP
+
+  ## Data persistence settings
+  persistence:
+    ## StorageClass for dynamic provisioning
+    # storageClass: ""
+    ## Volume access permissions
+    # accessMode: ["ReadWriteOnce"]
+    ## Disk space allocation
+    size: 10Gi
+
 ## Built-in CSGHub Server Configuration
 server:
   ## Resource name prefix

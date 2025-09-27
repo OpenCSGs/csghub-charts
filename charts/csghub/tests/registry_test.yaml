@@ -80,7 +80,6 @@ tests:
           path: data.REGISTRY_STORAGE_S3_REGIONENDPOINT
           value: "http://csghub-minio:9000"
       - equal:
-          base64decode: true
           path: data.REGISTRY_STORAGE_S3_ACCESSKEY
           value: "minio"
       - matchRegex:
@@ -125,11 +124,9 @@ tests:
           path: data.REGISTRY_STORAGE_S3_REGIONENDPOINT
           value: "https://s3.example.com"
       - equal:
-          base64decode: true
           path: data.REGISTRY_STORAGE_S3_ACCESSKEY
           value: "testUser"
       - equal:
-          base64decode: true
           path: data.REGISTRY_STORAGE_S3_SECRETKEY
           value: "testPassword"
       - equal:

@@ -1,8 +1,9 @@
-suite: Test Redis Resources
+suite: Test NATS Resources
 templates:
-  - redis/secret.yaml
-  - redis/service.yaml
-  - redis/statefulset.yaml
+  - nats/configmap.yaml
+  - nats/secret.yaml
+  - nats/service.yaml
+  - nats/statefulset.yaml
 release:
   name: csghub
   namespace: csghub
@@ -16,90 +17,76 @@ set:
       storageClass: "nfs-provisioner"
       accessModes: ["ReadWriteOnce", "ReadWriteMany"]
       size: "25Gi"
-    redis:
-      enabled: true
-  redis:
-    name: "redis"
+  nats:
+    name: "nats"
     image:
       registry: "docker.io"
-      repository: "redis"
-      tag: "8.0.0"
+      repository: "nats"
+      tag: "2.10.18"
       pullPolicy: ""
-    service:
-      type: "NodePort"
-      port: 6378
-      protocol: TCP
     persistence:
       size: ""
 tests:
-  - it: Should render secret correctly
-    template: redis/secret.yaml
-    set:
-      redis:
-        requirePass: true
+  - it: Should render all resources correctly
+    templates:
+      - nats/configmap.yaml
+      - nats/secret.yaml
+      - nats/service.yaml
+      - nats/statefulset.yaml
     asserts:
       - equal:
           path: metadata.name
-          value: "csghub-redis"
+          value: "csghub-nats"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: "redis"
+          value: "nats"
+
+  - it: Should render configmap correctly
+    template: nats/configmap.yaml
+    asserts:
+      - isNotNullOrEmpty:
+          path: data["generate_ssh_keys.sh"]
+
+  - it: Should render secret correctly
+    template: nats/secret.yaml
+    asserts:
+      - equal:
+          decodeBase64: true
+          path: data["NATS_USERNAME"]
+          value: "natsadmin"
       - matchRegex:
-          path: data["REDIS_PASSWD"]
-          pattern: "^[A-Za-z0-9+/=]{44}$"
+          decodeBase64: true
+          path: data["NATS_PASSWORD"]
+          pattern: "^[A-Za-z0-9+/=]{32}$"
 
   - it: Should render service correctly
-    template: redis/service.yaml
+    template: nats/service.yaml
     asserts:
-      - equal:
-          path: metadata.name
-          value: "csghub-redis"
-      - equal:
-          path: metadata.labels["app.kubernetes.io/service"]
-          value: "redis"
       - equal:
           path: spec.selector["app.kubernetes.io/service"]
-          value: "redis"
-      - equal:
-          path: spec.type
-          value: "NodePort"
-      - equal:
-          path: spec.ports[0].port
-          value: 6378
-      - equal:
-          path: spec.ports[0].protocol
-          value: "TCP"
-      - equal:
-          path: spec.ports[0].name
-          value: "redis"
+          value: "nats"
 
   - it: Should render statefulset with global correctly
-    template: redis/statefulset.yaml
+    template: nats/statefulset.yaml
     asserts:
       - equal:
-          path: metadata.name
-          value: "csghub-redis"
-      - equal:
-          path: metadata.labels["app.kubernetes.io/service"]
-          value: "redis"
-      - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/service"]
-          value: "redis"
+          value: "nats"
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/service"]
-          value: "redis"
+          value: "nats"
       - equal:
           path: metadata.annotations["reloader.stakater.com/auto"]
           value: "true"
       - equal:
           path: spec.serviceName
-          value: "csghub-redis"
+          value: "csghub-nats"
       - equal:
           path: spec.template.spec.imagePullSecrets[0].name
           value: "acr-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/redis:8.0.0"
+          value: "docker.io/nats:2.10.18"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
@@ -114,12 +101,12 @@ tests:
           value: "25Gi"
 
   - it: Should render statefulset with local correctly
-    template: redis/statefulset.yaml
+    template: nats/statefulset.yaml
     set:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-      redis:
+      nats:
         image:
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
@@ -127,15 +114,13 @@ tests:
           accessModes: ["ReadWriteOnce"]
           storageClass: "hostPath"
           size: "5Gi"
-        nodeSelector:
-          diskType: ssd
     asserts:
       - equal:
           path: spec.template.spec.imagePullSecrets[0].name
           value: "docker-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/redis:8.0.0"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nats:2.10.18"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -145,9 +130,6 @@ tests:
       - equal:
           path: spec.volumeClaimTemplates[0].spec.storageClassName
           value: "hostPath"
-      - equal:
-          path: spec.template.spec.nodeSelector.diskType
-          value: "ssd"
       - equal:
           path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
           value: "5Gi"
