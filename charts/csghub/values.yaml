@@ -149,7 +149,7 @@ postgresql:
     protocol: TCP
 
   ## Databases to create on startup
-  databases: ["csghub"]
+  databases: ["csghub", "csghub_casdoor"]
   ## Format:
   ## - databaseName
 
@@ -462,6 +462,62 @@ nats:
     # accessMode: ["ReadWriteOnce"]
     ## Disk space allocation
     size: 10Gi
+
+## Built-in Casdoor Configuration
+casdoor:
+  ## Resource name prefix
+  name: "casdoor"
+
+  ## Init Admin user, default "root"
+  admin: {}
+    # name: root
+    # password: ""
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Docker registry secrets
+    pullSecrets: []
+    ## Container registry URL
+    registry: "docker.io"
+    ## PostgreSQL image repository
+    repository: "casbin/casdoor"
+    ## Image version tag
+    tag: "v1.799.0"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Database service port
+    port: 8000
+    ## Network protocol
+    protocol: TCP
+
+  ## Configuration for ingress.
+  ingress:
+    ## Enable or disable ingress.
+    enabled: true
+    ## Ingress-nginx annotations
+    annotations: {}
+    ## TLS settings for ingress.
+    tls: {}
+      ## Enable or disable TLS.
+      # enabled: false
+      ## If tls enabled, a secret needs to be provided
+      # secretName: ""
+
+  ## Database configuration
+  postgresql:
+    ## PostgreSQL connection settings
+    # host: "<pg_host>"
+    # port: 5432
+    database: "csghub_casdoor"
+    # user: "csghub"
+    # password: ""
+    # timezone: "Etc/UTC"
+    # sslmode: "prefer"
 
 ## Built-in CSGHub Server Configuration
 server:

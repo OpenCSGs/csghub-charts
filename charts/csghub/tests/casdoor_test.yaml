@@ -1,0 +1,274 @@
+suite: Test Casdoor Resources
+templates:
+  - casdoor/configmap.yaml
+  - casdoor/ingress.yaml
+  - casdoor/job.yaml
+  - casdoor/secret.yaml
+  - casdoor/service.yaml
+  - casdoor/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      enabled: true
+      domain: example.cn
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    persistence:
+      storageClass: "nfs-provisioner"
+      accessModes: ["ReadWriteOnce", "ReadWriteMany"]
+      size: "25Gi"
+    postgresql:
+      enabled: true
+  casdoor:
+    name: "casdoor"
+    image:
+      registry: "docker.io"
+      repository: "casbin/casdoor"
+      tag: "v1.800.0"
+      pullPolicy: ""
+    service:
+      type: "ClusterIP"
+      port: 8002
+      protocol: TCP
+    ingress:
+      enabled: true
+    admin: {}
+    postgresql:
+      database: "csghub_casdoor"
+tests:
+  - it: Should render all resources correctly
+    templates:
+      - casdoor/configmap.yaml
+      - casdoor/ingress.yaml
+      - casdoor/job.yaml
+      - casdoor/service.yaml
+      - casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+
+  - it: Should render configmap correctly
+    template: casdoor/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "dataSourceName\\s*=\\s*\"postgresql://csghub:[A-Za-z0-9+/=]{32}@csghub-postgresql:5432/csghub_casdoor\\?sslmode=disable\""
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "origin\\s*=\\s*\"https?://casdoor.example.cn\""
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "websiteUrl":\s*"https?://casdoor\.example\.cn"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "homepageUrl":\s*"https?://casdoor\.example\.cn"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "https?://casdoor\.example\.cn"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "name":\s*"root"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "password":\s*".{60}"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "displayName":\s*"root"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "email":\s*"root.example.cn"
+      - isNotNullOrEmpty:
+          path: data["update_casdoor_conf.sql"]
+
+  - it: Should render ingress correctly
+    template: casdoor/ingress.yaml
+    asserts:
+      - contains:
+          path: spec.tls[0].hosts
+          content: "casdoor.example.cn"
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls"
+      - equal:
+          path: spec.rules[0].host
+          value: "casdoor.example.cn"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: "csghub-casdoor"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8002
+
+  - it: Should render ingress correctly with console enabled
+    template: casdoor/ingress.yaml
+    set:
+      casdoor:
+        ingress:
+          tls:
+            secretName: "example-cn-tls-local"
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls-local"
+
+  - it: Should render job correctly
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/busybox:latest"
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "EXTERNAL_ENDPOINT"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "https://casdoor.example.cn"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.defaultMode
+          value: 0744
+
+  - it: Should render secret correctly
+    template: casdoor/secret.yaml
+    set:
+      casdoor:
+        admin:
+          name: "adminUser"
+          password: "adminPassword"
+    documentIndex: 0
+    asserts:
+      - equal:
+          decodeBase64: true
+          path: data.INIT_ADMIN_USER
+          value: "adminUser"
+      - matchRegex:
+          decodeBase64: true
+          path: data.INIT_ADMIN_PASSWORD
+          pattern: "adminPassword"
+      - matchRegex:
+          decodeBase64: true
+          path: data.INIT_ADMIN_HTPASSWD
+          pattern: ".{60}"
+
+  - it: Should render secret correctly
+    template: casdoor/secret.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: data["tls.crt"]
+          value: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUUzVENDQXNXZ0F3SUJBZ0lEQWVKQU1BMEdDU3FHU0liM0RRRUJDd1VBTUNneERqQU1CZ05WQkFvVEJXRmsKYldsdU1SWXdGQVlEVlFRREV3MWpaWEowTFdKMWFXeDBMV2x1TUI0WERUSTBNRGd4TXpBMk5UVTFNMW9YRFRRMApNRGd4TXpBMk5UVTFNMW93S0RFT01Bd0dBMVVFQ2hNRllXUnRhVzR4RmpBVUJnTlZCQU1URFdObGNuUXRZblZwCmJIUXRhVzR3Z2dJaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQ0R3QXdnZ0lLQW9JQ0FRQ2gwOE1pUmFELy92bUwKRnEvMUlEY29RYjdycGdrb0lSWDlmaGx4SlIwTklSdEdpUTJVZ3p1dTRkM01sZE5TczB4cFRldFp1N1hVNGdtQwozaThhY3I4Ynd2VHUxUW5oSW45Mi9qa2M3Rk1jYlBPL1dDZEV4dVRIWmhZbENRT2lRMTBXb3hTVmp1NlQxdmlaCjUybE5BMDdrN0lqNitRTHlNN0hLME9FelBDNG00QlhkamFHMm84ZHYwYjdvODB2UmRDdG1oVXNPOUVFNFFpWTMKMUdGcnNlS0dQZktXRkFnNmJmLzVMd2N1VzY0b25XL2RKakJnNEU3bTd0WmxYbmhQQ1VLMFdURWhoNUlyeGdUNwpFMmtWMUJmMmxVZ3c0QWlQbWZacEN1SXJ4bzJyOGpLZlJJTUd5QnlxK0VvRzRYKzhCQmNpN0gxM01rclFwa3R2CjlQbWtBWHRXeTFEMkFDRnI4ZThGTTZKZ0NIVlhYSEJuYTZISnhzVVhJRXVhY2VMZWJyWEg4YmUyOVVKY0VIbncKdFFPR0pSTzgvMmF4V2E2ajZ6VkxHVUFoWWxWWUhjZzZOSWtyVjhDbEhWWUhTR3NTc2pSd3Z0aUxZMTB0MVBMaApjN0JlVFhTYlhMU1M3RlFJZVk4SmlKUU5zZlZobERTTWltdXA1Z3dZQlpycUlXNzE5SUNDL2V6M0ZZdXYveWtFCnUxOVBaajg2SThHNnAvTE1LM29WcStlckgrZGErdVNwQ3prZnlTMVlEY0MxOXZlWXQ0Qk9kRlNaaTRyRnJRUFEKamg3WXJjZVU4RmhmOUErbGMxRi9qWXlzaTB1TTQ0dktRUjM5RXN1eVBOeW5xQkZFbUMySmowSHVIM0xQeEtKYQpZZHFwclRaUFJhUTJ6UGkzRktCbWl6dExVK2ZTaVFJREFRQUJveEF3RGpBTUJnTlZIUk1CQWY4RUFqQUFNQTBHCkNTcUdTSWIzRFFFQkN3VUFBNElDQVFBdDhjd3pYVExZSmgyV2tDalFOSzM1RCs2ZmdWMUViSmx5RW5mUE05Ti8KVmxhK0NOUFI5STdLUm8xRVZyK0dtQ05oUjdaanprYUNCQVZJeHgzblFWVmVqa3JJVGpHRVFRKzBuWFY5MmREQQpqVk5RNTRKa2hpV292bHF5c2JxT2lpWEFYcnJFZnUxZElHZzdyTTdKU09Na2Q4Qmh0Qm9sdmFuQjVTcHlIUFhzClpha1MzV3NmNlRBYTR5eTJNQ1Z6VGYyMG0vcE16SzU0WmpSUFVRVVV4RmtxcEYyOEJqT1pjS1JEVDlyRHdpcTQKNlVvbE1uSVQyRXB0NG4yTStJT2txSFB0VlZxaW9TRlpsdk1EdjdjanlUSEEwSktVWXZkYVVYNXRDQmY1OHhTLwpHd2RFNktETEpzVC9WdnkreFViRk9RRHMrSE5zUHlDOGVBeXovamhiMXNLS2FKRzZTUjQ4UVc2MW55QUM3Y3V5Ckhma25hTlZpT0s4dEZkZUxNMVVBbUkrR0VmSnZhVVJjYVZ4YUFtcHk3SFBaS1VZSWhyWEJZSDBmL3RRVUhraFgKMTV0Q041QnRSY284bGhVaEZ0UTBrVUY0Ui9yUU93cEo5bmJxYWI4eUN3TktPelRMMFJCVmtQd2xHSlc2NFBpMwoxZVpTZjhNMmV5alk5SVpoU2szdENoV1ljcVpUUWVZTGtSbzFHVEhSWS92OGgybndzVHowUS9zU1NJTUNyaFNLClpSc2YrRWxEcmNmMHdJeVlaTVBXWmpiTmdIMitjdWJmM3dySncyYVdxVjI5cEF3NGdVU1F3NXhENGlxT0dtM04KMEdlWU5XbWlvMjk3Tm00YmNZdmYzQ2FxUUM4MlhaaXU1UFRRL2p0Z2c4MmRXRmZJN1pTaXNBUHI3NzVjTnZuKwpYdz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+      - equal:
+          path: data["tls.key"]
+          value: "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKS1FJQkFBS0NBZ0VBb2RQRElrV2cvLzc1aXhhdjlTQTNLRUcrNjZZSktDRVYvWDRaY1NVZERTRWJSb2tOCmxJTTdydUhkekpYVFVyTk1hVTNyV2J1MTFPSUpndDR2R25LL0c4TDA3dFVKNFNKL2R2NDVIT3hUSEd6enYxZ24KUk1ia3gyWVdKUWtEb2tOZEZxTVVsWTd1azliNG1lZHBUUU5PNU95SSt2a0M4ak94eXREaE16d3VKdUFWM1kyaAp0cVBIYjlHKzZQTkwwWFFyWm9WTER2UkJPRUltTjlSaGE3SGloajN5bGhRSU9tMy8rUzhITGx1dUtKMXYzU1l3CllPQk81dTdXWlY1NFR3bEN0Rmt4SVllU0s4WUUreE5wRmRRWDlwVklNT0FJajVuMmFRcmlLOGFOcS9JeW4wU0QKQnNnY3F2aEtCdUYvdkFRWEl1eDlkekpLMEtaTGIvVDVwQUY3VnN0UTlnQWhhL0h2QlRPaVlBaDFWMXh3WjJ1aAp5Y2JGRnlCTG1uSGkzbTYxeC9HM3R2VkNYQkI1OExVRGhpVVR2UDltc1ZtdW8rczFTeGxBSVdKVldCM0lPalNKCksxZkFwUjFXQjBockVySTBjTDdZaTJOZExkVHk0WE93WGsxMG0xeTBrdXhVQ0htUENZaVVEYkgxWVpRMGpJcHIKcWVZTUdBV2E2aUZ1OWZTQWd2M3M5eFdMci84cEJMdGZUMlkvT2lQQnVxZnl6Q3Q2RmF2bnF4L25XdnJrcVFzNQpIOGt0V0EzQXRmYjNtTGVBVG5SVW1ZdUt4YTBEMEk0ZTJLM0hsUEJZWC9RUHBYTlJmNDJNckl0TGpPT0x5a0VkCi9STExzanpjcDZnUlJKZ3RpWTlCN2g5eXo4U2lXbUhhcWEwMlQwV2tOc3o0dHhTZ1pvczdTMVBuMG9rQ0F3RUEKQVFLQ0FnQUZpbjZ2K2JwZGlabDV6YmtRcDUyNzN5UnVaUzBERnI3dUF4ZFQ3SFZtTWJBQlprZjB3ZG1WVDE2TQoxc1I1bkhJTldRR3AvT2RvOXFSa3VyN2FKUHV1TTZxM1Vzd1h6VnFYOUhSNExROWJkYytTeWEzdWlQRGtjdlpuCkpqdmRubmpkZ1kvKzN2b0VUZVFOUVFNMkE5cjdzNjJ0Q2tHemtWbVJIRDNaeDBHOVN3YjBveGphYkJrMEZ2WjIKZTM0cEdkVXltWFhNZVVpU2FKRnViL00yQU0xRTAzSXUrVmlleDQxd050QUVJbGVBUklQRUNyNjFVbmpoSjJSbgo3Q2dxYktMQUVoM0FqQ2ZSSCtLanhqSmU4UGd4RlVOM2lQUkNGbjk5Y1VYMVFjTXdGQWJ2dFNUWFlwcTRyKys0CjlKZXZGR1RHYVZxU2JrSnBpb2dpdVR5akJQbjRIT0lZeFg2eXlnSkQzVWZHS1RMd2Mwek93UVpHMEJPbnVGVU0KcXJzd29yeFJWRDBZbmhTUS91WFQySU10RHlyU2NrdGcxTHhtRXdrQ3lTL3c5UHFPenE0eHB4eUpydjJURGFFVAp1cG50UktXS0QzYWhYVnpKcHdjdlZZNW42ZDFBZVdBZ0hYQzdMdzMxVTFjYUhDaTMyV3RlcnMvYURYMXRBZEZzCmtlcEplZ25acXdLaFhNaWh5TEo3MGhRTmxkYXZheXdOT0RHbXdtZWxRMlVOU1ZMTmt5TUo2R3hsdnJLUFZHSWQKbklqV1gzRS9Zbm55ZDlEb21rUVkyek5YcHFnZVpGV0ZUWTZ5R2xKVVNyRGxqd1FXcEdUVTFHTW1EK0RoaVVpOQo3Mm1kYk5HMWtZVmNXcDQxcXdSWVBJSjViN3JaVWh5YmQ2VUdKeTFDMGJtYzlmYndRUUtDQVFFQXduZ3VHYWtuCjBmelk1aHoyWDJBbFJJUjFvY1ljaU5aQUZlc01zUXM5MXFPRXZTVVdLY3dJdkhkMU5uOEh2S3MxSGtJc1NQeHIKV1NLbVhUb0t4RFEzYk03WVA3dW1lbWw2WmpoaVFuT3I2anUvS0ZxeU9YK2Rla0tYMXlWS3hrbTNXK0lJYmRmYQpNVVZNenZ4VXlaaUk2SElrN2tiZWw5c05Ra0ZJOEhIZHgrZWl4M1k3blYrUjlzNXZwYlpYdkl0S2I5elowc2RMCll0OUw3V2tpMGVaOHhoUFhvYzhNV21xQXFDQWUydXVWMHRFTDdDQlN3eHY4R0JYTlBwalZzY0lIYkRKNHZjVFIKYjBXK2taeEN6UG1rcTBaY2lFa1puKzZTTy9iT2xoWXhIZVRoUkw0bHlCRXpHWTJES1doSjExNk41Ump4bXBjaQpha3lqblJvc3E2bVdyUUtDQVFFQTFRZVlDRXh0SFJaM01VVWlYTUFoYVFFb1ZyN3lWZFk0c2pmVG1MT21UbjVuCnBldjRnUElZaGVJNStPelFSNUQxdWlXSVB4bnhjckRJRThpeUh0NkhPVTFQR1E4anVIWnJtczhBVTFwd2h0cEUKYVR4L3VWejk1TnhJS0cvOE9YVjJMMHlxdHZra3VWTzdxZ2RiY2RuaEdPa3VVZTN2cUpxZ0VZK3BCamxtSzA0UwpUNGNlR21YSExiNEF0c0lhbFpmMDkzMjBGYVFYMGw2WE00R21Kcis5SVIra3dNUXVkWkk5UjFoRFRKZzZpSXkyCmVJbUFpUk1FaXMrS0FlelJCRU1KbGZSdTJMN0dOYnlDenFDRzlWa0U2ZGZGTXF4endtS3E3OEQ1YzYrdnVIRjAKVzRWazNUL1BveGdleERydnlKT2toTlNQRjl1cjZrZXJVUnBzdk1vU3pRS0NBUUVBbTJ0akpKejlOeVRGMERyTAphSFExdEtuTVBXdFF1TWZLVmZvUm5aa25aZGd2cU43djlKMmRTY3FMQWUvS0ppNEtlTkZZQlVpL0huREQxdlFoClVLZU91RVlqcStQejdCZEtmRkdKcmlRMS9EQ2QyTW1MY01xZDkrMHEzd1p0MlVWbTVtY2laMjlBY1dvNk5aNlMKd0w5SWc4VmQ0SlVCSndvcGNZOHRsUVRidy8xTEtmQkRPc1g3cU8xWmEyM3Nkc0kzem1rS0tSdWdFemYwdlp2dAorU1VsQ1VVb2E2aEc3aWY2Qk9RTzVOV3RXdHc1bEJCTk5LT3orU2ZMYmNERjRKZjZTSzJaczhpTnZVbFhRWlpLCkNQbG5jbjc4U3V0cE1GbUJ3NnkvZEZIdUZUOHNEajJOZ25URWl5Sis5ZVBrUjl6SXVKVVQyb0g1UGsxYjRaM2UKbjU4Y3pRS0NBUUVBeWRRUEExVzlUd0M0M3BJOGN4bUl6ZDVONUptMktRTHo1azJrQ0ptMEo4djAwU3RXM253QQpKZUJtd21OREZYck9oSlVJbDVneHZGS216SytwcWp0MGJDTEZuTjFPSDNiNmpjb3U2Y25Xc0x6Y2NjUGkwckM2CnozaXdXTGQ0aE11M3RDcHoxelVHeVJyK3dxR0R6c0w1VTh1Z21mak94YlB4a1pIRk51TnMyL3gwdHFveUtCcGoKY2dBQTF5WGhYL2QvSEhnWkJTUFplZk1xVjU4dTFxbDBPNHlxWUFPK2JKK250UTkzZTNzQ2dkcW5DbDVqeS9xYgpwQlByRWRYWFZhMVp5SnV6NVdBaGxFbk11STA0TC8wdC9ZcnpCd2FDQ2huSEQ2Mko2VVA3UE1rb3o0ajdQZTgxCi9yUmNlZGZJMUFTbHF6OWpidHd0N2FJSE9xakplcmdNeFFLQ0FRQVB1TjIxRGdvK0VHOXhySHY0NU1wUVlwSmwKSFIvamZhZWJJOU9PdDRSaVRENmFtenI5U0VkeWxzVmpBT0ZENVJNZ0ZUL0UrRDRMU3NJZjQ2NkxSZm1mRzYrSwp6K3Fpa2pYNFlZSEVBWWllSjY1TG81alV3aHFPMERwTlQ5elpiUWp1SndmbmRTalV0QTJ3NTZ3TWtwQTR5bktQCnovMUgzR1dxQmFrNTZxakwvUEFLOXExUWpENENOWDZvZTZReHA0Vk54OUNpL01kSG9kUHp6KzZIdzV5QUIxK00KWnNNSFNJemowcjZFVkxXSTdiUDFRN0ZLY3l1VGhWaTZPa1JveDN0dWxnbmZHSWZPSWhNbkt0UCtRYXlldWhCZAoxNXRTLzhWMTZTY3dUYzNZeHk2aSszUEFjUmNzNTJ2OHp6WWJkeHFFclBYc3pDZ3E5MTBBOXk4RDhqeWEKLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0K"
+
+  - it: Should render service correctly
+    template: casdoor/service.yaml
+    set:
+      casdoor:
+        console:
+          enabled: true
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8002
+
+  - it: Should render deployment with global correctly
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/casbin/casdoor:v1.800.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+
+  - it: Should render deployment with local correctly
+    template: casdoor/deployment.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      casdoor:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+        nodeSelector:
+          diskType: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/casbin/casdoor:v1.800.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/conf"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-casdoor"

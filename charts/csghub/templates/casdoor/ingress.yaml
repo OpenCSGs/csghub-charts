@@ -1,0 +1,54 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := .Values.casdoor }}
+{{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
+{{- if $ingressConfig.enabled }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: {{ include "common.endpoint.csghub" . | quote }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
+  {{- if $ingressConfig.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ include "common.domain.casdoor" . }}
+      secretName: {{ $ingressConfig.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ include "common.domain.casdoor" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $service.service.port }}
+            {{- else }}
+              serviceName: {{ $serviceName }}
+              servicePort: {{ $service.service.port }}
+            {{- end }}
+{{- end }}
