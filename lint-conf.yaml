@@ -75,11 +75,11 @@ ignore:
     - charts/*/charts/runner/templates/configmap-knative.yaml
     - charts/*/charts/runner/templates/secret.yaml
     - charts/csghub/charts/gitlab-shell/templates/configmap.yaml
-    - charts/csghub/charts/casdoor/templates/configmap.yaml
-    - charts/csghub/charts/casdoor/templates/secret.yaml
+    - charts/csghub/templates/casdoor/configmap.yaml
+    - charts/csghub/templates/casdoor/secret.yaml
     - charts/csghub/charts/csgship/charts/frontend/templates/configmap.yaml
     - charts/runner/templates/configmap-lws.yaml
     - charts/runner/templates/configmap-argo.yaml
     - charts/runner/templates/configmap-knative.yaml
     - charts/runner/templates/secret.yaml
-
+    - charts/csghub/tests/casdoor_test.yaml
