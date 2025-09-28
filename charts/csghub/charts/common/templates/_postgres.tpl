@@ -27,18 +27,18 @@ Returns: YAML configuration object with PostgreSQL connection parameters
   {{- $postgresqlConfig := dict
     "host" $postgresqlName
     "port" ($postgresSvc.service.port)
-    "user" ($service.postgresql.user | default "csghub")
-    "password" (include "common.randomPassword" ($service.postgresql.user | default "csghub"))
+    "user" "csghub"
+    "password" (include "common.randomPassword" "csghub")
     "database" ($service.postgresql.database | default "csghub")
     "timezone" "Etc/UTC"
-    "sslmode" "prefer"
+    "sslmode" "disable"
   -}}
 
   {{- /* If internal PostgreSQL is enabled and secret exists, use existing password */ -}}
   {{- if $global.Values.global.postgresql.enabled -}}
     {{- $secret := (lookup "v1" "Secret" $global.Release.Namespace $postgresqlName) -}}
-    {{- if and $secret (index $secret.data $postgresqlConfig.user) -}}
-      {{- $_ := set $postgresqlConfig "password" (index $secret.data $postgresqlConfig.user | b64dec) -}}
+    {{- if and $secret (index $secret.data "POSTGRES_PASSWORD") -}}
+      {{- $_ := set $postgresqlConfig "password" (index $secret.data "POSTGRES_PASSWORD" | b64dec) -}}
     {{- end -}}
   {{- end -}}
 
@@ -103,5 +103,5 @@ Returns: PostgreSQL connection string in DSN format
   {{- $service := .service -}}
   {{- $global := .global -}}
   {{- $config := include "common.postgresql.config" (dict "service" $service "global" $global) | fromYaml -}}
-  {{- printf "host=%s port=%s user=%s password=%s dbname=%s sslmode=%s" $config.host $config.port $config.user $config.password $config.database $config.sslmode -}}
+  {{- printf "postgresql://%s:%s@%s:%s/%s?sslmode=%s" $config.user $config.password $config.host ($config.port | toString) $config.database $config.sslmode -}}
 {{- end -}}
