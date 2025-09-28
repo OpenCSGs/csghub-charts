@@ -53,16 +53,4 @@ spec:
               serviceName: {{ $serviceName }}
               servicePort: {{ $service.service.port }}
             {{- end }}
-          - path: /v2/
-            pathType: Prefix
-            backend:
-            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
-              service:
-                name: {{ $serviceName }}
-                port:
-                  number: {{ $service.service.port }}
-            {{- else }}
-              serviceName: {{ $serviceName }}
-              servicePort: {{ $service.service.port }}
-            {{- end }}
 {{- end }}
