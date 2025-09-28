@@ -32,7 +32,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "wait-for-minio" . }}
 #
 # Dependencies:
-#   - minio.internal.endpoint template (internal service endpoint)
+#   - common.names.custom template (naming)
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-minio" }}
