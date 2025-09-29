@@ -20,7 +20,6 @@ metadata:
     {{- end }}
   annotations:
     reloader.stakater.com/auto: "true"
-    helm.sh/hook: post-install, post-upgrade
     helm.sh/hook-weight: "0"
     helm.sh/hook-delete-policy: before-hook-creation
     {{- if $service.annotations }}
@@ -83,7 +82,7 @@ spec:
               done
           envFrom:
             - secretRef:
-                name: {{ printf "%s-init-admin" $serviceName }}
+                name: {{ printf "%s-init" $serviceName }}
           env:
             - name: EXTERNAL_ENDPOINT
               value: {{ include "common.endpoint.casdoor" . | quote }}
