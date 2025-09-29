@@ -1,3 +1,4 @@
+## Global Configuration
 global:
   ## Ingress Configuration
   ingress:
