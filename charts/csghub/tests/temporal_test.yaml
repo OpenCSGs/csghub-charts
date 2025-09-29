@@ -1,0 +1,326 @@
+suite: Test Temporal Resources
+templates:
+  - temporal/ingress.yaml
+  - temporal/secret.yaml
+  - temporal/service.yaml
+  - temporal/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      enabled: true
+      domain: example.cn
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    persistence:
+      storageClass: "nfs-provisioner"
+      accessModes: ["ReadWriteOnce", "ReadWriteMany"]
+      size: "25Gi"
+    postgresql:
+      enabled: true
+  temporal:
+    name: "temporal"
+    image:
+      registry: "docker.io"
+      repository: "temporalio/auto-setup"
+      tag: "1.25.2"
+      pullPolicy: ""
+    service:
+      type: "ClusterIP"
+      port: 7234
+      protocol: TCP
+    console:
+      enabled: true
+      image:
+        repository: "temporalio/ui"
+        tag: "2.30.4"
+      service:
+        port: 8081
+      auth:
+        user: "testUser"
+        password: "testPassword"
+    ingress:
+      enabled: true
+    postgresql:
+      database: "csghub_temporal"
+tests:
+  - it: Should render all resources correctly
+    templates:
+      - temporal/secret.yaml
+      - temporal/ingress.yaml
+      - temporal/service.yaml
+      - temporal/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-temporal"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+
+  - it: Should render ingress correctly
+    template: temporal/ingress.yaml
+    asserts:
+      - contains:
+          path: spec.tls[0].hosts
+          content: "temporal.example.cn"
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls"
+      - equal:
+          path: spec.rules[0].host
+          value: "temporal.example.cn"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: "csghub-temporal"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8081
+
+  - it: Should render ingress correctly with console enabled
+    template: temporal/ingress.yaml
+    set:
+      temporal:
+        ingress:
+          tls:
+            secretName: "example-cn-tls-local"
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls-local"
+
+  - it: Should render secret correctly
+    template: temporal/secret.yaml
+    asserts:
+      - equal:
+          decodeBase64: true
+          path: data.DB
+          value: "postgres12"
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_SEEDS
+          value: "csghub-postgresql"
+      - equal:
+          decodeBase64: true
+          path: data.DB_PORT
+          value: "5432"
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_USER
+          value: "csghub"
+      - matchRegex:
+          decodeBase64: true
+          path: data.POSTGRES_PWD
+          pattern: "^[A-Za-z0-9+/=]{32}$"
+      - equal:
+          decodeBase64: true
+          path: data.DBNAME
+          value: "csghub_temporal"
+      - equal:
+          decodeBase64: true
+          path: data.VISIBILITY_DBNAME
+          value: "csghub_temporal_visibility"
+      - equal:
+          decodeBase64: true
+          path: data.DEFAULT_NAMESPACE
+          value: "default"
+      - equal:
+          decodeBase64: true
+          path: data.DEFAULT_NAMESPACE_RETENTION
+          value: "7d"
+      - equal:
+          decodeBase64: true
+          path: data.TEMPORAL_USERNAME
+          value: "testUser"
+      - equal:
+          decodeBase64: true
+          path: data.TEMPORAL_PASSWORD
+          value: "testPassword"
+      - matchRegex:
+          decodeBase64: true
+          path: data.auth
+          pattern: ".{60}"
+
+  - it: Should render secret correctly
+    template: temporal/secret.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+          external:
+            host: "10.0.6.1"
+            port: 6432
+            user: "temporal_global"
+            password: "Temporal@Global123"
+      temporal:
+        postgresql:
+          database: "temporal_global"
+    asserts:
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_SEEDS
+          value: "10.0.6.1"
+      - equal:
+          decodeBase64: true
+          path: data.DB_PORT
+          value: "6432"
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_USER
+          value: "temporal_global"
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_PWD
+          value: "Temporal@Global123"
+      - equal:
+          decodeBase64: true
+          path: data.DBNAME
+          value: "temporal_global"
+      - equal:
+          decodeBase64: true
+          path: data.VISIBILITY_DBNAME
+          value: "temporal_global_visibility"
+
+  - it: Should render secret correctly
+    template: temporal/secret.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+          external:
+            host: "10.0.6.1"
+            port: 6432
+            user: "temporal_global"
+            password: "Temporal@Global123"
+      temporal:
+        postgresql:
+          host: "10.0.6.2"
+          port: "7432"
+          database: "temporal"
+          user: "temporal"
+          password: "Temporal@1234"
+    asserts:
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_SEEDS
+          value: "10.0.6.2"
+      - equal:
+          decodeBase64: true
+          path: data.DB_PORT
+          value: "7432"
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_USER
+          value: "temporal"
+      - equal:
+          decodeBase64: true
+          path: data.POSTGRES_PWD
+          value: "Temporal@1234"
+      - equal:
+          decodeBase64: true
+          path: data.DBNAME
+          value: "temporal"
+      - equal:
+          decodeBase64: true
+          path: data.VISIBILITY_DBNAME
+          value: "temporal_visibility"
+
+  - it: Should render service correctly
+    template: temporal/service.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 7234
+      - equal:
+          path: spec.ports[1].port
+          value: 8081
+
+
+  - it: Should render deployment with global correctly
+    template: temporal/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/temporalio/auto-setup:1.25.2"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "docker.io/temporalio/ui:2.30.4"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+      - equal:
+          path: spec.template.spec.containers[1].env[0].name
+          value: "TEMPORAL_ADDRESS"
+      - equal:
+          path: spec.template.spec.containers[1].env[0].value
+          value: "csghub-temporal:7234"
+      - equal:
+          path: spec.template.spec.containers[1].env[1].name
+          value: "TEMPORAL_CORS_ORIGINS"
+      - equal:
+          path: spec.template.spec.containers[1].env[1].value
+          value: "https://temporal.example.cn"
+
+  - it: Should render deployment with local correctly
+    template: temporal/deployment.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      temporal:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/temporalio/auto-setup:1.25.2"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"

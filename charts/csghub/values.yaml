@@ -143,15 +143,18 @@ postgresql:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 5432
     ## Network protocol
     protocol: TCP
 
   ## Databases to create on startup
-  databases: ["csghub", "csghub_casdoor"]
   ## Format:
   ## - databaseName
+  databases:
+    - "csghub"
+    - "csghub_casdoor"
+    - "csghub_temporal"
 
   ## PostgreSQL runtime parameters
   parameters: {}
@@ -190,7 +193,7 @@ redis:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 6379
     ## Network protocol
     protocol: TCP
@@ -229,7 +232,7 @@ minio:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 9000
     ## Network protocol
     protocol: TCP
@@ -240,7 +243,7 @@ minio:
     enabled: true
     ## Console Service configuration
     service:
-      ## Database service port
+      ## Service port
       port: 9001
       ## Network protocol
       protocol: TCP
@@ -298,7 +301,7 @@ registry:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 5000
     ## Network protocol
     protocol: TCP
@@ -370,7 +373,7 @@ gitaly:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 8075
     ## Network protocol
     protocol: TCP
@@ -413,7 +416,7 @@ gitlabShell:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 22
     ## Network protocol
     protocol: TCP
@@ -449,7 +452,7 @@ nats:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 4222
     ## Network protocol
     protocol: TCP
@@ -490,7 +493,7 @@ casdoor:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 8000
     ## Network protocol
     protocol: TCP
@@ -519,6 +522,78 @@ casdoor:
     # timezone: "Etc/UTC"
     # sslmode: "prefer"
 
+## Built-in Temporal Configuration
+temporal:
+  ## Resource name prefix
+  name: "temporal"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Container registry secrets
+    pullSecrets: []
+    ## Image registry
+    registry: "docker.io"
+    ## Image repository
+    repository: "temporalio/auto-setup"
+    ## Image version tag
+    tag: "1.25.1"
+    ## Image pull behavior
+    pullPolicy: "IfNotPresent"
+
+  ## Service configuration
+  service:
+    ## Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    ## Service port
+    port: 7233
+    ## Network protocol
+    protocol: TCP
+
+  ## Console UI configuration
+  console:
+    ## If enabled console UI
+    enabled: true
+    ## Console image configuration
+    image:
+      ## Image repository for console ui
+      repository: "temporalio/ui"
+      ## Image version tag for console ui
+      tag: "2.30.3"
+    ## Console authentication configuration
+    auth:
+      user: "temporal"
+      password: ""
+    ## Service configuration
+    service:
+      ## Service port
+      port: 8080
+      ## Network protocol
+      protocol: TCP
+
+  ## Configuration for ingress.
+  ingress:
+    ## Enable or disable ingress.
+    enabled: true
+    ## Ingress-nginx annotations
+    annotations: {}
+    ## TLS settings for ingress.
+    tls: {}
+      ## Enable or disable TLS.
+      # enabled: false
+      ## If tls enabled, a secret needs to be provided
+      # secretName: ""
+
+  ## Database configuration
+  postgresql:
+    ## PostgreSQL connection settings
+    # host: "<pg_host>"
+    # port: 5432
+    database: "csghub_temporal"
+    # user: "csghub"
+    # password: ""
+    # timezone: "Etc/UTC"
+    # sslmode: "prefer"
+
 ## Built-in CSGHub Server Configuration
 server:
   ## Resource name prefix
@@ -528,7 +603,7 @@ server:
   service:
     ## Service type (ClusterIP, NodePort, LoadBalancer)
     type: ClusterIP
-    ## Database service port
+    ## Service port
     port: 8080
     ## Network protocol
     protocol: TCP
