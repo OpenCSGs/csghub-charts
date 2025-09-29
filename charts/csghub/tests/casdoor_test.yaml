@@ -139,9 +139,6 @@ tests:
           path: spec.template.spec.initContainers[0].image
           value: "docker.io/busybox:latest"
       - equal:
-          path: spec.template.spec.initContainers[1].image
-          value: "docker.io/opencsghq/psql:latest"
-      - equal:
           path: spec.template.spec.containers[0].image
           value: "docker.io/opencsghq/psql:latest"
       - equal:

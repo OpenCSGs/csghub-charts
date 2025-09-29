@@ -60,7 +60,6 @@ spec:
       {{- end }}
       initContainers:
         {{- include "wait-for-casdoor" . | nindent 8 }}
-        {{- include "wait-for-postgresql" (dict "service" $service "global" .) | nindent 8 }}
       containers:
         - name: {{ $serviceName }}
           image: {{ include "common.image.fixed" (dict "ctx" . "service" "casdoor" "image" "opencsghq/psql:latest") }}

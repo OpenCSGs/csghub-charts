@@ -45,10 +45,10 @@ SPDX-License-Identifier: APACHE-2.0
     - /bin/sh
     - -c
     - |
-      until nc -z {{ $serviceName }} {{ $service.service.port }};
+      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName ($service.service.port | toString) }}/api/health" 2>/dev/null;
       do
         echo 'Waiting for Casdoor to be ready...';
         sleep 5;
-      done
+      done;
       echo 'Casdoor is ready!'
 {{- end }}
