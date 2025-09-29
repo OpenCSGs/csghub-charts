@@ -21,7 +21,7 @@ global:
 
   ## Global image settings
   image:
-    ## Image registry URL (without trailing slash)
+    ## Image registry (without trailing slash)
     ## 【 CAUTION 】THIS WILL OVERWRITE LOCAL IMAGE REGISTRY
     # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
     ## Image tag format: {{version}}-{{edition}} (eg: v1.8.1-ee)
@@ -130,9 +130,9 @@ postgresql:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "docker.io"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "opencsghq/postgres"
     ## Image version tag
     tag: "15.10"
@@ -177,9 +177,9 @@ redis:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "docker.io"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "redis"
     ## Image version tag
     tag: "7.2.5"
@@ -216,9 +216,9 @@ minio:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "docker.io"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "minio/minio"
     ## Image version tag
     tag: "RELEASE.2024-12-18T13-15-44Z"
@@ -285,9 +285,9 @@ registry:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "docker.io"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "registry"
     ## Image version tag
     tag: "2.8.3"
@@ -357,9 +357,9 @@ gitaly:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "registry.gitlab.com"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "gitlab-org/build/cng/gitaly"
     ## Image version tag
     tag: "v17.5.0"
@@ -400,9 +400,9 @@ gitlabShell:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "registry.gitlab.com"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "gitlab-org/build/cng/gitlab-shell"
     ## Image version tag
     tag: "v17.5.0"
@@ -436,9 +436,9 @@ nats:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "docker.io"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "nats"
     ## Image version tag
     tag: "2.10.16"
@@ -477,9 +477,9 @@ casdoor:
   image:
     ## Docker registry secrets
     pullSecrets: []
-    ## Container registry URL
+    ## Image registry
     registry: "docker.io"
-    ## PostgreSQL image repository
+    ## Image repository
     repository: "casbin/casdoor"
     ## Image version tag
     tag: "v1.799.0"
