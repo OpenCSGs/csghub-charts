@@ -32,8 +32,10 @@ data:
     # only listen on a Unix domain socket. For Unix domain sockets use
     # "http+unix://<urlquoted-path-to-socket>", e.g.
     # "http+unix://%2Fpath%2Fto%2Fsocket"
-    {{- $serverSvc := include "common.names.custom" (list . .Values.server.name) }}
-    gitlab_url: {{ printf "http://%s:%s" $serverSvc (.Values.server.service.port | toString) | quote }}
+    {{- $serverSvc := .Values.server }}
+    {{- $serverHost := include "common.names.custom" (list . $serverSvc.name) }}
+    {{- $serverPort := dig "service" "port" "8080" $serverSvc | toString}}
+    gitlab_url: {{ printf "http://%s:%s" $serverHost $serverPort | quote }}
 
     # When a http+unix:// is used in gitlab_url, this is the relative URL root to GitLab.
     # Not used if gitlab_url is http:// or https://.
