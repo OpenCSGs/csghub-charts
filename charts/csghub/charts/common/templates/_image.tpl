@@ -83,3 +83,17 @@ Returns: Full image path in format "registry/repository"
     {{- fail "Invalid image configuration - registry and image are required" -}}
   {{- end -}}
 {{- end -}}
+
+{{/*
+Construct image tag with edition suffix
+Usage: {{ include "common.image.tag" (dict "tag" "v1.8.0" "context" .) }}
+*/}}
+{{- define "common.image.tag" -}}
+{{- $tag := .tag -}}
+{{- $edition := (.context.Values.global.edition | default "ee") -}}
+{{- if and (or (eq $edition "ce") (eq $edition "ee")) (not (regexMatch "(-ce|-ee)$" $tag)) -}}
+  {{- printf "%s-%s" $tag $edition -}}
+{{- else -}}
+  {{- $tag -}}
+{{- end -}}
+{{- end -}}

@@ -21,7 +21,7 @@ Returns: Full image path in format "registry/repository:tag"
   {{- $globalImage := default dict $context.Values.global.image -}}
 
   {{- /* Merge global and local image configuration with priority */ -}}
-  {{- $registry := or $localImage.registry $globalImage.registry -}}
+  {{- $registry := or $globalImage.registry $localImage.registry -}}
   {{- $repository := or $localImage.repository $globalImage.repository -}}
   {{- $tag := or $localImage.tag $globalImage.tag -}}
 
@@ -67,7 +67,7 @@ Returns: Full image path in format "registry/repository"
     {{- end -}}
   {{- end -}}
 
-  {{- $registry := or $localImage.registry $globalImage.registry -}}
+  {{- $registry := or $globalImage.registry $localImage.registry -}}
 
   {{- /* Adjust repository path for OpenCSG registry */ -}}
   {{- if and $registry (regexMatch "^opencsg-registry" $registry) -}}
@@ -82,4 +82,18 @@ Returns: Full image path in format "registry/repository"
   {{- else -}}
     {{- fail "Invalid image configuration - registry and image are required" -}}
   {{- end -}}
+{{- end -}}
+
+{{/*
+Construct image tag with edition suffix
+Usage: {{ include "common.image.tag" (dict "tag" "v1.8.0" "context" .) }}
+*/}}
+{{- define "common.image.tag" -}}
+{{- $tag := .tag -}}
+{{- $edition := (.context.Values.global.edition | default "ee") -}}
+{{- if and (or (eq $edition "ce") (eq $edition "ee")) (not (regexMatch "(-ce|-ee)$" $tag)) -}}
+  {{- printf "%s-%s" $tag $edition -}}
+{{- else -}}
+  {{- $tag -}}
+{{- end -}}
 {{- end -}}
