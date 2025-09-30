@@ -29,7 +29,7 @@ Returns: YAML configuration object with PostgreSQL connection parameters
     "port" ($postgresSvc.service.port)
     "user" "csghub"
     "password" (include "common.randomPassword" "csghub")
-    "database" ($service.postgresql.database | default "csghub")
+    "database" ($service.postgresql.database | default ( $postgresqlName | replace "-" "_"))
     "timezone" "Etc/UTC"
     "sslmode" "disable"
   -}}
