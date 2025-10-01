@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if .Values.global.postgresql.enabled }}
-{{- $service := .Values.postgresql }}
+{{- $service := include "common.service" (dict "service" "postgresql" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap

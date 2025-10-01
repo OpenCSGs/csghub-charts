@@ -22,7 +22,7 @@ Returns: YAML configuration object with PostgreSQL connection parameters
   {{- /* Configuration priority: internal PostgreSQL (if enabled) > service-level external > global external */ -}}
 
   {{- /* Default configuration for internal PostgreSQL */ -}}
-  {{- $postgresSvc := $global.Values.postgresql }}
+  {{- $postgresSvc := include "common.service" (dict "service" "postgresql" "global" $global) | fromYaml }}
   {{- $postgresqlName := include "common.names.custom" (list $global $postgresSvc.name) -}}
   {{- $serviceName := include "common.names.custom" (list $global $service.name) -}}
   {{- $postgresqlConfig := dict

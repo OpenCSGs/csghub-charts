@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if .Values.global.registry.enabled }}
-{{- $service := .Values.registry }}
+{{- $service := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $s3Config := include "common.s3.config" (dict "service" $service "global" .) | fromYaml }}
 apiVersion: v1

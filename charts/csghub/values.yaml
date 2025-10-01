@@ -150,9 +150,6 @@ logging:
 
 ## Portal configuration
 portal:
-  ## Resource name prefix
-  name: "portal"
-
   ## Image settings (overrides global.image)
   image:
     ## Image repository
@@ -215,9 +212,6 @@ portal:
 ## Provides the main service logic and API interface,
 ##  and handles requests sent by the client.
 server:
-  ## Resource name prefix
-  name: "server"
-
   ## Image settings (overrides global.image)
   image: {}
 
@@ -283,9 +277,6 @@ server:
 ## Responsible for forwarding requests related to deployment instances,
 ##  such as forwarding space application operation requests to Knative Serving services.
 rproxy:
-  ## Resource name prefix
-  name: "rproxy"
-
   ## Using public domain for application accessing
   usePublicDomain: true
 
@@ -294,7 +285,7 @@ rproxy:
   ## but the service will be retained for forward compatibility
   coredns:
     ## Enable or Disable coredns
-    enabled: false
+    enabled: true
     ## Image settings (overrides global.image)
     image:
       ## Image repository
@@ -316,35 +307,22 @@ rproxy:
       tag: "latest"
 
 ## Accounting configuration
-accounting:
-  ## Resource name prefix
-  name: "accounting"
+accounting: {}
 
 ## User configuration
-user:
-  ## Resource name prefix
-  name: "user"
+user: {}
 
 ## Dataviewer configuration
-dataviewer:
-  ## Resource name prefix
-  name: "dataviewer"
+dataviewer: {}
 
 ## Mirror configuration
-mirror:
-  ## Resource name prefix
-  name: "mirror"
+mirror: {}
 
 ## Aigateway configuration
-aigateway:
-  ## Resource name prefix
-  name: "aigateway"
+aigateway: {}
 
 ## Notifier configuration
 notifier:
-  ## Resource name prefix
-  name: "notifier"
-
   ## Set timezone
   repoSyncTime: "Asia/Shanghai"
 
@@ -363,9 +341,6 @@ notifier:
 
 ## Payment configuration
 payment:
-  ## Resource name prefix
-  name: "payment"
-
   ## Bucket to store billing
   billingBucket: "csghub-billing"
 
@@ -373,9 +348,6 @@ payment:
 ## This service relies on external content review services,
 ##  such as cloud service providers' content review services.
 moderation:
-  ## Resource name prefix
-  name: "moderation"
-
   ## Enable or disable the content moderation service
   enabled: false
 
@@ -392,9 +364,6 @@ moderation:
 
 ## Runner configuration
 runner:
-  ## Resource name prefix
-  name: "runner"
-
   ## Namespace for user-deployed inference, fine-tuning, model evaluation, and other instances
   namespace: "spaces"
 
@@ -429,9 +398,6 @@ runner:
 
 ## Dataflow configuration
 dataflow:
-  ## Resource name prefix
-  name: "dataflow"
-
   ## Enable or disable the dataflow service
   enabled: true
 
@@ -440,9 +406,6 @@ dataflow:
 #################################################################
 ## Embedded PostgreSQL configuration
 postgresql:
-  ## Resource name prefix
-  name: "postgresql"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -490,9 +453,6 @@ postgresql:
 
 ## Built-in Redis Configuration
 redis:
-  ## Resource name prefix
-  name: "redis"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -529,9 +489,6 @@ redis:
 
 ## Built-in Redis Configuration
 minio:
-  ## Resource name prefix
-  name: "minio"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -603,9 +560,6 @@ minio:
 
 ## Built-in Registry Configuration
 registry:
-  ## Resource name prefix
-  name: "registry"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -675,9 +629,6 @@ registry:
 
 ## Built-in Gitaly Configuration
 gitaly:
-  ## Resource name prefix
-  name: "gitaly"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -718,9 +669,6 @@ gitaly:
 
 ## Built-in Gitaly Configuration
 gitlabShell:
-  ## Resource name prefix
-  name: "gitlab-shell"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -754,9 +702,6 @@ gitlabShell:
 
 ## Built-in NATS Configuration
 nats:
-  ## Resource name prefix
-  name: "nats"
-
   ## Image settings (overrides global.image)
   image:
     ## Docker registry secrets
@@ -790,9 +735,6 @@ nats:
 
 ## Built-in Casdoor Configuration
 casdoor:
-  ## Resource name prefix
-  name: "casdoor"
-
   ## Init Admin user, default "root"
   admin: {}
     # name: root
@@ -846,9 +788,6 @@ casdoor:
 
 ## Built-in Temporal Configuration
 temporal:
-  ## Resource name prefix
-  name: "temporal"
-
   ## Image settings (overrides global.image)
   image:
     ## Container registry secrets

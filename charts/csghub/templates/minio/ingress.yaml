@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := .Values.minio }}
+{{- $service := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if and .Values.global.objectStore.enabled $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}

@@ -10,7 +10,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.casdoor" -}}
-{{- $service := .Values.casdoor }}
+{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 
@@ -36,7 +36,7 @@ SPDX-License-Identifier: APACHE-2.0
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-casdoor" }}
-{{- $service := .Values.casdoor -}}
+{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-casdoor
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "casdoor" "image" "busybox:latest") }}

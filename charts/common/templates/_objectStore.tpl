@@ -17,7 +17,7 @@ Returns: YAML configuration object with S3 connection parameters
   {{- /* Configuration priority: internal MinIO (if enabled) > service-level external > global external */ -}}
 
   {{- /* Default configuration (internal MinIO) */ -}}
-  {{- $minioSvc := $global.Values.minio }}
+  {{- $minioSvc := include "common.service" (dict "service" "minio" "global" $global) | fromYaml }}
   {{- $minioName := include "common.names.custom" (list $global $minioSvc.name) -}}
   {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" $global) | fromYaml }}
   {{- $s3Config := dict

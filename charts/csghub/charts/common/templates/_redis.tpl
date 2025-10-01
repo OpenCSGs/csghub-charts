@@ -22,7 +22,7 @@ Returns: YAML configuration object with Redis connection parameters
   {{- /* Configuration priority: internal Redis (if enabled) > service-level external > global external */ -}}
 
   {{- /* Default configuration for internal Redis */ -}}
-  {{- $redisSvc := $global.Values.redis }}
+  {{- $redisSvc := include "common.service" (dict "service" "redis" "global" $global) | fromYaml }}
   {{- $redisName := include "common.names.custom" (list $global $redisSvc.name) -}}
   {{- $redisConfig := dict
     "host" $redisName

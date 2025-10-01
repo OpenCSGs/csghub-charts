@@ -10,7 +10,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.registry" -}}
-{{- $service := .Values.registry }}
+{{- $service := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 

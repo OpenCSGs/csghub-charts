@@ -20,7 +20,7 @@ Returns: YAML configuration object with NATS connection parameters
   {{- /* Configuration priority: internal NATS > external NATS */ -}}
 
   {{- /* Default configuration for internal NATS */ -}}
-  {{- $natsSvc := $global.Values.nats -}}
+  {{- $natsSvc := include "common.service" (dict "service" "nats" "global" $global) | fromYaml }}
   {{- $natsName := include "common.names.custom" (list $global $natsSvc.name) -}}
   {{- $natsConfig := dict
     "host" $natsName

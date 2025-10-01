@@ -22,7 +22,7 @@ Returns: YAML configuration object with Gitaly connection parameters
   {{- /* Configuration priority: internal Gitaly (if enabled) > service-level external > global external */ -}}
 
   {{- /* Default configuration for internal Gitaly */ -}}
-  {{- $gitalySvc := $global.Values.gitaly -}}
+  {{- $gitalySvc := include "common.service" (dict "service" "gitaly" "global" $global) | fromYaml }}
   {{- $gitalyName := include "common.names.custom" (list $global $gitalySvc.name) -}}
   {{- $gitalyConfig := dict
     "host" $gitalyName

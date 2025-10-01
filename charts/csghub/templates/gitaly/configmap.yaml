@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if .Values.global.gitaly.enabled }}
-{{- $service := .Values.gitaly }}
+{{- $service := include "common.service" (dict "service" "gitaly" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
 apiVersion: v1
@@ -48,7 +48,7 @@ data:
 
     [gitlab]
     ## URL of the GitLab server.
-    {{- $serverSvc := .Values.server }}
+    {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
     {{- $serverHost := include "common.names.custom" (list . $serverSvc.name) }}
     {{- $serverPort := dig "service" "port" "8080" $serverSvc | toString }}
     url = {{ printf "http://%s:%s" $serverHost $serverPort | quote }}
