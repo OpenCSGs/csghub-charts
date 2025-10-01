@@ -1,0 +1,41 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := .Values.rproxy }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: {{ dig "service" "type" "ClusterIP" $service }}
+  ports:
+    - port: {{ dig "service" "port" 8083 $service }}
+      targetPort: 8083
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
+      name: {{ $service.name }}
+    {{- if $service.nginx.enabled }}
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: rproxy-nginx
+    {{- end }}
+    {{- if $service.coredns.enabled }}
+    - port: 53
+      targetPort: 53
+      protocol: TCP
+      name: coredns-tcp
+    - port: 53
+      targetPort: 53
+      protocol: UDP
+      name: coredns-udp
+    {{- end }}
+  selector:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}

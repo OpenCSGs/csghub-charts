@@ -1,0 +1,238 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $serviceName := include "common.names.custom" (list . "core") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: "core"
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  GIN_MODE: release
+  ## Portal Configuration
+  {{- $portalSvc := .Values.portal }}
+  {{- $portalS3Config := include "common.s3.config" (dict "service" $portalSvc "global" .) | fromYaml }}
+  {{- $portalPgConfig := include "common.postgresql.config" (dict "service" $portalSvc "global" .) | fromYaml }}
+  {{- $IngressConfig := include "common.ingress.config" (dict "service" $portalSvc "global" .) | fromYaml }}
+  CSGHUB_PORTAL_APP_ENV: "production"
+  CSGHUB_PORTAL_ENABLE_HTTPS: {{ dig "tls" "enabled" "false" $IngressConfig | quote }}
+  CSGHUB_PORTAL_ON_PREMISE: {{ ternary "false" "true" (eq .Values.global.edition "saas") | quote }}
+  CSGHUB_PORTAL_STARHUB_BASE_URL: {{ include "common.endpoint.csghub" . | quote }}
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+  {{- $apiToken := dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $data }}
+  CSGHUB_PORTAL_STARHUB_API_KEY: {{ $apiToken | quote }}
+  ## Portal Configuration for Casdoor
+  {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
+  {{- $redirectURI := printf "redirect_uri=%s/api/v1/callback/casdoor&scope=read&state=casdoor" (include "common.endpoint.csghub" .) }}
+  CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?client_id=7a97bc5168cb75ffc514&response_type=code&%s" $authorizeAPI $redirectURI | quote }}
+  ## Portal Configuration for PostgreSQL
+  CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "service" $portalSvc "global" .) | quote }}
+  ## Portal Configuration for ObjectStorage Public
+  {{- $s3DefaultEndpoint := $portalS3Config.externalEndpoint | trimPrefix "http://" | trimPrefix  "https://" }}
+  CSGHUB_PORTAL_S3_ENDPOINT: {{ $s3DefaultEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
+  CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $portalS3Config.accessKey | quote }}
+  CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $portalS3Config.secretKey | quote }}
+  {{- $portalPublicBucketName := include "common.names.custom" (list . (printf "%s-public" $portalSvc.name)) }}
+  CSGHUB_PORTAL_S3_BUCKET: {{ dig "objectStore" "bucket" $portalPublicBucketName $portalSvc | quote }}
+  CSGHUB_PORTAL_S3_REGION: {{ $portalS3Config.region | quote }}
+  CSGHUB_PORTAL_S3_ENABLE_SSL: {{ $portalS3Config.secure | quote }}
+  ## Portal Configuration for ObjectStorage Private
+  CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT: {{ $s3DefaultEndpoint | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID: {{ $portalS3Config.accessKey | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET: {{ $portalS3Config.secretKey | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ $portalS3Config.bucket | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ $portalS3Config.region | quote }}
+  CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ $portalS3Config.secure | quote }}
+  ## Portal Configuration for SMTP
+  {{- with $portalSvc.smtp }}
+  CSGHUB_PORTAL_MAILER_HOST: {{ .host | quote }}
+  CSGHUB_PORTAL_MAILER_PORT: {{ .port | quote }}
+  CSGHUB_PORTAL_MAILER_USERNAME: {{ .username | quote }}
+  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .password | quote }}
+  {{- end }}
+
+  ## Accounting Configuration
+  {{- $accountingSvc := .Values.accounting }}
+  OPENCSG_ACCOUNTING_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $accountingSvc.name)) | quote }}
+  OPENCSG_ACCOUNTING_SERVER_PORT: {{ $accountingSvc | dig "service" "port" "8086" | quote }}
+  OPENCSG_ACCOUNTING_CHARGING_ENABLE: "true"
+  OPENCSG_ACCOUNTING_MSG_FETCH_TIMEOUTINSEC: "5"
+  {{- $natsConfig := include "common.nats.config" . | fromYaml }}
+  OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
+
+  ## User Configuration
+  {{- $userSvc := .Values.user }}
+  OPENCSG_USER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $userSvc.name)) | quote }}
+  OPENCSG_USER_SERVER_PORT: {{ $userSvc | dig "service" "port" "8080" | quote }}
+  OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL: {{ printf "%s/server/callback" (include "common.endpoint.csghub" .) | quote }}
+
+  ## Moderation Configuration
+  {{- $moderationSvc := .Values.moderation }}
+  {{- if $moderationSvc.enabled }}
+  CSGHUB_PORTAL_SENSITIVE_CHECK: true
+  STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "true"
+  STARHUB_SERVER_SENSITIVE_CHECK_ENDPOINT: {{ $moderationSvc.endpoint | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_ID: {{ $moderationSvc.accessKeyId | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_SECRET: {{ $moderationSvc.accessKeySecret | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_REGION: {{ $moderationSvc.region | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ $moderationSvc.enableSSL | quote }}
+  OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $moderationSvc.name)) | quote }}
+  OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" "8089" | quote }}
+  {{- else }}
+  STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
+  {{- end }}
+
+  ## Server Configuration for Workflow
+  {{- $temporalSvc := .Values.temporal }}
+  {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
+  {{- $temporalPort := $temporalSvc | dig "service" "port" "7233" | toString }}
+  OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "http://%s:%s" $temporalHost $temporalPort | quote }}
+  STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
+
+  ## Server Configuration for Dataflow
+  {{- $dataflowSvc := .Values.dataflow }}
+  {{- if $dataflowSvc.enabled }}
+  OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataflowSvc.name)) | quote }}
+  OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowSvc | dig "service" "port" "8000" | quote }}
+  {{- end }}
+
+  ## Server Configuration for Dataviewer
+  {{- $dataviewerSvc := .Values.dataviewer }}
+  OPENCSG_DATAVIEWER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataviewerSvc.name)) | quote }}
+  OPENCSG_DATAVIEWER_SERVER_PORT: {{ $dataviewerSvc | dig "service" "port" "8093" | quote }}
+
+  ## Server Configuration for Notification
+  {{- $notifierSvc := .Values.notifier }}
+  STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $notifierSvc.name)) | quote }}
+  STARHUB_SERVER_NOTIFIER_PORT: {{ $notifierSvc | dig "service" "port" "8095" | quote }}
+  {{- with $portalSvc.smtp }}
+  STARHUB_SERVER_MAILER_HOST: {{ .host | quote }}
+  STARHUB_SERVER_MAILER_PORT: {{ .port | quote }}
+  STARHUB_SERVER_MAILER_USERNAME: {{ .username | quote }}
+  STARHUB_SERVER_MAILER_PASSWORD: {{ .password | quote }}
+  {{- end }}
+  STARHUB_SERVER_REPO_SYNC_TIMEZONE: {{ $notifierSvc.repoSyncTime | default "Asia/Shanghai" | quote }}
+  STARHUB_SERVER_NOTIFIER_BROADCAST_USER_PAGE_SIZE: {{ $notifierSvc.broadcastUserPageSize | default 100 | quote }}
+  STARHUB_SERVER_NOTIFIER_BROADCAST_EMAIL_PAGE_SIZE: {{ $notifierSvc.broadcastEmailPageSize | default 100 | quote }}
+  ### Server Configuration for FeiShu of Notification
+  {{- if eq .Values.global.edition "ee" }}
+  {{- with $notifierSvc.feiShu }}
+  STARHUB_SERVER_FEISHU_APP_ID: {{ .appId | quote }}
+  STARHUB_SERVER_FEISHU_APP_SECRET: {{ .appSecret | quote }}
+  STARHUB_SERVER_FEISHU_BATCH_SEND_MESSAGE_CRON_EXPRESSION: {{ .batchSendMessageCronExpression | default "*/10 * * * *" | quote }}
+  STARHUB_SERVER_FEISHU_MAX_REQUEST_CONTENT_SIZE: {{ .maxRequestContentSize | default 20480 | quote }}
+  STARHUB_SERVER_FEISHU_MAX_DELAY_DURATION: {{ .maxDelayDuration | default 3600 | quote }}
+  STARHUB_SERVER_FEISHU_CHAT_IDS_CACHE_TTL: {{ .chatIdsCacheTTL | default 21600 | quote }}
+  {{- end }}
+  {{- end }}
+
+  ## Server Configuration for Payment
+  {{- $paymentSvc := .Values.payment }}
+  {{- if eq .Values.global.edition "saas" }}
+  OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
+  OPENCSG_PAYMENT_BILL_BUCKET: {{ $paymentSvc.billingBucket | quote }}
+  OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $paymentSvc.name)) | quote }}
+  OPENCSG_PAYMENT_SERVER_PORT: {{ $paymentSvc | dig "service" "port" "8090" | quote }}
+  {{- end }}
+
+  ## Server Configuration for Payment
+  {{- $aigatewaySvc := .Values.aigateway }}
+  OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" "8094" | quote }}
+
+  ## Server Configuration
+  {{- $serverSvc := .Values.server }}
+  {{- $serverS3Config := include "common.s3.config" (dict "service" $serverSvc "global" .) | fromYaml }}
+  {{- $serverRedisConfig := include "common.redis.config" (dict "service" $serverSvc "global" .) | fromYaml }}
+  {{- $serverPgConfig := include "common.postgresql.config" (dict "service" $serverSvc "global" .) | fromYaml }}
+  {{- $serverGitConfig := include "common.gitaly.config" (dict "service" $serverSvc "global" .) | fromYaml }}
+  STARHUB_SERVER_SAAS: {{ eq .Values.global.edition "saas" | quote }}
+  STARHUB_SERVER_ENABLE_HTTPS: {{ dig "tls" "enabled" "false" $IngressConfig | quote }}
+  STARHUB_SERVER_MIRRORSERVER_ENABLE: "false"
+  STARHUB_SERVER_MIRROR_REMOTE: "false"
+  STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
+  {{- $jwtToken := dig "STARHUB_JWT_SIGNING_KEY" (randNumeric 8 | sha1sum) $data }}
+  STARHUB_JWT_SIGNING_KEY: {{ $jwtToken | quote }}
+
+  ## Server Configuration for Model
+  STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
+  ## Server Configuration for Model
+  {{- $registry := or $serverSvc.model.registry .Values.global.image.registry "docker.io" }}
+  STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
+
+  ## Server Configuration for Multiple-Sync
+  STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ $serverSvc.multiSync.enabled | quote }}
+  ## Server Configuration for Multiple-Sync fetch timeout
+  STARHUB_SERVER_GIT_OPERATION_TIMEOUT: "120"
+  {{- if $serverSvc.multiSync.proxy }}
+  STARHUB_SERVER_PROXY_ENABLE: "true"
+  STARHUB_SERVER_PROXY_URL: {{ $serverSvc.multiSync.proxy | quote }}
+  {{- end }}
+  {{- $mirrorSvc := .Values.mirror }}
+  {{- $mirrorLfsHost := include "common.names.custom" (list . (printf "%s-lfs" $mirrorSvc.name)) }}
+  STARHUB_SERVER_LFS_SYNC_HOST: {{ printf "http://%s" $mirrorLfsHost | quote }}
+  STARHUB_SERVER_LFS_SYNC_PORT: {{ $mirrorSvc | dig "service" "port" "8092" | quote }}
+
+  ## Server Configuration for Redis
+  STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $serverRedisConfig.host $serverRedisConfig.port | quote }}
+  STARHUB_SERVER_REDIS_PASSWORD: {{ $serverRedisConfig.password | quote }}
+
+  ## Server Configuration for PostgreSQL
+  STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "service" $serverSvc "global" .) | quote }}
+
+  ## Server Configuration for Object Storage
+  STARHUB_SERVER_S3_ENDPOINT: {{ $serverS3Config.externalEndpoint | trimPrefix "http://" | trimPrefix "https://" | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $serverS3Config.accessKey | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $serverS3Config.secretKey | quote }}
+  STARHUB_SERVER_S3_BUCKET: {{ $serverS3Config.bucket | quote }}
+  STARHUB_SERVER_S3_REGION: {{ $serverS3Config.region | quote }}
+  STARHUB_SERVER_S3_ENABLE_SSL: {{ $serverS3Config.secure | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" $serverS3Config.pathStyle | quote }}
+
+  ## Server Configuration for Gitaly
+  STARHUB_SERVER_GITSERVER_TYPE: "gitaly"
+  STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ printf "%s://%s:%v" $serverGitConfig.scheme $serverGitConfig.host $serverGitConfig.port | quote }}
+  STARHUB_SERVER_GITALY_TOKEN: {{ $serverGitConfig.token | quote }}
+  STARHUB_SERVER_GITALY_STORAGE: {{ $serverGitConfig.storage | quote }}
+  {{- $domain := include "common.domain.csghub" . }}
+  {{- $port := ternary "30022" "22" (eq .Values.global.ingress.service.type "NodePort") }}
+  STARHUB_SERVER_SSH_DOMAIN: {{ ternary (printf "git@%s" $domain) (printf "ssh://git@%s:%s" $domain $port) (eq $port "22") | quote }}
+
+  ## Server Configuration for Space Application
+  STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "common.endpoint.csghub" . | quote }}
+  {{- $rproxySvc := .Values.rproxy }}
+  {{- $rproxyPort := dig "service" "port" "8083" $rproxySvc }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" (include "namespace.spaces" .) $rproxyPort | quote }}
+  {{- $endpoint := include "common.domain.public" . }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" .Values.rproxy.usePublicDomain | quote }}
+  {{- $runnerSvc := .Values.runner }}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.pipIndexUrl | quote }}
+  {{- $sessionToken := dig "STARHUB_SERVER_SPACE_SESSION_SECRET_KEY" (randNumeric 8 | sha1sum) $data }}
+  STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ $sessionToken | quote }}
+
+  ## Server Configuration for Casdoor
+  STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"
+
+  ## Server Configuration for Tracing logging
+  {{- $tempoSvc := .Values.tempo }}
+  {{- $tempoHost := include "common.names.custom" (list . "tempo") }}
+  OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
+  OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
+
+  ## Server Configuration for Swagger API
+  STARHUB_SERVER_ENABLE_SWAGGER: {{ $serverSvc.swaggerAPI.enabled | quote }}
+
+  ## Server Configuration for Prometheus
+  {{- $promeSvc := .Values.prometheus }}
+  {{- if $promeSvc.enabled }}
+  {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
+  {{- $promePort := dig "service" "port" "80" $promeSvc }}
+  STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%s/api/v1/query" $promeHost $promePort | quote }}
+  {{- with $promeSvc.ingress.basicAuth }}
+  STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
+  {{- end }}
+  {{- end }}

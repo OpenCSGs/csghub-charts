@@ -65,3 +65,18 @@ Returns: Unique API token string that changes on every installation
   {{- /* Combine hashes to form final token */ -}}
   {{- printf "%s%s" $namespaceHash $nameHash -}}
 {{- end -}}
+
+{{/*
+Resolve service image with proper tag
+Usage:
+  {{ include "csghub.service.image" (dict "service" .Values.rproxy "context" .) }}
+*/}}
+{{- define "csghub.service.image" -}}
+{{- $service := .service -}}
+{{- $context := .context -}}
+{{- $tag := or (dig "image" "tag" "" $service) $context.Values.image.tag $context.Values.global.image.tag -}}
+{{- $finalTag := include "common.image.tag" (dict "tag" $tag "context" $context) -}}
+{{- $_ := set $context.Values.image "tag" $finalTag -}}
+{{- $image := mergeOverwrite $context.Values.image (default dict $service.image) -}}
+{{- $image | toYaml -}}
+{{- end -}}

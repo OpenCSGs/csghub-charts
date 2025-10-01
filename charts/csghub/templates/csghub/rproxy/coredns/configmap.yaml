@@ -1,0 +1,52 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := .Values.rproxy }}
+{{- if $service.coredns.enabled }}
+{{- $runnerSvc := .Values.runner }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-coredns" $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+{{- $spaceNamespace := include "namespace.spaces" . }}
+  corefile: |
+    .:53 {
+        {{- range .Values.runner.knative.serving.services }}
+        forward {{ printf "%s.%s." $spaceNamespace .domain }} /etc/resolv.conf
+        {{- end  }}
+        forward . {{ include "coredns.system.ip" . }}
+        log
+        errors
+        cache 30
+        reload
+        loadbalance
+    }
+    {{- range .Values.runner.knative.serving.services }}
+    {{ .domain }}:53 {
+        file /var/opt/coredns/{{ .domain }}
+        log
+        errors
+    }
+    {{- end }}
+  {{- range .Values.runner.knative.serving.services }}
+  {{ .domain }}: |
+    {{- $domain := (printf "%s.%s." $spaceNamespace .domain) }}
+    $ORIGIN {{ $domain }}
+    @ 3600 IN SOA ns1.{{ $domain }} admin.{{ $domain }} (
+        2022042401 ; Serial
+        3600       ; Refresh
+        1800       ; Retry
+        604800     ; Expire
+        86400      ; Minimum TTL
+    )
+    *   3600 IN A  {{ include "rproxy.service.ip" . }}
+{{- end }}
+{{- end }}

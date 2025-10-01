@@ -1,11 +1,14 @@
 ## Global Configuration
 global:
+  ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
+  edition: "ee"
+
   ## Ingress Configuration
   ingress:
     ## Define other ingressClass types compatible with ingress-nginx
     # className: "nginx"
     ## Domain name for accessing csghub
-    domain: example.com
+    domain: msens.cn
     ## Whether to use the top-level domain directly for access
     ## If true, access via domain only (example.com)
     ## If false, access via subdomain+domain (csghub.example.com)
@@ -122,6 +125,319 @@ global:
       ## Storage name for Gitaly repositories
       # storage: "default"
 
+#################################################################
+##  CSGHub Configuration                                       ##
+#################################################################
+## Core configuration
+## All CSGHub services using this as default local image configuration
+## except Portal
+image:
+  ## Docker registry secrets
+  pullSecrets: []
+  ## Image registry
+  registry: "docker.io"
+  ## Image repository
+  repository: "opencsghq/csghub-server"
+  ## Image version tag
+  tag: "v1.11.0"
+  ## Image pull behavior
+  pullPolicy: "IfNotPresent"
+
+## Log Level, eg: info, warning, debug, error
+logging:
+  ## Default info
+  level: info
+
+## Portal configuration
+portal:
+  ## Resource name prefix
+  name: "portal"
+
+  ## Image settings (overrides global.image)
+  image:
+    ## Image repository
+    repository: "opencsghq/csghub-portal"
+
+  ## Configuration for ingress.
+  ingress:
+    ## Enable or disable ingress.
+    enabled: true
+    ## Ingress-nginx annotations
+    annotations: {}
+    ## TLS settings for ingress.
+    tls: {}
+      ## Enable or disable TLS.
+      # enabled: false
+      ## If tls enabled, a secret needs to be provided
+      # secretName: ""
+
+  ## Links to docs center (not for ce/ee)
+  docs: {}
+    ## If using domain, it'll create svc by ExternalName
+    # domain: ""
+    # host: "192.168.18.10"
+    # port: "8003"
+
+  ## Database configuration
+  postgresql: {}
+    ## PostgreSQL connection settings
+    # host: "<pg_host>"
+    # port: 5432
+    # database: "csghub_portal"
+    # user: "csghub"
+    # password: ""
+    # timezone: "Etc/UTC"
+    # sslmode: "prefer"
+
+  ## External Object Storage Service Configuration (OSS/S3 Compatible)
+  objectStore: {}
+    ## Endpoint URL for accessing the object storage service
+    ## Example: "https://oss-cn-beijing.aliyuncs.com" or "http://minio.example.com:9000"
+    # endpoint: ""
+    ## Access Key ID for authentication
+    # accessKey: ""
+    ## Secret Access Key for authentication
+    # accessSecret: ""
+    ## Bucket name to be used in the object storage service
+    # bucket: "csghub-portal-public"
+    ## Region where the bucket is located
+    ## Example: "us-east-1", "cn-beijing"
+    # region: ""
+    ## Use secure TLS certificates (skip certificate verification if false)
+    # secure: false
+    ## Enable TLS encryption for connections
+    # encrypt: false
+    ## When true, bucket name is included in URL path
+    ## URL format: http://endpoint/bucket/object-key
+    ## When false: http://bucket.endpoint/object-key
+    # pathStyle: true
+
+## Provides the main service logic and API interface,
+##  and handles requests sent by the client.
+server:
+  ## Resource name prefix
+  name: "server"
+
+  ## Image settings (overrides global.image)
+  image: {}
+
+  ## Enable or disable the multi-sync service
+  multiSync:
+    enabled: true
+    ## Set proxy to get model from CSGHub
+    proxy: ""
+
+  ## Enable Swagger API assistants
+  swaggerAPI:
+    enabled: false
+
+  ## Database configuration
+  postgresql: {}
+    ## PostgreSQL connection settings
+    # host: "<pg_host>"
+    # port: 5432
+    # database: "csghub_server"
+    # user: "csghub"
+    # password: ""
+    # timezone: "Etc/UTC"
+    # sslmode: "prefer"
+
+  ## Redis configuration
+  redis: {}
+    ## Hostname or IP address of the external Redis server
+    # host: "<redis_host>"
+    ## Port number for the Redis connection
+    # port: 6379
+    ## Password for Redis authentication
+    # password: ""
+
+  ## External Object Storage Service Configuration (OSS/S3 Compatible)
+  objectStore: {}
+    ## Endpoint URL for accessing the object storage service
+    ## Example: "https://oss-cn-beijing.aliyuncs.com" or "http://minio.example.com:9000"
+    # endpoint: ""
+    ## Access Key ID for authentication
+    # accessKey: ""
+    ## Secret Access Key for authentication
+    # accessSecret: ""
+    ## Bucket name to be used in the object storage service
+    # bucket: "csghub-server"
+    ## Region where the bucket is located
+    ## Example: "us-east-1", "cn-beijing"
+    # region: ""
+    ## Use secure TLS certificates (skip certificate verification if false)
+    # secure: false
+    ## Enable TLS encryption for connections
+    # encrypt: false
+    ## When true, bucket name is included in URL path
+    ## URL format: http://endpoint/bucket/object-key
+    ## When false: http://bucket.endpoint/object-key
+    # pathStyle: true
+
+  ## Model images configuration
+  model: {}
+    ## Pull inference images from registry
+    # registry: "docker.io"
+
+## RProxy configuration
+## Responsible for forwarding requests related to deployment instances,
+##  such as forwarding space application operation requests to Knative Serving services.
+rproxy:
+  ## Resource name prefix
+  name: "rproxy"
+
+  ## Using public domain for application accessing
+  usePublicDomain: true
+
+  ## Built-in CoreDNS Configuration
+  ## Starting from v1.12.0, in the new operating mode, coredns has been deprecated.,
+  ## but the service will be retained for forward compatibility
+  coredns:
+    ## Enable or Disable coredns
+    enabled: false
+    ## Image settings (overrides global.image)
+    image:
+      ## Image repository
+      repository: "coredns/coredns"
+      ## Image version tag
+      tag: "1.11.1"
+
+  ## Built-in Nginx Configuration
+  ## Starting from v1.12.0, in the new operating mode, nginx has been deprecated.,
+  ## but the service will be retained for forward compatibility
+  nginx:
+    ## Enable or Disable coredns
+    enabled: false
+    ## Image settings (overrides global.image)
+    image:
+      ## Image repository
+      repository: "nginx"
+      ## Image version tag
+      tag: "latest"
+
+## Accounting configuration
+accounting:
+  ## Resource name prefix
+  name: "accounting"
+
+## User configuration
+user:
+  ## Resource name prefix
+  name: "user"
+
+## Dataviewer configuration
+dataviewer:
+  ## Resource name prefix
+  name: "dataviewer"
+
+## Mirror configuration
+mirror:
+  ## Resource name prefix
+  name: "mirror"
+
+## Aigateway configuration
+aigateway:
+  ## Resource name prefix
+  name: "aigateway"
+
+## Notifier configuration
+notifier:
+  ## Resource name prefix
+  name: "notifier"
+
+  ## Set timezone
+  repoSyncTime: "Asia/Shanghai"
+
+  ## SMTP notify settings
+  smtp: {}
+    # host: ""
+    # port: 465
+    # username: ""
+    # password: ""
+
+  feiShu: {}
+    ## FeiShu bot Application Id
+    # appId: ""
+    ## FeiShu bot Application Secret
+    # appSecret: ""
+
+## Payment configuration
+payment:
+  ## Resource name prefix
+  name: "payment"
+
+  ## Bucket to store billing
+  billingBucket: "csghub-billing"
+
+## Moderation configuration
+## This service relies on external content review services,
+##  such as cloud service providers' content review services.
+moderation:
+  ## Resource name prefix
+  name: "moderation"
+
+  ## Enable or disable the content moderation service
+  enabled: false
+
+  ## The API endpoint URL for the moderation service (Leave empty to disable)
+  # endpoint: ""
+  ## Access Key ID for authenticating with the moderation service
+  # accessKeyId: ""
+  ## Secret Access Key for authenticating with the moderation service
+  # accessKeySecret: ""
+  ## The service region (e.g., "us-west-1")
+  # region: ""
+  ## Enable SSL/TLS for secure communication with the service
+  # enableSSL: true
+
+## Runner configuration
+runner:
+  ## Resource name prefix
+  name: "runner"
+
+  ## Namespace for user-deployed inference, fine-tuning, model evaluation, and other instances
+  namespace: "spaces"
+
+  ## Automatic install and configure knative, argo, lws, included namespace declared before
+  ## Automatic configuration will use standardized installation to create their own namespaces,
+  ##   and control the use of namespaces through mergingNamespace
+  autoConfigure: true
+
+  ## Merging mode: "multi" (reduce namespaces) or "single" (merge to one namespace) or "disable" (Disable merging)
+  mergingNamespace: "disable"
+
+  ## Custom pip repository URL
+  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+
+  ## Knative serving configuration
+  knative:
+    serving:
+      ## It will generate ksvc with domain suffix http://<uuid>.<namespace>.<knative.serving.domain>
+      ## Default global.ingress.domain
+      domain: example.com
+      ## Starting from v1.12.0, in the new operating mode, `services` has been deprecated.,
+      ## but the service will be retained for forward compatibility
+      services:
+        ## Knative service type (LoadBalancer or NodePort)
+        - type: LoadBalancer
+          ## Internal domain for service access
+          domain: "example.com"
+          ## API server host address
+          # host: "192.168.18.10"
+          ## Service port (NodePort value when type is NodePort)
+          # port: "30213"
+
+## Dataflow configuration
+dataflow:
+  ## Resource name prefix
+  name: "dataflow"
+
+  ## Enable or disable the dataflow service
+  enabled: true
+
+#################################################################
+##  Other built-in third-party services                        ##
+#################################################################
 ## Embedded PostgreSQL configuration
 postgresql:
   ## Resource name prefix
@@ -270,6 +586,11 @@ minio:
   ## Policy: https://docs.min.io/community/minio-object-store/reference/minio-mc/mc-anonymous-set.html#mc.anonymous.set
   buckets:
     csghub-registry: "none"
+    csghub-billing: "none"
+    csghub-server: "none"
+    csghub-portal: "none"
+    csghub-portal-public: "download"
+
 
   ## Data persistence settings
   persistence:
@@ -513,11 +834,11 @@ casdoor:
       # secretName: ""
 
   ## Database configuration
-  postgresql:
+  postgresql: {}
     ## PostgreSQL connection settings
     # host: "<pg_host>"
     # port: 5432
-    database: "csghub_casdoor"
+    # database: "csghub_casdoor"
     # user: "csghub"
     # password: ""
     # timezone: "Etc/UTC"
@@ -585,31 +906,29 @@ temporal:
       # secretName: ""
 
   ## Database configuration
-  postgresql:
+  postgresql: {}
     ## PostgreSQL connection settings
     # host: "<pg_host>"
     # port: 5432
-    database: "csghub_temporal"
+    # database: "csghub_temporal"
     # user: "csghub"
     # password: ""
     # timezone: "Etc/UTC"
     # sslmode: "prefer"
 
-## Built-in CSGHub Server Configuration
-server:
-  ## Resource name prefix
-  name: "server"
-
-  ## Service configuration
-  service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 8080
-    ## Network protocol
-    protocol: TCP
-
+#################################################################
+##  Dependent subchart configuration                           ##
+#################################################################
 ## Reloader Configuration
 reloader:
   image:
     name: "opencsghq/stakater-reloader"
+
+## Tempo Configuration
+tempo:
+  enabled: false
+
+## Prometheus Configuration
+prometheus:
+  enabled: true
+  ingress: {}
