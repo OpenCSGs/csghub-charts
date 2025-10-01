@@ -3,9 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := .Values.rproxy }}
-{{- $serverSvc := .Values.server }}
-
+{{- $service := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -67,12 +65,14 @@ spec:
       serviceAccountName: {{ $service.serviceAccountName }}
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
       {{- end }}
-      {{- with (or .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or (dig "image" "pullSecrets" "" $service) .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
+      initContainers:
+        {{- include "wait-for-server" . | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           {{- $rproxyImage := include "csghub.service.image" (dict "service" $service "context" .) | fromYaml }}
@@ -144,7 +144,7 @@ spec:
           ports:
             - containerPort: 80
               name: {{ printf "%s-nginx" $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
           {{- with $service.environments }}
           env:
           {{- range $key, $value := . }}

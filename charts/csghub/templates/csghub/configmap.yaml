@@ -15,7 +15,7 @@ metadata:
 data:
   GIN_MODE: release
   ## Portal Configuration
-  {{- $portalSvc := .Values.portal }}
+  {{- $portalSvc := include "common.service" (dict "service" "portal" "global" .) | fromYaml }}
   {{- $portalS3Config := include "common.s3.config" (dict "service" $portalSvc "global" .) | fromYaml }}
   {{- $portalPgConfig := include "common.postgresql.config" (dict "service" $portalSvc "global" .) | fromYaml }}
   {{- $IngressConfig := include "common.ingress.config" (dict "service" $portalSvc "global" .) | fromYaml }}
@@ -57,7 +57,7 @@ data:
   {{- end }}
 
   ## Accounting Configuration
-  {{- $accountingSvc := .Values.accounting }}
+  {{- $accountingSvc := include "common.service" (dict "service" "accounting" "global" .) | fromYaml }}
   OPENCSG_ACCOUNTING_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $accountingSvc.name)) | quote }}
   OPENCSG_ACCOUNTING_SERVER_PORT: {{ $accountingSvc | dig "service" "port" "8086" | quote }}
   OPENCSG_ACCOUNTING_CHARGING_ENABLE: "true"
@@ -66,13 +66,13 @@ data:
   OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
 
   ## User Configuration
-  {{- $userSvc := .Values.user }}
+  {{- $userSvc := include "common.service" (dict "service" "user" "global" .) | fromYaml }}
   OPENCSG_USER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $userSvc.name)) | quote }}
   OPENCSG_USER_SERVER_PORT: {{ $userSvc | dig "service" "port" "8080" | quote }}
   OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL: {{ printf "%s/server/callback" (include "common.endpoint.csghub" .) | quote }}
 
   ## Moderation Configuration
-  {{- $moderationSvc := .Values.moderation }}
+  {{- $moderationSvc := include "common.service" (dict "service" "moderation" "global" .) | fromYaml }}
   {{- if $moderationSvc.enabled }}
   CSGHUB_PORTAL_SENSITIVE_CHECK: true
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "true"
@@ -88,26 +88,26 @@ data:
   {{- end }}
 
   ## Server Configuration for Workflow
-  {{- $temporalSvc := .Values.temporal }}
+  {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
   {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
   {{- $temporalPort := $temporalSvc | dig "service" "port" "7233" | toString }}
   OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "http://%s:%s" $temporalHost $temporalPort | quote }}
   STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
 
   ## Server Configuration for Dataflow
-  {{- $dataflowSvc := .Values.dataflow }}
+  {{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
   {{- if $dataflowSvc.enabled }}
   OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataflowSvc.name)) | quote }}
   OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowSvc | dig "service" "port" "8000" | quote }}
   {{- end }}
 
   ## Server Configuration for Dataviewer
-  {{- $dataviewerSvc := .Values.dataviewer }}
+  {{- $dataviewerSvc := include "common.service" (dict "service" "dataviewer" "global" .) | fromYaml }}
   OPENCSG_DATAVIEWER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataviewerSvc.name)) | quote }}
   OPENCSG_DATAVIEWER_SERVER_PORT: {{ $dataviewerSvc | dig "service" "port" "8093" | quote }}
 
   ## Server Configuration for Notification
-  {{- $notifierSvc := .Values.notifier }}
+  {{- $notifierSvc := include "common.service" (dict "service" "notifier" "global" .) | fromYaml }}
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $notifierSvc.name)) | quote }}
   STARHUB_SERVER_NOTIFIER_PORT: {{ $notifierSvc | dig "service" "port" "8095" | quote }}
   {{- with $portalSvc.smtp }}
@@ -132,7 +132,7 @@ data:
   {{- end }}
 
   ## Server Configuration for Payment
-  {{- $paymentSvc := .Values.payment }}
+  {{- $paymentSvc := include "common.service" (dict "service" "payment" "global" .) | fromYaml }}
   {{- if eq .Values.global.edition "saas" }}
   OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
   OPENCSG_PAYMENT_BILL_BUCKET: {{ $paymentSvc.billingBucket | quote }}
@@ -145,7 +145,7 @@ data:
   OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" "8094" | quote }}
 
   ## Server Configuration
-  {{- $serverSvc := .Values.server }}
+  {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
   {{- $serverS3Config := include "common.s3.config" (dict "service" $serverSvc "global" .) | fromYaml }}
   {{- $serverRedisConfig := include "common.redis.config" (dict "service" $serverSvc "global" .) | fromYaml }}
   {{- $serverPgConfig := include "common.postgresql.config" (dict "service" $serverSvc "global" .) | fromYaml }}
@@ -172,7 +172,7 @@ data:
   STARHUB_SERVER_PROXY_ENABLE: "true"
   STARHUB_SERVER_PROXY_URL: {{ $serverSvc.multiSync.proxy | quote }}
   {{- end }}
-  {{- $mirrorSvc := .Values.mirror }}
+  {{- $mirrorSvc := include "common.service" (dict "service" "mirror" "global" .) | fromYaml }}
   {{- $mirrorLfsHost := include "common.names.custom" (list . (printf "%s-lfs" $mirrorSvc.name)) }}
   STARHUB_SERVER_LFS_SYNC_HOST: {{ printf "http://%s" $mirrorLfsHost | quote }}
   STARHUB_SERVER_LFS_SYNC_PORT: {{ $mirrorSvc | dig "service" "port" "8092" | quote }}

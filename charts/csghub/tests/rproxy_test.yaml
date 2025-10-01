@@ -1,0 +1,276 @@
+suite: Test Casdoor Resources
+templates:
+  - csghub/rproxy/coredns/configmap.yaml
+  - csghub/rproxy/nginx/configmap.yaml
+  - csghub/rproxy/service.yaml
+  - csghub/rproxy/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      enabled: true
+      domain: example.cn
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    postgresql:
+      enabled: true
+  image:
+    registry: "ghcr.io"
+    repository: "opencsghq/csghub-server"
+    tag: "v1.11.0"
+    pullPolicy: ""
+  rproxy:
+    coredns:
+      enabled: true
+    nginx:
+      enabled: true
+  runner:
+    namespace: "space"
+    mergingNamespace: "disable"
+    knative:
+      serving:
+        services:
+          - domain: "app1.internal"
+            host: 10.0.6.10
+            port: 30022
+          - domain: "app2.internal"
+            host: 10.0.6.11
+            port: 30023
+tests:
+  - it: Should render coredns configmap correctly
+    template: csghub/rproxy/coredns/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy-coredns"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+      - matchRegex:
+          path: data.corefile
+          pattern: "\\s+forward space.app1.internal. /etc/resolv.conf"
+      - matchRegex:
+          path: data.corefile
+          pattern: "\\s+forward space.app2.internal. /etc/resolv.conf"
+      - matchRegex:
+          path: data.corefile
+          pattern: "\\s+app1.internal:53.*\\n.*app1.internal"
+      - matchRegex:
+          path: data.corefile
+          pattern: "\\s+app2.internal:53.*\\n.*app2.internal"
+      - matchRegex:
+          path: data["app1.internal"]
+          pattern: ".*space.app1.internal.\\n.*ns1.space.app1.internal.*admin.space.app1.internal.*"
+      - matchRegex:
+          path: data["app2.internal"]
+          pattern: ".*space.app2.internal.\\n.*ns1.space.app2.internal.*admin.space.app2.internal.*"
+
+  - it: Should render coredns configmap correctly with single namespace
+    template: csghub/rproxy/coredns/configmap.yaml
+    set:
+      runner:
+        mergingNamespace: "single"
+        knative:
+          serving:
+            services:
+              - domain: app1.internal
+              - domain: app2.internal
+    asserts:
+      - matchRegex:
+          path: data.corefile
+          pattern: "\\s+forward csghub.app1.internal. /etc/resolv.conf"
+
+  - it: Should render nginx configmap correctly
+    template: csghub/rproxy/nginx/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy-nginx"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+      - matchRegex:
+          path: data["app1.internal.conf"]
+          pattern: "\\s+server_name.*.space.app1.internal;\\n\\n\\s+resolver\\skube-dns.kube-system.svc.*"
+      - matchRegex:
+          path: data["app2.internal.conf"]
+          pattern: "\\s+server_name.*.space.app2.internal;\\n\\n\\s+resolver\\skube-dns.kube-system.svc.*"
+      - matchRegex:
+          path: data["app1.internal.conf"]
+          pattern: "\\s+proxy_pass\\shttp://10.0.6.10:30022"
+      - matchRegex:
+          path: data["app2.internal.conf"]
+          pattern: "\\s+proxy_pass\\shttp://10.0.6.11:30023"
+
+  - it: Should render nginx configmap correctly with single
+    template: csghub/rproxy/nginx/configmap.yaml
+    set:
+      runner:
+        mergingNamespace: "multi"
+        knative:
+          serving:
+            services:
+              - domain: "app.internal"
+    asserts:
+      - matchRegex:
+          path: data["app.internal.conf"]
+          pattern: "\\s+set.*kourier.knative-serving.svc.*\\n\\s+proxy_pass\\shttp://\\$knativeBackend"
+
+  - it: Should render service correctly
+    template: csghub/rproxy/service.yaml
+    set:
+      rproxy:
+        name: "rproxy-test"
+        service:
+          port: 8084
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy-test"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy-test"
+      - equal:
+          path: spec.ports[0]
+          value:
+            port: 8084
+            targetPort: 8083
+            protocol: TCP
+            name: rproxy-test
+      - equal:
+          path: spec.ports[1]
+          value:
+            port: 80
+            targetPort: 80
+            protocol: TCP
+            name: rproxy-nginx
+      - equal:
+          path: spec.ports[2]
+          value:
+            port: 53
+            targetPort: 53
+            protocol: TCP
+            name: coredns-tcp
+      - equal:
+          path: spec.ports[3]
+          value:
+            port: 53
+            targetPort: 53
+            protocol: UDP
+            name: coredns-udp
+
+  - it: Should render service correctly
+    template: csghub/rproxy/service.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: false
+        nginx:
+          enabled: false
+    asserts:
+      - equal:
+          path: spec.ports[0]
+          value:
+            port: 8083
+            targetPort: 8083
+            protocol: TCP
+            name: rproxy
+
+  - it: Should render deployment with global correctly
+    template: csghub/rproxy/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "rproxy"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "ghcr.io/busybox:latest"
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: "csghub-server:8080"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "ghcr.io/opencsghq/csghub-server:v1.11.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "ghcr.io/nginx:latest"
+      - equal:
+          path: spec.template.spec.containers[2].image
+          value: "ghcr.io/coredns/coredns:1.11.1"
+
+  - it: Should render deployment with local correctly
+    template: csghub/rproxy/deployment.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      rproxy:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+        nodeSelector:
+          diskType: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/busybox:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v1.11.0-ee"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nginx:latest"
+      - equal:
+          path: spec.template.spec.containers[2].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/coredns/coredns:1.11.1"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+
+  - it: Should render deployment with local correctly
+    template: csghub/rproxy/deployment.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: false
+        nginx:
+          enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1

@@ -3,9 +3,8 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := .Values.rproxy }}
+{{- $service := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
 {{- if $service.coredns.enabled }}
-{{- $runnerSvc := .Values.runner }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -31,7 +30,7 @@ data:
     }
     {{- range .Values.runner.knative.serving.services }}
     {{ .domain }}:53 {
-        file /var/opt/coredns/{{ .domain }}
+        file /coredns/{{ .domain }}
         log
         errors
     }
