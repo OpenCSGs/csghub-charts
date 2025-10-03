@@ -194,7 +194,7 @@ spec:
           imagePullPolicy: {{ or $corednsImage.pullPolicy .Values.global.image.pullPolicy }}
           args:
             - "-conf"
-            - "/coredns/corefile"
+            - "/etc/coredns/corefile"
           ports:
             - containerPort: 53
               name: coredns-tcp
@@ -215,7 +215,7 @@ spec:
           {{- end }}
           volumeMounts:
             - name: corefile
-              mountPath: /coredns
+              mountPath: /etc/coredns
           livenessProbe:
             tcpSocket:
               port: 53
