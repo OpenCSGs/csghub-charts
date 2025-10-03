@@ -91,14 +91,6 @@ spec:
               port: 7233
             initialDelaySeconds: 10
             periodSeconds: 5
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "temporal operator cluster health --address {{ $serviceName }}:7233"
-            initialDelaySeconds: 20
-            periodSeconds: 10
           {{- if $service.readinessProbe }}
           readinessProbe:
             {{- toYaml $service.readinessProbe | nindent 12 }}
