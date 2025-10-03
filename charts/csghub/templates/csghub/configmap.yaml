@@ -91,7 +91,7 @@ data:
   {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
   {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
   {{- $temporalPort := $temporalSvc | dig "service" "port" "7233" | toString }}
-  OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "http://%s:%s" $temporalHost $temporalPort | quote }}
+  OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "%s:%s" $temporalHost $temporalPort | quote }}
   STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
 
   ## Server Configuration for Dataflow

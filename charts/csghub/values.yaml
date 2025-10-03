@@ -298,7 +298,7 @@ rproxy:
   ## but the service will be retained for forward compatibility
   nginx:
     ## Enable or Disable coredns
-    enabled: false
+    enabled: true
     ## Image settings (overrides global.image)
     image:
       ## Image repository
@@ -432,7 +432,6 @@ postgresql:
   ## Format:
   ## - databaseName
   databases:
-    - "csghub"
     - "csghub_casdoor"
     - "csghub_temporal"
 

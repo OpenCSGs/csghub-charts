@@ -100,7 +100,7 @@ Usage:
 {{- $_ := set .Values.server "image" $image -}}
 - name: wait-for-server
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "server" "image" "busybox:latest") }}
-  imagePullPolicy: {{ .Values.global.image.pullPolicy | quote }}
+  imagePullPolicy: {{ or $image.pullPolicy .Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c
