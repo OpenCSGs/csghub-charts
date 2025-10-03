@@ -96,11 +96,9 @@ Usage:
 {{- $service := include "common.service" (dict "service" "server" "global" .) | fromYaml -}}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 {{- $serverPort := dig "service" "port" "8080" $service | toString -}}
-{{- $image := mergeOverwrite .Values.server.image .Values.image -}}
-{{- $_ := set .Values.server "image" $image -}}
 - name: wait-for-server
-  image: {{ include "common.image.fixed" (dict "ctx" . "service" "server" "image" "busybox:latest") }}
-  imagePullPolicy: {{ or $image.pullPolicy .Values.global.image.pullPolicy | quote }}
+  image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
+  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c

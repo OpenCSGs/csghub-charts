@@ -65,6 +65,8 @@ Returns: Full image path in format "registry/repository"
     {{- if index $ctx.Values $service "image" -}}
       {{- $localImage = index $ctx.Values $service "image" -}}
     {{- end -}}
+  {{- else }}
+    {{- $localImage = $ctx.Values.image }}
   {{- end -}}
 
   {{- $registry := or $globalImage.registry $localImage.registry -}}

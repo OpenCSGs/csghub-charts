@@ -18,11 +18,10 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := .service -}}
 {{- $global := .global -}}
 {{- $gitalyConfig := include "common.gitaly.config" (dict "service" $service "global" $global) | fromYaml -}}
-{{- $image := mergeOverwrite $global.Values.server.image $global.Values.image -}}
-{{- $_ := set $global.Values.server "image" $image -}}
+{{- $serverImage := include "csghub.service.image" (dict "service" $service "context" $global) | fromYaml }}
 - name: wait-for-gitaly
-  image: {{ include "common.image.fixed" (dict "ctx" $global "service" "server" "image" "busybox:latest") }}
-  imagePullPolicy: {{ or $image.pullPolicy $global.Values.global.image.pullPolicy | quote }}
+  image: {{ include "common.image.fixed" (dict "ctx" $global "service" "" "image" "busybox:latest") }}
+  imagePullPolicy: {{ or $global.Values.image.pullPolicy $global.Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c
