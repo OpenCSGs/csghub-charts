@@ -27,7 +27,7 @@ Returns: YAML configuration object with Redis connection parameters
   {{- $redisConfig := dict
     "host" $redisName
     "port" $redisSvc.service.port
-    "database" ($service.redis.database | default 0)
+    "database" (dig "redis" "database" "0" $service)
     "user" "default"
     "password" (include "common.randomPassword" $redisSvc.name)
   -}}
