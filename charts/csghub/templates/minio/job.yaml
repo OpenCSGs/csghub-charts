@@ -61,7 +61,7 @@ spec:
       initContainers:
         {{- include "wait-for-minio" . | nindent 8 }}
       containers:
-        - name: {{ $serviceName }}
+        - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/scripts/create_minio_buckets.sh" ]
