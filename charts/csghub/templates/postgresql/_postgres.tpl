@@ -8,7 +8,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Creates a Kubernetes init container that waits for PostgreSQL service to become ready
 # Verifies health endpoint before proceeding with pod startup
 #
-# Usage: {{ include "wait-for-postgresql" . }}
+# Usage: {{ include "wait-for-postgresql" (dict "service" $service "global" .) }}
 #
 # Dependencies:
 #   - common.names.custom template (naming)
