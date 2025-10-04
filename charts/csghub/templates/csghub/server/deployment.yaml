@@ -53,7 +53,7 @@ spec:
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
       {{- end }}
       {{- $serverImage := include "csghub.service.image" (dict "service" $service "context" .) | fromYaml }}
-      {{- with (or $serverImage.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      {{- with (or $serverImage.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}

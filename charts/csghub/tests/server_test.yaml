@@ -1,4 +1,4 @@
-suite: Test Casdoor Resources
+suite: Test Server Resources
 templates:
   - csghub/server/configmap.yaml
   - csghub/server/job.yaml
@@ -20,6 +20,8 @@ set:
     repository: "opencsghq/csghub-server"
     tag: "v1.11.0"
     pullPolicy: ""
+  server:
+    image: {}
   redis:
     image:
       repository: "redis"

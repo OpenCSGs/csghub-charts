@@ -33,6 +33,7 @@ set:
       enabled: true
     nginx:
       enabled: true
+    image: {}
   runner:
     namespace: "space"
     mergingNamespace: "disable"
