@@ -215,6 +215,10 @@ server:
   ## Image settings (overrides global.image)
   image: {}
 
+  ## Define gitlab ssh port
+  gitlabShell: {}
+    # sshPort: "22"
+
   ## Enable or disable the multi-sync service
   multiSync:
     enabled: true
