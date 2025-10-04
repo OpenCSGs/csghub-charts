@@ -39,8 +39,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-temporal
-  image: {{ include "common.image.fixed" (dict "ctx" . "service" "temporal" "image" "busybox:latest") }}
-  imagePullPolicy: {{ .Values.global.image.pullPolicy | quote }}
+  image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
+  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c

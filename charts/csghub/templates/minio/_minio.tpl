@@ -40,7 +40,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-minio
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "minio" "image" "busybox:latest") }}
-  imagePullPolicy: {{ .Values.global.image.pullPolicy | quote }}
+  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c

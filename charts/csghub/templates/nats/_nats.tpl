@@ -18,8 +18,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "service" "nats" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-nats
-  image: {{ include "common.image.fixed" (dict "ctx" . "service" "nats" "image" "busybox:latest") }}
-  imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy | quote }}
+  image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
+  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c

@@ -117,7 +117,7 @@ tests:
           value: "docker.io/redis:7.2.5"
       - equal:
           path: spec.template.spec.initContainers[1].image
-          value: "docker.io/opencsghq/psql:latest"
+          value: "ghcr.io/opencsghq/psql:latest"
       - equal:
           path: spec.template.spec.initContainers[2].image
           value: "ghcr.io/busybox:latest"

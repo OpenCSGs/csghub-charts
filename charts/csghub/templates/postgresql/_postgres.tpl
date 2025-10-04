@@ -18,8 +18,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := .service -}}
 {{- $global := .global -}}
 - name: wait-for-postgresql
-  image: {{ include "common.image.fixed" (dict "ctx" $global "service" "casdoor" "image" "opencsghq/psql:latest") }}
-  imagePullPolicy: {{ or $service.image.pullPolicy $global.Values.global.image.pullPolicy | quote }}
+  image: {{ include "common.image.fixed" (dict "ctx" $global "service" "" "image" "opencsghq/psql:latest") }}
+  imagePullPolicy: {{ or $global.Values.image.pullPolicy $global.Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c
