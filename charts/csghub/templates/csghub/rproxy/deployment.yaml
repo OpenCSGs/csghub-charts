@@ -138,7 +138,8 @@ spec:
           {{- end }}
         {{- if $service.nginx.enabled }}
         - name: {{ printf "%s-nginx" $service.name }}
-          {{- $nginxImage := mergeOverwrite .Values.image $service.nginx.image }}
+          {{- $nginxBaseImage := deepCopy .Values.image }}
+          {{- $nginxImage := mergeOverwrite $nginxBaseImage $service.nginx.image }}
           image: {{ include "common.image" (list . $nginxImage) }}
           imagePullPolicy: {{ or $nginxImage.pullPolicy .Values.global.image.pullPolicy }}
           ports:
@@ -189,7 +190,8 @@ spec:
         {{- end }}
         {{- if $service.coredns.enabled }}
         - name: {{ printf "%s-coredns" $service.name }}
-          {{- $corednsImage := mergeOverwrite .Values.image $service.coredns.image }}
+          {{- $corednsBaseImage := deepCopy .Values.image }}
+          {{- $corednsImage := mergeOverwrite $corednsBaseImage $service.coredns.image }}
           image: {{ include "common.image" (list . $corednsImage) }}
           imagePullPolicy: {{ or $corednsImage.pullPolicy .Values.global.image.pullPolicy }}
           args:

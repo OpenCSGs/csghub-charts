@@ -74,11 +74,17 @@ Usage:
 {{- define "csghub.service.image" -}}
 {{- $service := .service -}}
 {{- $context := .context -}}
-{{- $tag := or (dig "image" "tag" "" $service) $context.Values.image.tag $context.Values.global.image.tag -}}
+
+{{- $baseImage := deepCopy (default (dict) $context.Values.image) -}}
+{{- $serviceImage := deepCopy (default (dict) $service.image) -}}
+
+{{- $tag := or (dig "image" "tag" "" $service) $baseImage.tag $context.Values.global.image.tag -}}
 {{- $finalTag := include "common.image.tag" (dict "tag" $tag "context" $context) -}}
-{{- $_ := set $context.Values.image "tag" $finalTag -}}
-{{- $image := mergeOverwrite $context.Values.image (default dict $service.image) -}}
-{{- $image | toYaml -}}
+
+{{- $mergedImage := mergeOverwrite $baseImage $serviceImage -}}
+{{- $_ := set $mergedImage "tag" $finalTag -}}
+
+{{- $mergedImage | toYaml -}}
 {{- end -}}
 
 {{- /*
