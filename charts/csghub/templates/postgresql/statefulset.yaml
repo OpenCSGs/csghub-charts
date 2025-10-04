@@ -85,7 +85,7 @@ spec:
           {{- end }}
           volumeMounts:
             - name: data
-              mountPath: /data
+              mountPath: /var/lib/postgresql/data
             - name: runtime
               mountPath: /etc/postgresql/runtime.conf
               subPath: runtime.conf
