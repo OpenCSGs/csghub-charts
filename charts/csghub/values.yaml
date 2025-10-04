@@ -8,7 +8,7 @@ global:
     ## Define other ingressClass types compatible with ingress-nginx
     # className: "nginx"
     ## Domain name for accessing csghub
-    domain: msens.cn
+    domain: example.com
     ## Whether to use the top-level domain directly for access
     ## If true, access via domain only (example.com)
     ## If false, access via subdomain+domain (csghub.example.com)
@@ -434,6 +434,7 @@ postgresql:
   databases:
     - "csghub_casdoor"
     - "csghub_temporal"
+    - "csghub_server"
 
   ## PostgreSQL runtime parameters
   parameters: {}

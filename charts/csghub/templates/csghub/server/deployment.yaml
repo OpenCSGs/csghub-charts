@@ -1,0 +1,168 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ $service.replicas | default 1 }}
+  minReadySeconds: {{ $service.minReadySeconds | default 30 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/service: {{ $service.name }}
+      {{- if $service.selector }}
+        {{- toYaml $service.selector | nindent 6 }}
+      {{- else }}
+        {{- include "common.labels.selector" . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/service: {{ $service.name }}
+        {{- if $service.podLabels }}
+          {{- toYaml $service.podLabels | nindent 8 }}
+        {{- else }}
+          {{- include "common.labels" . | nindent 8 }}
+        {{- end }}
+      annotations:
+      {{- if $service.podAnnotations }}
+        {{- toYaml $service.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ $service.terminationGracePeriodSeconds | default 20 }}
+      {{- if $service.serviceAccountName }}
+      serviceAccountName: {{ $service.serviceAccountName }}
+      automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
+      {{- end }}
+      {{- $serverImage := include "csghub.service.image" (dict "service" $service "context" .) | fromYaml }}
+      {{- with (or $serverImage.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      initContainers:
+        {{- include "wait-for-redis" (dict "service" $service "global" .)  | nindent 8 }}
+        {{- include "wait-for-postgresql" (dict "service" $service "global" .) | nindent 8 }}
+        {{- include "wait-for-gitaly" (dict "service" $service "global" .) | nindent 8 }}
+        {{- include "wait-for-nats" . | nindent 8 }}
+        {{- include "wait-for-temporal" . | nindent 8 }}
+      containers:
+        - name: {{ $service.name }}
+          image: {{ include "common.image" (list . $serverImage) }}
+          imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
+          command:
+            - "/starhub-bin/starhub"
+            - "start"
+            - "server"
+            - "-l"
+            - {{ .Values.logging.level | default "info" | quote }}
+          ports:
+            - containerPort: 8080
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "core") }}
+          {{- with $service.environments }}
+          env:
+          {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if $service.resources }}
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: jwt-token-cert
+              mountPath: /starhub-bin/casdoor
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          {{- if $service.startupProbe }}
+          startupProbe:
+            {{- toYaml $service.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if $service.securityContext }}
+          securityContext:
+            {{- toYaml $service.securityContext | nindent 12 }}
+          {{- end }}
+          {{- if $service.lifecycle }}
+          lifecycle:
+            {{- toYaml $service.lifecycle | nindent 12 }}
+          {{- end }}
+          {{- if $service.stdin }}
+          stdin: {{ $service.stdin }}
+          {{- end }}
+          {{- if $service.tty }}
+          tty: {{ $service.tty }}
+          {{- end }}
+      volumes:
+        {{- $casdoorSvc := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+        - name: jwt-token-cert
+          secret:
+            {{- $casdoorCert := printf "%s-certs" $casdoorSvc.name }}
+            secretName: {{ include "common.names.custom" (list . $casdoorCert) }}
+      {{- if $service.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $service.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $service.tolerations }}
+      tolerations:
+        {{- toYaml $service.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if $service.affinity }}
+      affinity:
+        {{- toYaml $service.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $service.podSecurityContext }}
+      securityContext:
+        {{- toYaml $service.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if $service.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml $service.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
+      {{- if $service.hostname }}
+      hostname: {{ $service.hostname }}
+      {{- end }}
+      {{- if $service.subdomain }}
+      subdomain: {{ $service.subdomain }}
+      {{- end }}
+  {{- if $service.strategy }}
+  strategy:
+    {{- toYaml $service.strategy | nindent 4 }}
+  {{- end }}
+  {{- if $service.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ $service.revisionHistoryLimit }}
+  {{- end }}
+  progressDeadlineSeconds: {{ $service.progressDeadlineSeconds | default 600 }}

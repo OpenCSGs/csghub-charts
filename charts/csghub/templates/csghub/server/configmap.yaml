@@ -1,0 +1,23 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob "scripts/server/*.sql" }}
+{{- with $currentScope }}
+{{- base $path | nindent 2 }}: |
+{{- .Files.Get $path | nindent 4 }}
+{{- end }}
+{{- end }}

@@ -1,4 +1,4 @@
-suite: Test Casdoor Resources
+suite: Test RProxy Resources
 templates:
   - csghub/rproxy/coredns/configmap.yaml
   - csghub/rproxy/nginx/configmap.yaml
