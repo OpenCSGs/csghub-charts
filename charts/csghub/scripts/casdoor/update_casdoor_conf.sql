@@ -47,12 +47,11 @@ END $$;
 --
 -- Update RedirectURLs for CSGHub application
 --
-UPDATE
-    application
-SET
-    redirect_uris = '["' || current_setting('session.external_endpoint', true) || '/api/v1/callback/casdoor"]'
-WHERE
-    name = 'CSGHub';
+UPDATE application
+SET redirect_uris = json_build_array(
+    rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor'
+)::text
+WHERE name = 'CSGHub';
 
 --
 -- Enable org Select for built-in application
