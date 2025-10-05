@@ -72,16 +72,17 @@ data:
   OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL: {{ printf "%s/server/callback" (include "common.endpoint.csghub" .) | quote }}
 
   ## Moderation Configuration
-  {{- $moderationSvc := include "common.service" (dict "service" "moderation" "global" .) | fromYaml }}
+  {{- $gatewaySvc := include "common.service" (dict "service" "gateway" "global" .) | fromYaml }}
+  {{- $moderationSvc := $gatewaySvc.moderation }}
   {{- if $moderationSvc.enabled }}
-  CSGHUB_PORTAL_SENSITIVE_CHECK: true
+  CSGHUB_PORTAL_SENSITIVE_CHECK: "true"
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "true"
   STARHUB_SERVER_SENSITIVE_CHECK_ENDPOINT: {{ $moderationSvc.endpoint | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_ID: {{ $moderationSvc.accessKeyId | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_SECRET: {{ $moderationSvc.accessKeySecret | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_REGION: {{ $moderationSvc.region | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ $moderationSvc.enableSSL | quote }}
-  OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $moderationSvc.name)) | quote }}
+  OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $gatewaySvc.name)) | quote }}
   OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" "8089" | quote }}
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
@@ -141,7 +142,7 @@ data:
   {{- end }}
 
   ## Server Configuration for Payment
-  {{- $aigatewaySvc := .Values.aigateway }}
+  {{- $aigatewaySvc := $gatewaySvc.aigateway }}
   OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" "8094" | quote }}
 
   ## Server Configuration
@@ -179,7 +180,9 @@ data:
 
   ## Server Configuration for Redis
   STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $serverRedisConfig.host $serverRedisConfig.port | quote }}
+  {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $serverRedisConfig.password) }}
   STARHUB_SERVER_REDIS_PASSWORD: {{ $serverRedisConfig.password | quote }}
+  {{- end }}
 
   ## Server Configuration for PostgreSQL
   STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "service" $serverSvc "global" .) | quote }}
