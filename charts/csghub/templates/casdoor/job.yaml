@@ -84,7 +84,7 @@ spec:
                 name: {{ printf "%s-init" $serviceName }}
           env:
             - name: EXTERNAL_ENDPOINT
-              value: {{ include "common.endpoint.casdoor" . | quote }}
+              value: {{ include "common.endpoint.csghub" . | quote }}
             - name: PGHOST
               value: {{ $pgConfig.host | quote }}
             - name: PGPORT

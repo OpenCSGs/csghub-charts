@@ -146,7 +146,7 @@ tests:
           value: "EXTERNAL_ENDPOINT"
       - equal:
           path: spec.template.spec.containers[0].env[0].value
-          value: "https://casdoor.example.cn"
+          value: "https://csghub.example.cn"
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].mountPath
           value: "/scripts"
