@@ -322,9 +322,6 @@ dataviewer: {}
 ## Mirror configuration
 mirror: {}
 
-## Aigateway configuration
-aigateway: {}
-
 ## Notifier configuration
 notifier:
   ## Set timezone
@@ -348,23 +345,28 @@ payment:
   ## Bucket to store billing
   billingBucket: "csghub-billing"
 
-## Moderation configuration
-## This service relies on external content review services,
-##  such as cloud service providers' content review services.
-moderation:
-  ## Enable or disable the content moderation service
-  enabled: false
+## Gateway configuration, including aigateway and moderation
+gateway:
+  ## Aigateway configuration
+  aigateway: {}
 
-  ## The API endpoint URL for the moderation service (Leave empty to disable)
-  # endpoint: ""
-  ## Access Key ID for authenticating with the moderation service
-  # accessKeyId: ""
-  ## Secret Access Key for authenticating with the moderation service
-  # accessKeySecret: ""
-  ## The service region (e.g., "us-west-1")
-  # region: ""
-  ## Enable SSL/TLS for secure communication with the service
-  # enableSSL: true
+  ## Moderation configuration
+  ## This service relies on external content review services,
+  ##  such as cloud service providers' content review services.
+  moderation:
+    ## Enable or disable the content moderation service
+    enabled: false
+
+    ## The API endpoint URL for the moderation service (Leave empty to disable)
+    # endpoint: ""
+    ## Access Key ID for authenticating with the moderation service
+    # accessKeyId: ""
+    ## Secret Access Key for authenticating with the moderation service
+    # accessKeySecret: ""
+    ## The service region (e.g., "us-west-1")
+    # region: ""
+    ## Enable SSL/TLS for secure communication with the service
+    # enableSSL: true
 
 ## Runner configuration
 runner:
@@ -439,6 +441,7 @@ postgresql:
     - "csghub_casdoor"
     - "csghub_temporal"
     - "csghub_server"
+    - "csghub_portal"
 
   ## PostgreSQL runtime parameters
   parameters: {}
@@ -551,7 +554,6 @@ minio:
     csghub-server: "none"
     csghub-portal: "none"
     csghub-portal-public: "download"
-
 
   ## Data persistence settings
   persistence:

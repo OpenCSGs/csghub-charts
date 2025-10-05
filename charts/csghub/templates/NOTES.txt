@@ -1,0 +1,96 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+✅ CSGHub has been successfully installed!
+
+---
+
+🔗 CSGHub & 🔐 Casdoor Admin Console
+{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . (printf "%s-init" $service.name)) }}
+{{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
+{{- $defaultUser := $service.admin.name | default "root" }}
+{{- $defaultPass := $service.admin.password | default (include "common.randomPassword" $service.name) }}
+{{- $adminPass := "" }}
+{{- with and $existingSecret $existingSecret.data }}
+  {{- $adminPass = index $existingSecret.data "INIT_ADMIN_PASSWORD" | b64dec }}
+{{- end }}
+
+Access your CSGHub and Casdoor instance:
+
+  🌐 CSGHub: {{ include "common.endpoint.csghub" . }}
+  🔐 Casdoor Admin Console: {{ include "common.endpoint.casdoor" . }}
+  🔑 Credentials: {{ $defaultUser }} / {{ $adminPass | default $defaultPass }}
+
+Retrieve the root/admin password with:
+  kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
+    -o jsonpath='{.data.INIT_ADMIN_USER}' | base64 -d && \
+  echo -n " / " && \
+  kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
+    -o jsonpath='{.data.INIT_ADMIN_PASSWORD}' | base64 -d
+
+{{- if .Values.temporal.console.enabled }}
+{{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
+{{- $temporalName := include "common.names.custom" (list . $temporalSvc.name) }}
+---
+
+🕓 Temporal Console
+Address: {{ include "common.endpoint.temporal" . }}
+Credentials:
+  kubectl get secret -n {{ .Release.Namespace }} {{ $temporalName }} \
+    -o jsonpath='{.data.TEMPORAL_USERNAME}' | base64 -d && \
+  echo -n " / " && \
+  kubectl get secret -n {{ .Release.Namespace }} {{ $temporalName }} \
+    -o jsonpath='{.data.TEMPORAL_PASSWORD}' | base64 -d
+{{- end }}
+
+{{- if .Values.global.objectStore.enabled }}
+{{- $minioSvc := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
+{{- $minioName := include "common.names.custom" (list . $minioSvc.name) }}
+---
+
+💾 Minio Console
+Address: {{ include "common.endpoint.minio" . }}/console/
+Credentials:
+  kubectl get secret -n {{ .Release.Namespace }} {{ $minioName }} \
+    -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && \
+  echo -n " / " && \
+  kubectl get secret -n {{ .Release.Namespace }} {{ $minioName }} \
+    -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d
+{{- end }}
+
+{{- if .Values.global.registry.enabled }}
+{{- $registrySvc := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
+{{- $registryName := include "common.names.custom" (list . $registrySvc.name) }}
+{{- $endpointRegistry := include "common.endpoint.registry" . | trimPrefix "http://" | trimPrefix "https://" }}
+---
+
+📦 Distribution Registry
+Endpoint: {{ $endpointRegistry }}
+Credentials:
+  kubectl get secret -n {{ .Release.Namespace }} {{ $registryName }} \
+    -o jsonpath='{.data.REGISTRY_USERNAME}' | base64 -d && \
+  echo -n " / " && \
+  kubectl get secret -n {{ .Release.Namespace }} {{ $registryName }} \
+    -o jsonpath='{.data.REGISTRY_PASSWORD}' | base64 -d
+
+Login:
+  kubectl get secret -n {{ .Release.Namespace }} {{ $registryName }} \
+    -o jsonpath='{.data.REGISTRY_PASSWORD}' | base64 -d | \
+  docker login {{ $endpointRegistry }} \
+    --username "$(kubectl get secret -n {{ .Release.Namespace }} {{ $registryName }} \
+    -o jsonpath='{.data.REGISTRY_USERNAME}' | base64 -d)" \
+    --password-stdin
+
+Example:
+  docker pull {{ $endpointRegistry }}/test:latest
+  docker push {{ $endpointRegistry }}/test:latest
+
+*Note: Not recommended for production use.*
+{{- end }}
+
+---
+
+📘 More info:
+https://github.com/OpenCSGs/csghub-charts

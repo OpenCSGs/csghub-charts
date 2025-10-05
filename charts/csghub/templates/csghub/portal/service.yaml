@@ -1,0 +1,68 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "portal" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: {{ dig "service" "type" "ClusterIP" $service }}
+  ports:
+    - port: {{ dig "service" "port" 8090 $service }}
+      targetPort: 8090
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
+      name: {{ $service.name }}
+  selector:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}
+{{- if or (and $service.docs.host $service.docs.port) $service.docs.domain }}
+{{- $serviceDocsName := include "common.names.custom" (list . (printf "%s-docs" $serviceName)) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceDocsName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceDocsName }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  {{- if $service.docs.domain }}
+  type: ExternalName
+  externalName: {{ $service.docs.domain | trimPrefix "https://" | trimPrefix "http://" }}
+  {{- else }}
+  type: ClusterIP
+  ports:
+    - port: {{ $service.docs.port }}
+      targetPort: {{ $service.docs.port }}
+      protocol: TCP
+      name: docs
+  {{- end }}
+  selector:
+    app.kubernetes.io/service: {{ $serviceDocsName }}
+    {{- include "common.labels.selector" . | nindent 4 }}
+---
+{{- if and $service.docs.host $service.docs.port }}
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ $serviceDocsName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceDocsName }}
+    {{- include "common.labels" . | nindent 4 }}
+subsets:
+  - addresses:
+      - ip: {{ $service.docs.host }}
+    ports:
+      - port: {{ $service.docs.port }}
+{{- end }}
+{{- end }}
