@@ -5,5 +5,8 @@ dependencies:
 - name: reloader
   repository: file://charts/reloader
   version: 2.1.4
-digest: sha256:1adbbe486c054aa6d4f25d886977168e1413998931289752115bfcb4fb8c8ad5
-generated: "2025-09-25T23:34:06.764383+08:00"
+- name: ingress-nginx
+  repository: file://charts/ingress-nginx
+  version: 4.12.7
+digest: sha256:30ca09c47865dfd31550f8ec7ad514da6314ca42333e5e34fa64202f4a655e70
+generated: "2025-10-09T11:33:53.08289+08:00"
