@@ -863,7 +863,72 @@ temporal:
 
 #################################################################
 ##  Dependent subchart configuration                           ##
+##  PLEASE DO NOT UPDATE!!!                                    ##
 #################################################################
+## The following is a reference to a third-party chart.
+##  Do not modify it unless you know the purpose of the modification.
+
+## Ingress-nginx Configuration
+ingress-nginx:
+  ## Enable the NGINX Ingress Controller
+  enabled: true
+  ## TCP services configuration
+  tcp:
+    ## Forward TCP traffic on port 22 to the specified service
+    22: csghub/csghub-gitlab-shell:22
+  ## NGINX Ingress Controller configuration
+  controller:
+    progressDeadlineSeconds: 600
+    ## Configuration for the controller image
+    ## Reset digest to use third-party repository
+    ## DO NOT UPDATE!!! image.digest and admissionWebhooks.patch.image.digest
+    image:
+      image: opencsghq/ingress-nginx-controller
+      ## Digest of the image for the controller
+      digest: ""
+    ## Configuration for admission webhooks
+    admissionWebhooks:
+      ## Patch settings for admission webhooks
+      patch:
+        ## Digest of the image for the admission webhook
+        image:
+          image: opencsghq/ingress-nginx-kube-webhook-certgen
+          ## Digest of the image for the admission webhook
+          digest: ""
+    ## Configuration settings for the Ingress Controller
+    config:
+      ## Set the risk level for annotations; critical indicates high risk
+      annotations-risk-level: Critical
+      custom-http-errors: "404,500,502,503"
+    ## Allow the use of server snippets in annotations
+    allowSnippetAnnotations: true
+    ## Configuration for the service exposed by the Ingress Controller
+    service:
+      type: *type
+      ## Node ports for HTTP and HTTPS traffic
+      nodePorts:
+        ## Node port for HTTP traffic
+        http: 30080
+        ## Node port for HTTPS traffic
+        https: 30443
+        ## Node port for TCP traffic
+        tcp:
+          ## Node port for TCP traffic on port 22
+          22: 30022
+  ## Custom error pages
+  defaultBackend:
+    enabled: true
+    image:
+      image: opencsghq/ingress-nginx-custom-error-pages
+      tag: v1.2.0
+    extraVolumes:
+      - name: custom-error-pages
+        configMap:
+          name: ingress-nginx-custom-errors
+    extraVolumeMounts:
+      - name: custom-error-pages
+        mountPath: /www
+
 ## Reloader Configuration
 reloader:
   image:
