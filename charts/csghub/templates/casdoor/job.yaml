@@ -61,7 +61,7 @@ spec:
       initContainers:
         {{- include "wait-for-casdoor" . | nindent 8 }}
       containers:
-        - name: {{ $serviceName }}
+        - name: {{ $service.name }}
           image: {{ include "common.image.fixed" (dict "ctx" . "service" "casdoor" "image" "opencsghq/psql:latest") }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           command:
