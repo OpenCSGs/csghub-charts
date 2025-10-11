@@ -103,7 +103,7 @@ spec:
           {{- if .Values.configmapReload.prometheus.image.digest }}
           image: "{{ tpl .Values.configmapReload.prometheus.image.repository . }}@{{ tpl .Values.configmapReload.prometheus.image.digest . }}"
           {{- else }}
-          image: {{ include "image.generic.prefix" (list . .Values.configmapReload.prometheus.image ) }}
+          image: "{{ include "common.image" (list . .Values.configmapReload.prometheus.image) }}"
           {{- end }}
           imagePullPolicy: "{{ .Values.configmapReload.prometheus.image.pullPolicy }}"
           {{- with .Values.configmapReload.prometheus.containerSecurityContext }}
@@ -177,7 +177,7 @@ spec:
           {{- if .Values.server.image.digest }}
           image: "{{ tpl .Values.server.image.repository . }}@{{ tpl .Values.server.image.digest . }}"
           {{- else }}
-          image: {{ include "image.generic.prefix" (list . .Values.server.image ) }}
+          image: "{{ include "common.image" (list . .Values.server.image) }}"
           {{- end }}
           imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
           {{- with .Values.server.command }}
