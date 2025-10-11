@@ -746,7 +746,7 @@ tempo:
 
 ## Prometheus monitoring configuration
 prometheus:
-  enabled: true                            # Enable Prometheus
+  enabled: false                           # Enable Prometheus
 
   ingress:
     enabled: false                         # Enable Prometheus ingress
