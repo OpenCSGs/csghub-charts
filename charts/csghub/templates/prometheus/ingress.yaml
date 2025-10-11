@@ -23,10 +23,12 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    {{- if $service.ingress.basicAuth }}
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: {{ $serviceName }}
     nginx.ingress.kubernetes.io/auth-secret-type: "auth-file"
     nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - Prometheus"
+    {{- end }}
     {{- if $service.annotations }}
       {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}

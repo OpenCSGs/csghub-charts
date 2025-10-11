@@ -24,10 +24,12 @@ metadata:
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: {{ include "common.endpoint.csghub" . | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    {{- if $service.ingress.basicAuth }}
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: {{ $serviceName }}
     nginx.ingress.kubernetes.io/auth-secret-type: "auth-file"
     nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - Loki"
+    {{- end }}
     {{- if $service.annotations }}
       {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}
