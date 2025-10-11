@@ -12,17 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.global.autoConfigure }}
+{{- $runnerSvc := include "common.service" . | fromYaml }}
+{{- if $runnerSvc.autoConfigure }}
+{{- $service := mergeOverwrite (deepCopy $runnerSvc) (dict "name" "runner-knative") }}
 {{- $knativeNamespace := include "namespace.knative" . }}
 {{- $kourierNamespace := include "namespace.kourier" . }}
-{{- $registry := or .Values.global.image.registry "gcr.io" }}
-{{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.names.custom" (list . "runner-knative") }}
+  name: {{ include "common.names.custom" (list . $service.name) }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "runner-knative") | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
   serving-crds.yaml: |
     apiVersion: apiextensions.k8s.io/v1
@@ -13405,7 +13407,8 @@ data:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
     spec:
-      image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/queue:v1.16.1" $registry }}
+      {{- $queueImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/serving/cmd/queue:v1.16.1") }}
+      image: {{ $queueImage | replace "docker.io" "gcr.io" }}
     ---
     apiVersion: v1
     kind: ConfigMap
@@ -13508,10 +13511,14 @@ data:
       annotations:
         knative.dev/example-checksum: "720ddb97"
     data:
-      {{- if or .Values.global.registry.enabled .Values.registry.insecure .Values.global.registry.external.insecure }}
-      registries-skipping-tag-resolving: "{{ $registryConfig.registry }}{{ if .Values.global.image.registry }}, {{ .Values.global.image.registry }}{{ end }}"
+      {{- $globalRegistry := "" }}
+      {{- with .Values.global.image.registry }}
+        {{- $globalRegistry = . }}
       {{- end }}
-      queue-sidecar-image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/queue:v1.16.1" $registry }}
+      {{- $localRegistry := include "common.domain.registry" . }}
+      {{- $registryList := list $localRegistry $globalRegistry }}
+      registries-skipping-tag-resolving: {{ join "," $registryList | quote }}
+      queue-sidecar-image: {{ $queueImage | replace "docker.io" "gcr.io" }}
     ---
     apiVersion: v1
     kind: ConfigMap
@@ -13533,7 +13540,10 @@ data:
         example.org: |
           selector:
             app: nonprofit
-      {{ .Values.global.knative.serving.domain }}: ""
+      {{ $service.knative.serving.domain }}: ""
+      {{- range $service.knative.serving.services }}
+      {{ .domain }}: ""
+      {{- end }}
     ---
     apiVersion: v1
     kind: ConfigMap
@@ -13785,7 +13795,8 @@ data:
           serviceAccountName: activator
           containers:
             - name: activator
-              image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/activator:v1.16.1" $registry }}
+              {{- $activatorImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/serving/cmd/activator:v1.16.1") }}
+              image: {{ $activatorImage | replace "docker.io" "gcr.io" }}
               resources:
                 requests:
                   cpu: 300m
@@ -13914,7 +13925,8 @@ data:
           serviceAccountName: controller
           containers:
             - name: autoscaler
-              image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/autoscaler:v1.16.1" $registry }}
+              {{- $autoscalerImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/serving/cmd/autoscaler:v1.16.1") }}
+              image: {{ $autoscalerImage | replace "docker.io" "gcr.io" }}
               resources:
                 requests:
                   cpu: 100m
@@ -14022,7 +14034,8 @@ data:
           serviceAccountName: controller
           containers:
             - name: controller
-              image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/controller:v1.16.1" $registry }}
+              {{- $controllerImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/serving/cmd/controller:v1.16.1") }}
+              image: {{ $controllerImage | replace "docker.io" "gcr.io" }}
               resources:
                 requests:
                   cpu: 100m
@@ -14171,7 +14184,8 @@ data:
           serviceAccountName: controller
           containers:
             - name: webhook
-              image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/webhook:v1.16.1" $registry }}
+              {{- $webhookImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/serving/cmd/webhook:v1.16.1") }}
+              image: {{ $webhookImage | replace "docker.io"  "gcr.io" }}
               resources:
                 requests:
                   cpu: 100m
@@ -14610,7 +14624,8 @@ data:
             app: net-kourier-controller
         spec:
           containers:
-            - image: {{ printf "%s/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.16.0" $registry }}
+              {{- $kourierImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/net-kourier/cmd/kourier:v1.16.0") }}
+            - image: {{ $kourierImage | replace "docker.io"  "gcr.io" }}
               name: controller
               env:
                 - name: CERTS_SECRET_NAMESPACE
@@ -14732,7 +14747,8 @@ data:
               env:
                 - name: DRAIN_TIME_SECONDS
                   value: "15"
-              image: {{ printf "%s/envoyproxy/envoy:v1.31-latest" (or .Values.global.image.registry "docker.io") }}
+              {{- $envoyImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "envoyproxy/envoy:v1.31-latest") }}
+              image: {{ $envoyImage }}
               name: kourier-gateway
               ports:
                 - name: http2-external
@@ -14931,7 +14947,8 @@ data:
           serviceAccountName: controller
           containers:
             - name: autoscaler-hpa
-              image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/autoscaler-hpa:v1.16.1" $registry }}
+              {{- $autoscalerHPAImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "knative-releases/knative.dev/serving/cmd/autoscaler-hpa:v1.16.1") }}
+              image: {{ $autoscalerHPAImage | replace "docker.io" "gcr.io" }}
               resources:
                 requests:
                   cpu: 30m

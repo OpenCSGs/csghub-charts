@@ -1,29 +1,46 @@
 {{- /*
 Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
-*/}}
+*/ -}}
 
-{{- if .Values.global.autoConfigure }}
+{{- $runnerSvc := include "common.service" . | fromYaml }}
+{{- if $runnerSvc.autoConfigure }}
+{{- $service := mergeOverwrite (deepCopy $runnerSvc) (dict "name" "runner-argo") }}
 {{- $argoNamespace := include "namespace.argo" . }}
 {{- $spaceNamespace := include "namespace.spaces" . }}
-{{- $registry := or .Values.global.image.registry "quay.io" }}
-{{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.names.custom" (list . "runner-argo") }}
+  name: {{ include "common.names.custom" (list . $service.name) }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "runner-argo") | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
-  argo.yaml: |
-    {{- if ne .Values.global.mergingNamespace "Single" }}
+  space.yaml: |
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: {{ $argoNamespace }}
+      name: {{ $spaceNamespace }}
       labels:
-        kubernetes.io/metadata.name: {{ $argoNamespace }}
-    {{- end }}
+        kubernetes.io/metadata.name: {{ $spaceNamespace }}
+    ---
+    {{- $serviceName := include "common.names.custom" (list . $runnerSvc.name) }}
+    {{- $registryConfig := include "common.registry.config" (dict "service" $runnerSvc "global" .) | fromYaml }}
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: {{ include "common.names.custom" (list . "docker-credential") }}
+      namespace: {{ $spaceNamespace }}
+      labels:
+        app.kubernetes.io/service: {{ $runnerSvc.name }}
+        {{- include "common.labels" . | nindent 8 }}
+      annotations:
+        helm.sh/resource-policy: keep
+    type: kubernetes.io/dockerconfigjson
+    data:
+      .dockerconfigjson: {{ printf "{\"auths\":{\"%s\":{\"username\":\"%s\",\"password\":\"%s\",\"auth\":\"%s\"}}}" $registryConfig.registry $registryConfig.username $registryConfig.password (printf "%s:%s" $registryConfig.username $registryConfig.password | b64enc) | b64enc }}
+    {{- if .Values.resourceQuota.enabled }}
     ---
     apiVersion: v1
     kind: ResourceQuota
@@ -34,6 +51,47 @@ data:
       hard:
         requests.nvidia.com/gpu: "2"
         limits.nvidia.com/gpu: "2"
+    ---
+    # --- ResourceQuota for workflows-quota namespace ---
+    # This object defines the total resource limits for the entire 'workflows-quota' namespace.
+    # It ensures that the sum of resources used by all pods in this namespace does not exceed the specified values.
+    apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      # The name of the ResourceQuota object.
+      name: {{ include "common.names.custom" (list . "resource-quota") }}
+      # This quota applies to the 'workflows-quota' namespace.
+      namespace: {{ include "namespace.spaces" . }}
+    spec:
+      # 'hard' defines the absolute limits.
+      hard:
+        # --- Compute Resource Limits ---
+        # Total amount of CPU that can be requested by all pods in this namespace.
+        requests.cpu: "80"
+        # Total amount of memory that can be requested by all pods in this namespace.
+        requests.memory: "160Gi"
+        # Total amount of CPU that can be limited across all pods in this namespace.
+        limits.cpu: "100"
+        # Total amount of memory that can be limited across all pods in this namespace.
+        limits.memory: "200Gi"
+        # --- GPU Resource Limits ---
+        # Total number of GPUs that can be requested by all pods.
+        # The resource name 'nvidia.com/gpu' is standard for NVIDIA GPUs via the device plugin.
+        # If you use a different GPU vendor, this key might change.
+        requests.nvidia.com/gpu: "80"
+        # Total number of GPUs that can be limited across all pods.
+        limits.nvidia.com/gpu: "100"
+    {{- end }}
+
+  argo.yaml: |
+    {{- if ne .Values.global.mergingNamespace "Single" }}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: {{ $argoNamespace }}
+      labels:
+        kubernetes.io/metadata.name: {{ $argoNamespace }}
+    {{- end }}
     ---
     # This is an auto-generated file. DO NOT EDIT
     apiVersion: apiextensions.k8s.io/v1
@@ -1317,7 +1375,8 @@ data:
             - args:
                 - server
               env: []
-              image: {{ printf "%s/argoproj/argocli:v3.5.12" $registry }}
+              {{- $cliImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "argoproj/argocli:v3.5.12") }}
+              image: {{ $cliImage | replace "docker.io" "quay.io" }}
               name: argo-server
               ports:
                 - containerPort: 2746
@@ -1372,7 +1431,8 @@ data:
                     fieldRef:
                       apiVersion: v1
                       fieldPath: metadata.name
-              image: {{ printf "%s/argoproj/workflow-controller:v3.5.12" $registry }}
+              {{- $controllerImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "argoproj/workflow-controller:v3.5.12") }}
+              image: {{ $controllerImage | replace "docker.io" "quay.io" }}
               livenessProbe:
                 failureThreshold: 3
                 httpGet:

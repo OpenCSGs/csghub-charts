@@ -1,21 +1,25 @@
 {{- /*
 Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
-*/}}
+*/ -}}
 
+{{- $service := include "common.service" . | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "common.names.custom" (list . "runner") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" (dict "context" . "service" "runner") | nindent 4 }}
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ $service.service.type }}
   ports:
-    - port: {{ include "csghub.svc.port" "runner" }}
+    - port: {{ $service.service.port }}
       targetPort: 8082
-      protocol: TCP
-      name: runner
+      protocol: {{ $service.service.protocol }}
+      name: {{ $service.name }}
   selector:
-    {{- include "common.serviceSelectorLabels" (dict "selector" true "context" . "service" "runner") | nindent 4 }}
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}

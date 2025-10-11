@@ -43,14 +43,18 @@ Returns:
   {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) -}}
 {{- end }}
 
-{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" (include "common.endpoint.csghub" $global) -}}
+{{- $csghubEndpoint := include "common.endpoint.csghub" $global }}
+{{- if not $service.chartContext.isBuiltIn }}
+{{- $csghubEndpoint = $service.externalUrl }}
+{{- end }}
+{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint -}}
 {{- $args = concat $args (list $hfEndpoint) -}}
 
 {{- $insecure := false }}
-{{- if $service.chartContext.isBuiltInt }}
+{{- if $service.chartContext.isBuiltIn }}
   {{- $insecure = or $global.Values.global.registry.enabled $global.Values.global.registry.external.insecure }}
 {{- else }}
-  {{- $insecure = $service.objectStore.insesure }}
+  {{- $insecure = $service.registry.insecure }}
 {{- end }}
 
 {{- if $insecure }}
@@ -82,7 +86,6 @@ Returns:
 */}}
 {{- define "wait-for-loki" }}
 {{- $service := include "common.service" . | fromYaml -}}
-{{- required "Loki address is required" $service.logcollector.loki.address }}
 - name: wait-for-loki
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
   imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
@@ -90,7 +93,7 @@ Returns:
     - /bin/sh
     - -c
     - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "%s:/ready" $service.logcollector.loki.address }}";
+      until wget --spider --timeout=5 --tries=1 "{{ printf "%s/ready" (required "Loki address is required" $service.logcollector.loki.address) }}";
       do
         echo 'Waiting for Loki to be ready...';
         sleep 5;

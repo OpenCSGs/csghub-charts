@@ -1,7 +1,7 @@
 {{- /*
 Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
-*/}}
+*/ -}}
 
 {{/*
 Since the source file `manifests.yaml` is too large,
@@ -10,17 +10,21 @@ so all description fields are truncated using the following command:
 `yq eval 'del(.. | select(has("description")).description)' manifests.yaml > simple_lws.yaml`
 */}}
 
-{{- if .Values.global.autoConfigure }}
+{{- $runnerSvc := include "common.service" . | fromYaml }}
+{{- if $runnerSvc.autoConfigure }}
+{{- $service := mergeOverwrite (deepCopy $runnerSvc) (dict "name" "runner-lws") }}
 {{- $lwsNamespace := include "namespace.lws" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.names.custom" (list . "runner-lws") }}
+  name: {{ include "common.names.custom" (list . $service.name) }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "runner-lws") | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
   manifests.yaml: |
-    {{- if ne .Values.global.mergingNamespace "Single" }}
+    {{- if ne $service.mergingNamespace "Single" }}
     apiVersion: v1
     kind: Namespace
     metadata:
@@ -7912,7 +7916,8 @@ data:
                 - --zap-log-level=2
               command:
                 - /manager
-              image: {{ or .Values.global.image.registry "docker.io" }}/opencsghq/lws:v0.6.1
+              {{- $lwsImage := include "common.image.fixed" (dict "ctx" . "service" "" "image" "opencsghq/lws:v0.6.1") }}
+              image: {{ $lwsImage }}
               livenessProbe:
                 httpGet:
                   path: /healthz

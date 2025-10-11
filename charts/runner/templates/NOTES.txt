@@ -5,7 +5,7 @@ APP VERSION: {{ .Chart.AppVersion }}
 You have successfully installed CSGHub-Runner!
 
 Visit CSGHub-Runner using following endpoint:
-    endpoint: {{ include "runner.external.endpoint" . }}
+    endpoint: {{ include "common.endpoint.runner" . }}
 
 For more details, visit:
     https://github.com/OpenCSGs/csghub-charts

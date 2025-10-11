@@ -1,217 +1,163 @@
-## Global configuration will override subChart's configuration
+#################################################################
+##  Global Configuration                                       ##
+#################################################################
 global:
-
-  ## Image configuration
-  image:
-    ## Image registry path (without trailing slash)
-    # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-    ## Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)
-    tag: "v1.11.0-ee"
-    ## Image pull policy
-    pullPolicy: "IfNotPresent"
-    ## Kubernetes secrets for pulling images from private registry
-    pullSecrets: []
-
-  ## Kubernetes Namespace Configuration
-  namespace: "spaces"
-
-  ## Auto-Configuration Settings
-  ## Automatically install Knative, Argo and LWS dependencies
-  autoConfigure: true
-
-  ## Namespace Merging Strategy
-  ## Options: "Multi" (multiple namespaces), "Single" (merge to one), "Disable" (no merging)
-  mergingNamespace: "Disable"
-
-  ## Knative Serving Configuration
-  knative:
-    serving:
-      ## Internal domain for Knative services
-      ## It will generate ksvc with domain suffix http://<uuid>.<namespace>.<knative.serving.domain>
-      domain: "example.com"
-
-  ## Python Package Index Configuration
-  ## Alternative: "https://pypi.org/simple/"
-  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
-
-  ## Domain Usage Configuration
-  usePublicDomain: true  # Use public domains for deployments vs internal only
-
-  ## Ingress Configuration
+  ## Ingress configuration
   ingress:
-    ## Ingress controller class name
-    className: "nginx"
-    ## Base domain name for all ingress routes
-    domain: "example.com"
-    ## Custom domain prefixes for different services
-    ## Example: { public: "app", runner: "runner-api" }
-    customDomainPrefixes: {}
-    ## Use top-level domain directly (true) or subdomains (false)
-    ## true: https://example.com, false: https://runner.example.com
-    useTop: false
-    ## TLS/SSL configuration for ingress
-    tls: {}
-      # enabled: true
-      # secretName: "csghub-tls-cert"
+    # className: "nginx"            # Ingress controller class name
+    domain: "example.com"           # Base domain for accessing csghub
+    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
+    ## TLS/SSL configuration
+    tls:
+      enabled: false                # Enable or disable TLS
+      # secretName: ""                # TLS secret name (if enabled)
+    ## Service configuration
     service:
-      ## Service type for exposing the runner
-      ## Options: LoadBalancer, NodePort, ClusterIP
-      type: &type LoadBalancer
+      type: &type "LoadBalancer"          # Service type: LoadBalancer or NodePort
 
-  ## Container Registry configuration
+  ## Image management
+  image:
+    # registry: ""                  # Custom image registry (overrides local registry)
+    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
+    pullSecrets: []                 # Private registry authentication secrets
+
+  ## Disable internal Registry (It's Only a flag)
   registry:
-    ## Use built-in (true) or external (false) container registry
-    enabled: true
-    ## External Container Registry configuration
-    external: {}
-      ## URL of the external container registry
-      # registry: "registry-1.docker.io"
-      ## Repository namespace in the external registry
-      # repository: "csghub"
-      ## Username for authenticating with the external registry
-      # username: "registry"
-      ## Password for authenticating with the external registry
-      # password: ""
-      ## Disable TLS/SSL encryption for the registry connection
-      # insecure: false
+    enabled: false
 
-  ## Object storage configuration
+  ## Disable internal ObjectStore (It's Only a flag)
   objectStore:
-    ## Use built-in (true) or external (false) object storage
-    enabled: true
-    ## External Object Storage configuration
-    external: {}
-      ## Endpoint URL for the object storage service
-      # endpoint: "http://minio.<domain>"
-      ## Access key for object storage authentication
-      # accessKey: "minio"
-      ## Secret key for object storage authentication
-      # secretKey: ""
-      ## Region where the bucket is located
-      # region: "cn-north-1"
-      ## Enable server-side encryption for objects
-      # encrypt: false
-      ## Use HTTPS for connections to the object storage
-      # secure: false
-      ## Use path-style addressing for the bucket (vs virtual-hosted style)
-      # pathStyle: true
+    enabled: false
 
-######################################################
-## For CSGHub Runner Local Configuration
-######################################################
+#################################################################
+##  CSGHub Configuration                                       ##
+#################################################################
 ## External CSGHub URL for accessing the hub interface
 externalUrl: "https://csghub.example.com"
+
+## Global image configuration
+image:
+  registry: "docker.io"                    # Docker registry
+  repository: "opencsghq/csghub-server"
+  tag: "v1.11.0"                           # Image version tag
+  pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
+  pullSecrets: []                          # Docker registry secrets
+
+## Ingress configuration
+ingress:
+  enabled: true                            # Enable or disable ingress
+  annotations: {}                          # Ingress-nginx annotations
+  tls: {}                                  # TLS settings for ingress
+    # enabled: false                       # Enable or disable TLS
+    # secretName: ""                       # TLS secret name (if enabled)
 
 ## API token for authenticating with CSGHub API
 hubAPIToken: ""
 
 ## Unique identifier for the origin cluster
-# originClusterID: "37913ede-1bbe-4b7c-a3ee-db6d568ac2c2"
+originClusterID: ""
 
-## Define num of replicas
-replicas: 1
+## Logging configuration
+logging:
+  level: "info"                            # Log level: info, warning, debug, error
 
-## Region of runner
-region: "cn-beijing"
+#################################################################
+##  Runner Configuration                                       ##
+#################################################################
+## Defined resource name
+name: "runner"
 
-## Data Reporting Interval
-interval: 60
+## Service Configuration
+service:
+  type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+  port: 8082                               # Service port
+  protocol: "TCP"                          # Network protocol
 
-## Image Configuration
-image:
-  ## Docker registry URL
-  registry: "docker.io"
-  ## Repository name for the runner image
-  repository: "opencsghq/csghub-server"
-  ## Image tag version
-  # tag: "v1.11.0-ee"
-  ## Image pull policy (Always, IfNotPresent, Never)
-  pullPolicy: "IfNotPresent"
-  ## List of secret names for pulling from private registries
-  pullSecrets: []
+## Runner deployment context
+chartContext:
+  isBuiltIn: false                     # Runner deployed bundled with csghub
 
-## Ingress Configuration
-ingress:
-  tls: {}
-    # enabled: true
-    # secretName: "csghub-tls-cert"
+## Runner operation and communication
+region: "region-0"                     # Region the runner belongs to
+interval: 60                           # Communication interval with server (seconds)
+
+## Namespace management
+namespace: "spaces"                    # Namespace for user-deployed workloads
+autoConfigure: true                    # Automatically install knative/argo/lws
+mergingNamespace: "disable"            # Namespace merging: multi, single, disable
+
+## Networking configuration
+usePublicDomain: true                  # Use public domain for application access
+
+## Package and image management
+pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
+extraBuildArgs: []                     # Extra Kaniko build arguments
+modelRegistry: ""                      # Model image configuration
+
+## GPU resource configuration
+gpuModelLabel:
+  typeLabel: "nvidia.com/gpu.product"  # GPU type label
+  capacityLabel: "nvidia.com/gpu"      # GPU capacity label
+
+## Knative Serving configuration
+knative:
+  serving:
+    domain: "example.com"              # Domain suffix for Knative services
+
+    ## Deprecated configuration (for backward compatibility)
+    services: {}
+      # - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
+      #   domain: "example.com"          # Internal service domain
+      #   host: "192.168.18.10"        # API server host address
+      #   port: "30213"                # NodePort value when type=NodePort
 
 ## RBAC Configuration
 rbac:
-  ## Create RBAC resources (ServiceAccount, Role, RoleBinding, ClusterRole, ClusterRoleBinding)
-  create: true
+  create: true                         # Create SA, Role, RoleBinding, ClusterRole, ClusterRoleBinding
+  serviceAccountName: "runner-admin"   # serviceAccountName created by rbac
 
-## Container Registry Configuration
+## Logcollector Configuration
+logcollector:
+  enabled: false
+
+  ## Logging Integration Configuration
+  loki:
+    address: ""
+
+## Trace Logging Configuration
+tempo:
+  address: ""
+
+## Registry Configuration
 registry: {}
-  ## Container registry endpoint
-  # registry: ""
-  ## Default repository prefix for pushed images
-  # repository: "csghub"
-  ## Registry authentication username
-  # username: "registry"
-  ## Registry authentication password/token
-  # password: ""
-  ## Allow insecure registry connections (not recommended for production)
-  # insecure: false
+  # registry: ""                           # External registry URL
+  # repository: "csghub"                   # Repository namespace
+  # username: ""                           # Registry username
+  # password: ""                           # Registry password
+  # insecure: "false"                      # Disable TLS/SSL encryption
 
-## Object Storage Configuration (S3-compatible)
-objectStore: {}
-  ## External object storage configuration (only used when enabled: false)
-  ## Object storage endpoint URL
-  # endpoint: ""
-  ## Access key for object storage
-  # accessKey: "minio"
-  ## Secret key for object storage
-  # secretKey: ""
-  ## Bucket for object storage
-  # bucket: "csghub-evaluation"
-  ## Storage region
-  # region: "cn-north-1"
-  ## Use HTTPS for secure connections
-  # secure: true
-  ## Enable server-side encryption (if supported)
-  # encrypt: false
-  ## Use path-style addressing (required for some S3 implementations like MinIO)
-  # pathStyle: true
-
-## Logging Integration
-loki:
-  ## Loki log aggregation service endpoint
-  address: "https://loki.example.com"
-
-## GPU Configuration
-gpuModelLabel:
-  typeLabel: "nvidia.com/gpu.product"
-  capacityLabel: "nvidia.com/gpu"
-
-## Define argo serviceAccount
-argo:
-  serviceAccount: "executor"
-
-## Logging Configuration
-logging:
-  ## Log level (debug, info, warning, error)
-  level: "info"
-
-## Model Registry
-model: {}
-  ## Defined model image registry, inference instance will pull images from
-  # registry: ""
-
-## Forward tracing to tempo
-tempo: {}
-  # endpoint: ""
+## ObjectStore Configuration
+objectStore: {}                            # External object storage
+  # endpoint: ""                           # Object storage endpoint URL
+  # accessKey: ""                          # Access key for authentication
+  # secretKey: ""                          # Secret key for authentication
+  # bucket: "csghub-registry"              # Bucket name
+  # region: ""                             # Storage region
+  # secure: false                          # Use secure TLS certificates
+  # encrypt: false                         # Enable TLS encryption
+  # pathStyle: true                        # Use path-style addressing
 
 ## Pod Metadata
 podAnnotations: {}
-  ## Example: { "prometheus.io/scrape": "true", "prometheus.io/port": "9090" }
+## Example: { "prometheus.io/scrape": "true", "prometheus.io/port": "9090" }
 
 podLabels: {}
-  ## Example: { "app.kubernetes.io/component": "runner", "environment": "production" }
+## Example: { "app.kubernetes.io/component": "runner", "environment": "production" }
 
 ## Security Contexts
 podSecurityContext: {}
-  ## Example: { fsGroup: 2000, runAsNonRoot: true, runAsUser: 1000 }
+## Example: { fsGroup: 2000, runAsNonRoot: true, runAsUser: 1000 }
 
 securityContext: {}
   ## Example:
@@ -245,7 +191,7 @@ resources: {}
 
 ## Node Scheduling Configuration
 nodeSelector: {}
-  ## Example: { "node-type": "compute-optimized", "gpu": "true" }
+## Example: { "node-type": "compute-optimized", "gpu": "true" }
 
 tolerations: []
   ## Example:
@@ -267,121 +213,77 @@ affinity: {}
   #           values: ["runner"]
   #       topologyKey: "kubernetes.io/hostname"
 
-## Clearly identify the running mode, `true` means running as a subchart
-chartContext:
-  isBuiltIn: false
+#################################################################
+##  Dependent SubCharts Configuration                          ##
+##  PLEASE DO NOT UPDATE!!!                                    ##
+#################################################################
+## Do not modify it unless you know the purpose of the modification.
 
-## PLEASE DO NOT UPDATE!!!
+## Ingress-nginx configuration
 ingress-nginx:
-  ## Enable the NGINX Ingress Controller
-  enabled: false
-  ## NGINX Ingress Controller configuration
-  controller:
-    progressDeadlineSeconds: 600
-    ## Configuration for the controller image
-    ## Reset digest to use third-party repository
-    ## DO NOT UPDATE!!! image.digest and admissionWebhooks.patch.image.digest
-    image:
-      image: opencsghq/ingress-nginx-controller
-      ## Digest of the image for the controller
-      digest: ""
-    ## Configuration for admission webhooks
-    admissionWebhooks:
-      ## Patch settings for admission webhooks
-      patch:
-        ## Digest of the image for the admission webhook
-        image:
-          image: opencsghq/ingress-nginx-kube-webhook-certgen
-          ## Digest of the image for the admission webhook
-          digest: ""
-    ## Configuration settings for the Ingress Controller
-    config:
-      ## Set the risk level for annotations; critical indicates high risk
-      annotations-risk-level: Critical
-      #      http-snippet: |
-      #        limit_req_zone $binary_remote_addr zone=global:10m rate=20r/s;
-      #        limit_conn_zone $binary_remote_addr zone=addr:10m;
-      #      server-snippet: |
-      #        limit_req zone=global burst=40;
-      #        limit_conn addr 50;
-      custom-http-errors: "404,500,502,503"
-    ## Allow the use of server snippets in annotations
-    allowSnippetAnnotations: true
-    ## Configuration for the service exposed by the Ingress Controller
-    service:
-      type: *type
-      ## Node ports for HTTP and HTTPS traffic
-      nodePorts:
-        ## Node port for HTTP traffic
-        http: 30080
-        ## Node port for HTTPS traffic
-        https: 30443
-        ## Node port for TCP traffic
-        tcp:
-          ## Node port for TCP traffic on port 22
-          22: 30022
-  ## Custom error pages
-  defaultBackend:
-    enabled: true
-    image:
-      image: opencsghq/ingress-nginx-custom-error-pages
-      tag: v1.2.0
-    extraVolumes:
-      - name: custom-error-pages
-        configMap:
-          name: csghub-custom-error-pages
-    extraVolumeMounts:
-      - name: custom-error-pages
-        mountPath: /www
+  enabled: true                            # Enable NGINX Ingress Controller
 
-## Using reloader to online reload configmaps and secrets
+  controller:
+    progressDeadlineSeconds: 600           # Deployment progress deadline
+
+    ## Image configuration
+    image:
+      image: "opencsghq/ingress-nginx-controller"
+      digest: ""                           # Image digest (do not update)
+
+    ## Admission webhooks configuration
+    admissionWebhooks:
+      patch:
+        image:
+          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
+          digest: ""                       # Image digest (do not update)
+
+    ## Service configuration
+    service:
+      type: *type                          # Service type
+      nodePorts:
+        http: 30080                        # HTTP node port
+        https: 30443                       # HTTPS node port
+
+## Reloader configuration
 reloader:
   image:
-    name: "opencsghq/stakater-reloader"
+    name: "opencsghq/stakater-reloader"    # Reloader image name
 
-## Enable or disable Prometheus
+## Prometheus monitoring configuration
 prometheus:
-  enabled: false
-  ## Enable or disable Alertmanager
+  enabled: false                           # Enable Prometheus
+
+  ingress:
+    enabled: false                         # Enable Prometheus ingress
+    basicAuth: {}                          # Basic authentication
+    # username: "prometheus"
+    # password: ""
+
+  ## Component configuration
   alertmanager:
-    enabled: false
-  ## Enable or disable Prometheus pushgateway
+    enabled: false                         # Disable Alertmanager
   prometheus-pushgateway:
-    enabled: false
-  ## Enable or disable Prometheus node exporter
+    enabled: false                         # Disable pushgateway
   prometheus-node-exporter:
-    enabled: false
-  ## Server configuration for Prometheus
+    enabled: false                         # Disable node exporter
+
+  ## Server configuration
   server:
-    ## Sending metrics to remote prometheus server
-    remoteWrite:
-      - url: ""
-        basic_auth: {}
-          # username: "<username>"
-          # password: "<password>"
-    ## Image configuration for Prometheus server
     image:
-      ## Registry for Prometheus server image
       registry: "quay.io"
-      ## Repository for Prometheus server image
-      repository: prometheus/prometheus
-      ## Tag for Prometheus server image
-      tag: v3.5.0
-  ## ConfigMap reload configuration for Prometheus
+      repository: "prometheus/prometheus"
+      tag: "v3.5.0"
+
+  ## ConfigMap reload configuration
   configmapReload:
-    ## Prometheus-specific configmap reload settings
     prometheus:
-      ## Image configuration for configmap reloader
       image:
-        ## Registry for configmap reloader image
         registry: "quay.io"
-        ## Repository for configmap reloader image
         repository: "prometheus-operator/prometheus-config-reloader"
-        ## Tag for configmap reloader image
-        tag: v0.85.0
+        tag: "v0.85.0"
+
   ## Kube-state-metrics configuration
   kube-state-metrics:
-    ## Image configuration for kube-state-metrics
     image:
-      ## Tag for kube-state-metrics image
-      tag: v2.17.0
+      tag: "v2.17.0"
