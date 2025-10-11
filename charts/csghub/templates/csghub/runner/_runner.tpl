@@ -22,10 +22,21 @@ Returns:
   {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) -}}
 {{- end }}
 
-{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" (include "common.endpoint.csghub" $global) -}}
+{{- $csghubEndpoint := include "common.endpoint.csghub" $global }}
+{{- if not $service.chartContext.isBuiltIn }}
+{{- $csghubEndpoint = $service.externalUrl }}
+{{- end }}
+{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint -}}
 {{- $args = concat $args (list $hfEndpoint) -}}
 
-{{- if or $global.Values.global.registry.enabled $global.Values.global.registry.external.insecure }}
+{{- $insecure := false }}
+{{- if $service.chartContext.isBuiltIn }}
+  {{- $insecure = or $global.Values.global.registry.enabled $global.Values.global.registry.external.insecure }}
+{{- else }}
+  {{- $insecure = $service.registry.insecure }}
+{{- end }}
+
+{{- if $insecure }}
   {{- $args = concat $args (list
     "--skip-tls-verify"
     "--skip-tls-verify-pull"

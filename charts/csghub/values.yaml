@@ -142,7 +142,7 @@ portal:
   objectStore: {}
     # endpoint: ""                         # Object storage endpoint URL
     # accessKey: ""                        # Access key for authentication
-    # accessSecret: ""                     # Secret key for authentication
+    # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-portal-public"       # Bucket name
     # region: ""                           # Storage region
     # secure: false                        # Use secure TLS certificates
@@ -187,7 +187,7 @@ server:
   objectStore: {}
     # endpoint: ""                         # Object storage endpoint URL
     # accessKey: ""                        # Access key for authentication
-    # accessSecret: ""                     # Secret key for authentication
+    # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-server"              # Bucket name
     # region: ""                           # Storage region
     # secure: false                        # Use secure TLS certificates
@@ -268,7 +268,7 @@ runner:
   ## Package and image management
   pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
   extraBuildArgs: []                     # Extra Kaniko build arguments
-  model: {}                              # Model image configuration
+  modelRegistry: ""                      # Model image configuration
 
   ## GPU resource configuration
   gpuModelLabel:
@@ -433,7 +433,7 @@ registry:
   objectStore: {}                            # External object storage
     # endpoint: ""                           # Object storage endpoint URL
     # accessKey: ""                          # Access key for authentication
-    # accessSecret: ""                       # Secret key for authentication
+    # secretKey: ""                          # Secret key for authentication
     # bucket: "csghub-registry"              # Bucket name
     # region: ""                             # Storage region
     # secure: false                          # Use secure TLS certificates

@@ -34,8 +34,7 @@ set:
     interval: 30
     region: "cn-north-1"
     usePublicDomain: true
-    model:
-      registry: "model.io"
+    modelRegistry: "model.io"
     service:
       port: 8072
     gpuModelLabel:
