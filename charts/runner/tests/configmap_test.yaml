@@ -101,7 +101,7 @@ tests:
           value: "acr.io/alpine/git:2.36.2"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
-          value: "acr.io/bitnami/kaniko:1.23.2"
+          value: "acr.io/opencsghq/kaniko-executor:v1.24.0"
       - matchRegex:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
           pattern: ".*csghub.example.cn.*--skip-tls-verify,--skip-tls-verify-pull,--insecure,--insecure-pull"
