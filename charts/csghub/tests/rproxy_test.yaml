@@ -4,6 +4,7 @@ templates:
   - csghub/rproxy/nginx/configmap.yaml
   - csghub/rproxy/service.yaml
   - csghub/rproxy/deployment.yaml
+  - csghub/rproxy/deployment-coredns.yaml
 release:
   name: csghub
   namespace: csghub
@@ -137,9 +138,14 @@ tests:
       - equal:
           path: metadata.name
           value: "csghub-rproxy-test"
+        documentIndex: 0
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "rproxy-test"
+          documentSelector:
+            path: metadata.name
+            value: "csghub-rproxy-test"
+        documentIndex: 0
       - equal:
           path: spec.ports[0]
           value:
@@ -147,6 +153,7 @@ tests:
             targetPort: 8083
             protocol: TCP
             name: rproxy-test
+        documentIndex: 0
       - equal:
           path: spec.ports[1]
           value:
@@ -154,20 +161,23 @@ tests:
             targetPort: 80
             protocol: TCP
             name: rproxy-nginx
+        documentIndex: 0
       - equal:
-          path: spec.ports[2]
+          path: spec.ports[0]
           value:
             port: 53
             targetPort: 53
             protocol: TCP
             name: coredns-tcp
+        documentIndex: 1
       - equal:
-          path: spec.ports[3]
+          path: spec.ports[1]
           value:
             port: 53
             targetPort: 53
             protocol: UDP
             name: coredns-udp
+        documentIndex: 1
 
   - it: Should render service correctly
     template: csghub/rproxy/service.yaml
@@ -219,8 +229,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].image
           value: "ghcr.io/nginx:latest"
+
+  - it: Should render deployment with global correctly
+    template: csghub/rproxy/deployment-coredns.yaml
+    asserts:
       - equal:
-          path: spec.template.spec.containers[2].image
+          path: spec.template.spec.containers[0].image
           value: "ghcr.io/coredns/coredns:1.11.1"
 
   - it: Should render deployment with local correctly
@@ -249,9 +263,6 @@ tests:
           path: spec.template.spec.containers[1].image
           value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nginx:latest"
       - equal:
-          path: spec.template.spec.containers[2].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/coredns/coredns:1.11.1"
-      - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
       - contains:
@@ -262,6 +273,21 @@ tests:
       - equal:
           path: spec.template.spec.nodeSelector.diskType
           value: "ssd"
+
+  - it: Should render deployment with global correctly
+    template: csghub/rproxy/deployment-coredns.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      rproxy:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/coredns/coredns:1.11.1"
 
   - it: Should render deployment with local correctly
     template: csghub/rproxy/deployment.yaml

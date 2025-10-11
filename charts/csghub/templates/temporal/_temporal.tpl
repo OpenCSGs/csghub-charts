@@ -45,7 +45,7 @@ SPDX-License-Identifier: APACHE-2.0
     - /bin/sh
     - -c
     - |
-      until nc -z {{ $serviceName }} {{ $service.service.port }} 2>/dev/null;
+      until nc -z {{ $serviceName }} {{ $service.service.port }};
       do
         echo 'Waiting for Temporal to be ready...';
         sleep 5;

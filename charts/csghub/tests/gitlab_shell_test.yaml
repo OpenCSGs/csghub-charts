@@ -60,19 +60,19 @@ tests:
           count: 2
       - isNotNullOrEmpty:
           path: data[".gitaly_token"]
-          documentSelector:
-            path: metadata.name
-            value: "csghub-gitlab-shell"
+        documentSelector:
+          path: metadata.name
+          value: "csghub-gitlab-shell"
       - isNotNullOrEmpty:
           path: data["config.yaml"]
-          documentSelector:
-            path: metadata.name
-            value: "csghub-gitlab-shell"
+        documentSelector:
+          path: metadata.name
+          value: "csghub-gitlab-shell"
       - isNotNullOrEmpty:
           path: data["generate_ssh_keys.sh"]
-          documentSelector:
-            path: metadata.name
-            value: "csghub-gitlab-shell-init"
+        documentSelector:
+          path: metadata.name
+          value: "csghub-gitlab-shell-init"
 
   - it: Should render rbac correctly
     template: gitlab-shell/rbac.yaml

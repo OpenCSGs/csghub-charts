@@ -26,7 +26,7 @@ SPDX-License-Identifier: APACHE-2.0
     - /bin/sh
     - -c
     - |
-      until nc -z {{ $gitalyConfig.host }} {{ $gitalyConfig.port }} 2>/dev/null;
+      until nc -z {{ $gitalyConfig.host }} {{ $gitalyConfig.port }};
       do
         echo 'Waiting for Gitaly to be ready...';
         sleep 5;

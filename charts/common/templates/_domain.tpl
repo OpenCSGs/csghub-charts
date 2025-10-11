@@ -20,7 +20,11 @@ Usage: {{ include "common.domain" (dict "ctx" . "sub" "api") }}
     {{- if hasKey $ctx.Values.global.ingress "domain" -}}
       {{- $domain := $ctx.Values.global.ingress.domain -}}
       {{- if $domain -}}
-        {{- printf "%s.%s" $subDomain $domain -}}
+        {{- if $subDomain }}
+          {{- printf "%s.%s" $subDomain $domain -}}
+        {{- else }}
+          {{- $domain -}}
+        {{- end }}
       {{- else -}}
         {{- fail "A valid domain entry (like example.com) is required in global.ingress.domain!" -}}
       {{- end -}}

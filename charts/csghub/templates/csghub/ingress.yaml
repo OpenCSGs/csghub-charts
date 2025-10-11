@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "service" "portal" "global" .) | fromYaml }}
+{{- $runnerSvc := include "common.service" (dict "service" "runner" "global" .) | fromYaml }}
 {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
 {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
@@ -41,7 +42,7 @@ metadata:
     nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
     nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
-    {{- if not $rproxySvc.usePublicDomain }}
+    {{- if not $runnerSvc.usePublicDomain }}
     nginx.ingress.kubernetes.io/server-snippet: |
       location ~* "^/endpoint/" {
         {{- $suffix := include "common.domain.cluster" . }}
@@ -136,7 +137,7 @@ spec:
               servicePort: {{ $service.docs.port }}
             {{- end }}
           {{- end }}
-    {{- if $rproxySvc.usePublicDomain }}
+    {{- if $runnerSvc.usePublicDomain }}
     - host: {{ printf "*.%s" (include "common.domain.public" .) | quote }}
       http:
         paths:

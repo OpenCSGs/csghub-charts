@@ -24,7 +24,7 @@ SPDX-License-Identifier: APACHE-2.0
     - /bin/sh
     - -c
     - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:8222" $serviceName }}/healthz" 2>/dev/null;
+      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:8222" $serviceName }}/healthz";
       do
         echo 'Waiting for Nats to be ready...';
         sleep 5;

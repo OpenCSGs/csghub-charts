@@ -54,7 +54,19 @@ Returns: YAML configuration with merged ingress settings
 
   {{- /* Merge TLS configuration */ -}}
   {{- if hasKey $serviceIngress "tls" -}}
-    {{- $serviceTls := $serviceIngress.tls -}}
+    {{- $serviceTls := dict }}
+    {{- with $service.ingress.tls }}
+      {{- if kindIs "slice" . }}
+        {{- if . }}
+          {{- $serviceTls = first . }}
+        {{- else }}
+          {{- $serviceTls = dict "enabled" false }}
+        {{- end }}
+      {{- else if kindIs "map" . }}
+        {{- $serviceTls = . }}
+      {{- end }}
+    {{- end -}}
+
     {{- $mergedTls := $ingressConfig.tls -}}
 
     {{- if hasKey $serviceTls "enabled" -}}

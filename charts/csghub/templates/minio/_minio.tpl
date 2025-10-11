@@ -45,7 +45,7 @@ SPDX-License-Identifier: APACHE-2.0
     - /bin/sh
     - -c
     - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName ($service.service.port | toString) }}/minio/health/live" 2>/dev/null;
+      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName ($service.service.port | toString) }}/minio/health/live";
       do
         echo 'Waiting for MinIO to be ready...';
         sleep 5;

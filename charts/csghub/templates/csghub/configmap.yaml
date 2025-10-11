@@ -167,7 +167,8 @@ data:
   ## Server Configuration for Model
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   ## Server Configuration for Model
-  {{- $registry := or $serverSvc.model.registry .Values.global.image.registry "docker.io" }}
+  {{- $runnerSvc := include "common.service" (dict "service" "runner" "global" .) | fromYaml }}
+  {{- $registry := or $runnerSvc.model.registry .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
 
   ## Server Configuration for Multiple-Sync
@@ -199,7 +200,7 @@ data:
   STARHUB_SERVER_S3_BUCKET: {{ $serverS3Config.bucket | quote }}
   STARHUB_SERVER_S3_REGION: {{ $serverS3Config.region | quote }}
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $serverS3Config.secure | quote }}
-  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" $serverS3Config.pathStyle | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $serverS3Config.pathStyle "true") | quote }}
 
   ## Server Configuration for Gitaly
   STARHUB_SERVER_GITSERVER_TYPE: "gitaly"
@@ -213,12 +214,11 @@ data:
 
   ## Server Configuration for Space Application
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "common.endpoint.csghub" . | quote }}
-  {{- $rproxySvc := .Values.rproxy }}
+  {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
   {{- $rproxyPort := dig "service" "port" "8083" $rproxySvc }}
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" (include "namespace.spaces" .) $rproxyPort | quote }}
   {{- $endpoint := include "common.domain.public" . }}
-  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" .Values.rproxy.usePublicDomain | quote }}
-  {{- $runnerSvc := .Values.runner }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.usePublicDomain | quote }}
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.pipIndexUrl | quote }}
   {{- $sessionToken := dig "STARHUB_SERVER_SPACE_SESSION_SECRET_KEY" (randNumeric 8 | sha1sum) $data }}
   STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ $sessionToken | quote }}
@@ -232,16 +232,18 @@ data:
   STARHUB_SERVER_CASDOOR_APPLICATION_NAME: "CSGHub"
 
   ## Server Configuration for Tracing logging
-  {{- $tempoSvc := .Values.tempo }}
+  {{- $tempoSvc := include "common.service" (dict "service" "tempo" "global" .) | fromYaml }}
   {{- $tempoHost := include "common.names.custom" (list . "tempo") }}
+  {{- if $tempoSvc.enabled }}
   OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
+  {{- end }}
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
 
   ## Server Configuration for Swagger API
   STARHUB_SERVER_ENABLE_SWAGGER: {{ $serverSvc.swaggerAPI.enabled | quote }}
 
   ## Server Configuration for Prometheus
-  {{- $promeSvc := .Values.prometheus }}
+  {{- $promeSvc := include "common.service" (dict "service" "prometheus" "global" .) | fromYaml }}
   {{- if $promeSvc.enabled }}
   {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
   {{- $promePort := dig "service" "port" "80" $promeSvc }}

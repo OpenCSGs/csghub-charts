@@ -1,944 +1,783 @@
-## Global Configuration
+#################################################################
+##  Global Configuration                                       ##
+#################################################################
 global:
   ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
   edition: "ee"
 
-  ## Ingress Configuration
+  ## Ingress configuration
   ingress:
-    ## Define other ingressClass types compatible with ingress-nginx
-    # className: "nginx"
-    ## Domain name for accessing csghub
-    domain: example.com
-    ## Whether to use the top-level domain directly for access
-    ## If true, access via domain only (example.com)
-    ## If false, access via subdomain+domain (csghub.example.com)
-    useTop: false
-    ## TLS Configuration
-    tls: {}
-      ## Enable or disable TLS.
-      # enabled: false
-      ## If tls enabled, a secret needs to be provided
-      # secretName: ""
+    # className: "nginx"            # Ingress controller class name
+    domain: "example.com"           # Base domain for accessing csghub
+    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
+    ## TLS/SSL configuration
+    tls:
+      enabled: false                # Enable or disable TLS
+      # secretName: ""                # TLS secret name (if enabled)
+    ## Service configuration
     service:
-      ## Service type for ingress (LoadBalancer or NodePort)
-      type: &type LoadBalancer
+      type: &type "LoadBalancer"          # Service type: LoadBalancer or NodePort
 
-  ## Global image settings
+  ## Image management
   image:
-    ## Image registry (without trailing slash)
-    ## 【 CAUTION 】THIS WILL OVERWRITE LOCAL IMAGE REGISTRY
-    # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-    ## Image tag format: {{version}}-{{edition}} (eg: v1.8.1-ee)
-    tag: "v1.11.0"
-    ## Image pull policy (Always, IfNotPresent, Never)
-    pullPolicy: "IfNotPresent"
-    ## Secrets for private registry authentication
-    pullSecrets: []
+    # registry: ""                  # Custom image registry (overrides local registry)
+    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
+    pullSecrets: []                 # Private registry authentication secrets
 
-  ## Persistent volume settings
+  ## Persistent volume configuration
   persistence:
-    ## StorageClass name (empty for default)
-    # storageClass: ""
-    ## Volume access modes
-    accessModes: ["ReadWriteOnce"]
-    ## Default storage capacity
-    size: 10Gi
+    # storageClass: ""              # StorageClass name (empty for default)
+    accessModes: ["ReadWriteOnce"]  # Volume access modes
+    size: "10Gi"                    # Default storage capacity
 
   ## Database configuration
   postgresql:
-    ## Use embedded PostgreSQL (true) or external (false)
+    ## Use built-in (true) or external (false)
     enabled: true
-    ## External PostgreSQL connection settings
+    ## External PostgreSQL connection
     external: {}
-      # host: "<pg_host>"
-      # port: 6432
-      # user: "csghub"
-      # password: ""
-      # timezone: "Etc/UTC"
-      # sslmode: "prefer"
+      # host: "<pg_host>"           # PostgreSQL host address
+      # port: 6432                  # PostgreSQL port
+      # user: "csghub"              # Database username
+      # password: ""                # Database password
+      # timezone: "Etc/UTC"         # Database timezone
+      # sslmode: "prefer"           # SSL mode
 
   ## Redis configuration
   redis:
-    ## Use built-in (true) or external (false) redis
+    ## Use built-in (true) or external (false)
     enabled: true
     ## External Redis configuration
     external: {}
-      ## Hostname or IP address of the external Redis server
-      # host: "<redis_host>"
-      ## Port number for the Redis connection
-      # port: 6379
-      ## Password for Redis authentication
-      # password: ""
+      # host: "<redis_host>"        # Redis server hostname or IP
+      # port: 6379                  # Redis port number
+      # password: ""                # Redis authentication password
 
   ## Object storage configuration
   objectStore:
-    ## Use built-in (true) or external (false) object storage
+    ## Use built-in (true) or external (false)
     enabled: true
-    ## External Object Storage configuration
+    ## External Object Storage
     external: {}
-      ## Endpoint URL for the object storage service
-      # endpoint: "http://minio.<domain>"
-      ## Access key for object storage authentication
-      # accessKey: "minio"
-      ## Secret key for object storage authentication
-      # secretKey: ""
-      ## Region where the bucket is located
-      # region: "cn-north-1"
-      ## Enable server-side encryption for objects
-      # encrypt: false
-      ## Use HTTPS for connections to the object storage
-      # secure: false
-      ## Use path-style addressing for the bucket (vs virtual-hosted style)
-      # pathStyle: true
+      # endpoint: ""                # Object storage endpoint URL
+      # accessKey: ""               # Access key for authentication
+      # secretKey: ""               # Secret key for authentication
+      # region: "cn-north-1"        # Storage region
+      # encrypt: "false"            # Enable server-side encryption
+      # secure: "false"             # Use HTTPS for connections
+      # pathStyle: "true"           # Use path-style addressing
 
   ## Container Registry configuration
   registry:
-    ## Use built-in (true) or external (false) container registry
+    ## Use built-in (true) or external (false)
     enabled: true
-    ## External Container Registry configuration
+    ## External Container Registry
     external: {}
-      ## URL of the external container registry
-      # registry: "registry-1.docker.io"
-      ## Repository namespace in the external registry
-      # repository: "csghub"
-      ## Username for authenticating with the external registry
-      # username: "registry"
-      ## Password for authenticating with the external registry
-      # password: ""
-      ## Disable TLS/SSL encryption for the registry connection
-      # insecure: false
+      # registry: ""                # External registry URL
+      # repository: "csghub"        # Repository namespace
+      # username: ""                # Registry username
+      # password: ""                # Registry password
+      # insecure: "false"           # Disable TLS/SSL encryption
 
   ## Gitaly configuration
   gitaly:
-    ## Use built-in (true) or external (false) gitaly
+    ## Use built-in (true) or external (false)
     enabled: true
     ## External Gitaly configuration
     external: {}
-      ## Connection scheme for Gitaly (tcp, tls, unix)
-      # scheme: "tcp"
-      ## Hostname or IP address of the external Gitaly server
-      # host: "<gitaly_host>"
-      ## Port number for the Gitaly connection
-      # port: 8075
-      ## Authentication token for Gitaly connection
-      # token: ""
-      ## Storage name for Gitaly repositories
-      # storage: "default"
+      # scheme: "tcp"               # Connection scheme: tcp, tls, unix
+      # host: "<gitaly_host>"       # Gitaly server hostname or IP
+      # port: 8075                  # Gitaly port number
+      # token: ""                   # Authentication token
+      # storage: "default"          # Storage name for repositories
 
 #################################################################
-##  CSGHub Configuration                                       ##
+##  CSGHub Core Configuration                                  ##
 #################################################################
-## Core configuration
-## All CSGHub services using this as default local image configuration
-## except Portal
+## All CSGHub services using this as default local image configuration (except Portal)
+## Global image configuration
 image:
-  ## Docker registry secrets
-  pullSecrets: []
-  ## Image registry
-  registry: "docker.io"
-  ## Image repository
+  registry: "docker.io"                    # Docker registry
   repository: "opencsghq/csghub-server"
-  ## Image version tag
-  tag: "v1.11.0"
-  ## Image pull behavior
-  pullPolicy: "IfNotPresent"
+  tag: "v1.11.0"                           # Image version tag
+  pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
+  pullSecrets: []                          # Docker registry secrets
 
-## Log Level, eg: info, warning, debug, error
+## Logging configuration
 logging:
-  ## Default info
-  level: info
+  level: "info"                            # Log level: info, warning, debug, error
 
-## Portal configuration
+## Portal service configuration
 portal:
   ## Image settings (overrides global.image)
   image:
-    ## Image repository
-    repository: "opencsghq/csghub-portal"
+    repository: "opencsghq/csghub-portal"  # Portal image repository
 
-  ## Configuration for ingress.
+  ## Ingress configuration
   ingress:
-    ## Enable or disable ingress.
-    enabled: true
-    ## Ingress-nginx annotations
-    annotations: {}
-    ## TLS settings for ingress.
-    tls: {}
-      ## Enable or disable TLS.
-      # enabled: false
-      ## If tls enabled, a secret needs to be provided
-      # secretName: ""
+    enabled: true                          # Enable or disable ingress
+    annotations: {}                        # Ingress-nginx annotations
+    tls: {}                                # TLS settings for ingress
+      # enabled: false                     # Enable or disable TLS
+      # secretName: ""                     # TLS secret name (if enabled)
 
-  ## Links to docs center (not for ce/ee)
+  ## Documentation center links
   docs: {}
-    ## If using domain, it'll create svc by ExternalName
-    # domain: ""
-    # host: "192.168.18.10"
-    # port: "8003"
+    # domain: ""                           # External docs domain (creates ExternalName service)
+    # host: "192.168.18.10"                # Docs service host
+    # port: "8003"                         # Docs service port
 
   ## Database configuration
   postgresql: {}
-    ## PostgreSQL connection settings
-    # host: "<pg_host>"
-    # port: 5432
-    # database: "csghub_portal"
-    # user: "csghub"
-    # password: ""
-    # timezone: "Etc/UTC"
-    # sslmode: "prefer"
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_portal"            # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
 
-  ## External Object Storage Service Configuration (OSS/S3 Compatible)
+  ## Object storage configuration
   objectStore: {}
-    ## Endpoint URL for accessing the object storage service
-    ## Example: "https://oss-cn-beijing.aliyuncs.com" or "http://minio.example.com:9000"
-    # endpoint: ""
-    ## Access Key ID for authentication
-    # accessKey: ""
-    ## Secret Access Key for authentication
-    # accessSecret: ""
-    ## Bucket name to be used in the object storage service
-    # bucket: "csghub-portal-public"
-    ## Region where the bucket is located
-    ## Example: "us-east-1", "cn-beijing"
-    # region: ""
-    ## Use secure TLS certificates (skip certificate verification if false)
-    # secure: false
-    ## Enable TLS encryption for connections
-    # encrypt: false
-    ## When true, bucket name is included in URL path
-    ## URL format: http://endpoint/bucket/object-key
-    ## When false: http://bucket.endpoint/object-key
-    # pathStyle: true
+    # endpoint: ""                         # Object storage endpoint URL
+    # accessKey: ""                        # Access key for authentication
+    # accessSecret: ""                     # Secret key for authentication
+    # bucket: "csghub-portal-public"       # Bucket name
+    # region: ""                           # Storage region
+    # secure: false                        # Use secure TLS certificates
+    # encrypt: false                       # Enable TLS encryption
+    # pathStyle: true                      # Use path-style addressing
 
-## Provides the main service logic and API interface,
-##  and handles requests sent by the client.
+## Main service logic and API interface
 server:
   ## Image settings (overrides global.image)
   image: {}
 
-  ## Define gitlab ssh port
+  ## GitLab SSH configuration
   gitlabShell: {}
-    # sshPort: "22"
+    # sshPort: "22"                        # GitLab SSH port
 
-  ## Enable or disable the multi-sync service
+  ## Multi-sync service configuration
   multiSync:
-    enabled: true
-    ## Set proxy to get model from CSGHub
-    proxy: ""
+    enabled: true                          # Enable or disable multi-sync service
+    proxy: ""                              # Proxy for model synchronization
 
-  ## Enable Swagger API assistants
+  ## API documentation
   swaggerAPI:
-    enabled: false
+    enabled: false                         # Enable Swagger API assistants
 
   ## Database configuration
   postgresql: {}
-    ## PostgreSQL connection settings
-    # host: "<pg_host>"
-    # port: 5432
-    # database: "csghub_server"
-    # user: "csghub"
-    # password: ""
-    # timezone: "Etc/UTC"
-    # sslmode: "prefer"
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_server"            # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
 
   ## Redis configuration
   redis: {}
-    ## Hostname or IP address of the external Redis server
-    # host: "<redis_host>"
-    ## Port number for the Redis connection
-    # port: 6379
-    ## Password for Redis authentication
-    # password: ""
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+    # password: ""                         # Redis authentication password
 
-  ## External Object Storage Service Configuration (OSS/S3 Compatible)
+  ## Object storage configuration
   objectStore: {}
-    ## Endpoint URL for accessing the object storage service
-    ## Example: "https://oss-cn-beijing.aliyuncs.com" or "http://minio.example.com:9000"
-    # endpoint: ""
-    ## Access Key ID for authentication
-    # accessKey: ""
-    ## Secret Access Key for authentication
-    # accessSecret: ""
-    ## Bucket name to be used in the object storage service
-    # bucket: "csghub-server"
-    ## Region where the bucket is located
-    ## Example: "us-east-1", "cn-beijing"
-    # region: ""
-    ## Use secure TLS certificates (skip certificate verification if false)
-    # secure: false
-    ## Enable TLS encryption for connections
-    # encrypt: false
-    ## When true, bucket name is included in URL path
-    ## URL format: http://endpoint/bucket/object-key
-    ## When false: http://bucket.endpoint/object-key
-    # pathStyle: true
+    # endpoint: ""                         # Object storage endpoint URL
+    # accessKey: ""                        # Access key for authentication
+    # accessSecret: ""                     # Secret key for authentication
+    # bucket: "csghub-server"              # Bucket name
+    # region: ""                           # Storage region
+    # secure: false                        # Use secure TLS certificates
+    # encrypt: false                       # Enable TLS encryption
+    # pathStyle: true                      # Use path-style addressing
 
-  ## Model images configuration
-  model: {}
-    ## Pull inference images from registry
-    # registry: "docker.io"
-
-## RProxy configuration
-## Responsible for forwarding requests related to deployment instances,
-##  such as forwarding space application operation requests to Knative Serving services.
+## Reverse proxy configuration
 rproxy:
-  ## Using public domain for application accessing
-  usePublicDomain: true
-
-  ## Built-in CoreDNS Configuration
-  ## Starting from v1.12.0, in the new operating mode, coredns has been deprecated.,
-  ## but the service will be retained for forward compatibility
+  ## CoreDNS configuration (deprecated from v1.12.0, retained for compatibility)
   coredns:
-    ## Enable or Disable coredns
-    enabled: true
-    ## Image settings (overrides global.image)
+    enabled: true                          # Enable or disable CoreDNS
     image:
-      ## Image repository
-      repository: "coredns/coredns"
-      ## Image version tag
-      tag: "1.11.1"
+      repository: "coredns/coredns"        # CoreDNS image repository
+      tag: "1.11.1"                        # CoreDNS image tag
 
-  ## Built-in Nginx Configuration
-  ## Starting from v1.12.0, in the new operating mode, nginx has been deprecated.,
-  ## but the service will be retained for forward compatibility
+  ## Nginx configuration (deprecated from v1.12.0, retained for compatibility)
   nginx:
-    ## Enable or Disable coredns
-    enabled: true
-    ## Image settings (overrides global.image)
+    enabled: true                          # Enable or disable Nginx
     image:
-      ## Image repository
-      repository: "nginx"
-      ## Image version tag
-      tag: "latest"
+      repository: "nginx"                  # Nginx image repository
+      tag: "latest"                        # Nginx image tag
 
-## Accounting configuration
-accounting: {}
-
-## User configuration
-user: {}
-
-## Dataviewer configuration
-dataviewer: {}
-
-## Mirror configuration
-mirror: {}
-
-## Notifier configuration
+## Notification service configuration
 notifier:
-  ## Set timezone
-  repoSyncTime: "Asia/Shanghai"
+  repoSyncTime: "Asia/Shanghai"            # Timezone for repository synchronization
 
-  ## SMTP notify settings
+  ## SMTP notification settings
   smtp: {}
-    # host: ""
-    # port: 465
-    # username: ""
-    # password: ""
+    # host: ""                             # SMTP server host
+    # port: 465                            # SMTP server port
+    # username: ""                         # SMTP username
+    # password: ""                         # SMTP password
 
+  ## FeiShu notification settings
   feiShu: {}
-    ## FeiShu bot Application Id
-    # appId: ""
-    ## FeiShu bot Application Secret
-    # appSecret: ""
+    # appId: ""                            # FeiShu bot Application ID
+    # appSecret: ""                        # FeiShu bot Application Secret
 
-## Payment configuration
+## Payment service configuration
 payment:
-  ## Bucket to store billing
-  billingBucket: "csghub-billing"
+  billingBucket: "csghub-billing"          # Bucket for storing billing data
 
-## Gateway configuration, including aigateway and moderation
+## Gateway service configuration
 gateway:
-  ## Aigateway configuration
+  ## AI Gateway configuration
   aigateway: {}
 
-  ## Moderation configuration
-  ## This service relies on external content review services,
-  ##  such as cloud service providers' content review services.
+  ## Content moderation configuration
   moderation:
-    ## Enable or disable the content moderation service
-    enabled: false
-
-    ## The API endpoint URL for the moderation service (Leave empty to disable)
-    # endpoint: ""
-    ## Access Key ID for authenticating with the moderation service
-    # accessKeyId: ""
-    ## Secret Access Key for authenticating with the moderation service
-    # accessKeySecret: ""
-    ## The service region (e.g., "us-west-1")
-    # region: ""
-    ## Enable SSL/TLS for secure communication with the service
-    # enableSSL: true
+    enabled: false                         # Enable or disable content moderation
+    ## External moderation service settings
+    # endpoint: ""                         # Moderation API endpoint URL
+    # accessKeyId: ""                      # Access key for authentication
+    # accessKeySecret: ""                  # Secret key for authentication
+    # region: ""                           # Service region
+    # enableSSL: true                      # Enable SSL/TLS for secure communication
 
 ## Runner configuration
 runner:
-  ## Namespace for user-deployed inference, fine-tuning, model evaluation, and other instances
-  namespace: "spaces"
+  enabled: true                          # Enable or disable internal runner
 
-  ## Automatic install and configure knative, argo, lws, included namespace declared before
-  ## Automatic configuration will use standardized installation to create their own namespaces,
-  ##   and control the use of namespaces through mergingNamespace
-  autoConfigure: true
+  ## Runner deployment context
+  chartContext:
+    isBuiltIn: true                      # Runner deployed bundled with csghub
 
-  ## Merging mode: "multi" (reduce namespaces) or "single" (merge to one namespace) or "disable" (Disable merging)
-  mergingNamespace: "disable"
+  ## Runner operation and communication
+  region: "region-0"                     # Region the runner belongs to
+  interval: 60                           # Communication interval with server (seconds)
 
-  ## Custom pip repository URL
-  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+  ## Namespace management
+  namespace: "spaces"                    # Namespace for user-deployed workloads
+  autoConfigure: true                    # Automatically install knative/argo/lws
+  mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
-  ## Knative serving configuration
+  ## Networking configuration
+  usePublicDomain: true                  # Use public domain for application access
+
+  ## Package and image management
+  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
+  extraBuildArgs: []                     # Extra Kaniko build arguments
+  model: {}                              # Model image configuration
+
+  ## GPU resource configuration
+  gpuModelLabel:
+    typeLabel: "nvidia.com/gpu.product"  # GPU type label
+    capacityLabel: "nvidia.com/gpu"      # GPU capacity label
+
+  ## Knative Serving configuration
   knative:
     serving:
-      ## It will generate ksvc with domain suffix http://<uuid>.<namespace>.<knative.serving.domain>
-      ## Default global.ingress.domain
-      domain: example.com
-      ## Starting from v1.12.0, in the new operating mode, `services` has been deprecated.,
-      ## but the service will be retained for forward compatibility
-      services:
-        ## Knative service type (LoadBalancer or NodePort)
-        - type: LoadBalancer
-          ## Internal domain for service access
-          domain: "example.com"
-          ## API server host address
-          # host: "192.168.18.10"
-          ## Service port (NodePort value when type is NodePort)
-          # port: "30213"
+      domain: "example.com"              # Domain suffix for Knative services
 
-## Dataflow configuration
+      ## Deprecated configuration (for backward compatibility)
+      services:
+        - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
+          domain: "example.com"          # Internal service domain
+          # host: "192.168.18.10"        # API server host address
+          # port: "30213"                # NodePort value when type=NodePort
+
+## Dataflow service configuration
 dataflow:
-  ## Enable or disable the dataflow service
-  enabled: true
+  enabled: true                          # Enable or disable dataflow service
+
+## Accounting service configuration
+accounting: {}
+
+## User service configuration
+user: {}
+
+## Data viewer configuration
+dataviewer: {}
+
+## Mirror service configuration
+mirror: {}
 
 #################################################################
-##  Other built-in third-party services                        ##
+##  Built-in Third-party Components                            ##
 #################################################################
 ## Embedded PostgreSQL configuration
 postgresql:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "opencsghq/postgres"
-    ## Image version tag
-    tag: "15.10"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "15.10"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 5432
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 5432                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Databases to create on startup
-  ## Format:
-  ## - databaseName
-  databases:
+  databases:                                 # Databases to create on startup
     - "csghub_casdoor"
     - "csghub_temporal"
     - "csghub_server"
     - "csghub_portal"
 
-  ## PostgreSQL runtime parameters
-  parameters: {}
-    ## Dynamic parameters (it will trigger recreate)
-    # max_connections: 400
-    # shared_buffers: "128MB"
+  parameters: {}                             # PostgreSQL runtime parameters
+    # max_connections: 400                   # Dynamic parameters (triggers recreate)
+    # shared_buffers: "128MB"                # Shared memory buffers
 
-  ## Data persistence settings
   persistence:
-    ## StorageClass for dynamic provisioning
-    # storageClass: ""
-    ## Volume access permissions
-    # accessMode: ["ReadWriteOnce"]
-    ## Disk space allocation
-    size: 50Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "50Gi"                             # Disk space allocation
 
-## Built-in Redis Configuration
+## Built-in Redis configuration
 redis:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "redis"
-    ## Image version tag
-    tag: "7.2.5"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "7.2.5"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 6379
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 6379                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Password required
-  requirePass: false
+  requirePass: false                         # Password requirement
 
-  ## Data persistence settings
   persistence:
-    ## StorageClass for dynamic provisioning
-    # storageClass: ""
-    ## Volume access permissions
-    # accessMode: ["ReadWriteOnce"]
-    ## Disk space allocation
-    size: 10Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
 
-## Built-in Redis Configuration
+## Embedded MinIO configuration
 minio:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "minio/minio"
-    ## Image version tag
-    tag: "RELEASE.2024-12-18T13-15-44Z"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "RELEASE.2024-12-18T13-15-44Z"      # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 9000
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 9000                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Console configuration
   console:
-    ## If enabled console UI
-    enabled: true
-    ## Console Service configuration
+    enabled: true                            # Enable console UI
     service:
-      ## Service port
-      port: 9001
-      ## Network protocol
-      protocol: TCP
+      port: 9001                             # Console service port
+      protocol: "TCP"                        # Network protocol
 
-  ## Configuration for ingress.
   ingress:
-    ## Enable or disable ingress.
-    enabled: true
-    ## Ingress-nginx annotations
-    annotations: {}
-    ## TLS settings for ingress.
-    tls: {}
-      ## Enable or disable TLS.
-      # enabled: false
-      ## If tls enabled, a secret needs to be provided
-      # secretName: ""
+    enabled: true                            # Enable or disable ingress
+    annotations: {}                          # Ingress-nginx annotations
+    tls: {}                                  # TLS settings
+      # enabled: false                       # Enable or disable TLS
+      # secretName: ""                       # TLS secret name
 
-  ## Region
-  region: "cn-north-1"
+  region: "cn-north-1"                       # Storage region
 
-  ## Buckets to be created
-  ## Add new bucket eg: <bucket_name>: <policy>
-  ## Policy: https://docs.min.io/community/minio-object-store/reference/minio-mc/mc-anonymous-set.html#mc.anonymous.set
-  buckets:
-    csghub-registry: "none"
-    csghub-billing: "none"
-    csghub-server: "none"
-    csghub-portal: "none"
-    csghub-portal-public: "download"
+  buckets:                                   # Buckets to be created
+    - name: "csghub-registry"                # Bucket name
+      policy: "none"                         # Access policy: none, download, public
+    - name: "csghub-billing"
+      policy: "none"
+    - name: "csghub-server"
+      policy: "none"
+    - name: "csghub-portal"
+      policy: "none"
+    - name: "csghub-portal-public"
+      policy: "download"
+    - name: "csghub-runner"
+      policy: "none"
 
-  ## Data persistence settings
   persistence:
-    ## StorageClass for dynamic provisioning
-    # storageClass: ""
-    ## Volume access permissions
-    # accessMode: ["ReadWriteOnce"]
-    ## Disk space allocation
-    size: 500Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "500Gi"                            # Disk space allocation
 
-## Built-in Registry Configuration
+## Embedded Registry configuration
 registry:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "registry"
-    ## Image version tag
-    tag: "2.8.3"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "2.8.3"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 5000
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 5000                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Configuration for ingress.
   ingress:
-    ## Enable or disable ingress.
-    enabled: true
-    ## Ingress-nginx annotations
-    annotations: {}
-    ## TLS settings for ingress.
-    tls: {}
-      ## Enable or disable TLS.
-      # enabled: false
-      ## If tls enabled, a secret needs to be provided
-      # secretName: ""
+    enabled: true                            # Enable or disable ingress
+    annotations: {}                          # Ingress-nginx annotations
+    tls: {}                                  # TLS settings
+      # enabled: false                       # Enable or disable TLS
+      # secretName: ""                       # TLS secret name
 
-  ## Configuration for logging
   logging:
-    ## log level, enums error, warn, info, and debug
-    level: "info"
-    ## Formatter log, enums json, text, logstash
-    formatter: "json"
-    ## Enable access log
-    accesslog: true
+    level: "info"                            # Log level: error, warn, info, debug
+    formatter: "json"                        # Log format: json, text, logstash
+    accesslog: true                          # Enable access log
 
-  ## External Object Storage Service Configuration (OSS/S3 Compatible)
-  objectStore: {}
-    ## Endpoint URL for accessing the object storage service
-    ## Example: "https://oss-cn-beijing.aliyuncs.com" or "http://minio.example.com:9000"
-    # endpoint: ""
-    ## Access Key ID for authentication
-    # accessKey: ""
-    ## Secret Access Key for authentication
-    # accessSecret: ""
-    ## Bucket name to be used in the object storage service
-    # bucket: "csghub-registry"
-    ## Region where the bucket is located
-    ## Example: "us-east-1", "cn-beijing"
-    # region: ""
-    ## Use secure TLS certificates (skip certificate verification if false)
-    # secure: false
-    ## Enable TLS encryption for connections
-    # encrypt: false
-    ## When true, bucket name is included in URL path
-    ## URL format: http://endpoint/bucket/object-key
-    ## When false: http://bucket.endpoint/object-key
-    # pathStyle: true
+  objectStore: {}                            # External object storage
+    # endpoint: ""                           # Object storage endpoint URL
+    # accessKey: ""                          # Access key for authentication
+    # accessSecret: ""                       # Secret key for authentication
+    # bucket: "csghub-registry"              # Bucket name
+    # region: ""                             # Storage region
+    # secure: false                          # Use secure TLS certificates
+    # encrypt: false                         # Enable TLS encryption
+    # pathStyle: true                        # Use path-style addressing
 
-## Built-in Gitaly Configuration
+## Embedded Gitaly configuration
 gitaly:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
-    registry: "registry.gitlab.com"
-    ## Image repository
-    repository: "gitlab-org/build/cng/gitaly"
-    ## Image version tag
-    tag: "v17.5.0"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    registry: "registry.gitlab.com"          # Image registry
+    repository: "gitlab-org/build/cng/gitaly" # Image repository
+    tag: "v17.5.0"                           # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 8075
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 8075                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Define gitaly storage
-  storage: "default"
+  storage: "default"                         # Gitaly storage name
 
-  ## Log output level
   logging:
-    level: "info"
+    level: "info"                            # Log output level
 
-  ## Data persistence settings
   persistence:
-    ## StorageClass for dynamic provisioning
-    # storageClass: ""
-    ## Volume access permissions
-    # accessMode: ["ReadWriteOnce"]
-    ## Disk space allocation
-    size: 200Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "200Gi"                            # Disk space allocation
 
-## Built-in Gitaly Configuration
+## Embedded GitLab Shell configuration
 gitlabShell:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
-    registry: "registry.gitlab.com"
-    ## Image repository
-    repository: "gitlab-org/build/cng/gitlab-shell"
-    ## Image version tag
-    tag: "v17.5.0"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    registry: "registry.gitlab.com"          # Image registry
+    repository: "gitlab-org/build/cng/gitlab-shell" # Image repository
+    tag: "v17.5.0"                           # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 22
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 22                                 # SSH service port
+    protocol: "TCP"                          # Network protocol
 
-  ## RBAC configuration
-  ## Enable to patch ingress tcp configuration
   rbac:
-    create: true
+    create: true                             # Enable RBAC for ingress TCP configuration
 
-  ## securityContext configuration
   securityContext:
-    runAsUser: 0
+    runAsUser: 0                             # Run as root user
 
-## Built-in NATS Configuration
+## Embedded NATS configuration
 nats:
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "nats"
-    ## Image version tag
-    tag: "2.10.16"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "2.10.16"                           # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 4222
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 4222                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Data persistence settings
   persistence:
-    ## StorageClass for dynamic provisioning
-    # storageClass: ""
-    ## Volume access permissions
-    # accessMode: ["ReadWriteOnce"]
-    ## Disk space allocation
-    size: 10Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
 
-## Built-in Casdoor Configuration
+## Embedded Casdoor configuration
 casdoor:
-  ## Init Admin user, default "root"
-  admin: {}
-    # name: root
-    # password: ""
+  admin: {}                                  # Initial admin user
+    # name: "root"                           # Admin username
+    # password: ""                           # Admin password
 
-  ## Image settings (overrides global.image)
   image:
-    ## Docker registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "casbin/casdoor"
-    ## Image version tag
-    tag: "v1.799.0"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "v1.799.0"                          # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 8000
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 8000                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Configuration for ingress.
   ingress:
-    ## Enable or disable ingress.
-    enabled: true
-    ## Ingress-nginx annotations
-    annotations: {}
-    ## TLS settings for ingress.
-    tls: {}
-      ## Enable or disable TLS.
-      # enabled: false
-      ## If tls enabled, a secret needs to be provided
-      # secretName: ""
+    enabled: true                            # Enable or disable ingress
+    annotations: {}                          # Ingress-nginx annotations
+    tls: {}                                  # TLS settings
+      # enabled: false                       # Enable or disable TLS
+    # secretName: ""                       # TLS secret name
 
-  ## Database configuration
-  postgresql: {}
-    ## PostgreSQL connection settings
-    # host: "<pg_host>"
-    # port: 5432
-    # database: "csghub_casdoor"
-    # user: "csghub"
-    # password: ""
-    # timezone: "Etc/UTC"
-    # sslmode: "prefer"
+  postgresql: {}                             # Database configuration
+    # host: "<pg_host>"                      # PostgreSQL host address
+    # port: 5432                             # PostgreSQL port
+    # database: "csghub_casdoor"             # Database name
+    # user: "csghub"                         # Database username
+    # password: ""                           # Database password
+    # timezone: "Etc/UTC"                    # Database timezone
+    # sslmode: "prefer"                      # SSL mode
 
-## Built-in Temporal Configuration
+## Embedded Temporal configuration
 temporal:
-  ## Image settings (overrides global.image)
   image:
-    ## Container registry secrets
-    pullSecrets: []
-    ## Image registry
     registry: "docker.io"
-    ## Image repository
     repository: "temporalio/auto-setup"
-    ## Image version tag
-    tag: "1.25.1"
-    ## Image pull behavior
-    pullPolicy: "IfNotPresent"
+    tag: "1.25.1"                            # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Service configuration
   service:
-    ## Service type (ClusterIP, NodePort, LoadBalancer)
-    type: ClusterIP
-    ## Service port
-    port: 7233
-    ## Network protocol
-    protocol: TCP
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 7233                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Console UI configuration
   console:
-    ## If enabled console UI
-    enabled: true
-    ## Console image configuration
+    enabled: false                           # Enable console UI
     image:
-      ## Image repository for console ui
-      repository: "temporalio/ui"
-      ## Image version tag for console ui
-      tag: "2.30.3"
-    ## Console authentication configuration
+      repository: "temporalio/ui"            # Console UI image repository
+      tag: "2.30.3"                          # Console UI image tag
     auth:
-      user: "temporal"
-      password: ""
-    ## Service configuration
+      user: "temporal"                       # Console authentication user
+      password: ""                           # Console authentication password
     service:
-      ## Service port
-      port: 8080
-      ## Network protocol
-      protocol: TCP
+      port: 8080                             # Console service port
+      protocol: "TCP"                        # Network protocol
 
-  ## Configuration for ingress.
   ingress:
-    ## Enable or disable ingress.
-    enabled: true
-    ## Ingress-nginx annotations
-    annotations: {}
-    ## TLS settings for ingress.
-    tls: {}
-      ## Enable or disable TLS.
-      # enabled: false
-      ## If tls enabled, a secret needs to be provided
-      # secretName: ""
+    enabled: true                            # Enable or disable ingress
+    annotations: {}                          # Ingress-nginx annotations
+    tls: {}                                  # TLS settings
+      # enabled: false                       # Enable or disable TLS
+      # secretName: ""                       # TLS secret name
 
-  ## Database configuration
-  postgresql: {}
-    ## PostgreSQL connection settings
-    # host: "<pg_host>"
-    # port: 5432
-    # database: "csghub_temporal"
-    # user: "csghub"
-    # password: ""
-    # timezone: "Etc/UTC"
-    # sslmode: "prefer"
+  postgresql: {}                             # Database configuration
+    # host: "<pg_host>"                      # PostgreSQL host address
+    # port: 5432                             # PostgreSQL port
+    # database: "csghub_temporal"            # Database name
+    # user: "csghub"                         # Database username
+    # password: ""                           # Database password
+    # timezone: "Etc/UTC"                    # Database timezone
+    # sslmode: "prefer"                      # SSL mode
 
 #################################################################
-##  Dependent subchart configuration                           ##
+##  Dependent SubCharts                                        ##
 ##  PLEASE DO NOT UPDATE!!!                                    ##
 #################################################################
-## The following is a reference to a third-party chart.
-##  Do not modify it unless you know the purpose of the modification.
+## Do not modify it unless you know the purpose of the modification.
 
-## Ingress-nginx Configuration
+## Ingress-nginx configuration
 ingress-nginx:
-  ## Enable the NGINX Ingress Controller
-  enabled: true
+  enabled: true                            # Enable NGINX Ingress Controller
+
   ## TCP services configuration
   tcp:
-    ## Forward TCP traffic on port 22 to the specified service
-    22: csghub/csghub-gitlab-shell:22
-  ## NGINX Ingress Controller configuration
-  controller:
-    progressDeadlineSeconds: 600
-    ## Configuration for the controller image
-    ## Reset digest to use third-party repository
-    ## DO NOT UPDATE!!! image.digest and admissionWebhooks.patch.image.digest
-    image:
-      image: opencsghq/ingress-nginx-controller
-      ## Digest of the image for the controller
-      digest: ""
-    ## Configuration for admission webhooks
-    admissionWebhooks:
-      ## Patch settings for admission webhooks
-      patch:
-        ## Digest of the image for the admission webhook
-        image:
-          image: opencsghq/ingress-nginx-kube-webhook-certgen
-          ## Digest of the image for the admission webhook
-          digest: ""
-    ## Configuration settings for the Ingress Controller
-    config:
-      ## Set the risk level for annotations; critical indicates high risk
-      annotations-risk-level: Critical
-      custom-http-errors: "404,500,502,503"
-    ## Allow the use of server snippets in annotations
-    allowSnippetAnnotations: true
-    ## Configuration for the service exposed by the Ingress Controller
-    service:
-      type: *type
-      ## Node ports for HTTP and HTTPS traffic
-      nodePorts:
-        ## Node port for HTTP traffic
-        http: 30080
-        ## Node port for HTTPS traffic
-        https: 30443
-        ## Node port for TCP traffic
-        tcp:
-          ## Node port for TCP traffic on port 22
-          22: 30022
-  ## Custom error pages
-  defaultBackend:
-    enabled: true
-    image:
-      image: opencsghq/ingress-nginx-custom-error-pages
-      tag: v1.2.0
-    extraVolumes:
-      - name: custom-error-pages
-        configMap:
-          name: ingress-nginx-custom-errors
-    extraVolumeMounts:
-      - name: custom-error-pages
-        mountPath: /www
+    22: "csghub/csghub-gitlab-shell:22"   # Forward TCP traffic on port 22
 
-## Reloader Configuration
+  controller:
+    progressDeadlineSeconds: 600           # Deployment progress deadline
+
+    ## Image configuration
+    image:
+      image: "opencsghq/ingress-nginx-controller"
+      digest: ""                           # Image digest (do not update)
+
+    ## Admission webhooks configuration
+    admissionWebhooks:
+      patch:
+        image:
+          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
+          digest: ""                       # Image digest (do not update)
+
+    ## Controller configuration
+    config:
+      annotations-risk-level: "Critical"   # Risk level for annotations
+      custom-http-errors: "404,500,502,503" # Custom HTTP error codes
+
+    allowSnippetAnnotations: true          # Allow server snippets in annotations
+
+    ## Service configuration
+    service:
+      type: *type                          # Service type
+      nodePorts:
+        http: 30080                        # HTTP node port
+        https: 30443                       # HTTPS node port
+        tcp:
+          22: 30022                        # TCP node port for SSH
+
+  ## Custom error pages configuration
+  defaultBackend:
+    enabled: true                          # Enable custom error pages
+    image:
+      image: "opencsghq/ingress-nginx-custom-error-pages"
+      tag: "v1.2.0"
+    extraVolumes:
+      - name: "custom-error-pages"
+        configMap:
+          name: "ingress-nginx-custom-errors"
+    extraVolumeMounts:
+      - name: "custom-error-pages"
+        mountPath: "/www"
+
+## Fluentd log collection configuration
+fluentd:
+  enabled: false                           # Enable or disable Fluentd
+  image:
+    repository: "opencsghq/fluent-fluentd-kubernetes-daemonset" # Fluentd image
+  fileConfigs: {}                          # Fluentd file sources configuration
+
+## Reloader configuration
 reloader:
   image:
-    name: "opencsghq/stakater-reloader"
+    name: "opencsghq/stakater-reloader"    # Reloader image name
 
-## Tempo Configuration
+## Loki log aggregation configuration
+loki:
+  ingress:
+    enabled: false                         # Enable Loki ingress
+    basicAuth: {}                          # Basic authentication
+      # username: "loki"
+    # password: "loki"
+
+  memcached:
+    image:
+      registry: "docker.io"                # Memcached image registry
+
+  memcachedExporter:
+    enabled: false                         # Disable memcached exporter
+
+  sidecar:
+    image:
+      registry: "docker.io"                # Sidecar image registry
+
+  deploymentMode: "SingleBinary"           # Deployment mode: SingleBinary or MicroServices
+
+  singleBinary:
+    replicas: 1                            # Single binary replicas
+    extraVolumeMounts:
+      - name: "storage"
+        mountPath: "/loki"                 # Storage volume mount
+    extraEnv:
+      - name: "GOMEMLIMIT"
+        value: "3750MiB"                   # Memory limit for Go runtime
+
+  ## Component replication (disabled for distributed mode)
+  write:
+    replicas: 0                            # Write component replicas
+  read:
+    replicas: 0                            # Read component replicas
+  backend:
+    replicas: 0                            # Backend component replicas
+
+  lokiCanary:
+    enabled: false                         # Disable Loki canary monitoring
+
+  gateway:
+    enabled: false                         # Disable Loki gateway
+
+  ## Core Loki configuration
+  loki:
+    auth_enabled: false                    # Disable authentication
+    commonConfig:
+      replication_factor: 1                # Data replication factor
+      path_prefix: "/loki"                 # Storage path prefix
+      ring:
+        kvstore:
+          store: "inmemory"                # In-memory key-value store
+    storage:
+      type: "filesystem"                   # Storage type: filesystem
+    schemaConfig:
+      configs:
+        - from: "2024-04-01"
+          store: "tsdb"                    # Time-series database store
+          object_store: "filesystem"       # Object storage backend
+          schema: "v13"                    # Schema version
+          index:
+            prefix: "loki_index_"          # Index prefix
+            period: "24h"                  # Index period
+    ingester:
+      chunk_encoding: "snappy"             # Chunk encoding compression
+    tracing:
+      enabled: false                       # Disable tracing
+    querier:
+      max_concurrent: 2                    # Maximum concurrent queries
+
+  test:
+    enabled: false                         # Disable test configuration
+
+  ## Cache configuration
+  chunksCache:
+    writebackSizeLimit: "10MB"             # Chunks cache writeback size limit
+    resources:
+      limits:
+        memory: "4096Mi"                   # Memory limit
+      requests:
+        memory: "2048Mi"                   # Memory request
+
+  resultsCache:
+    resources:
+      limits:
+        memory: "1024Mi"                   # Memory limit
+      requests:
+        memory: "512Mi"                    # Memory request
+
+## Tempo tracing configuration
 tempo:
-  enabled: false
+  enabled: false                           # Enable or disable Tempo
 
-## Prometheus Configuration
+## Prometheus monitoring configuration
 prometheus:
-  enabled: true
-  ingress: {}
+  enabled: true                            # Enable Prometheus
+
+  ingress:
+    enabled: false                         # Enable Prometheus ingress
+    basicAuth: {}                          # Basic authentication
+      # username: "prometheus"
+    # password: ""
+
+  ## Component configuration
+  alertmanager:
+    enabled: false                         # Disable Alertmanager
+  prometheus-pushgateway:
+    enabled: false                         # Disable pushgateway
+  prometheus-node-exporter:
+    enabled: false                         # Disable node exporter
+
+  ## Server configuration
+  server:
+    image:
+      registry: "quay.io"
+      repository: "prometheus/prometheus"
+      tag: "v3.5.0"
+
+  ## ConfigMap reload configuration
+  configmapReload:
+    prometheus:
+      image:
+        registry: "quay.io"
+        repository: "prometheus-operator/prometheus-config-reloader"
+        tag: "v0.85.0"
+
+  ## Kube-state-metrics configuration
+  kube-state-metrics:
+    image:
+      tag: "v2.17.0"

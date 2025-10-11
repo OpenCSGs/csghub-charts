@@ -137,8 +137,10 @@ tests:
       minio:
         region: "es-west-1"
         buckets:
-          csghub-test: none
-          csghub-test-public: download
+          - name: csghub-test
+            policy: none
+          - name: csghub-test-public
+            policy: download
     asserts:
       - equal:
           decodeBase64: true

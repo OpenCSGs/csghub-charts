@@ -1,0 +1,201 @@
+suite: Test Core ConfigMap
+templates:
+  - csghub/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    edition: "ee"
+    ingress:
+      domain: "example.com"
+      tls:
+        enabled: true
+        secretName: "test-tls"
+    image:
+      registry: "acr.io"
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    registry:
+      enabled: true
+    objectStore:
+      enabled: true
+  portal:
+    name: "portal-svc"
+    service:
+      port: "8080"
+  server:
+    name: "server-svc"
+    service:
+      port: "8070"
+  runner:
+    name: "runner-svc"
+    namespace: "spaces"
+    interval: 30
+    region: "cn-north-1"
+    usePublicDomain: true
+    model:
+      registry: "model.io"
+    service:
+      port: 8072
+    gpuModelLabel:
+      typeLabel: "nvidia.com/gpu.product"
+      capacityLabel: "nvidia.com/gpu"
+  accounting:
+    name: "accounting-svc"
+  user:
+    name: "user-svc"
+  loki:
+    name: "loki-svc"
+  tempo:
+    enabled: true
+  registry:
+    name: "registry"
+  minio:
+    name: "minio"
+  postgresql:
+    name: "postgresql"
+  nats:
+    name: "nats"
+  prometheus:
+    enabled: true
+tests:
+  - it: Should render configmap correctly
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-core"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "core"
+      - equal:
+          path: data.CSGHUB_PORTAL_ENABLE_HTTPS
+          value: "true"
+      - equal:
+          path: data.CSGHUB_PORTAL_ON_PREMISE
+          value: "true"
+      - equal:
+          path: data.CSGHUB_PORTAL_STARHUB_BASE_URL
+          value: "https://csghub.example.com"
+      - matchRegex:
+          path: data.CSGHUB_PORTAL_STARHUB_API_KEY
+          pattern: ".{128}"
+      - matchRegex:
+          path: data.CSGHUB_PORTAL_LOGIN_URL
+          pattern: "https://casdoor.example.com/.*\\?client_id=.*&response_type=code&redirect_uri=https://csghub.example.com/.*"
+      - matchRegex:
+          path: data.CSGHUB_PORTAL_DATABASE_DSN
+          pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_portal_svc\\?sslmode=disable"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ENDPOINT
+          value: "minio.example.com"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ACCESS_KEY_ID
+          value: "minio"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_BUCKET
+          value: "csghub-portal-svc-public"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ENABLE_SSL
+          value: "true"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_BUCKET
+          value: "csghub-portal-svc"
+      - equal:
+          path: data.CSGHUB_PORTAL_REDIS_ADDR
+          value: "csghub-redis:6379"
+      - matchRegex:
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          pattern: "nats://natsadmin:.*@csghub-nats:4222"
+      - equal:
+          path: data.OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL
+          value: "https://csghub.example.com/server/callback"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
+          value: "model.io"
+      - matchRegex:
+          path: data.STARHUB_DATABASE_DSN
+          pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_server_svc\\?sslmode=disable"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET
+          value: "csghub-server-svc"
+      - matchRegex:
+          path: data.STARHUB_SERVER_GITALY_SERVER_SOCKET
+          pattern: "tcp://csghub-gitaly:8075"
+      - equal:
+          path: data.STARHUB_SERVER_SSH_DOMAIN
+          value: "git@csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_DOMAIN
+          value: "https://csghub.example.com"
+      - matchRegex:
+          path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
+          pattern: "spaces.app.internal.*"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_CERTIFICATE
+          value: "/starhub-bin/casdoor/tls.crt"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_CLIENT_ID
+          value: "7a97bc5168cb75ffc514"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_CLIENT_SECRET
+          value: "33bd85106818efd90c57fb35ffc787aabbff6f7a"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_ENDPOINT
+          value: "https://casdoor.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_PROMETHEUS_API_ADDRESS
+          value: "http://csghub-prometheus-server:80/api/v1/query"
+
+  - it: Should render configmap correctly
+    template: csghub/configmap.yaml
+    set:
+      global:
+        registry:
+          enabled: false
+          external:
+            registry: "registry.io"
+            repository: "test"
+            insecure: false
+        objectStore:
+          enabled: false
+          external:
+            endpoint: "https://s4.example.com"
+            accessKey: "testUser"
+            secretKey: "testPassword"
+            bucket: "csghub-eva"
+            region: "es-west-1"
+            encrypt: "false"
+            secure: "false"
+            pathStyle: "false"
+      runner:
+        usePublicDomain: false
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: ""
+      - equal:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
+          value: "testUser"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_SECRET
+          value: "testPassword"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENDPOINT
+          value: "s4.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET
+          value: "csghub-eva"
+      - equal:
+          path: data.STARHUB_SERVER_S3_REGION
+          value: "es-west-1"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENABLE_SSL
+          value: "false"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
+          value: "auto"

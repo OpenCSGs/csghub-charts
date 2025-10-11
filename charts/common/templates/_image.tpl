@@ -25,6 +25,13 @@ Returns: Full image path in format "registry/repository:tag"
   {{- $repository := or $localImage.repository $globalImage.repository -}}
   {{- $tag := or $localImage.tag $globalImage.tag -}}
 
+  {{- if not $registry }}
+    {{- $registry = regexFind "^[^/]+" $repository }}
+    {{- if $registry }}
+      {{- $repository = trimPrefix (printf "%s/" $registry) $repository }}
+    {{- end }}
+  {{- end }}
+
   {{- /* Adjust repository path for OpenCSG registry */ -}}
   {{- if and $registry (regexMatch "^opencsg-registry" $registry) -}}
     {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $repository) -}}
@@ -65,6 +72,8 @@ Returns: Full image path in format "registry/repository"
     {{- if index $ctx.Values $service "image" -}}
       {{- $localImage = index $ctx.Values $service "image" -}}
     {{- end -}}
+  {{- else }}
+    {{- $localImage = $ctx.Values.image }}
   {{- end -}}
 
   {{- $registry := or $globalImage.registry $localImage.registry -}}

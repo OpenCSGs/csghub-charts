@@ -188,76 +188,11 @@ spec:
           tty: {{ $service.tty }}
           {{- end }}
         {{- end }}
-        {{- if $service.coredns.enabled }}
-        - name: {{ printf "%s-coredns" $service.name }}
-          {{- $corednsBaseImage := deepCopy .Values.image }}
-          {{- $corednsImage := mergeOverwrite $corednsBaseImage $service.coredns.image }}
-          image: {{ include "common.image" (list . $corednsImage) }}
-          imagePullPolicy: {{ or $corednsImage.pullPolicy .Values.global.image.pullPolicy }}
-          args:
-            - "-conf"
-            - "/etc/coredns/corefile"
-          ports:
-            - containerPort: 53
-              name: coredns-tcp
-              protocol: "TCP"
-            - containerPort: 53
-              name: coredns-udp
-              protocol: "UDP"
-          {{- with $service.environments }}
-          env:
-          {{- range $key, $value := . }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-          {{- end }}
-          {{- end }}
-          {{- if $service.resources }}
-          resources:
-            {{- toYaml $service.resources | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: corefile
-              mountPath: /etc/coredns
-          livenessProbe:
-            tcpSocket:
-              port: 53
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          {{- if $service.readinessProbe }}
-          readinessProbe:
-            {{- toYaml $service.readinessProbe | nindent 12 }}
-          {{- end }}
-          {{- if $service.startupProbe }}
-          startupProbe:
-            {{- toYaml $service.startupProbe | nindent 12 }}
-          {{- end }}
-          {{- if $service.securityContext }}
-          securityContext:
-            {{- toYaml $service.securityContext | nindent 12 }}
-          {{- end }}
-          {{- if $service.lifecycle }}
-          lifecycle:
-            {{- toYaml $service.lifecycle | nindent 12 }}
-          {{- end }}
-          {{- if $service.stdin }}
-          stdin: {{ $service.stdin }}
-          {{- end }}
-          {{- if $service.tty }}
-          tty: {{ $service.tty }}
-          {{- end }}
-        {{- end }}
-      {{- if or $service.nginx.enabled $service.coredns.enabled }}
+      {{- if $service.nginx.enabled }}
       volumes:
-        {{- if $service.nginx.enabled }}
         - name: config
           configMap:
             name: {{ printf "%s-nginx" $serviceName }}
-        {{- end }}
-        {{- if $service.coredns.enabled }}
-        - name: corefile
-          configMap:
-            name: {{ printf "%s-coredns" $serviceName }}
-        {{- end }}
       {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:

@@ -29,7 +29,6 @@ Returns: YAML configuration object with Gitaly connection parameters
     "port" ($gitalySvc.service.port | toString)
     "storage" ($gitalySvc.storage | default "default")
     "token" (include "common.randomPassword" $gitalySvc.name)
-    "isCluster" false
     "scheme" "tcp"
   -}}
 
@@ -50,7 +49,6 @@ Returns: YAML configuration object with Gitaly connection parameters
         "port" ((.port | default $gitalyConfig.port) | toString)
         "storage" (.storage | default $gitalyConfig.storage)
         "token" (.token | default $gitalyConfig.token)
-        "isCluster" (.isCluster | default $gitalyConfig.isCluster)
         "scheme" (.scheme | default $gitalyConfig.scheme)
       ) $gitalyConfig -}}
     {{- end -}}
@@ -62,7 +60,6 @@ Returns: YAML configuration object with Gitaly connection parameters
         "port" ((.port | default $gitalyConfig.port) | toString)
         "storage" (.storage | default $gitalyConfig.storage)
         "token" (.token | default $gitalyConfig.token)
-        "isCluster" (.isCluster | default $gitalyConfig.isCluster)
         "scheme" (.scheme | default $gitalyConfig.scheme)
       ) $gitalyConfig -}}
     {{- end -}}

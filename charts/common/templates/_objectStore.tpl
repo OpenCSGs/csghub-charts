@@ -27,9 +27,9 @@ Returns: YAML configuration object with S3 connection parameters
     "accessKey" "minio"
     "secretKey" (include "common.randomPassword" $minioSvc.name)
     "bucket" (include "common.names.custom" (list $global $service.name))
-    "encrypt" false
+    "encrypt" "false"
     "secure" ($ingressConfig.tls.enabled)
-    "pathStyle" true
+    "pathStyle" "true"
   -}}
 
   {{- /* If internal MinIO is enabled and secret exists, use it */ -}}

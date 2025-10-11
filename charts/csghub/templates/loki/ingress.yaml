@@ -1,0 +1,58 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
+{{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
+{{- if $ingressConfig.enabled }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: {{ include "common.endpoint.csghub" . | quote }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ $serviceName }}
+    nginx.ingress.kubernetes.io/auth-secret-type: "auth-file"
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - Loki"
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
+  {{- if $ingressConfig.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ include "common.domain.loki" . }}
+      secretName: {{ $ingressConfig.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ include "common.domain.loki" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: 3100
+            {{- else }}
+              serviceName: {{ $serviceName }}
+              servicePort: 3100
+            {{- end }}
+{{- end }}

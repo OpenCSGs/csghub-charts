@@ -56,7 +56,7 @@ Returns: Unique API token string that changes on every installation
   {{- $global := . -}}
 
   {{- /* Generate random seed for uniqueness across installations */ -}}
-  {{- $seed := randAlphaNum 8 -}}
+  {{- $seed := now | date "200601021504" -}}
 
   {{- /* Create unique hashes combining release info with random seed */ -}}
   {{- $namespaceHash := (printf "%s-%s" $global.Release.Namespace $seed | sha256sum) -}}
@@ -109,7 +109,7 @@ Usage:
     - /bin/sh
     - -c
     - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName $serverPort }}/healthz" 2>/dev/null;
+      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName $serverPort }}/healthz";
       do
         echo 'Waiting for CSGHub Server to be ready...';
         sleep 5;
