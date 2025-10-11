@@ -1,0 +1,18 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" . | fromYaml }}
+{{- $spaceName := include "namespace.spaces" . }}
+{{- $spaceExists := lookup "v1" "Namespace" "" $spaceName }}
+{{- if and (not $spaceExists) $service.autoConfigure }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $spaceName }}
+  labels:
+    kubernetes.io/metadata.name: {{ $spaceName }}
+  annotations:
+    helm.sh/resource-policy: keep
+{{- end }}

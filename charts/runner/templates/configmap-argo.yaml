@@ -18,13 +18,6 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   space.yaml: |
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: {{ $spaceNamespace }}
-      labels:
-        kubernetes.io/metadata.name: {{ $spaceNamespace }}
-    ---
     {{- $serviceName := include "common.names.custom" (list . $runnerSvc.name) }}
     {{- $registryConfig := include "common.registry.config" (dict "service" $runnerSvc "global" .) | fromYaml }}
     apiVersion: v1
