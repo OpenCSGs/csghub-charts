@@ -179,7 +179,7 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
   annotations:
     helm.sh/hook: pre-install, pre-upgrade, post-delete
-    helm.sh/hook-weight: "0"
+    helm.sh/hook-weight: "-5"
 data:
   generate_ssh_keys.sh: |
     #!/bin/bash
