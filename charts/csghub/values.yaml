@@ -656,7 +656,7 @@ loki:
     enabled: false                         # Enable Loki ingress
     basicAuth: {}                          # Basic authentication
       # username: "loki"
-    # password: "loki"
+      # password: "loki"
 
   memcached:
     image:
@@ -752,7 +752,7 @@ prometheus:
     enabled: false                         # Enable Prometheus ingress
     basicAuth: {}                          # Basic authentication
       # username: "prometheus"
-    # password: ""
+      # password: ""
 
   ## Component configuration
   alertmanager:
