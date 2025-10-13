@@ -25,7 +25,7 @@ data:
   STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME: {{ $serviceName | quote }}
 
   ## Runner Configuration for Space
-  STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ $service.namespace | quote }}
+  STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ include "namespace.spaces" . | quote }}
   STARHUB_SERVER_CLUSTER_RUNNER_NAMESPACE: {{ .Release.Namespace | quote }}
   STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_INTERVAL_IN_SEC: {{ $service.interval | default "60" | quote }}
   STARHUB_SERVER_CLUSTER_REGION: {{ $service.region | default "region-0" | quote }}
@@ -34,7 +34,7 @@ data:
   {{- $publicDomain := include "common.domain.public" . }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $publicDomain "" $service.usePublicDomain | quote }}
   #### Maybe not used, Domain app.internal is only a Placeholder
-  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal" $service.namespace | quote }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal" (include "namespace.spaces" .) | quote }}
 
   ## Runner Configuration for Kaniko
   STARHUB_SERVER_DOCKER_REG_BASE: {{ printf "%s/%s/" $service.registry.registry $service.registry.repository | quote }}

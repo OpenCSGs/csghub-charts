@@ -35,7 +35,7 @@ data:
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%s" $lokiSvcName $lokiSvcPort | quote }}
 
   ## Runner Configuration for Space
-  STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ $service.namespace | quote }}
+  STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ include "namespace.spaces" . | quote }}
   STARHUB_SERVER_CLUSTER_RUNNER_NAMESPACE: {{ .Release.Namespace | quote }}
   STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_INTERVAL_IN_SEC: {{ $service.interval | default 60 | quote }}
   STARHUB_SERVER_CLUSTER_REGION: {{ $service.region | default "region-0" | quote }}

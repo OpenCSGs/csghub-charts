@@ -167,7 +167,7 @@ roleRef:
   kind: Role
   name: runner-imagebuilder-configmaps
   apiGroup: rbac.authorization.k8s.io
-{{- if ne $service.namespace .Release.Namespace }}
+{{- if ne (include "namespace.spaces" .) .Release.Namespace }}
 ---
 ## --- Cluster-wide nodes and pods viewing permissions ---
 apiVersion: rbac.authorization.k8s.io/v1
