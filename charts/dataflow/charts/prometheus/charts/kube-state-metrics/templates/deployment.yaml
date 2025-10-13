@@ -158,7 +158,7 @@ spec:
         {{- end }}
         {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        image: {{ include "image.generic.prefix" (list . .Values.image ) }}
+        image: {{ include "common.image" (list . .Values.image) }}
         {{- if eq .Values.kubeRBACProxy.enabled false }}
         ports:
         - containerPort: {{ .Values.service.port | default 8080}}
