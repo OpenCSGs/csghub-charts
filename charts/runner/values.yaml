@@ -106,7 +106,7 @@ knative:
     domain: "example.com"              # Domain suffix for Knative services
 
     ## Deprecated configuration (for backward compatibility)
-    services: {}
+    services: []
       # - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
       #   domain: "example.com"          # Internal service domain
       #   host: "192.168.18.10"        # API server host address
