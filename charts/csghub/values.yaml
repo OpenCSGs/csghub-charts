@@ -54,6 +54,17 @@ global:
       # port: 6379                  # Redis port number
       # password: ""                # Redis authentication password
 
+  ## MongoDB configuration
+  mongo:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Mongo configuration
+    external: {}
+      # host: "<mongo_host>"        # Mongo server hostname or IP
+      # port: 27017                 # Mongo  port number
+      # user: "root"                # Mongo authentication user
+      # password: ""                # Mongo authentication password
+
   ## Object storage configuration
   objectStore:
     ## Use built-in (true) or external (false)

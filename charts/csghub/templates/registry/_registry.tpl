@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # Registry External Endpoint Helper
 # Generates the complete external access endpoint for Registry service
-# Usage: {{ include "external.endpoint.registry" . }}
+# Usage: {{ include "common.endpoint.registry" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.registry" }}

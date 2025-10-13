@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # MinIO External Endpoint Helper
 # Generates the complete external access endpoint for MinIO service
-# Usage: {{ include "external.endpoint.minio" . }}
+# Usage: {{ include "common.endpoint.minio" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.minio" }}

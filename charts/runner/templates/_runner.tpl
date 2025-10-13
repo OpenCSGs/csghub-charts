@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # Runner External Endpoint Helper
 # Generates the complete external access endpoint for Runner service
-# Usage: {{ include "external.endpoint.runner" . }}
+# Usage: {{ include "common.endpoint.runner" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.runner" }}

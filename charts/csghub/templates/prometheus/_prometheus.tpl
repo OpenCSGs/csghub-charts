@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # Prometheus External Endpoint Helper
 # Generates the complete external access endpoint for Prometheus service
-# Usage: {{ include "external.endpoint.prometheus" . }}
+# Usage: {{ include "common.endpoint.prometheus" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.prometheus" }}

@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # Loki External Endpoint Helper
 # Generates the complete external access endpoint for Loki service
-# Usage: {{ include "external.endpoint.loki" . }}
+# Usage: {{ include "common.endpoint.loki" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.loki" }}

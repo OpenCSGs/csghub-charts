@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # Temporal External Endpoint Helper
 # Generates the complete external access endpoint for Temporal service
-# Usage: {{ include "external.endpoint.temporal" . }}
+# Usage: {{ include "common.endpoint.temporal" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.temporal" }}

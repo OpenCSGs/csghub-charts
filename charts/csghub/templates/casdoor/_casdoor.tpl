@@ -17,7 +17,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 # Casdoor External Endpoint Helper
 # Generates the complete external access endpoint for Casdoor service
-# Usage: {{ include "external.endpoint.casdoor" . }}
+# Usage: {{ include "common.endpoint.casdoor" . }}
 # Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.casdoor" }}
