@@ -219,7 +219,7 @@ data:
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "common.endpoint.csghub" . | quote }}
   {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
   {{- $rproxyPort := dig "service" "port" 8083 $rproxySvc }}
-  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" (include "namespace.spaces" .) $rproxyPort | quote }}
+  STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%v" (include "namespace.spaces" .) $rproxyPort | quote }}
   {{- $endpoint := include "common.domain.public" . }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.usePublicDomain | quote }}
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.pipIndexUrl | quote }}
