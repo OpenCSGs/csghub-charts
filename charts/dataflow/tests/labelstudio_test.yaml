@@ -1,147 +1,195 @@
-suite: Test PostgreSQL Resources
+suite: Test LabelStudio Resources
 templates:
-  - postgresql/configmap.yaml
-  - postgresql/secret.yaml
-  - postgresql/service.yaml
-  - postgresql/statefulset.yaml
+  - label-studio/configmap.yaml
+  - label-studio/ingress.yaml
+  - label-studio/service.yaml
+  - label-studio/statefulset.yaml
 release:
   name: csghub
   namespace: csghub
 set:
   global:
+    ingress:
+      domain: "example.cn"
+      tls:
+        enabled: true
+        secretName: "test-tls"
     image:
       registry: ""
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
       storageClass: "nfs-provisioner"
-      accessModes: ["ReadWriteOnce", "ReadWriteMany"]
+      accessModes: ["ReadWriteOnce"]
       size: "25Gi"
     postgresql:
       enabled: true
-  postgresql:
-    name: "postgresql"
+  externalUrl: "https://csghub.example.com"
+  labelStudio:
+    name: "label-studio"
     image:
       registry: "docker.io"
-      repository: "opencsghq/postgres"
-      tag: "17.0"
+      repository: "opencsghq/labelstudio"
+      tag: "latest"
       pullPolicy: ""
     service:
-      type: "NodePort"
-      port: 6432
-      protocol: UDP
-    databases: ["db1", "db2"]
-    parameters:
-      max_connections: 666
-      shared_buffers: "1024MB"
+      type: "ClusterIP"
+      port: 8003
+      protocol: TCP
     persistence:
       size: ""
+  dataflow:
+    chartContext:
+      isBuiltIn: false
+  postgresql:
+    name: "postgresql"
+    service:
+      port: 5432
 tests:
   - it: Should render configmap correctly
-    template: postgresql/configmap.yaml
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - hasDocuments:
-          count: 1
-      - equal:
-          path: metadata.name
-          value: "csghub-postgresql"
-      - equal:
-          path: metadata.labels["app.kubernetes.io/service"]
-          value: "postgresql"
-      - matchRegex:
-          path: data["runtime.conf"]
-          pattern: "include_if_exists = '/var/lib/postgresql/data/postgresql.conf'"
-      - matchRegex:
-          path: data["runtime.conf"]
-          pattern: "max_connections = '666'"
-      - matchRegex:
-          path: data["runtime.conf"]
-          pattern: "shared_buffers = '1024MB'"
-
-  - it: Should render secret correctly
-    template: postgresql/secret.yaml
+    template: label-studio/configmap.yaml
     asserts:
       - equal:
           path: metadata.name
-          value: "csghub-postgresql"
+          value: "csghub-label-studio"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: "postgresql"
+          value: "label-studio"
       - equal:
-          decodeBase64: true
-          path: data["POSTGRES_USER"]
+          path: data["CSG_HUB_ENDPOINT"]
+          value: "https://csghub.example.com"
+      - equal:
+          path: data["LABEL_STUDIO_HOST"]
+          value: "label-studio.example.cn"
+      - equal:
+          path: data["LABEL_STUDIO_PORT"]
+          value: "8003"
+      - equal:
+          path: data["POSTGRE_HOST"]
+          value: "csghub-postgresql"
+      - equal:
+          path: data["POSTGRE_PORT"]
+          value: "5432"
+      - equal:
+          path: data["POSTGRE_NAME"]
+          value: "csghub_label_studio"
+      - equal:
+          path: data["POSTGRE_USER"]
           value: "csghub"
       - matchRegex:
-          path: data["POSTGRES_PASSWORD"]
-          pattern: "^[A-Za-z0-9+/=]{44}$"
+          path: data["POSTGRE_PASSWORD"]
+          pattern: ".{32}"
+
+  - it: Should render configmap correctly with external postgresql
+    template: label-studio/configmap.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+      dataflow:
+        chartContext:
+          isBuiltIn: true
+      labelStudio:
+        postgresql:
+          host: "10.6.0.10"
+          port: 6432
+          database: "postgres"
+          user: "postgres"
+          password: "postgres"
+    asserts:
+      - equal:
+          path: data["CSG_HUB_ENDPOINT"]
+          value: "https://csghub.example.cn"
+      - equal:
+          path: data["POSTGRE_HOST"]
+          value: "10.6.0.10"
+      - equal:
+          path: data["POSTGRE_PORT"]
+          value: "6432"
+      - equal:
+          path: data["POSTGRE_NAME"]
+          value: "postgres"
+      - equal:
+          path: data["POSTGRE_USER"]
+          value: "postgres"
       - matchRegex:
-          decodeBase64: true
-          path: data["POSTGRES_MULTIPLE_DATABASES"]
-          pattern: "db1,db2"
+          path: data["POSTGRE_PASSWORD"]
+          pattern: "postgres"
+
+  - it: Should render ingress correctly
+    template: label-studio/ingress.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.tls[0].hosts[0]
+          value: "label-studio.example.cn"
+      - equal:
+          path: spec.tls[0].secretName
+          value: "test-tls"
 
   - it: Should render service correctly
-    template: postgresql/service.yaml
+    template: label-studio/service.yaml
     asserts:
       - equal:
           path: metadata.name
-          value: "csghub-postgresql"
+          value: "csghub-label-studio"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: "postgresql"
+          value: "label-studio"
       - equal:
           path: spec.selector["app.kubernetes.io/service"]
-          value: "postgresql"
+          value: "label-studio"
       - equal:
           path: spec.type
-          value: "NodePort"
+          value: "ClusterIP"
       - equal:
           path: spec.ports[0].port
-          value: 6432
+          value: 8003
       - equal:
           path: spec.ports[0].protocol
-          value: "UDP"
+          value: "TCP"
       - equal:
           path: spec.ports[0].name
-          value: "postgresql"
+          value: "label-studio"
 
   - it: Should render statefulset with global correctly
-    template: postgresql/statefulset.yaml
+    template: label-studio/statefulset.yaml
     asserts:
       - equal:
           path: metadata.name
-          value: "csghub-postgresql"
+          value: "csghub-label-studio"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: "postgresql"
+          value: "label-studio"
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/service"]
-          value: "postgresql"
+          value: "label-studio"
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/service"]
-          value: "postgresql"
+          value: "label-studio"
       - equal:
           path: metadata.annotations["reloader.stakater.com/auto"]
           value: "true"
       - equal:
           path: spec.serviceName
-          value: "csghub-postgresql"
+          value: "csghub-label-studio"
       - equal:
           path: spec.template.spec.imagePullSecrets[0].name
           value: "acr-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/postgres:17.0"
+          value: "docker.io/opencsghq/labelstudio:latest"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
       - equal:
-          path: spec.template.spec.containers[0].args
-          value: ["-c", "config_file=/etc/postgresql/runtime.conf"]
-      - equal:
           path: spec.volumeClaimTemplates[0].spec.accessModes
-          value: ["ReadWriteOnce", "ReadWriteMany"]
+          value: ["ReadWriteOnce"]
       - equal:
           path: spec.volumeClaimTemplates[0].spec.storageClassName
           value: "nfs-provisioner"
@@ -150,17 +198,15 @@ tests:
           value: "25Gi"
 
   - it: Should render statefulset with local correctly
-    template: postgresql/statefulset.yaml
+    template: label-studio/statefulset.yaml
     set:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-      postgresql:
+      labelStudio:
         image:
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
-        environments:
-          POSTGRES_DATA: "/var/lib/postgresql/data"
         persistence:
           accessModes: ["ReadWriteOnce"]
           storageClass: "hostPath"
@@ -173,16 +219,10 @@ tests:
           value: "docker-pull-secret"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:17.0"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/labelstudio:latest"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "POSTGRES_DATA"
-      - equal:
-          path: spec.template.spec.containers[0].env[0].value
-          value: "/var/lib/postgresql/data"
       - equal:
           path: spec.volumeClaimTemplates[0].spec.accessModes
           value: ["ReadWriteOnce"]
