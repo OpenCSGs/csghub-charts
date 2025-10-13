@@ -19,9 +19,9 @@ metadata:
 data:
   ## Dataflow configuration
   {{- if $service.chartContext.isBuiltIn }}
-  CSGHUB_ENDPOINT: {{ include "common.domain.csghub" . | quote }}
+  CSGHUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   {{- else }}
-  CSGHUB_ENDPOINT: {{ $service.externalUrl | quote }}
+  CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
   {{- end }}
   DATA_DIR: "/data/dataflow"
   MAX_WORKERS: "99"

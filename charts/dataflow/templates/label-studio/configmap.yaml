@@ -18,12 +18,12 @@ metadata:
 data:
   ## Dataflow configuration
   {{- if $dataflowSvc.chartContext.isBuiltIn }}
-  CSG_HUB_ENDPOINT: {{ include "common.domain.csghub" . | quote }}
+  CSG_HUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   {{- else }}
-  CSG_HUB_ENDPOINT: {{ $service.externalUrl | quote }}
+  CSG_HUB_ENDPOINT: {{ .Values.externalUrl | quote }}
   {{- end }}
   LABEL_STUDIO_HOST: {{ include "common.domain.labelstudio" . | quote }}
-  LABEL_STUDIO_PORT: {{ $service | dig "service" "port" "8002" | quote }}
+  LABEL_STUDIO_PORT: {{ $service | dig "service" "port" 8002 | quote }}
   DJANGO_DB: "default"
   JSON_LOG: "1"
   POSTGRE_HOST: {{ $pgConfig.host | quote }}

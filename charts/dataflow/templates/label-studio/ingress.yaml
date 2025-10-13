@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
+{{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
@@ -23,7 +24,11 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/enable-cors: "true"
+    {{- if $dataflowSvc.chartContext.isBuiltIn }}
     nginx.ingress.kubernetes.io/cors-allow-origin: {{ include "common.endpoint.csghub" . | quote }}
+    {{- else }}
+    nginx.ingress.kubernetes.io/cors-allow-origin: {{ .Values.externalUrl | quote }}
+    {{- end }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
     nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
     nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
