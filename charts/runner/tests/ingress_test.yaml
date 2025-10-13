@@ -16,6 +16,8 @@ set:
   name: "runner-svc"
   service:
     port: 8082
+  chartContext:
+    isBuiltIn: false
 tests:
   - it: Should render ingress correctly
     template: ingress.yaml
