@@ -3,18 +3,23 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- $service := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "common.names.custom" (list . "label-studio") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
-  clusterIP: None
+  type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
-    - port: {{ include "csghub.svc.port" "label-studio" }}
+    - port: {{ dig "service" "port" 8002 $service }}
       targetPort: 8002
-      protocol: TCP
-      name: label-studio
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
+      name: {{ $service.name }}
   selector:
+    app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels.selector" . | nindent 4 }}

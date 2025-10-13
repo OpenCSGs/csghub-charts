@@ -5,7 +5,7 @@ APP VERSION: {{ .Chart.AppVersion }}
 You have successfully installed CSGHub-Dataflow!
 
 Visit CSGHub-Dataflow using following endpoint:
-    endpoint: {{ include "dataflow.external.endpoint" . }}
+    endpoint: {{ include "common.endpoint.dataflow" . }}
 
 For more details, visit:
     https://github.com/OpenCSGs/csghub-charts

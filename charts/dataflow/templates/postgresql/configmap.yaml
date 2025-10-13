@@ -3,124 +3,23 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- if and .Values.global.postgresql.enabled (not .Values.chartContext.isBuiltIn) }}
+{{- if and .Values.global.postgresql.enabled (not .Values.dataflow.chartContext.isBuiltIn) }}
+{{- $service := include "common.service" (dict "service" "postgresql" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.names.custom" (list . "postgresql-init") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
-  initialize.sql: |
-    {{- $secretData := (lookup "v1" "Secret" .Release.Namespace (include "common.names.custom" (list . "postgresql"))).data }}
-    {{- range $dbName, $dbConfig := .Values.postgresql.databases }}
-      {{- $username := $dbConfig.owner }}
-      {{- $password := $dbConfig.password | default (include "common.randomPassword" $username) }}
-      {{- if and $secretData (index $secretData $username) }}
-        {{- $password = index $secretData $username | b64dec }}
-      {{- end }}
-    {{- if and $username $password }}
-
-    -- Initialize user and database {{ $dbName | quote }}
-    -- Create user {{ $username | quote }} if it doesn't exist
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM pg_roles WHERE rolname = {{ $username | squote }}
-      ) THEN
-        {{- if or (contains "server" $username) (eq "csghub" $username) }}
-        CREATE USER {{ $username | quote }} WITH ENCRYPTED PASSWORD {{ $password | squote }} CREATEDB SUPERUSER;
-        {{- else }}
-        CREATE USER {{ $username | quote }} WITH ENCRYPTED PASSWORD {{ $password | squote }} CREATEDB;
-        {{- end }}
-
-        RAISE NOTICE 'Successfully created user %', {{ $username | squote }};
-      ELSE
-        RAISE NOTICE 'User % already exists', {{ $username | squote }};
-      END IF;
-    END $$;
-
-    -- Create database {{ $dbName | quote }} if it doesn't exist
-    CREATE DATABASE {{ $dbName }} ENCODING 'UTF-8' OWNER {{ $username | quote }};
-    -- Ensure database owner correct
-    ALTER DATABASE {{ $dbName }} OWNER TO {{ $username | quote }};
-    -- Grant privileges on database {{ $dbName | quote }} to user {{ $username | quote }}
-    GRANT ALL PRIVILEGES ON DATABASE {{ $dbName }} TO {{ $username | quote }};
-
-    {{- if regexMatch "star|ship|gpt" $dbName }}
-      DO $$
-      DECLARE
-        target_db TEXT;
-      BEGIN
-        IF EXISTS (SELECT 1 FROM pg_database WHERE datname in ('starship','starship_codegpt')) THEN
-          PERFORM pg_terminate_backend(pid)
-          FROM pg_stat_activity
-          WHERE datname in ('starship','starship_codegpt') AND pid <> pg_backend_pid();
-
-          SELECT COALESCE(
-            (SELECT 'starship' FROM pg_database WHERE datname = 'starship'),
-            (SELECT 'starship_codegpt' FROM pg_database WHERE datname = 'starship_codegpt')
-          ) INTO target_db;
-
-          EXECUTE format('ALTER DATABASE %I RENAME TO csgship', target_db);
-
-          RAISE NOTICE 'Database % rename to csgship', target_db;
-        ELSE
-          RAISE NOTICE 'Database starship or starship_codegpt does not exists';
-        END IF;
-      END $$;
-    {{- end }}
-
-      -- Connection to {{ $dbName | quote }}
-      \connect {{ $dbName | quote }}
-      -- Change owner for tables
-      DO $$
-      DECLARE
-        r RECORD;
-        new_owner TEXT := {{ $username | squote }};
-        table_count INTEGER := 0;
-      BEGIN
-        FOR r IN
-          SELECT 'ALTER TABLE ' || schemaname || '.' || tablename || ' OWNER TO ' || new_owner || ';' AS alter_cmd
-          FROM pg_tables
-          WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-        LOOP
-          EXECUTE r.alter_cmd;
-          table_count := table_count + 1;
-        END LOOP;
-
-        RAISE NOTICE 'Successfully changed ownership of % tables to %', table_count, new_owner;
-      END $$;
-    {{- end }}
-    {{- end }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "common.names.custom" (list . "postgresql") }}
-  namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" . | nindent 4 }}
-data:
-  postgresql.conf: |
-    listen_addresses = '*'
-    shared_buffers = 256MB
-    max_connections = 200
-    max_wal_size = 1GB
-    min_wal_size = 80MB
-    dynamic_shared_memory_type = posix
-    log_timezone = 'Etc/UTC'
-    datestyle = 'iso, mdy'
-    timezone = 'Etc/UTC'
-    lc_messages = 'en_US.utf8'
-    lc_monetary = 'en_US.utf8'
-    lc_numeric = 'en_US.utf8'
-    lc_time = 'en_US.utf8'
-    default_text_search_config = 'pg_catalog.english'
-    include_if_exists = '/etc/postgresql/runtime.conf'
   runtime.conf: |
-  {{- range $key, $value := .Values.postgresql.parameters -}}
-    {{- if and $key $value }}
-    {{ printf "%s = %s" $key ($value | toString) }}
+    include_if_exists = '/var/lib/postgresql/data/postgresql.conf'
+    {{- range $key, $value := $service.parameters -}}
+      {{- if and $key $value }}
+    {{ printf "%s = %s" $key ($value | toString | squote ) }}
+      {{- end }}
     {{- end }}
-  {{- end }}
 {{- end }}

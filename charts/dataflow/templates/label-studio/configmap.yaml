@@ -3,21 +3,27 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.labelStudio "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
+{{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.names.custom" (list . "label-studio") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "label-studio") | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
-{{- if .Values.chartContext.isBuiltIn }}
-  CSG_HUB_ENDPOINT: {{ include "csghub.internal.endpoint" . | quote }}
-{{- else }}
-  CSG_HUB_ENDPOINT: {{ .Values.externalUrl | quote }}
-{{- end }}
-  LABEL_STUDIO_HOST: {{ include "label-studio.external.domain" . | quote }}
-  LABEL_STUDIO_PORT: "8002"
+  ## Dataflow configuration
+  {{- if $dataflowSvc.chartContext.isBuiltIn }}
+  CSG_HUB_ENDPOINT: {{ include "common.domain.csghub" . | quote }}
+  {{- else }}
+  CSG_HUB_ENDPOINT: {{ $service.externalUrl | quote }}
+  {{- end }}
+  LABEL_STUDIO_HOST: {{ include "common.domain.labelstudio" . | quote }}
+  LABEL_STUDIO_PORT: {{ $service | dig "service" "port" "8002" | quote }}
   DJANGO_DB: "default"
   JSON_LOG: "1"
   POSTGRE_HOST: {{ $pgConfig.host | quote }}
@@ -25,4 +31,4 @@ data:
   POSTGRE_NAME: {{ $pgConfig.database | quote }}
   POSTGRE_USER: {{ $pgConfig.user | quote }}
   POSTGRE_PASSWORD: {{ $pgConfig.password | quote }}
-  SSLMODE: {{ $pgConfig.sslmode }}
+  SSLMODE: {{ $pgConfig.sslmode | quote }}

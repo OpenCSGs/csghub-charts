@@ -3,21 +3,26 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $pgConfig := include "csghub.postgresql.config" (dict "service" .Values.dataflow "global" .) | fromYaml }}
-{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values.dataflow "global" .) | fromYaml }}
-{{- $mongoConfig := include "csghub.mongo.config" (dict "service" .Values.dataflow "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+{{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
+{{- $mongoConfig := include "common.mongo.config" (dict "service" $service "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.names.custom" (list . "dataflow") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" (dict "context" . "service" "dataflow") | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
-{{- if .Values.chartContext.isBuiltIn }}
-  CSGHUB_ENDPOINT: {{ include "csghub.internal.endpoint" . | quote }}
-{{- else }}
-  CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
-{{- end }}
+  ## Dataflow configuration
+  {{- if $service.chartContext.isBuiltIn }}
+  CSGHUB_ENDPOINT: {{ include "common.domain.csghub" . | quote }}
+  {{- else }}
+  CSGHUB_ENDPOINT: {{ $service.externalUrl | quote }}
+  {{- end }}
   DATA_DIR: "/data/dataflow"
   MAX_WORKERS: "99"
   RAY_ADDRESS: "auto"
@@ -31,14 +36,6 @@ data:
   DATABASE_DB: {{ $pgConfig.database | quote }}
   DATABASE_USERNAME: {{ $pgConfig.user | quote }}
   DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
-  {{- $labelStudioHost := include "common.names.custom" (list . "label-studio") }}
-  {{- $labelStudioPort := include "csghub.svc.port" "label-studio" }}
-  STUDIO_JUMP_URL: {{ include "label-studio.external.endpoint" . | quote }}
-  {{- $redisHost := $redisConfig.host }}
-  {{- $redisPort := $redisConfig.port }}
-  REDIS_HOST_URL: {{ printf "redis://%s:%s" $redisHost $redisPort | quote }}
-  {{- $mongoHost := $mongoConfig.host }}
-  {{- $mongoPort := $mongoConfig.port }}
-  {{- $mongoUser := $mongoConfig.user }}
-  {{- $mongoPass := $mongoConfig.password }}
-  MONG_HOST_URL: {{ printf "mongodb://%s:%s@%s:%s" $mongoUser $mongoPass $mongoHost $mongoPort | quote }}
+  STUDIO_JUMP_URL: {{ include "common.endpoint.labelstudio" . | quote }}
+  REDIS_HOST_URL: {{ printf "redis://%s:%v" $redisConfig.host $redisConfig.port | quote }}
+  MONG_HOST_URL: {{ printf "mongodb://%s:%s@%s:%v" $mongoConfig.user $mongoConfig.password $mongoConfig.host $mongoConfig.port | quote }}

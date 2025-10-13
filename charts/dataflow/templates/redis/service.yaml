@@ -3,21 +3,26 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- if and .Values.global.redis.enabled (not .Values.chartContext.isBuiltIn) }}
-{{- $redisConfig := include "csghub.redis.config" (dict "service" .Values "global" .) | fromYaml }}
+{{- if and .Values.global.redis.enabled (not .Values.dataflow.chartContext.isBuiltIn) }}
+{{- $service := include "common.service" (dict "service" "redis" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "common.names.custom" (list . "redis") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
+  type: {{ dig "service" "type" "ClusterIP" $service }}
   clusterIP: None
   ports:
-    - port: {{ $redisConfig.port }}
-      targetPort: 6379
-      protocol: TCP
-      name: redis
+    - port: {{ $service.service.port }}
+      targetPort: 5432
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
+      name: {{ $service.name }}
   selector:
+    app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels.selector" . | nindent 4 }}
 {{- end }}

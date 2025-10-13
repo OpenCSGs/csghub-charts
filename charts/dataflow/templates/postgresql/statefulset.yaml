@@ -3,71 +3,96 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- if and .Values.global.postgresql.enabled (not .Values.chartContext.isBuiltIn) }}
+{{- if and .Values.global.postgresql.enabled (not .Values.dataflow.chartContext.isBuiltIn) }}
+{{- $service := include "common.service" (dict "service" "postgresql" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.custom" (list . "postgresql") }}
+  name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
-  labels: {{ include "common.labels" . | nindent 4 }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
   annotations:
     reloader.stakater.com/auto: "true"
-    {{- with .Values.postgresql.annotations }}
-    {{- toYaml . | nindent 4 }}
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}
 spec:
+  replicas: {{ $service.replicas | default 1 }}
+  serviceName: {{ $serviceName }}
+  minReadySeconds: {{ $service.minReadySeconds | default 30 }}
   selector:
     matchLabels:
-      {{- include "common.labels.selector" . | nindent 6 }}
-  serviceName: {{ include "common.names.custom" (list . "postgresql") }}
-  replicas: 1
-  minReadySeconds: 30
+      app.kubernetes.io/service: {{ $service.name }}
+      {{- if $service.selector }}
+        {{- toYaml $service.selector | nindent 6 }}
+      {{- else }}
+        {{- include "common.labels.selector" . | nindent 6 }}
+      {{- end }}
   template:
     metadata:
-      annotations:
-        {{- with .Values.postgresql.podAnnotations }}
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
       labels:
-        {{- include "common.labels" . | nindent 8 }}
+        app.kubernetes.io/service: {{ $service.name }}
+        {{- if $service.podLabels }}
+          {{- toYaml $service.podLabels | nindent 8 }}
+        {{- else }}
+          {{- include "common.labels" . | nindent 8 }}
+        {{- end }}
+      annotations:
+      {{- if $service.podAnnotations }}
+        {{- toYaml $service.podAnnotations | nindent 8 }}
+      {{- end }}
     spec:
-      {{- with (or .Values.postgresql.image.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
+      terminationGracePeriodSeconds: {{ $service.terminationGracePeriodSeconds | default 20 }}
+      {{- if $service.serviceAccountName }}
+      serviceAccountName: {{ $service.serviceAccountName }}
+      automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
+      {{- end }}
+      {{- with (or $service.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
-      {{- with .Values.postgresql.securityContext }}
-      securityContext:
-        {{- . | toYaml | nindent 8 }}
-      {{- end }}
-      terminationGracePeriodSeconds: 10
       containers:
-        - name: postgresql
-          image: {{ include "image.generic.prefix" (list . .Values.postgresql.image) }}
-          imagePullPolicy: {{ or .Values.postgresql.image.pullPolicy .Values.image.pullPolicy .Values.global.image.pullPolicy }}
-          args: [ "-c", "config_file=/etc/postgresql/postgresql.conf" ]
+        - name: {{ $service.name }}
+          image: {{ include "common.image" (list . $service.image) }}
+          imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
+          args:
+            - -c
+            - config_file=/etc/postgresql/runtime.conf
           ports:
             - containerPort: 5432
-              name: postgresql
-              protocol: TCP
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "postgresql") }}
+                name: {{ $serviceName }}
+            - secretRef:
+                name: {{ $serviceName }}
+          {{- with $service.environments }}
           env:
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "common.names.custom" (list . "postgresql") }}
-                  key: postgres
-            {{- with .Values.postgresql.environments }}
-            {{- range $key, $value := . }}
+          {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
-            {{- end }}
-            {{- end }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: runtime
+              mountPath: /etc/postgresql/runtime.conf
+              subPath: runtime.conf
+          {{- if $service.resources }}
           resources:
-            {{- .Values.postgresql.resources | toYaml | nindent 12 }}
+            {{- toYaml $service.resources | nindent 12 }}
+          {{- end }}
           livenessProbe:
             tcpSocket:
               port: 5432
@@ -75,30 +100,67 @@ spec:
             periodSeconds: 5
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "postgres", "-d", "postgres", "-h", "127.0.0.1", "-p", "5432"]
+              command:
+                - "pg_isready"
+                - "-U"
+                - "csghub"
+                - "-d"
+                - "csghub"
+                - "-h"
+                - "127.0.0.1"
+                - "-p"
+                - "5432"
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          {{- if $service.startupProbe }}
+          startupProbe:
+            {{- toYaml $service.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if $service.securityContext }}
           securityContext:
-            {{- .Values.postgresql.podSecurityContext | toYaml | nindent 12 }}
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/postgresql/data
-            - name: config
-              mountPath: /etc/postgresql
+            {{- toYaml $service.securityContext | nindent 12 }}
+          {{- end }}
+          {{- if $service.lifecycle }}
+          lifecycle:
+            {{- toYaml $service.lifecycle | nindent 12 }}
+          {{- end }}
+          {{- if $service.stdin }}
+          stdin: {{ $service.stdin }}
+          {{- end }}
+          {{- if $service.tty }}
+          tty: {{ $service.tty }}
+          {{- end }}
       volumes:
-        - name: config
+        - name: runtime
           configMap:
-            name: {{ include "common.names.custom" (list . "postgresql") }}
-      {{- with .Values.postgresql.nodeSelector }}
+            name: {{ $serviceName }}
+      {{- if $service.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml $service.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- with .Values.postgresql.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.postgresql.tolerations }}
+      {{- if $service.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml $service.tolerations | nindent 8 }}
       {{- end }}
+      {{- if $service.affinity }}
+      affinity:
+        {{- toYaml $service.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $service.podSecurityContext }}
+      securityContext:
+        {{- toYaml $service.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if $service.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml $service.topologySpreadConstraints | nindent 8 }}
+      {{- end }}
+      {{- if $service.hostname }}
+      hostname: {{ $service.hostname }}
+      {{- end }}
+      {{- if $service.subdomain }}
+      subdomain: {{ $service.subdomain }}
+      {{- end }}
+  {{- $persistence := $service.persistence }}
   volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
@@ -106,18 +168,32 @@ spec:
         name: data
         namespace: {{ .Release.Namespace }}
         labels:
+          app.kubernetes.io/service: {{ $service.name }}
           {{- include "common.labels" . | nindent 10 }}
         annotations:
           helm.sh/resource-policy: keep
-          {{- with .Values.postgresql.annotations }}
-            {{- toYaml . | nindent 10 }}
+          {{- if $persistence.annotations }}
+            {{- toYaml $persistence.annotations | nindent 10 }}
           {{- end }}
       spec:
-        accessModes: {{ or .Values.postgresql.persistence.accessMode .Values.global.persistence.accessMode }}
-        {{- if (or .Values.postgresql.persistence.storageClass .Values.global.persistence.storageClass) }}
-        storageClassName: {{ or .Values.postgresql.persistence.storageClass .Values.global.persistence.storageClass }}
+        accessModes:
+        {{- range $mode := (or $persistence.accessModes .Values.global.persistence.accessModes) }}
+          - {{ $mode | default "ReadWriteOnce" }}
+        {{- end }}
+        {{- with (or $persistence.storageClass .Values.global.persistence.storageClass) }}
+        storageClassName: {{ . }}
         {{- end }}
         resources:
           requests:
-            storage: {{ or .Values.postgresql.persistence.size .Values.global.persistence.size }}
+            storage: {{ or $persistence.size .Values.global.persistence.size }}
+  {{- if $service.updateStrategy }}
+  updateStrategy:
+    {{- toYaml $service.updateStrategy | nindent 4 }}
+  {{- end }}
+  {{- if $service.podManagementPolicy }}
+  podManagementPolicy: {{ $service.podManagementPolicy }}
+  {{- end }}
+  {{- if $service.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ $service.revisionHistoryLimit }}
+  {{- end }}
 {{- end }}

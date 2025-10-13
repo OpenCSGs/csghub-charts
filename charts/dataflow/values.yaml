@@ -1,482 +1,329 @@
-## Global configuration will override subChart's configuration
+#################################################################
+##  Global Configuration                                       ##
+#################################################################
 global:
+  ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
+  edition: "ee"
 
-  ## Image configuration
-  image:
-    ## Image registry path (without trailing slash)
-    # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-    ## Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)
-    tag: "v1.11.0-ee"
-    ## Image pull policy
-    pullPolicy: "IfNotPresent"
-    ## Kubernetes secrets for pulling images from private registry
-    pullSecrets: []
-
-  ## Ingress Configuration
+  ## Ingress configuration
   ingress:
-    ## Ingress controller class name
-    className: "nginx"
-    ## Base domain name for all ingress routes
-    domain: "example.com"
-    ## Custom domain prefixes for different services
-    ## Example: { public: "app", dataflow: "dataflow-api" }
-    customDomainPrefixes: {}
-    ## Use top-level domain directly (true) or subdomains (false)
-    ## true: https://example.com, false: https://dataflow.example.com
-    useTop: false
-    ## TLS/SSL configuration for ingress
-    tls: {}
-      # enabled: true
-    # secretName: "csghub-tls-cert"
+    # className: "nginx"            # Ingress controller class name
+    domain: "example.com"           # Base domain for accessing csghub
+    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
+    ## TLS/SSL configuration
+    tls:
+      enabled: false                # Enable or disable TLS
+      # secretName: ""              # TLS secret name (if enabled)
+    ## Service configuration
     service:
-      ## Service type for exposing the dataflow
-      ## Options: LoadBalancer, NodePort, ClusterIP
-      type: &type LoadBalancer
+      type: &type "LoadBalancer"    # Service type: LoadBalancer or NodePort
 
-  ## PostgreSQL database configuration
+  ## Image management
+  image:
+    # registry: ""                  # Custom image registry (overrides local registry)
+    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
+    pullSecrets: []                 # Private registry authentication secrets
+
+  ## Persistent volume configuration
+  persistence:
+    # storageClass: ""              # StorageClass name (empty for default)
+    accessModes: ["ReadWriteOnce"]  # Volume access modes
+    size: "10Gi"                    # Default storage capacity
+
+  ## Database configuration
   postgresql:
-    ## Use built-in (true) or external (false) postgresql
+    ## Use built-in (true) or external (false)
     enabled: true
-    ## External PostgreSQL configuration
-    external:
-      ## Hostname or IP address of the external PostgreSQL server
-      host: "<pg_host>"
-      ## Port number for the PostgreSQL connection
-      port: 6432
-      ## Username for PostgreSQL authentication
-      # user: "csghub"
-      ## Password for PostgreSQL authentication
-      # password: ""
-      ## Timezone setting for the database connection
-      # timezone: "Etc/UTC"
-      ## SSL mode for the database connection (prefer, require, verify-full, etc.)
-      # sslmode: "prefer"
+    ## External PostgreSQL connection
+    external: {}
+      # host: "<pg_host>"           # PostgreSQL host address
+      # port: 6432                  # PostgreSQL port
+      # user: "csghub"              # Database username
+      # password: ""                # Database password
+      # timezone: "Etc/UTC"         # Database timezone
+      # sslmode: "prefer"           # SSL mode
 
   ## Redis configuration
   redis:
-    ## Use built-in (true) or external (false) redis
+    ## Use built-in (true) or external (false)
     enabled: true
     ## External Redis configuration
     external: {}
-      ## Hostname or IP address of the external Redis server
-      # host: "<redis_host>"
-      ## Port number for the Redis connection
-      # port: 6379
-      ## Password for Redis authentication
-      # password: ""
+      # host: "<redis_host>"        # Redis server hostname or IP
+      # port: 6379                  # Redis port number
+      # password: ""                # Redis authentication password
 
   ## MongoDB configuration
   mongo:
-    ## Use built-in (true) or external (false) Mongo
+    ## Use built-in (true) or external (false)
     enabled: true
     ## External Mongo configuration
     external: {}
-      ## Hostname or IP address of the external Mongo server
-      # host: "<mongo_host>"
-      ## Port number for the Mongo connection
-      # port: 27017
-      ## Username for Mongo authentication
-      # user: "root"
-      ## Password for Mongo authentication
-      # password: ""
+      # host: "<mongo_host>"        # Mongo server hostname or IP
+      # port: 27017                 # Mongo  port number
+      # user: "root"                # Mongo authentication user
+      # password: ""                # Mongo authentication password
 
-  ## Persistent storage configuration
-  persistence:
-    ## Name of the StorageClass to use for dynamic provisioning (empty string uses default StorageClass)
-    # storageClass: ""
-    ## Volume access mode - ReadWriteOnce allows read-write by a single node
-    accessMode: ["ReadWriteOnce"]
-    ## Storage capacity - 10 gibibytes (approximately 10.74 gigabytes)
-    size: 10Gi
-
-######################################################
-## For CSGHub Dataflow Local Configuration
-######################################################
+#################################################################
+##  Dataflow Configuration                                     ##
+#################################################################
 ## External CSGHub URL for accessing the hub interface
 externalUrl: "https://csghub.example.com"
 
-## Image Configuration
-image:
-  ## Docker registry URL
-  registry: "docker.io"
-  ## Repository name for the runner image
-  repository: "opencsghq/csghub-server"
-  ## Image tag version
-  # tag: "v1.11.0-ee"
-  ## Image pull policy (Always, IfNotPresent, Never)
-  pullPolicy: "IfNotPresent"
-  ## List of secret names for pulling from private registries
-  pullSecrets: []
-
-## Ingress Configuration
+## Ingress configuration
 ingress:
-  tls: {}
-    # enabled: true
-  # secretName: "csghub-tls-cert"
+  enabled: true                            # Enable or disable ingress
+  annotations: {}                          # Ingress-nginx annotations
+  tls: {}                                  # TLS settings for ingress
+    # enabled: false                       # Enable or disable TLS
+    # secretName: ""                       # TLS secret name (if enabled)
 
+## Dataflow Configuration
 dataflow:
-  ## Configuration for images, it will overwrite global.images
+  ## Dataflow deployment context
+  chartContext:
+    isBuiltIn: false                     # Dataflow deployed bundled with csghub
+
+  ## Image settings (overrides global.image)
   image:
-    ## List of image pull secrets.
-    ## Used to pull Docker images from private repositories.
-    ## This array is empty by default, meaning no secrets are required by default.
-    pullSecrets: []
-    ## Specify path prefix relative to docker.io
-    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
-    ## No need to add the final slash `/`
     registry: "docker.io"
-    ## Specifies the location of the PostgreSQL Docker image in the registry.
     repository: "opencsghq/dataflow"
-    ## Defines the specific version of the PostgreSQL image to use.
-    tag: "20250901"
-    ## Determines how the image should be pulled from the registry.
-    pullPolicy: "IfNotPresent"
+    tag: "20250916"                         # Image version tag
+    pullPolicy: "IfNotPresent"              # Image pull policy
+    pullSecrets: []                         # Docker registry secrets
 
-  ## PostgreSQL Configuration
-  postgresql:
-    ## Hostname or IP address of the external PostgreSQL server
-    # host: "<pg_host>"
-    ## Port number for PostgreSQL connection
-    # port: 6432
-    ## Database name for PostgreSQL connection
-    database: "csghub_dataflow"
-    ## Username for PostgreSQL authentication
-    user: "csghub"
-    ## Password for PostgreSQL authentication
-    # password: ""
-    ## Timezone setting for the database connection
-    # timezone: "Etc/UTC"
-    ## SSL mode for the database connection (prefer, require, verify-full, etc.)
-    # sslmode: "prefer"
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_server"            # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
 
-  ## Redis Configuration
+  ## Redis configuration
   redis: {}
-    ## Hostname or IP address of the external Redis server
-    # host: "<redis_host>"
-    ## Port number for the Redis connection
-    # port: 6379
-    ## Password for Redis authentication
-    # password: ""
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+    # password: ""                         # Redis authentication password
 
   ## MongoDB Configuration
   mongo: {}
-    ## Hostname or IP address of the external Mongo server
-    # host: "<mongo_host>"
-    ## Port number for the Mongo connection
-    # port: 27017
-    ## Username for Mongo authentication
-    # user: "root"
-    ## Password for Mongo authentication
-    # password: ""
+    # host: "<mongo_host>"        # Mongo server hostname or IP
+    # port: 27017                 # Mongo  port number
+    # user: "root"                # Mongo authentication user
+    # password: ""                # Mongo authentication password
 
-  ## Persistence settings for the PostgreSQL data.
   persistence:
-    ## Specifies the StorageClass used for provisioning the volume.
-    ## An empty value means the default StorageClass is used.
-    ## StorageClass defines the type of storage used and can affect performance and cost.
-    # storageClass: ""
-    ## Defines the access modes of the volume.
-    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-    ## This is suitable for most use cases where a single instance of PostgreSQL is running.
-    accessMode: ["ReadWriteMany"]
-    ## Specifies the size of the persistent volume.
-    ## This should be adjusted based on expected usage and data growth over time.
-    size: 100Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    accessMode: ["ReadWriteMany"]            # Volume access permissions
+    size: "100Gi"                            # Disk space allocation
 
 ## Celery Worker Configuration
 worker:
+  ## Logging configuration
   logging:
     level: "info"
 
+## Label Studio Configuration
 labelStudio:
-  ## Configuration for images, it will overwrite global.images
+  ## Image settings (overrides global.image)
   image:
-    ## List of image pull secrets.
-    ## Used to pull Docker images from private repositories.
-    ## This array is empty by default, meaning no secrets are required by default.
-    pullSecrets: []
-    ## Specify path prefix relative to docker.io
-    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
-    ## No need to add the final slash `/`
     registry: "docker.io"
-    ## Specifies the location of the PostgreSQL Docker image in the registry.
     repository: "opencsghq/label-studio"
-    ## Defines the specific version of the PostgreSQL image to use.
-    tag: "latest"
-    ## Determines how the image should be pulled from the registry.
-    pullPolicy: "IfNotPresent"
+    tag: "latest"                            # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## PostgreSQL Configuration
-  postgresql:
-    ## Hostname or IP address of the external PostgreSQL server
-    # host: "<pg_host>"
-    ## Port number for PostgreSQL connection
-    # port: 6432
-    ## Database name for PostgreSQL connection
-    database: "csghub_dataflow"
-    ## Username for PostgreSQL authentication
-    user: "csghub"
-    ## Password for PostgreSQL authentication
-    # password: ""
-    ## Timezone setting for the database connection
-    # timezone: "Etc/UTC"
-    ## SSL mode for the database connection (prefer, require, verify-full, etc.)
-    # sslmode: "prefer"
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_label_studio"      # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
 
-  ## Persistence settings for the PostgreSQL data.
   persistence: {}
-    ## Specifies the StorageClass used for provisioning the volume.
-    ## An empty value means the default StorageClass is used.
-    ## StorageClass defines the type of storage used and can affect performance and cost.
-    # storageClass: ""
-    ## Defines the access modes of the volume.
-    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-    ## This is suitable for most use cases where a single instance of PostgreSQL is running.
-    # accessMode: [ "ReadWriteOnce" ]
-    ## Specifies the size of the persistent volume.
-    ## This should be adjusted based on expected usage and data growth over time.
-    # size: 10Gi
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteMany"]          # Volume access permissions
+    # size: "100Gi"                          # Disk space allocation
 
-## Built-in Postgresql Configuration
+#################################################################
+##  Built-in Third-party Components                            ##
+#################################################################
+## Embedded PostgreSQL configuration
 postgresql:
-  ## Configuration for images, it will overwrite global.images
   image:
-    ## List of image pull secrets.
-    ## Used to pull Docker images from private repositories.
-    ## This array is empty by default, meaning no secrets are required by default.
-    pullSecrets: []
-    ## Specify path prefix relative to docker.io
-    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
-    ## No need to add the final slash `/`
     registry: "docker.io"
-    ## Specifies the location of the PostgreSQL Docker image in the registry.
     repository: "opencsghq/postgres"
-    ## Defines the specific version of the PostgreSQL image to use.
-    tag: "15.10"
-    ## Determines how the image should be pulled from the registry.
-    pullPolicy: "IfNotPresent"
+    tag: "15.10"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## List of databases to be created upon deployment
-  databases:
-    ## Database & User postgres is default, cannot remove.
-    postgres:
-      owner: postgres
-    csghub_dataflow:
-      owner: csghub
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 5432                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## You can pass in the parameters you want to modify by executing this parameter.
-  ## Currently, only hot loading parameters are supported.
-  parameters: {}
-    ## Set the parameters for the PostgreSQL database
-    ## The online reload parameter can take effect automatically.
-    ## If you need to restart the database, please restart it manually.
-    # timezone: "Etc/UTC"
+  databases:                                 # Databases to create on startup
+    - "csghub_dataflow"
+    - "csghub_label_studio"
 
-  ## Persistence settings for the PostgreSQL data.
-  persistence: {}
-    ## Specifies the StorageClass used for provisioning the volume.
-    ## An empty value means the default StorageClass is used.
-    ## StorageClass defines the type of storage used and can affect performance and cost.
-    # storageClass: ""
-    ## Defines the access modes of the volume.
-    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-    ## This is suitable for most use cases where a single instance of PostgreSQL is running.
-    # accessMode: [ "ReadWriteOnce" ]
-    ## Specifies the size of the persistent volume.
-    ## This should be adjusted based on expected usage and data growth over time.
-    # size: 10Gi
+  parameters: {}                             # PostgreSQL runtime parameters
+    # max_connections: 400                   # Dynamic parameters (triggers recreate)
+    # shared_buffers: "128MB"                # Shared memory buffers
 
-## Built-in Redis Configuration
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "50Gi"                             # Disk space allocation
+
+## Built-in Redis configuration
 redis:
-  ## Configuration for images, it will overwrite global.images
   image:
-    ## List of image pull secrets.
-    ## Used to pull Docker images from private repositories.
-    ## This array is empty by default, meaning no secrets are required by default.
-    pullSecrets: []
-    ## Specify path prefix relative to docker.io
-    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
-    ## No need to add the final slash `/`
     registry: "docker.io"
-    ## Specifies the location of the Redis Docker image in the registry.
     repository: "redis"
-    ## Defines the specific version of the Redis image to use.
-    tag: "7.2.5"
-    ## Determines how the image should be pulled from the registry.
-    pullPolicy: "IfNotPresent"
+    tag: "7.2.5"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Password required
-  requirePass: false
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 6379                               # Service port
+    protocol: "TCP"                          # Network protocol
 
-  ## Persistence settings for the Redis data.
-  persistence: {}
-    ## Specifies the StorageClass used for provisioning the volume.
-    ## An empty value means the default StorageClass is used.
-    ## StorageClass defines the type of storage used and can affect performance and cost.
-    # storageClass: ""
-    ## Defines the access modes of the volume.
-    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-    ## This is suitable for most use cases where a single instance of Redis is running.
-    # accessMode: [ "ReadWriteOnce" ]
-    ## Specifies the size of the persistent volume.
-    ## This should be adjusted based on expected usage and data growth over time.
-    # size: 10Gi
+  requirePass: false                         # Password requirement
 
-## Built-in MongoDB Configuration
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
+
+## Built-in MongoDB configuration
 mongo:
-  ## Configuration for images, it will overwrite global.images
   image:
-    ## List of image pull secrets.
-    ## Used to pull Docker images from private repositories.
-    ## This array is empty by default, meaning no secrets are required by default.
-    pullSecrets: []
-    ## Specify path prefix relative to docker.io
-    ## eg: minio/minio:latest with prefix {{ prefix }}/minio/minio:latest
-    ## No need to add the final slash `/`
     registry: "docker.io"
-    ## Specifies the location of the Redis Docker image in the registry.
     repository: "opencsghq/mongo"
-    ## Defines the specific version of the Redis image to use.
-    tag: "8.0.12"
-    ## Determines how the image should be pulled from the registry.
-    pullPolicy: "IfNotPresent"
+    tag: "8.0.12"                            # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
 
-  ## Authentication configuration settings
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 27017                              # Service port
+    protocol: "TCP"                          # Network protocol
+
   auth: {}
-    ## Username for authentication (default: "root")
-    # user: "root"
-    ## Password for authentication (leave empty for random password)
-    # password: ""
+    # user: "root"                           # user for authentication
+    # password: ""                           # Password for authentication
 
-  ## Persistence settings for the Redis data.
-  persistence: {}
-    ## Specifies the StorageClass used for provisioning the volume.
-    ## An empty value means the default StorageClass is used.
-    ## StorageClass defines the type of storage used and can affect performance and cost.
-    # storageClass: ""
-    ## Defines the access modes of the volume.
-    ## ReadWriteOnce means the volume can be mounted as read-write by a single node.
-    ## This is suitable for most use cases where a single instance of Redis is running.
-    # accessMode: [ "ReadWriteOnce" ]
-    ## Specifies the size of the persistent volume.
-    ## This should be adjusted based on expected usage and data growth over time.
-    # size: 10Gi
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
 
-## Clearly identify the running mode, `true` means running as a subchart
-chartContext:
-  isBuiltIn: false
+#################################################################
+##  Dependent SubCharts                                        ##
+##  PLEASE DO NOT UPDATE!!!                                    ##
+#################################################################
+## Do not modify it unless you know the purpose of the modification.
 
-## PLEASE DO NOT UPDATE!!!
+## Ingress-nginx configuration
 ingress-nginx:
-  ## Enable the NGINX Ingress Controller
-  enabled: false
-  ## NGINX Ingress Controller configuration
-  controller:
-    progressDeadlineSeconds: 600
-    ## Configuration for the controller image
-    ## Reset digest to use third-party repository
-    ## DO NOT UPDATE!!! image.digest and admissionWebhooks.patch.image.digest
-    image:
-      image: opencsghq/ingress-nginx-controller
-      ## Digest of the image for the controller
-      digest: ""
-    ## Configuration for admission webhooks
-    admissionWebhooks:
-      ## Patch settings for admission webhooks
-      patch:
-        ## Digest of the image for the admission webhook
-        image:
-          image: opencsghq/ingress-nginx-kube-webhook-certgen
-          ## Digest of the image for the admission webhook
-          digest: ""
-    ## Configuration settings for the Ingress Controller
-    config:
-      ## Set the risk level for annotations; critical indicates high risk
-      annotations-risk-level: Critical
-      #      http-snippet: |
-      #        limit_req_zone $binary_remote_addr zone=global:10m rate=20r/s;
-      #        limit_conn_zone $binary_remote_addr zone=addr:10m;
-      #      server-snippet: |
-      #        limit_req zone=global burst=40;
-      #        limit_conn addr 50;
-      custom-http-errors: "404,500,502,503"
-    ## Allow the use of server snippets in annotations
-    allowSnippetAnnotations: true
-    ## Configuration for the service exposed by the Ingress Controller
-    service:
-      type: *type
-      ## Node ports for HTTP and HTTPS traffic
-      nodePorts:
-        ## Node port for HTTP traffic
-        http: 30080
-        ## Node port for HTTPS traffic
-        https: 30443
-        ## Node port for TCP traffic
-        tcp:
-          ## Node port for TCP traffic on port 22
-          22: 30022
-  ## Custom error pages
-  defaultBackend:
-    enabled: true
-    image:
-      image: opencsghq/ingress-nginx-custom-error-pages
-      tag: v1.2.0
-    extraVolumes:
-      - name: custom-error-pages
-        configMap:
-          name: csghub-custom-error-pages
-    extraVolumeMounts:
-      - name: custom-error-pages
-        mountPath: /www
+  enabled: true                            # Enable NGINX Ingress Controller
 
-## Using reloader to online reload configmaps and secrets
+  ## TCP services configuration
+  tcp:
+    22: "csghub/csghub-gitlab-shell:22"    # Forward TCP traffic on port 22
+
+  controller:
+    progressDeadlineSeconds: 600           # Deployment progress deadline
+
+    ## Image configuration
+    image:
+      image: "opencsghq/ingress-nginx-controller"
+      digest: ""                           # Image digest (do not update)
+
+    ## Admission webhooks configuration
+    admissionWebhooks:
+      patch:
+        image:
+          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
+          digest: ""                       # Image digest (do not update)
+
+    ## Controller configuration
+    config:
+      annotations-risk-level: "Critical"   # Risk level for annotations
+      custom-http-errors: "404,500,502,503" # Custom HTTP error codes
+
+    allowSnippetAnnotations: true          # Allow server snippets in annotations
+
+    ## Service configuration
+    service:
+      type: *type                          # Service type
+      nodePorts:
+        http: 30080                        # HTTP node port
+        https: 30443                       # HTTPS node port
+        tcp:
+          22: 30022                        # TCP node port for SSH
+
+  ## Custom error pages configuration
+  defaultBackend:
+    enabled: true                          # Enable custom error pages
+    image:
+      image: "opencsghq/ingress-nginx-custom-error-pages"
+      tag: "v1.2.0"
+    extraVolumes:
+      - name: "custom-error-pages"
+        configMap:
+          name: "ingress-nginx-custom-errors"
+    extraVolumeMounts:
+      - name: "custom-error-pages"
+        mountPath: "/www"
+
+## Reloader configuration
 reloader:
   image:
-    name: "opencsghq/stakater-reloader"
+    name: "opencsghq/stakater-reloader"    # Reloader image name
 
-## Enable or disable Prometheus
+## Prometheus monitoring configuration
 prometheus:
-  enabled: false
-  ## Enable or disable Alertmanager
+  enabled: false                           # Enable Prometheus
+
+  ingress:
+    enabled: false                         # Enable Prometheus ingress
+    basicAuth: {}                          # Basic authentication
+      # username: "prometheus"
+      # password: ""
+
+  ## Component configuration
   alertmanager:
-    enabled: false
-  ## Enable or disable Prometheus pushgateway
+    enabled: false                         # Disable Alertmanager
   prometheus-pushgateway:
-    enabled: false
-  ## Enable or disable Prometheus node exporter
+    enabled: false                         # Disable pushgateway
   prometheus-node-exporter:
-    enabled: false
-  ## Server configuration for Prometheus
+    enabled: false                         # Disable node exporter
+
+  ## Server configuration
   server:
-    ## Sending metrics to remote prometheus server
-    remoteWrite:
-      - url: ""
-        basic_auth: {}
-          # username: "<username>"
-        # password: "<password>"
-    ## Image configuration for Prometheus server
     image:
-      ## Registry for Prometheus server image
       registry: "quay.io"
-      ## Repository for Prometheus server image
-      repository: prometheus/prometheus
-      ## Tag for Prometheus server image
-      tag: v3.5.0
-  ## ConfigMap reload configuration for Prometheus
+      repository: "prometheus/prometheus"
+      tag: "v3.5.0"
+
+  ## ConfigMap reload configuration
   configmapReload:
-    ## Prometheus-specific configmap reload settings
     prometheus:
-      ## Image configuration for configmap reloader
       image:
-        ## Registry for configmap reloader image
         registry: "quay.io"
-        ## Repository for configmap reloader image
         repository: "prometheus-operator/prometheus-config-reloader"
-        ## Tag for configmap reloader image
-        tag: v0.85.0
+        tag: "v0.85.0"
+
   ## Kube-state-metrics configuration
   kube-state-metrics:
-    ## Image configuration for kube-state-metrics
     image:
-      ## Tag for kube-state-metrics image
-      tag: v2.17.0
+      tag: "v2.17.0"
