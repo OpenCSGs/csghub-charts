@@ -30,7 +30,7 @@ data:
     }
     {{- range .Values.runner.knative.serving.services }}
     {{ .domain }}:53 {
-        file /coredns/{{ .domain }}
+        file /etc/coredns/{{ .domain }}
         log
         errors
     }
