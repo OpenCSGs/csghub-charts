@@ -287,6 +287,14 @@ runner:
           # host: "192.168.18.10"        # API server host address
           # port: "30213"                # NodePort value when type=NodePort
 
+  ## Disable subCharts same with parent
+  ingress-nginx:
+    enabled: false
+  reloader:
+    enabled: false
+  prometheus:
+    enabled: false
+
 ## Dataflow service configuration
 dataflow:
   enabled: true                          # Enable or disable dataflow service

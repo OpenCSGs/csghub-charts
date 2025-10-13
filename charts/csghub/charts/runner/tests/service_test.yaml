@@ -1,0 +1,30 @@
+suite: Test Runner Service
+templates:
+  - service.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  name: "runner-svc"
+  service:
+    port: 8082
+tests:
+  - it: Should render service correctly
+    template: service.yaml
+    set:
+      casdoor:
+        console:
+          enabled: true
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "runner-svc"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "runner-svc"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8082

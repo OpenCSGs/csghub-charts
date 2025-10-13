@@ -1,6 +1,7 @@
 apiVersion: v2
-name: csghub
-description: CSGHub charts with CE and EE.
+name: runner
+description: Responsible for deploying and managing application instances in the Kubernetes cluster to
+  ensure fast building and continuous delivery of applications.
 home: https://opencsg.com
 icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
 sources:
@@ -32,31 +33,15 @@ dependencies:
   - name: common
     version: 0.1.0
     repository: file://charts/common
-  - name: reloader
-    version: 2.1.4
-    repository: file://charts/reloader
-    condition: reloader.enabled
   - name: ingress-nginx
     version: 4.12.7
     repository: file://charts/ingress-nginx
     condition: ingress-nginx.enabled
-  - name: fluentd
-    version: 0.5.2
-    repository: file://charts/fluentd
-    condition: fluentd.enabled
-  - name: loki
-    version: 6.29.0
-    repository: file://charts/loki
-    condition: loki.enabled
-  - name: tempo
-    version: 1.23.3
-    repository: file://charts/tempo
-    condition: tempo.enabled
+  - name: reloader
+    version: 2.1.4
+    repository: file://charts/reloader
+    condition: reloader.enabled
   - name: prometheus
     version: 27.37.0
     repository: file://charts/prometheus
     condition: prometheus.enabled
-  - name: runner
-    version: 1.11.0
-    repository: file://charts/runner
-    condition: runner.enabled
