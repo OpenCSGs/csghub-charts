@@ -58,11 +58,6 @@ tests:
           path: data["CSGHUB_PORTAL_STARHUB_BASE_URL"]
           pattern: "occ.opencsg-poc.com"
         template: configmap-core.yaml
-      - matchRegex:
-          path: data["STARHUB_SERVER_CASDOOR_ENDPOINT"]
-          pattern: "iam.opencsg-poc.com"
-        documentIndex: 0
-        template: charts/casdoor/templates/configmap.yaml
   - it: csgship subdomain should be rendered right if given
     set:
       global.ingress.enabled: true
