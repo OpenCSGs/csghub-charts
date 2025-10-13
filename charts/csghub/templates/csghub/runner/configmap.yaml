@@ -19,7 +19,7 @@ data:
   ## Runner Configuration for Server
   {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
   {{- $apiToken := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $data }}
-  STARHUB_SERVER_API_TOKEN: {{ include "csghub.api.token" . | quote }}
+  STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
 
   {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
   {{- $serverSvcName := include "common.names.custom" (list . $serverSvc.name) }}
@@ -33,6 +33,7 @@ data:
   {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
   {{- $lokiSvcPort := dig "service" "port" "3100" $lokiSvc }}
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%s" $lokiSvcName $lokiSvcPort | quote }}
+  STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME: {{ $serviceName | quote }}
 
   ## Runner Configuration for Space
   STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ include "namespace.spaces" . | quote }}
