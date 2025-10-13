@@ -212,8 +212,9 @@ data:
           "enableLinkWithEmail": true,
           "orgChoiceMode": "Select",
           "samlReplyUrl": "",
-          "clientId": "7a97bc5168cb75ffc514",
-          "clientSecret": "33bd85106818efd90c57fb35ffc787aabbff6f7a",
+          {{- $app := include "csghub.casdoor.client" "CSGHub" | fromYaml }}
+          "clientId": {{ $app.clientId | quote }},
+          "clientSecret": {{ $app.clientSecret | quote }},
           "providers": [
             {
               "owner": "",

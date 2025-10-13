@@ -82,7 +82,7 @@ tests:
           pattern: ".{128}"
       - matchRegex:
           path: data.CSGHUB_PORTAL_LOGIN_URL
-          pattern: "https://casdoor.example.com/.*\\?client_id=.*&response_type=code&redirect_uri=https://csghub.example.com/.*"
+          pattern: "https://casdoor.example.com/.*\\?client_id=[0-9a-z]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
       - matchRegex:
           path: data.CSGHUB_PORTAL_DATABASE_DSN
           pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_portal_svc\\?sslmode=disable"
@@ -137,12 +137,12 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_CASDOOR_CERTIFICATE
           value: "/starhub-bin/casdoor/tls.crt"
-      - equal:
+      - matchRegex:
           path: data.STARHUB_SERVER_CASDOOR_CLIENT_ID
-          value: "7a97bc5168cb75ffc514"
-      - equal:
+          pattern: "[0-9a-z]{20}"
+      - matchRegex:
           path: data.STARHUB_SERVER_CASDOOR_CLIENT_SECRET
-          value: "33bd85106818efd90c57fb35ffc787aabbff6f7a"
+          pattern: "[0-9a-z]{40}"
       - equal:
           path: data.STARHUB_SERVER_CASDOOR_ENDPOINT
           value: "https://casdoor.example.com"

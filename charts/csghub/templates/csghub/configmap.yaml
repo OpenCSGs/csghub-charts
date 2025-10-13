@@ -30,7 +30,10 @@ data:
   ## Portal Configuration for Casdoor
   {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
   {{- $redirectURI := printf "redirect_uri=%s/api/v1/callback/casdoor&scope=read&state=casdoor" (include "common.endpoint.csghub" .) }}
-  CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?client_id=7a97bc5168cb75ffc514&response_type=code&%s" $authorizeAPI $redirectURI | quote }}
+  {{- $app := include "csghub.casdoor.client" "CSGHub" | fromYaml }}
+  {{- $casdoorClientID := dig "STARHUB_SERVER_CASDOOR_CLIENT_ID" $app.clientId $data }}
+  {{- $casdoorClientSecret := dig "STARHUB_SERVER_CASDOOR_CLIENT_SECRET" $app.clientSecret $data }}
+  CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?client_id=%s&response_type=code&%s" $authorizeAPI $casdoorClientID $redirectURI | quote }}
   ## Portal Configuration for PostgreSQL
   CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "service" $portalSvc "global" .) | quote }}
   ## Portal Configuration for ObjectStorage Public
@@ -225,8 +228,8 @@ data:
 
   ## Server Configuration for Casdoor
   STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"
-  STARHUB_SERVER_CASDOOR_CLIENT_ID: "7a97bc5168cb75ffc514"
-  STARHUB_SERVER_CASDOOR_CLIENT_SECRET: "33bd85106818efd90c57fb35ffc787aabbff6f7a"
+  STARHUB_SERVER_CASDOOR_CLIENT_ID: {{ $casdoorClientID | quote }}
+  STARHUB_SERVER_CASDOOR_CLIENT_SECRET: {{ $casdoorClientSecret | quote }}
   STARHUB_SERVER_CASDOOR_ENDPOINT: {{ include "common.endpoint.casdoor" . | quote }}
   STARHUB_SERVER_CASDOOR_ORGANIZATION_NAME: "OpenCSG"
   STARHUB_SERVER_CASDOOR_APPLICATION_NAME: "CSGHub"
