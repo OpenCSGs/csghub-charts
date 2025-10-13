@@ -101,7 +101,7 @@ Usage:
 {{- define "wait-for-server" }}
 {{- $service := include "common.service" (dict "service" "server" "global" .) | fromYaml -}}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
-{{- $serverPort := dig "service" "port" "8080" $service | toString -}}
+{{- $serverPort := dig "service" "port" 8080 $service | toString -}}
 - name: wait-for-server
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
   imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}

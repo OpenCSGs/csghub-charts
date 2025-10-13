@@ -23,16 +23,16 @@ data:
 
   {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
   {{- $serverSvcName := include "common.names.custom" (list . $serverSvc.name) }}
-  {{- $serverSvcPort := dig "service" "port" "8080" $serverSvc }}
+  {{- $serverSvcPort := dig "service" "port" 8080 $serverSvc }}
   STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ printf "http://%s:%v" $serverSvcName $serverSvcPort | quote }}
 
-  {{- $runnerSvcPort := dig "service" "port" "8082" $service }}
+  {{- $runnerSvcPort := dig "service" "port" 8082 $service }}
   STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN: {{ printf "http://%s:%v" $serviceName $runnerSvcPort | quote }}
 
   {{- $lokiSvc := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
   {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
-  {{- $lokiSvcPort := dig "service" "port" "3100" $lokiSvc }}
-  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%s" $lokiSvcName $lokiSvcPort | quote }}
+  {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
   STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME: {{ $serviceName | quote }}
 
   ## Runner Configuration for Space

@@ -26,7 +26,7 @@ Returns: YAML configuration object with Gitaly connection parameters
   {{- $gitalyName := include "common.names.custom" (list $global $gitalySvc.name) -}}
   {{- $gitalyConfig := dict
     "host" $gitalyName
-    "port" (dig "service" "port" "8075" $gitalySvc)
+    "port" (dig "service" "port" 8075 $gitalySvc)
     "storage" (dig "storage" "default" $gitalySvc)
     "token" (include "common.randomPassword" $gitalySvc.name)
     "scheme" "tcp"

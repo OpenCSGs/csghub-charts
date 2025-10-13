@@ -71,11 +71,11 @@ spec:
           {{- end }}
           ports:
             - containerPort: 9000
-              name: {{ $service.service.name | default $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
             {{- if $service.console.enabled }}
             - containerPort: 9001
-              name: {{ $service.console.service.name | default (printf "%s-console" $service.name) }}
+              name: {{ printf "%s-console" $service.name }}
               protocol: {{ $service.console.service.protocol | default "TCP" }}
             {{- end }}
           envFrom:

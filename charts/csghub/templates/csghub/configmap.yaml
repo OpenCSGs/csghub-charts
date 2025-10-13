@@ -67,7 +67,7 @@ data:
   ## Accounting Configuration
   {{- $accountingSvc := include "common.service" (dict "service" "accounting" "global" .) | fromYaml }}
   OPENCSG_ACCOUNTING_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $accountingSvc.name)) | quote }}
-  OPENCSG_ACCOUNTING_SERVER_PORT: {{ $accountingSvc | dig "service" "port" "8086" | quote }}
+  OPENCSG_ACCOUNTING_SERVER_PORT: {{ $accountingSvc | dig "service" "port" 8086 | quote }}
   OPENCSG_ACCOUNTING_CHARGING_ENABLE: "true"
   OPENCSG_ACCOUNTING_MSG_FETCH_TIMEOUTINSEC: "5"
   {{- $natsConfig := include "common.nats.config" . | fromYaml }}
@@ -76,7 +76,7 @@ data:
   ## User Configuration
   {{- $userSvc := include "common.service" (dict "service" "user" "global" .) | fromYaml }}
   OPENCSG_USER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $userSvc.name)) | quote }}
-  OPENCSG_USER_SERVER_PORT: {{ $userSvc | dig "service" "port" "8080" | quote }}
+  OPENCSG_USER_SERVER_PORT: {{ $userSvc | dig "service" "port" 8080 | quote }}
   OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL: {{ printf "%s/server/callback" (include "common.endpoint.csghub" .) | quote }}
 
   ## Moderation Configuration
@@ -91,7 +91,7 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_REGION: {{ $moderationSvc.region | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ $moderationSvc.enableSSL | quote }}
   OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $gatewaySvc.name)) | quote }}
-  OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" "8089" | quote }}
+  OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" 8089 | quote }}
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
   {{- end }}
@@ -99,7 +99,7 @@ data:
   ## Server Configuration for Workflow
   {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
   {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
-  {{- $temporalPort := $temporalSvc | dig "service" "port" "7233" | toString }}
+  {{- $temporalPort := $temporalSvc | dig "service" "port" 7233 | toString }}
   OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "%s:%s" $temporalHost $temporalPort | quote }}
   STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
 
@@ -107,18 +107,18 @@ data:
   {{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
   {{- if $dataflowSvc.enabled }}
   OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataflowSvc.name)) | quote }}
-  OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowSvc | dig "service" "port" "8000" | quote }}
+  OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowSvc | dig "service" "port" 8000 | quote }}
   {{- end }}
 
   ## Server Configuration for Dataviewer
   {{- $dataviewerSvc := include "common.service" (dict "service" "dataviewer" "global" .) | fromYaml }}
   OPENCSG_DATAVIEWER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataviewerSvc.name)) | quote }}
-  OPENCSG_DATAVIEWER_SERVER_PORT: {{ $dataviewerSvc | dig "service" "port" "8093" | quote }}
+  OPENCSG_DATAVIEWER_SERVER_PORT: {{ $dataviewerSvc | dig "service" "port" 8093 | quote }}
 
   ## Server Configuration for Notification
   {{- $notifierSvc := include "common.service" (dict "service" "notifier" "global" .) | fromYaml }}
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $notifierSvc.name)) | quote }}
-  STARHUB_SERVER_NOTIFIER_PORT: {{ $notifierSvc | dig "service" "port" "8095" | quote }}
+  STARHUB_SERVER_NOTIFIER_PORT: {{ $notifierSvc | dig "service" "port" 8095 | quote }}
   {{- with $portalSvc.smtp }}
   STARHUB_SERVER_MAILER_HOST: {{ .host | quote }}
   STARHUB_SERVER_MAILER_PORT: {{ .port | quote }}
@@ -146,12 +146,12 @@ data:
   OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
   OPENCSG_PAYMENT_BILL_BUCKET: {{ $paymentSvc.billingBucket | quote }}
   OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $paymentSvc.name)) | quote }}
-  OPENCSG_PAYMENT_SERVER_PORT: {{ $paymentSvc | dig "service" "port" "8090" | quote }}
+  OPENCSG_PAYMENT_SERVER_PORT: {{ $paymentSvc | dig "service" "port" 8090 | quote }}
   {{- end }}
 
   ## Server Configuration for Payment
   {{- $aigatewaySvc := $gatewaySvc.aigateway }}
-  OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" "8094" | quote }}
+  OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" 8094 | quote }}
 
   ## Server Configuration
   {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
@@ -185,7 +185,7 @@ data:
   {{- $mirrorSvc := include "common.service" (dict "service" "mirror" "global" .) | fromYaml }}
   {{- $mirrorSvcName := include "common.names.custom" (list . $mirrorSvc.name) }}
   STARHUB_SERVER_LFS_SYNC_HOST: {{ printf "http://%s" $mirrorSvcName | quote }}
-  STARHUB_SERVER_LFS_SYNC_PORT: {{ $mirrorSvc | dig "service" "port" "8092" | quote }}
+  STARHUB_SERVER_LFS_SYNC_PORT: {{ $mirrorSvc | dig "service" "port" 8092 | quote }}
 
   ## Server Configuration for Redis
   STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $serverRedisConfig.host $serverRedisConfig.port | quote }}
@@ -218,7 +218,7 @@ data:
   ## Server Configuration for Space Application
   STARHUB_SERVER_PUBLIC_DOMAIN: {{ include "common.endpoint.csghub" . | quote }}
   {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
-  {{- $rproxyPort := dig "service" "port" "8083" $rproxySvc }}
+  {{- $rproxyPort := dig "service" "port" 8083 $rproxySvc }}
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%s" (include "namespace.spaces" .) $rproxyPort | quote }}
   {{- $endpoint := include "common.domain.public" . }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.usePublicDomain | quote }}
@@ -249,8 +249,8 @@ data:
   {{- $promeSvc := include "common.service" (dict "service" "prometheus" "global" .) | fromYaml }}
   {{- if $promeSvc.enabled }}
   {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
-  {{- $promePort := dig "service" "port" "80" $promeSvc }}
-  STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%s/api/v1/query" $promeHost $promePort | quote }}
+  {{- $promePort := dig "service" "port" 80 $promeSvc }}
+  STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%v/api/v1/query" $promeHost $promePort | quote }}
   {{- with $promeSvc.ingress.basicAuth }}
   STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
   {{- end }}

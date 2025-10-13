@@ -69,8 +69,8 @@ spec:
             - config_file=/etc/postgresql/runtime.conf
           ports:
             - containerPort: 5432
-              name: {{ $service.service.name | default $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
             - configMapRef:
                 name: {{ $serviceName }}

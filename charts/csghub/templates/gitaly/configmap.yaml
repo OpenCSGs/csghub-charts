@@ -50,7 +50,7 @@ data:
     ## URL of the GitLab server.
     {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
     {{- $serverHost := include "common.names.custom" (list . $serverSvc.name) }}
-    {{- $serverPort := dig "service" "port" "8080" $serverSvc | toString }}
+    {{- $serverPort := dig "service" "port" 8080 $serverSvc | toString }}
     url = {{ printf "http://%s:%s" $serverHost $serverPort | quote }}
     ## 'relative_url_root' is only needed if a UNIX socket is used in 'url' and GitLab is configured to
     ## use a relative path. For example, '/gitlab'.

@@ -66,8 +66,8 @@ spec:
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           ports:
             - containerPort: 7233
-              name: {{ $service.service.name | default $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
             - secretRef:
                 name: {{ $serviceName }}
@@ -121,7 +121,7 @@ spec:
           ports:
             - containerPort: 8080
               name: "console"
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              protocol: {{ dig "console" "service" "protocol" "TCP" $service }}
           env:
             - name: TEMPORAL_ADDRESS
               value: {{ printf "%s:%s" $serviceName ($service.service.port | toString) }}

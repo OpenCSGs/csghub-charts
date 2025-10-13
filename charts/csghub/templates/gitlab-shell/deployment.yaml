@@ -64,8 +64,8 @@ spec:
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           ports:
             - containerPort: 22
-              name: {{ $service.service.name | default $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
           env:
             - name: SSH_DAEMON
               value: "gitlab-sshd"

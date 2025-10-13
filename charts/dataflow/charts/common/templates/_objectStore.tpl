@@ -21,7 +21,7 @@ Returns: YAML configuration object with S3 connection parameters
   {{- $minioName := include "common.names.custom" (list $global $minioSvc.name) -}}
   {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" $global) | fromYaml }}
   {{- $s3Config := dict
-    "endpoint" (printf "http://%s:%s" $minioName (dig "service" "port" "9000" $minioSvc| toString))
+    "endpoint" (printf "http://%s:%s" $minioName (dig "service" "port" 9000 $minioSvc| toString))
     "externalEndpoint" (include "common.endpoint.minio" $global)
     "region" (dig "region" "cn-north-1" $minioSvc)
     "accessKey" "minio"

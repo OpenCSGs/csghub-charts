@@ -65,11 +65,11 @@ spec:
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           ports:
             - containerPort: 4222
-              name: {{ $service.service.name | default $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              name: {{ dig "service" "name" $service.name $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
             - containerPort: 8222
               name: {{ printf "%s-monitor" $service.name }}
-              protocol: {{ $service.service.protocol | default "TCP" }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
           {{- with $service.environments }}
           env:
           {{- range $key, $value := . }}

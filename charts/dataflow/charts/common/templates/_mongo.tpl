@@ -26,7 +26,7 @@ Returns: YAML configuration object with MongoDB connection parameters
   {{- $mongoName := include "common.names.custom" (list $global $mongoSvc.name) -}}
   {{- $mongoConfig := dict
     "host" $mongoName
-    "port" (dig "service" "port" "27017" $mongoSvc)
+    "port" (dig "service" "port" 27017 $mongoSvc)
     "user" "root"
     "password" (include "common.randomPassword" $mongoSvc.name)
   -}}

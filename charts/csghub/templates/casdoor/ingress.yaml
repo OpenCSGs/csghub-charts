@@ -7,6 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $casdoorPort := dig "service" "port" 8000 $service }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -46,9 +47,9 @@ spec:
               service:
                 name: {{ $serviceName }}
                 port:
-                  number: {{ $service.service.port }}
+                  number: {{ $casdoorPort }}
             {{- else }}
               serviceName: {{ $serviceName }}
-              servicePort: {{ $service.service.port }}
+              servicePort: {{ $casdoorPort }}
             {{- end }}
 {{- end }}

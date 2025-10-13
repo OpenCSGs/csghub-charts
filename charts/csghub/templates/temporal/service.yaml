@@ -14,16 +14,16 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 spec:
-  type: {{ $service.service.type }}
+  type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
-    - port: {{ $service.service.port }}
+    - port: {{ dig "service" "port" 7233 $service }}
       targetPort: 7233
-      protocol: {{ $service.service.protocol }}
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
     {{- if $service.console.enabled }}
-    - port: {{ $service.console.service.port }}
+    - port: {{ dig "console" "service" "port" "8080" $service }}
       targetPort: 8080
-      protocol: {{ $service.console.service.protocol }}
+      protocol: {{ dig "console" "service" "protocol" "TCP" $service }}
       name: console
     {{- end }}
   selector:

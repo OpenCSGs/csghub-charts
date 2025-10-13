@@ -7,6 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $prometheusPort := dig "service" "port" 80 $service }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -51,9 +52,9 @@ spec:
               service:
                 name: {{ $serviceName }}
                 port:
-                  number: 80
+                  number: {{ $prometheusPort }}
             {{- else }}
               serviceName: {{ $serviceName }}
-              servicePort: 80
+              servicePort: {{ $prometheusPort }}
             {{- end }}
 {{- end }}

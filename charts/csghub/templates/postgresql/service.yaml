@@ -15,12 +15,12 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 spec:
-  type: {{ $service.service.type }}
+  type: {{ dig "service" "type" "ClusterIP" $service }}
   clusterIP: None
   ports:
-    - port: {{ $service.service.port }}
+    - port: {{ dig "service" "port" 5432 $service }}
       targetPort: 5432
-      protocol: {{ $service.service.protocol }}
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
   selector:
     app.kubernetes.io/service: {{ $service.name }}

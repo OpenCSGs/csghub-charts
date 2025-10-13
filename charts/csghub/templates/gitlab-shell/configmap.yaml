@@ -34,7 +34,7 @@ data:
     # "http+unix://%2Fpath%2Fto%2Fsocket"
     {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
     {{- $serverHost := include "common.names.custom" (list . $serverSvc.name) }}
-    {{- $serverPort := dig "service" "port" "8080" $serverSvc | toString}}
+    {{- $serverPort := dig "service" "port" 8080 $serverSvc | toString}}
     gitlab_url: {{ printf "http://%s:%s" $serverHost $serverPort | quote }}
 
     # When a http+unix:// is used in gitlab_url, this is the relative URL root to GitLab.
