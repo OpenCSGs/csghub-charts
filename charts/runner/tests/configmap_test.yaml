@@ -10,6 +10,7 @@ set:
       domain: "example.com"
       tls:
         enabled: true
+        secretName: "test-tls"
       service:
         type: "LoadBalancer"
     image:
