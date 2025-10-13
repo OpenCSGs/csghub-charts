@@ -438,8 +438,6 @@ retry helm upgrade --install csghub csghub/csghub \
   --set ingress-nginx.controller.service.type="$INGRESS_SERVICE_TYPE" \
   --set global.knative.serving.services[0].type="$KOURIER_SERVICE_TYPE" \
   --set global.knative.serving.services[0].domain="$KNATIVE_INTERNAL_DOMAIN" \
-  --set global.knative.serving.services[0].host="$KNATIVE_INTERNAL_HOST" \
-  --set global.knative.serving.services[0].port="$KNATIVE_INTERNAL_PORT" \
   $EXTRA_ARGS | tee ./login.txt
 
 ####################################################################################
