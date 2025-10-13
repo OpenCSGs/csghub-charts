@@ -50,7 +50,7 @@ install_dependencies() {
       ubuntu|debian)
         OS="debian-based"
         log "INFO" "Installing dependencies for Debian/Ubuntu..."
-        apt update &>/dev/null && apt install -y curl wget unzip jq apt-transport-https &>/dev/null
+        apt update &>/dev/null && apt install -y curl wget gpg unzip jq apt-transport-https &>/dev/null
         ;;
 #      centos|rhel|fedora)
 #        OS="fedora-based"
@@ -260,8 +260,8 @@ fi
 ####################################################################################
 if [ "$INSTALL_HELM" == "true" ]; then
   log "INFO" "Install helm for helm repo operations."
-  curl -sf https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" > /etc/apt/sources.list.d/helm-stable-debian.list
+  curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+  echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
   apt-get update &>/dev/null && apt-get install -y helm &>/dev/null
 
   if helm version &> /dev/null; then
