@@ -247,6 +247,7 @@ ingress-nginx:
 
 ## Reloader configuration
 reloader:
+  enabled: true
   image:
     name: "opencsghq/stakater-reloader"    # Reloader image name
 
