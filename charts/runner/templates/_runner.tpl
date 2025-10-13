@@ -37,7 +37,8 @@ Returns:
 {{- $service := .service -}}
 {{- $global := .global -}}
 
-{{- $args := list "--compressed-caching=false" "--single-snapshot" "--log-format=text" -}}
+{{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" -}}
+{{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" "--cache-repo=registry.cn-beijing.aliyuncs.com/opencsg_space/kaniko-cache") }}
 
 {{- if $service.pipIndexUrl }}
   {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) -}}
