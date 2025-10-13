@@ -24,7 +24,7 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   manifests.yaml: |
-    {{- if ne $service.mergingNamespace "Single" }}
+    {{- if ne $service.mergingNamespace "single" }}
     apiVersion: v1
     kind: Namespace
     metadata:

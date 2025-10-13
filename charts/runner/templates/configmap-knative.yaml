@@ -6559,7 +6559,7 @@ data:
               jsonPath: .spec.image
     ---
   serving-core.yaml: |
-    {{- if ne .Values.global.mergingNamespace "Single" }}
+    {{- if ne $runnerSvc.mergingNamespace "single" }}
     apiVersion: v1
     kind: Namespace
     metadata:
@@ -14391,7 +14391,7 @@ data:
         app.kubernetes.io/version: "1.16.1"
     ---
   kourier.yaml: |
-    {{- if eq .Values.global.mergingNamespace "Disable" }}
+    {{- if eq $runnerSvc.mergingNamespace "disable" }}
     apiVersion: v1
     kind: Namespace
     metadata:

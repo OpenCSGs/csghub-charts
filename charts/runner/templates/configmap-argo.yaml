@@ -77,7 +77,7 @@ data:
     {{- end }}
 
   argo.yaml: |
-    {{- if ne .Values.global.mergingNamespace "Single" }}
+    {{- if ne $runnerSvc.mergingNamespace "single" }}
     apiVersion: v1
     kind: Namespace
     metadata:
