@@ -159,7 +159,7 @@ spec:
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /etc/nginx/config.d
+              mountPath: /etc/nginx/conf.d
           livenessProbe:
             tcpSocket:
               port: 80

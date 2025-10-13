@@ -15,6 +15,9 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
+  {{- if $service.nginx.enabled }}
+  clusterIP: {{ include "rproxy.service.ip" . }}
+  {{- end }}
   ports:
     - port: {{ dig "service" "port" 8083 $service }}
       targetPort: 8083
