@@ -22,18 +22,19 @@ Returns: YAML configuration with merged ingress settings
 {{- /* Configuration priority: service-level ingress > global ingress */ -}}
 
 {{- /* Default configuration from global ingress */ -}}
+{{- $globalIngress := $global.Values.global.ingress }}
 {{- $ingressConfig := dict
-  "enabled" ($global.Values.global.ingress.enabled | default false)
-  "className" ($global.Values.global.ingress.className | default "nginx")
-  "annotations" ($global.Values.global.ingress.annotations | default dict)
-  "domain" ($global.Values.global.ingress.domain | default "example.com")
-  "useTop" ($global.Values.global.ingress.useTop | default false)
+  "enabled" (dig "enabled" "false" $globalIngress)
+  "className" (dig "className" "nginx" $globalIngress)
+  "annotations" (dig "annotations" dict $globalIngress)
+  "domain" (dig "domain" "example.com" $globalIngress)
+  "useTop" (dig "useTop" "false" $globalIngress)
   "tls" (dict
-    "enabled" ($global.Values.global.ingress.tls.enabled | default false)
-    "secretName" ($global.Values.global.ingress.tls.secretName | default "")
+    "enabled" (dig "tls" "enabled" "false" $globalIngress)
+    "secretName" (dig "tls" "secretName" "" $globalIngress)
   )
   "service" (dict
-    "type" ($global.Values.global.ingress.service.type | default "ClusterIP")
+    "type" (dig "service" "type" "LoadBalancer" $globalIngress)
   )
 -}}
 

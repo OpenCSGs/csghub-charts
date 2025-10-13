@@ -21,14 +21,14 @@ Returns: YAML configuration object with S3 connection parameters
   {{- $minioName := include "common.names.custom" (list $global $minioSvc.name) -}}
   {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" $global) | fromYaml }}
   {{- $s3Config := dict
-    "endpoint" (printf "http://%s:%s" $minioName ($minioSvc.service.port | toString))
+    "endpoint" (printf "http://%s:%s" $minioName (dig "service" "port" "9000" $minioSvc| toString))
     "externalEndpoint" (include "common.endpoint.minio" $global)
-    "region" ($minioSvc.region | default "cn-north-1")
+    "region" (dig "region" "cn-north-1" $minioSvc)
     "accessKey" "minio"
     "secretKey" (include "common.randomPassword" $minioSvc.name)
     "bucket" (include "common.names.custom" (list $global $service.name))
     "encrypt" "false"
-    "secure" ($ingressConfig.tls.enabled)
+    "secure" (dig "tls" "enabled" "false" $ingressConfig)
     "pathStyle" "true"
   -}}
 

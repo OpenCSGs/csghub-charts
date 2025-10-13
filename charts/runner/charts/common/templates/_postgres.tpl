@@ -27,10 +27,10 @@ Returns: YAML configuration object with PostgreSQL connection parameters
   {{- $serviceName := include "common.names.custom" (list $global $service.name) -}}
   {{- $postgresqlConfig := dict
     "host" $postgresqlName
-    "port" ($postgresSvc.service.port)
+    "port" (dig "service" "port" "5432" $postgresSvc)
     "user" "csghub"
     "password" (include "common.randomPassword" "csghub")
-    "database" ($service.postgresql.database | default ( $serviceName | replace "-" "_"))
+    "database" (dig "postgresql" "database" ($serviceName | replace "-" "_") $service)
     "timezone" "Etc/UTC"
     "sslmode" "disable"
   -}}

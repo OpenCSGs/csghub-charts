@@ -24,7 +24,7 @@ Returns: YAML configuration object with NATS connection parameters
   {{- $natsName := include "common.names.custom" (list $global $natsSvc.name) -}}
   {{- $natsConfig := dict
     "host" $natsName
-    "port" $natsSvc.service.port
+    "port" (dig "service" "port" "4222" $natsSvc)
     "user" "natsadmin"
     "password" (include "common.randomPassword" $natsSvc.name)
   -}}
