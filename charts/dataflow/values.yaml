@@ -65,6 +65,10 @@ global:
       # user: "root"                # Mongo authentication user
       # password: ""                # Mongo authentication password
 
+  ## SubChart deployment context
+  chartContext:
+    isBuiltIn: false                     # deployed bundled with csghub
+
 #################################################################
 ##  Dataflow Configuration                                     ##
 #################################################################
@@ -81,10 +85,6 @@ ingress:
 
 ## Dataflow Configuration
 dataflow:
-  ## Dataflow deployment context
-  chartContext:
-    isBuiltIn: false                     # Dataflow deployed bundled with csghub
-
   ## Image settings (overrides global.image)
   image:
     registry: "docker.io"

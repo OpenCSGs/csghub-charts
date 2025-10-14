@@ -17,7 +17,7 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   ## Dataflow configuration
-  {{- if $dataflowSvc.chartContext.isBuiltIn }}
+  {{- if .Values.global.chartContext.isBuiltIn }}
   CSGHUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   {{- else }}
   CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}

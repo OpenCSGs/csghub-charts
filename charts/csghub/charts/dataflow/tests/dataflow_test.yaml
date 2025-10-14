@@ -25,10 +25,10 @@ set:
       size: "25Gi"
     postgresql:
       enabled: true
-  externalUrl: "https://csghub.example.com"
-  dataflow:
     chartContext:
       isBuiltIn: false
+  externalUrl: "https://csghub.example.com"
+  dataflow:
     name: "dataflow"
     image:
       registry: "docker.io"
@@ -97,9 +97,9 @@ tests:
           enabled: false
         mongo:
           enabled: false
-      dataflow:
         chartContext:
           isBuiltIn: true
+      dataflow:
         postgresql:
           host: "10.6.0.10"
           port: 6432

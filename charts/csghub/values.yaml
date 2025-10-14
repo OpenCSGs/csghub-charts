@@ -112,6 +112,10 @@ global:
       # host: "<dataflow_host>"     # Dataflow server hostname or IP
       # port: 80                    # Dataflow port number
 
+  ## SubChart deployment context
+  chartContext:
+    isBuiltIn: true                     # deployed bundled with csghub
+
 #################################################################
 ##  CSGHub Core Configuration                                  ##
 #################################################################

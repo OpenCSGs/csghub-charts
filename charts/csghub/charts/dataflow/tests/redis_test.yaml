@@ -18,6 +18,8 @@ set:
       size: "25Gi"
     redis:
       enabled: true
+    chartContext:
+      isBuiltIn: false
   redis:
     name: "redis"
     image:
@@ -31,9 +33,6 @@ set:
       protocol: TCP
     persistence:
       size: ""
-  dataflow:
-    chartContext:
-      isBuiltIn: false
 tests:
   - it: Should render secret correctly
     template: redis/secret.yaml

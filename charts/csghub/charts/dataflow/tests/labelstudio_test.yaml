@@ -24,6 +24,8 @@ set:
       size: "25Gi"
     postgresql:
       enabled: true
+    chartContext:
+      isBuiltIn: false
   externalUrl: "https://csghub.example.com"
   labelStudio:
     name: "label-studio"
@@ -38,9 +40,6 @@ set:
       protocol: TCP
     persistence:
       size: ""
-  dataflow:
-    chartContext:
-      isBuiltIn: false
   postgresql:
     name: "postgresql"
     service:
@@ -86,7 +85,6 @@ tests:
       global:
         postgresql:
           enabled: false
-      dataflow:
         chartContext:
           isBuiltIn: true
       labelStudio:

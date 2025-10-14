@@ -45,14 +45,14 @@ Returns:
 {{- end }}
 
 {{- $csghubEndpoint := include "common.endpoint.csghub" $global }}
-{{- if not $service.chartContext.isBuiltIn }}
+{{- if not $global.Values.global.chartContext.isBuiltIn }}
 {{- $csghubEndpoint = $service.externalUrl }}
 {{- end }}
 {{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint -}}
 {{- $args = concat $args (list $hfEndpoint) -}}
 
 {{- $insecure := false }}
-{{- if $service.chartContext.isBuiltIn }}
+{{- if $global.Values.global.chartContext.isBuiltIn }}
   {{- $insecure = or $global.Values.global.registry.enabled $global.Values.global.registry.external.insecure }}
 {{- else }}
   {{- $insecure = $service.registry.insecure }}

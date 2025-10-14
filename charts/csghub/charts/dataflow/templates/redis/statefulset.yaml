@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- if and .Values.global.redis.enabled (not .Values.dataflow.chartContext.isBuiltIn) }}
+{{- if and .Values.global.redis.enabled (not .Values.global.chartContext.isBuiltIn) }}
 {{- $service := include "common.service" (dict "service" "redis" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}

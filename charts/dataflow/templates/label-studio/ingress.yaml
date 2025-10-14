@@ -24,7 +24,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    {{- if $dataflowSvc.chartContext.isBuiltIn }}
+    {{- if .Values.global.chartContext.isBuiltIn }}
     nginx.ingress.kubernetes.io/cors-allow-origin: {{ include "common.endpoint.csghub" . | quote }}
     {{- else }}
     nginx.ingress.kubernetes.io/cors-allow-origin: {{ .Values.externalUrl | quote }}

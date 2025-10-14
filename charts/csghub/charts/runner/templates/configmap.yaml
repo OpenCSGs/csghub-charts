@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" . | fromYaml }}
-{{- if not $service.chartContext.isBuiltIn }}
+{{- if not .Values.global.chartContext.isBuiltIn }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap

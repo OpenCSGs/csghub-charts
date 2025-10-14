@@ -38,9 +38,8 @@ set:
       protocol: TCP
     persistence:
       size: ""
-  dataflow:
-    chartContext:
-      isBuiltIn: false
+  chartContext:
+    isBuiltIn: false
   postgresql:
     name: "postgresql"
     service:
@@ -86,7 +85,6 @@ tests:
       global:
         postgresql:
           enabled: false
-      dataflow:
         chartContext:
           isBuiltIn: true
       labelStudio:

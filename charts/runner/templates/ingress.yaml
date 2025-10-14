@@ -5,7 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" . | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
-{{- if and $ingressConfig.enabled (not $service.chartContext.isBuiltIn) }}
+{{- if and $ingressConfig.enabled (not .Values.global.chartContext.isBuiltIn) }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress

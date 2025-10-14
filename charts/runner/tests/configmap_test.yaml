@@ -22,10 +22,10 @@ set:
       enabled: false
     objectStore:
       enabled: false
+    chartContext:
+      isBuiltIn: false
   externalUrl: "https://csghub.example.cn"
   name: "runner-svc"
-  chartContext:
-    isBuiltIn: false
   region: "es-west-1"
   interval: 30
   namespace: "spaces"

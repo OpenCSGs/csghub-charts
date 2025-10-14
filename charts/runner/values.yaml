@@ -30,6 +30,10 @@ global:
   objectStore:
     enabled: false
 
+  ## SubChart deployment context
+  chartContext:
+    isBuiltIn: false                     # deployed bundled with csghub
+
 #################################################################
 ##  CSGHub Configuration                                       ##
 #################################################################
@@ -73,10 +77,6 @@ service:
   type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
   port: 8082                               # Service port
   protocol: "TCP"                          # Network protocol
-
-## Runner deployment context
-chartContext:
-  isBuiltIn: false                     # Runner deployed bundled with csghub
 
 ## Runner operation and communication
 region: "region-0"                     # Region the runner belongs to
