@@ -31,6 +31,9 @@ set:
       protocol: TCP
     persistence:
       size: ""
+  dataflow:
+    chartContext:
+      isBuiltIn: false
 tests:
   - it: Should render secret correctly
     template: redis/secret.yaml

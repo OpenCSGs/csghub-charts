@@ -36,6 +36,9 @@ set:
       shared_buffers: "1024MB"
     persistence:
       size: ""
+  dataflow:
+    chartContext:
+      isBuiltIn: false
 tests:
   - it: Should render configmap correctly
     template: postgresql/configmap.yaml
