@@ -33,6 +33,7 @@ dependencies:
   - name: common
     version: 0.1.0
     repository: file://charts/common
+    # repository: https://charts.opencsg.com/repository/csghub
   - name: ingress-nginx
     version: 4.12.7
     repository: file://charts/ingress-nginx
