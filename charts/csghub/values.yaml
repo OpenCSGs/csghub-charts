@@ -103,6 +103,15 @@ global:
       # token: ""                   # Authentication token
       # storage: "default"          # Storage name for repositories
 
+  ## Dataflow configuration
+  dataflow:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Dataflow configuration
+    external: {}
+      # host: "<dataflow_host>"     # Dataflow server hostname or IP
+      # port: 80                    # Dataflow port number
+
 #################################################################
 ##  CSGHub Core Configuration                                  ##
 #################################################################
@@ -310,6 +319,23 @@ runner:
 dataflow:
   enabled: true                          # Enable or disable dataflow service
 
+  dataflow:
+    ## Dataflow deployment context
+    chartContext:
+      isBuiltIn: true                      # Dataflow deployed bundled with csghub
+
+  ## Disable subCharts same with parent
+  ingress-nginx:
+    enabled: false
+  reloader:
+    enabled: false
+  prometheus:
+    enabled: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+
 ## Accounting service configuration
 accounting: {}
 
@@ -344,6 +370,8 @@ postgresql:
     - "csghub_temporal"
     - "csghub_server"
     - "csghub_portal"
+    - "csghub_dataflow"
+    - "csghub_label_studio"
 
   parameters: {}                             # PostgreSQL runtime parameters
     # max_connections: 400                   # Dynamic parameters (triggers recreate)

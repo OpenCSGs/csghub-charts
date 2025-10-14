@@ -105,10 +105,9 @@ data:
 
   ## Server Configuration for Dataflow
   {{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
-  {{- if $dataflowSvc.enabled }}
-  OPENCSG_DATAFLOW_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataflowSvc.name)) | quote }}
-  OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowSvc | dig "service" "port" 8000 | quote }}
-  {{- end }}
+  {{- $dataflowConfig := include "common.dataflow.config" (dict "service" $dataflowSvc "global" .) | fromYaml }}
+  OPENCSG_DATAFLOW_SERVER_HOST: {{ $dataflowConfig.host | quote }}
+  OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowConfig.port | quote }}
 
   ## Server Configuration for Dataviewer
   {{- $dataviewerSvc := include "common.service" (dict "service" "dataviewer" "global" .) | fromYaml }}
