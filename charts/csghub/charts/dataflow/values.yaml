@@ -1,0 +1,330 @@
+#################################################################
+##  Global Configuration                                       ##
+#################################################################
+global:
+  ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
+  edition: "ee"
+
+  ## Ingress configuration
+  ingress:
+    # className: "nginx"            # Ingress controller class name
+    domain: "example.com"           # Base domain for accessing csghub
+    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
+    ## TLS/SSL configuration
+    tls:
+      enabled: false                # Enable or disable TLS
+      # secretName: ""              # TLS secret name (if enabled)
+    ## Service configuration
+    service:
+      type: &type "LoadBalancer"    # Service type: LoadBalancer or NodePort
+
+  ## Image management
+  image:
+    # registry: ""                  # Custom image registry (overrides local registry)
+    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
+    pullSecrets: []                 # Private registry authentication secrets
+
+  ## Persistent volume configuration
+  persistence:
+    # storageClass: ""              # StorageClass name (empty for default)
+    accessModes: ["ReadWriteOnce"]  # Volume access modes
+    size: "10Gi"                    # Default storage capacity
+
+  ## Database configuration
+  postgresql:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External PostgreSQL connection
+    external: {}
+      # host: "<pg_host>"           # PostgreSQL host address
+      # port: 6432                  # PostgreSQL port
+      # user: "csghub"              # Database username
+      # password: ""                # Database password
+      # timezone: "Etc/UTC"         # Database timezone
+      # sslmode: "prefer"           # SSL mode
+
+  ## Redis configuration
+  redis:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Redis configuration
+    external: {}
+      # host: "<redis_host>"        # Redis server hostname or IP
+      # port: 6379                  # Redis port number
+      # password: ""                # Redis authentication password
+
+  ## MongoDB configuration
+  mongo:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Mongo configuration
+    external: {}
+      # host: "<mongo_host>"        # Mongo server hostname or IP
+      # port: 27017                 # Mongo  port number
+      # user: "root"                # Mongo authentication user
+      # password: ""                # Mongo authentication password
+
+#################################################################
+##  Dataflow Configuration                                     ##
+#################################################################
+## External CSGHub URL for accessing the hub interface
+externalUrl: "https://csghub.example.com"
+
+## Ingress configuration
+ingress:
+  enabled: true                            # Enable or disable ingress
+  annotations: {}                          # Ingress-nginx annotations
+  tls: {}                                  # TLS settings for ingress
+    # enabled: false                       # Enable or disable TLS
+    # secretName: ""                       # TLS secret name (if enabled)
+
+## Dataflow Configuration
+dataflow:
+  ## Dataflow deployment context
+  chartContext:
+    isBuiltIn: false                     # Dataflow deployed bundled with csghub
+
+  ## Image settings (overrides global.image)
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/dataflow"
+    tag: "20250916"                         # Image version tag
+    pullPolicy: "IfNotPresent"              # Image pull policy
+    pullSecrets: []                         # Docker registry secrets
+
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_dataflow"          # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
+
+  ## Redis configuration
+  redis: {}
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+    # password: ""                         # Redis authentication password
+
+  ## MongoDB Configuration
+  mongo: {}
+    # host: "<mongo_host>"        # Mongo server hostname or IP
+    # port: 27017                 # Mongo  port number
+    # user: "root"                # Mongo authentication user
+    # password: ""                # Mongo authentication password
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    accessModes: ["ReadWriteMany"]           # Volume access permissions
+    size: "100Gi"                            # Disk space allocation
+
+## Celery Worker Configuration
+worker:
+  ## Logging configuration
+  logging:
+    level: "info"
+
+## Label Studio Configuration
+labelStudio:
+  ## Image settings (overrides global.image)
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/label-studio"
+    tag: "latest"                            # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_label_studio"      # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
+
+  persistence: {}
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteMany"]         # Volume access permissions
+    # size: "100Gi"                          # Disk space allocation
+
+#################################################################
+##  Built-in Third-party Components                            ##
+#################################################################
+## Embedded PostgreSQL configuration
+postgresql:
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/postgres"
+    tag: "15.10"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 5432                               # Service port
+    protocol: "TCP"                          # Network protocol
+
+  databases:                                 # Databases to create on startup
+    - "csghub_dataflow"
+    - "csghub_label_studio"
+
+  parameters: {}                             # PostgreSQL runtime parameters
+    # max_connections: 400                   # Dynamic parameters (triggers recreate)
+    # shared_buffers: "128MB"                # Shared memory buffers
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "50Gi"                             # Disk space allocation
+
+## Built-in Redis configuration
+redis:
+  image:
+    registry: "docker.io"
+    repository: "redis"
+    tag: "7.2.5"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 6379                               # Service port
+    protocol: "TCP"                          # Network protocol
+
+  requirePass: false                         # Password requirement
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
+
+## Built-in MongoDB configuration
+mongo:
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/mongo"
+    tag: "8.0.12"                            # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 27017                              # Service port
+    protocol: "TCP"                          # Network protocol
+
+  auth: {}
+    # user: "root"                           # user for authentication
+    # password: ""                           # Password for authentication
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
+
+#################################################################
+##  Dependent SubCharts                                        ##
+##  PLEASE DO NOT UPDATE!!!                                    ##
+#################################################################
+## Do not modify it unless you know the purpose of the modification.
+
+## Ingress-nginx configuration
+ingress-nginx:
+  enabled: true                            # Enable NGINX Ingress Controller
+
+  ## TCP services configuration
+  tcp:
+    22: "csghub/csghub-gitlab-shell:22"    # Forward TCP traffic on port 22
+
+  controller:
+    progressDeadlineSeconds: 600           # Deployment progress deadline
+
+    ## Image configuration
+    image:
+      image: "opencsghq/ingress-nginx-controller"
+      digest: ""                           # Image digest (do not update)
+
+    ## Admission webhooks configuration
+    admissionWebhooks:
+      patch:
+        image:
+          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
+          digest: ""                       # Image digest (do not update)
+
+    ## Controller configuration
+    config:
+      annotations-risk-level: "Critical"    # Risk level for annotations
+      custom-http-errors: "404,500,502,503" # Custom HTTP error codes
+      enable-underscores-in-headers: "true" # Skip underscores headers
+
+    allowSnippetAnnotations: true          # Allow server snippets in annotations
+
+    ## Service configuration
+    service:
+      type: *type                          # Service type
+      nodePorts:
+        http: 30080                        # HTTP node port
+        https: 30443                       # HTTPS node port
+        tcp:
+          22: 30022                        # TCP node port for SSH
+
+  ## Custom error pages configuration
+  defaultBackend:
+    enabled: true                          # Enable custom error pages
+    image:
+      image: "opencsghq/ingress-nginx-custom-error-pages"
+      tag: "v1.2.0"
+    extraVolumes:
+      - name: "custom-error-pages"
+        configMap:
+          name: "ingress-nginx-custom-errors"
+    extraVolumeMounts:
+      - name: "custom-error-pages"
+        mountPath: "/www"
+
+## Reloader configuration
+reloader:
+  image:
+    name: "opencsghq/stakater-reloader"    # Reloader image name
+
+## Prometheus monitoring configuration
+prometheus:
+  enabled: false                           # Enable Prometheus
+
+  ingress:
+    enabled: false                         # Enable Prometheus ingress
+    basicAuth: {}                          # Basic authentication
+      # username: "prometheus"
+      # password: ""
+
+  ## Component configuration
+  alertmanager:
+    enabled: false                         # Disable Alertmanager
+  prometheus-pushgateway:
+    enabled: false                         # Disable pushgateway
+  prometheus-node-exporter:
+    enabled: false                         # Disable node exporter
+
+  ## Server configuration
+  server:
+    image:
+      registry: "quay.io"
+      repository: "prometheus/prometheus"
+      tag: "v3.5.0"
+
+  ## ConfigMap reload configuration
+  configmapReload:
+    prometheus:
+      image:
+        registry: "quay.io"
+        repository: "prometheus-operator/prometheus-config-reloader"
+        tag: "v0.85.0"
+
+  ## Kube-state-metrics configuration
+  kube-state-metrics:
+    image:
+      tag: "v2.17.0"

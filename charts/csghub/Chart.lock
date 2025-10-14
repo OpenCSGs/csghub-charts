@@ -23,5 +23,8 @@ dependencies:
 - name: runner
   repository: file://charts/runner
   version: 1.11.0
-digest: sha256:44b1744bbbb15d64e7b77013f95324e22dad55427493c69cfc8f83202e14beca
-generated: "2025-10-13T13:10:15.02832+08:00"
+- name: dataflow
+  repository: file://charts/dataflow
+  version: 1.11.0
+digest: sha256:2473977a141ad1d102395c3769ea8e8c8dc2a978aa53ba6f0a4838d03618d7be
+generated: "2025-10-14T15:13:37.737384+08:00"

@@ -1,0 +1,51 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
+{{- if and $ingressConfig.enabled (not $service.chartContext.isBuiltIn) }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $dataflowPort := dig "service" "port" 8000 $service }}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
+  {{- if $ingressConfig.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ include "common.domain.dataflow" . }}
+      secretName: {{ $ingressConfig.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ include "common.domain.dataflow" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $dataflowPort }}
+            {{- else }}
+              serviceName: {{ $serviceName }}
+              servicePort: {{ $dataflowPort }}
+            {{- end }}
+{{- end }}

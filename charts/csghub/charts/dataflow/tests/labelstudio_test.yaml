@@ -1,0 +1,237 @@
+suite: Test LabelStudio Resources
+templates:
+  - label-studio/configmap.yaml
+  - label-studio/ingress.yaml
+  - label-studio/service.yaml
+  - label-studio/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      domain: "example.cn"
+      tls:
+        enabled: true
+        secretName: "test-tls"
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    persistence:
+      storageClass: "nfs-provisioner"
+      accessModes: ["ReadWriteOnce"]
+      size: "25Gi"
+    postgresql:
+      enabled: true
+  externalUrl: "https://csghub.example.com"
+  labelStudio:
+    name: "label-studio"
+    image:
+      registry: "docker.io"
+      repository: "opencsghq/labelstudio"
+      tag: "latest"
+      pullPolicy: ""
+    service:
+      type: "ClusterIP"
+      port: 8003
+      protocol: TCP
+    persistence:
+      size: ""
+  dataflow:
+    chartContext:
+      isBuiltIn: false
+  postgresql:
+    name: "postgresql"
+    service:
+      port: 5432
+tests:
+  - it: Should render configmap correctly
+    template: label-studio/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: data["CSGHUB_ENDPOINT"]
+          value: "https://csghub.example.com"
+      - equal:
+          path: data["LABEL_STUDIO_HOST"]
+          value: "label-studio.example.cn"
+      - equal:
+          path: data["LABEL_STUDIO_PORT"]
+          value: "8003"
+      - equal:
+          path: data["POSTGRE_HOST"]
+          value: "csghub-postgresql"
+      - equal:
+          path: data["POSTGRE_PORT"]
+          value: "5432"
+      - equal:
+          path: data["POSTGRE_NAME"]
+          value: "csghub_label_studio"
+      - equal:
+          path: data["POSTGRE_USER"]
+          value: "csghub"
+      - matchRegex:
+          path: data["POSTGRE_PASSWORD"]
+          pattern: ".{32}"
+
+  - it: Should render configmap correctly with external postgresql
+    template: label-studio/configmap.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+      dataflow:
+        chartContext:
+          isBuiltIn: true
+      labelStudio:
+        postgresql:
+          host: "10.6.0.10"
+          port: 6432
+          database: "postgres"
+          user: "postgres"
+          password: "postgres"
+    asserts:
+      - equal:
+          path: data["CSGHUB_ENDPOINT"]
+          value: "https://csghub.example.cn"
+      - equal:
+          path: data["POSTGRE_HOST"]
+          value: "10.6.0.10"
+      - equal:
+          path: data["POSTGRE_PORT"]
+          value: "6432"
+      - equal:
+          path: data["POSTGRE_NAME"]
+          value: "postgres"
+      - equal:
+          path: data["POSTGRE_USER"]
+          value: "postgres"
+      - matchRegex:
+          path: data["POSTGRE_PASSWORD"]
+          pattern: "postgres"
+
+  - it: Should render ingress correctly
+    template: label-studio/ingress.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.tls[0].hosts[0]
+          value: "label-studio.example.cn"
+      - equal:
+          path: spec.tls[0].secretName
+          value: "test-tls"
+
+  - it: Should render service correctly
+    template: label-studio/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8003
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "label-studio"
+
+  - it: Should render statefulset with global correctly
+    template: label-studio/statefulset.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.serviceName
+          value: "csghub-label-studio"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/labelstudio:latest"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes
+          value: ["ReadWriteOnce"]
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "nfs-provisioner"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "25Gi"
+
+  - it: Should render statefulset with local correctly
+    template: label-studio/statefulset.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      labelStudio:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+        persistence:
+          accessModes: ["ReadWriteOnce"]
+          storageClass: "hostPath"
+          size: "20Gi"
+        nodeSelector:
+          diskType: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/labelstudio:latest"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes
+          value: ["ReadWriteOnce"]
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "hostPath"
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "20Gi"
