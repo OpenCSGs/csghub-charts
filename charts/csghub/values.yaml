@@ -379,7 +379,7 @@ postgresql:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "50Gi"                             # Disk space allocation
 
 ## Built-in Redis configuration
@@ -400,7 +400,7 @@ redis:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "10Gi"                             # Disk space allocation
 
 ## Embedded MinIO configuration
@@ -448,7 +448,7 @@ minio:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "500Gi"                            # Disk space allocation
 
 ## Embedded Registry configuration
@@ -508,7 +508,7 @@ gitaly:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "200Gi"                            # Disk space allocation
 
 ## Embedded GitLab Shell configuration
@@ -547,7 +547,7 @@ nats:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "10Gi"                             # Disk space allocation
 
 ## Embedded Casdoor configuration

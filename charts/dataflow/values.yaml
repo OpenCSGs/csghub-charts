@@ -118,7 +118,7 @@ dataflow:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    accessMode: ["ReadWriteMany"]            # Volume access permissions
+    accessModes: ["ReadWriteMany"]            # Volume access permissions
     size: "100Gi"                            # Disk space allocation
 
 ## Celery Worker Configuration
@@ -149,7 +149,7 @@ labelStudio:
 
   persistence: {}
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteMany"]          # Volume access permissions
+    # accessModes: ["ReadWriteMany"]         # Volume access permissions
     # size: "100Gi"                          # Disk space allocation
 
 #################################################################
@@ -179,7 +179,7 @@ postgresql:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "50Gi"                             # Disk space allocation
 
 ## Built-in Redis configuration
@@ -200,7 +200,7 @@ redis:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "10Gi"                             # Disk space allocation
 
 ## Built-in MongoDB configuration
@@ -223,7 +223,7 @@ mongo:
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessMode: ["ReadWriteOnce"]          # Volume access permissions
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "10Gi"                             # Disk space allocation
 
 #################################################################
