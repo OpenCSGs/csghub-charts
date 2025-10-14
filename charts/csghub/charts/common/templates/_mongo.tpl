@@ -24,11 +24,13 @@ Returns: YAML configuration object with MongoDB connection parameters
   {{- /* Default configuration for internal Mongo */ -}}
   {{- $mongoSvc := include "common.service" (dict "service" "mongo" "global" $global) | fromYaml }}
   {{- $mongoName := include "common.names.custom" (list $global $mongoSvc.name) -}}
+  {{- $mongoUser := dig "auth" "user" "root" $mongoSvc}}
+  {{- $mongoPassword := dig "auth" "password" (include "common.randomPassword" "root") $mongoSvc}}
   {{- $mongoConfig := dict
     "host" $mongoName
     "port" (dig "service" "port" 27017 $mongoSvc)
-    "user" "root"
-    "password" (include "common.randomPassword" $mongoSvc.name)
+    "user" $mongoUser
+    "password" $mongoPassword
   -}}
 
   {{- /* If internal Mongo is enabled and secret exists, use existing credentials */ -}}
