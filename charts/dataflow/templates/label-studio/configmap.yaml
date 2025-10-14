@@ -18,9 +18,9 @@ metadata:
 data:
   ## Dataflow configuration
   {{- if $dataflowSvc.chartContext.isBuiltIn }}
-  CSG_HUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
+  CSGHUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   {{- else }}
-  CSG_HUB_ENDPOINT: {{ .Values.externalUrl | quote }}
+  CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
   {{- end }}
   LABEL_STUDIO_HOST: {{ include "common.domain.labelstudio" . | quote }}
   LABEL_STUDIO_PORT: {{ $service | dig "service" "port" 8002 | quote }}
