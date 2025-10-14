@@ -21,17 +21,6 @@ metadata:
       {{- include "common.labels" . | nindent 4 }}
     {{- end }}
   annotations:
-    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-    nginx.ingress.kubernetes.io/enable-cors: "true"
-    {{- if $service.chartContext.isBuiltIn }}
-    nginx.ingress.kubernetes.io/cors-allow-origin: {{ include "common.endpoint.csghub" . | quote }}
-    {{- else }}
-    nginx.ingress.kubernetes.io/cors-allow-origin: {{ .Values.externalUrl | quote }}
-    {{- end }}
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
-    nginx.ingress.kubernetes.io/custom-http-errors: "404,502,503"
-    nginx.ingress.kubernetes.io/proxy_intercept_errors: "on"
-    nginx.ingress.kubernetes.io/default-backend: {{ include "common.names.custom" (list . "ingress-nginx-defaultbackend") }}
     {{- if $service.annotations }}
       {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}
