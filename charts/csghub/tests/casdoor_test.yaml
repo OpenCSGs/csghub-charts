@@ -73,15 +73,11 @@ tests:
       - matchRegex:
           path: data["init_data.json"]
           pattern: |-
-            "websiteUrl":\s*"https?://casdoor\.example\.cn"
+            "websiteUrl":\s*"https?://csghub\.example\.cn"
       - matchRegex:
           path: data["init_data.json"]
           pattern: |-
-            "homepageUrl":\s*"https?://casdoor\.example\.cn"
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "https?://casdoor\.example\.cn"
+            "homepageUrl":\s*"https?://csghub\.example\.cn"
       - matchRegex:
           path: data["init_data.json"]
           pattern: |-
