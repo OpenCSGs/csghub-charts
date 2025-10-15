@@ -72,11 +72,12 @@ spec:
               do
                 echo Executing $$sql_file;
                 psql \
-                  -v external_endpoint="'$EXTERNAL_ENDPOINT'" \
+                  -v external_endpoint="''" \
+                  -v csgship_external_endpoint="'$CSGSHIP_EXTERNAL_ENDPOINT'" \
                   -v htpasswd="'$INIT_ADMIN_HTPASSWD'" \
-                  -v oauth_client_id="" \
-                  -v oauth_client_secret="" \
-                  -v oauth_issuer="" \
+                  -v oauth_client_id="'$OAUTH_CLIENT_ID'" \
+                  -v oauth_client_secret="'$OAUTH_CLIENT_SECRET'" \
+                  -v oauth_issuer="'$OAUTH_ISSUER'" \
                   -f $$sql_file;
               done
           envFrom:
@@ -93,8 +94,19 @@ spec:
               value: {{ $pgConfig.database | quote }}
             - name: PGUSER
               value: {{ $pgConfig.user | quote }}
+            {{- if .Values.csgship.enabled }}
             - name: PGPASSWORD
               value: {{ $pgConfig.password | quote }}
+            - name: CSGSHIP_EXTERNAL_ENDPOINT
+              value: {{ include "common.endpoint.web" . | quote }}
+            {{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+            - name: OAUTH_CLIENT_ID
+              value: {{ dig "oauth" "clientId" "" $webSvc | quote }}
+            - name: OAUTH_CLIENT_SECRET
+              value: {{ dig "oauth" "clientSecret" "" $webSvc | quote }}
+            - name: OAUTH_ISSUER
+              value: {{ dig "oauth" "issuer" "https://gitlab.example.com" $webSvc | quote }}
+            {{- end }}
             {{- with $service.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}

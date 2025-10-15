@@ -340,6 +340,20 @@ dataflow:
   redis:
     enabled: false
 
+csgship:
+  enabled: false
+  ## Disable subCharts same with parent
+  ingress-nginx:
+    enabled: false
+  reloader:
+    enabled: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  casdoor:
+    enabled: false
+
 ## Accounting service configuration
 accounting: {}
 

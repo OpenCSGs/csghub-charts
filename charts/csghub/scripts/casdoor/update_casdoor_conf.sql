@@ -25,6 +25,7 @@ SET row_security = off;
 -- Import psql variables into session settings
 --
 SET session.external_endpoint = :'external_endpoint';
+SET session.csgship_external_endpoint = :'csgship_external_endpoint';
 SET session.oauth_client_id = :'oauth_client_id';
 SET session.oauth_client_secret = :'oauth_client_secret';
 SET session.oauth_issuer = :'oauth_issuer';
@@ -52,6 +53,15 @@ SET redirect_uris = json_build_array(
     rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor'
 )::text
 WHERE name = 'CSGHub';
+
+--
+-- Update RedirectURLs for CSGShip application
+--
+UPDATE application
+SET redirect_uris = json_build_array(
+    rtrim( replace(current_setting('session.csgship_external_endpoint', true), '''', ''), '/') || '/api/v1/account/casdoor/login/callback'
+)::text
+WHERE name = 'CSGShip';
 
 --
 -- Enable org Select for built-in application
@@ -92,11 +102,11 @@ BEGIN
         UPDATE
             provider
         SET
-            client_id = oauth_client_id,
-            client_secret = oauth_client_secret,
-            custom_auth_url = oauth_issuer || '/oauth/authorize',
-            custom_token_url = oauth_issuer || '/oauth/token',
-            custom_user_info_url = oauth_issuer || '/api/v4/user'
+            client_id = rtrim( replace(oauth_client_id, '''', ''), '/'),
+            client_secret = rtrim( replace(oauth_client_secret, '''', ''), '/'),
+            custom_auth_url = rtrim( replace(oauth_issuer, '''', ''), '/') || '/oauth/authorize',
+            custom_token_url = rtrim( replace(oauth_issuer, '''', ''), '/') || '/oauth/token',
+            custom_user_info_url = rtrim( replace(oauth_issuer, '''', ''), '/') || '/api/v4/user'
         WHERE
             name = 'GitLab_Provider';
 

@@ -212,9 +212,9 @@ data:
           "enableLinkWithEmail": true,
           "orgChoiceMode": "Select",
           "samlReplyUrl": "",
-          {{- $app := include "csghub.casdoor.client" "CSGHub" | fromYaml }}
-          "clientId": {{ $app.clientId | quote }},
-          "clientSecret": {{ $app.clientSecret | quote }},
+          {{- $appCsghub := include "csghub.casdoor.client" "CSGHub" | fromYaml }}
+          "clientId": {{ $appCsghub.clientId | quote }},
+          "clientSecret": {{ $appCsghub.clientSecret | quote }},
           "providers": [
             {
               "owner": "",
@@ -409,7 +409,256 @@ data:
             "id_token"
           ],
           "redirectUris": [
-            "{{ include "common.endpoint.casdoor" . }}/api/v1/callback/casdoor"
+            "{{ include "common.endpoint.csghub" . }}/api/v1/callback/casdoor"
+          ],
+          "tokenFormat": "JWT",
+          "tokenFields": [],
+          "expireInHours": 168,
+          "refreshExpireInHours": 168,
+          "themeData": {
+            "themeType": "lark",
+            "colorPrimary": "#1C8B7F",
+            "borderRadius": 6,
+            "isCompact": false,
+            "isEnabled": true
+          },
+          "footerHtml": "<C2><A9>2025 OpenCSG. All rights reserved.",
+          "formCSS": "",
+          "formOffset": 2,
+          "formSideHtml": "<style>  .left-model{    text-align: center;    padding: 60px;    background-image: url('https://cdn.jsdelivr.net/gh/OpenCSGs/images/background.png');    background-size: cover;    background-position: center;    position: absolute;    transform: none;    width: 100%;    height: 100%;  }  .side-logo {    display: flex;    align-items: center;  }  .side-logo span {    font-family: Montserrat, sans-serif;    font-weight: 900;    font-size: 2.4rem;    line-height: 1.3;    margin-left: 16px;    color: #404040;  }  .img{    max-width: none;    margin: 41px 0 13px;  }</style><div class='left-model'>  <span class='side-logo'> <img src='' alt='' style='width: 120px'>   </span>  <div class='img'>    <img src='' alt='' style='width: 120px'/>  </div></div>",
+          "failedSigninLimit": 5,
+          "failedSigninFrozenTime": 15
+        },
+        {
+          "owner": "admin",
+          "name": "CSGShip",
+          "displayName": "CSGShip",
+          "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
+          "homepageUrl": {{ include "common.endpoint.web" . | quote }},
+          "organization": "OpenCSG",
+          "cert": "csgship-cert",
+          "enablePassword": true,
+          "enableSignUp": true,
+          "enableSigninSession": false,
+          "enableAutoSignin": false,
+          "enableCodeSignin": false,
+          "enableSamlCompress": false,
+          "enableSamlC14n10": false,
+          "enableSamlPostBinding": false,
+          "enableWebAuthn": false,
+          "enableLinkWithEmail": true,
+          "orgChoiceMode": "Select",
+          "samlReplyUrl": "",
+          {{- $appCsgship := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
+          "clientId": {{ $appCsgship.clientId | quote }},
+          "clientSecret": {{ $appCsgship.clientSecret | quote }},
+          "providers": [
+            {
+              "owner": "",
+              "name": "Email_Provider",
+              "canSignUp": true,
+              "canSignIn": true,
+              "canUnlink": true,
+              "prompted": false,
+              "rule": "all"
+            },
+            {
+              "owner": "",
+              "name": "Captcha_Provider",
+              "canSignUp": true,
+              "canSignIn": true,
+              "canUnlink": true,
+              "prompted": false,
+              "rule": "None"
+            },
+            {
+              "owner": "",
+              "name": "GitLab_Provider",
+              "canSignUp": true,
+              "canSignIn": true,
+              "canUnlink": true,
+              "countryCodes": null,
+              "prompted": false,
+              "signupGroup": "",
+              "rule": "None",
+              "provider": null
+            }
+          ],
+          "signinMethods": [
+            {
+              "name": "Password",
+              "displayName": "Password",
+              "rule": "All"
+            }
+          ],
+          "signupItems": [
+            {
+              "name": "ID",
+              "visible": false,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "Random"
+            },
+            {
+              "name": "Username",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Display name",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Password",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Confirm password",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Email",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "No verification"
+            },
+            {
+              "name": "Agreement",
+              "visible": false,
+              "required": false,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            }
+          ],
+          "signinItems": [
+            {
+              "name": "Back button",
+              "visible": false,
+              "label": "\n\u003cstyle\u003e\n  .back-button {\n      top: 65px;\n      left: 15px;\n      position: absolute;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Languages",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-languages {\n      top: 55px;\n      right: 5px;\n      position: absolute;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Logo",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-logo-box {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Signin methods",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .signin-methods {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Username",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-username {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Password",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-password {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Agreement",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-agreement {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Forgot password?",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-forget-password {\n    display: inline-flex;\n    justify-content: space-between;\n    width: 320px;\n    margin-bottom: 25px;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Login button",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-button-box {\n    margin-bottom: 5px;\n  }\n  .login-button {\n    width: 100%;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Signup link",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-signup-link {\n    margin-bottom: 24px;\n    display: flex;\n    justify-content: end;\n}\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Providers",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .provider-img {\n      width: 30px;\n      margin: 5px;\n  }\n  .provider-big-img {\n      margin-bottom: 10px;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "small",
+              "isCustom": false
+            }
+          ],
+          "grantTypes": [
+            "authorization_code",
+            "id_token"
+          ],
+          "redirectUris": [
+            "{{ include "common.endpoint.webAPI" . }}/api/v1/account/casdoor/login/callback"
           ],
           "tokenFormat": "JWT",
           "tokenFields": [],
@@ -442,6 +691,18 @@ data:
           "expireInYears": 20,
           "certificate": "-----BEGIN CERTIFICATE-----\nMIIE3TCCAsWgAwIBAgIDAeJAMA0GCSqGSIb3DQEBCwUAMCgxDjAMBgNVBAoTBWFk\nbWluMRYwFAYDVQQDEw1jZXJ0LWJ1aWx0LWluMB4XDTI0MDgxMzA2NTU1M1oXDTQ0\nMDgxMzA2NTU1M1owKDEOMAwGA1UEChMFYWRtaW4xFjAUBgNVBAMTDWNlcnQtYnVp\nbHQtaW4wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQCh08MiRaD//vmL\nFq/1IDcoQb7rpgkoIRX9fhlxJR0NIRtGiQ2Ugzuu4d3MldNSs0xpTetZu7XU4gmC\n3i8acr8bwvTu1QnhIn92/jkc7FMcbPO/WCdExuTHZhYlCQOiQ10WoxSVju6T1viZ\n52lNA07k7Ij6+QLyM7HK0OEzPC4m4BXdjaG2o8dv0b7o80vRdCtmhUsO9EE4QiY3\n1GFrseKGPfKWFAg6bf/5LwcuW64onW/dJjBg4E7m7tZlXnhPCUK0WTEhh5IrxgT7\nE2kV1Bf2lUgw4AiPmfZpCuIrxo2r8jKfRIMGyByq+EoG4X+8BBci7H13MkrQpktv\n9PmkAXtWy1D2ACFr8e8FM6JgCHVXXHBna6HJxsUXIEuaceLebrXH8be29UJcEHnw\ntQOGJRO8/2axWa6j6zVLGUAhYlVYHcg6NIkrV8ClHVYHSGsSsjRwvtiLY10t1PLh\nc7BeTXSbXLSS7FQIeY8JiJQNsfVhlDSMimup5gwYBZrqIW719ICC/ez3FYuv/ykE\nu19PZj86I8G6p/LMK3oVq+erH+da+uSpCzkfyS1YDcC19veYt4BOdFSZi4rFrQPQ\njh7YrceU8Fhf9A+lc1F/jYysi0uM44vKQR39EsuyPNynqBFEmC2Jj0HuH3LPxKJa\nYdqprTZPRaQ2zPi3FKBmiztLU+fSiQIDAQABoxAwDjAMBgNVHRMBAf8EAjAAMA0G\nCSqGSIb3DQEBCwUAA4ICAQAt8cwzXTLYJh2WkCjQNK35D+6fgV1EbJlyEnfPM9N/\nVla+CNPR9I7KRo1EVr+GmCNhR7ZjzkaCBAVIxx3nQVVejkrITjGEQQ+0nXV92dDA\njVNQ54JkhiWovlqysbqOiiXAXrrEfu1dIGg7rM7JSOMkd8BhtBolvanB5SpyHPXs\nZakS3Wsf6TAa4yy2MCVzTf20m/pMzK54ZjRPUQUUxFkqpF28BjOZcKRDT9rDwiq4\n6UolMnIT2Ept4n2M+IOkqHPtVVqioSFZlvMDv7cjyTHA0JKUYvdaUX5tCBf58xS/\nGwdE6KDLJsT/Vvy+xUbFOQDs+HNsPyC8eAyz/jhb1sKKaJG6SR48QW61nyAC7cuy\nHfknaNViOK8tFdeLM1UAmI+GEfJvaURcaVxaAmpy7HPZKUYIhrXBYH0f/tQUHkhX\n15tCN5BtRco8lhUhFtQ0kUF4R/rQOwpJ9nbqab8yCwNKOzTL0RBVkPwlGJW64Pi3\n1eZSf8M2eyjY9IZhSk3tChWYcqZTQeYLkRo1GTHRY/v8h2nwsTz0Q/sSSIMCrhSK\nZRsf+ElDrcf0wIyYZMPWZjbNgH2+cubf3wrJw2aWqV29pAw4gUSQw5xD4iqOGm3N\n0GeYNWmio297Nm4bcYvf3CaqQC82XZiu5PTQ/jtgg82dWFfI7ZSisAPr775cNvn+\nXw==\n-----END CERTIFICATE-----\n",
           "privateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIJKQIBAAKCAgEAodPDIkWg//75ixav9SA3KEG+66YJKCEV/X4ZcSUdDSEbRokN\nlIM7ruHdzJXTUrNMaU3rWbu11OIJgt4vGnK/G8L07tUJ4SJ/dv45HOxTHGzzv1gn\nRMbkx2YWJQkDokNdFqMUlY7uk9b4medpTQNO5OyI+vkC8jOxytDhMzwuJuAV3Y2h\ntqPHb9G+6PNL0XQrZoVLDvRBOEImN9Rha7Hihj3ylhQIOm3/+S8HLluuKJ1v3SYw\nYOBO5u7WZV54TwlCtFkxIYeSK8YE+xNpFdQX9pVIMOAIj5n2aQriK8aNq/Iyn0SD\nBsgcqvhKBuF/vAQXIux9dzJK0KZLb/T5pAF7VstQ9gAha/HvBTOiYAh1V1xwZ2uh\nycbFFyBLmnHi3m61x/G3tvVCXBB58LUDhiUTvP9msVmuo+s1SxlAIWJVWB3IOjSJ\nK1fApR1WB0hrErI0cL7Yi2NdLdTy4XOwXk10m1y0kuxUCHmPCYiUDbH1YZQ0jIpr\nqeYMGAWa6iFu9fSAgv3s9xWLr/8pBLtfT2Y/OiPBuqfyzCt6Favnqx/nWvrkqQs5\nH8ktWA3Atfb3mLeATnRUmYuKxa0D0I4e2K3HlPBYX/QPpXNRf42MrItLjOOLykEd\n/RLLsjzcp6gRRJgtiY9B7h9yz8SiWmHaqa02T0WkNsz4txSgZos7S1Pn0okCAwEA\nAQKCAgAFin6v+bpdiZl5zbkQp5273yRuZS0DFr7uAxdT7HVmMbABZkf0wdmVT16M\n1sR5nHINWQGp/Odo9qRkur7aJPuuM6q3UswXzVqX9HR4LQ9bdc+Sya3uiPDkcvZn\nJjvdnnjdgY/+3voETeQNQQM2A9r7s62tCkGzkVmRHD3Zx0G9Swb0oxjabBk0FvZ2\ne34pGdUymXXMeUiSaJFub/M2AM1E03Iu+Viex41wNtAEIleARIPECr61UnjhJ2Rn\n7CgqbKLAEh3AjCfRH+KjxjJe8PgxFUN3iPRCFn99cUX1QcMwFAbvtSTXYpq4r++4\n9JevFGTGaVqSbkJpiogiuTyjBPn4HOIYxX6yygJD3UfGKTLwc0zOwQZG0BOnuFUM\nqrsworxRVD0YnhSQ/uXT2IMtDyrScktg1LxmEwkCyS/w9PqOzq4xpxyJrv2TDaET\nupntRKWKD3ahXVzJpwcvVY5n6d1AeWAgHXC7Lw31U1caHCi32Wters/aDX1tAdFs\nkepJegnZqwKhXMihyLJ70hQNldavaywNODGmwmelQ2UNSVLNkyMJ6GxlvrKPVGId\nnIjWX3E/Ynnyd9DomkQY2zNXpqgeZFWFTY6yGlJUSrDljwQWpGTU1GMmD+DhiUi9\n72mdbNG1kYVcWp41qwRYPIJ5b7rZUhybd6UGJy1C0bmc9fbwQQKCAQEAwnguGakn\n0fzY5hz2X2AlRIR1ocYciNZAFesMsQs91qOEvSUWKcwIvHd1Nn8HvKs1HkIsSPxr\nWSKmXToKxDQ3bM7YP7umeml6ZjhiQnOr6ju/KFqyOX+dekKX1yVKxkm3W+IIbdfa\nMUVMzvxUyZiI6HIk7kbel9sNQkFI8HHdx+eix3Y7nV+R9s5vpbZXvItKb9zZ0sdL\nYt9L7Wki0eZ8xhPXoc8MWmqAqCAe2uuV0tEL7CBSwxv8GBXNPpjVscIHbDJ4vcTR\nb0W+kZxCzPmkq0ZciEkZn+6SO/bOlhYxHeThRL4lyBEzGY2DKWhJ116N5Rjxmpci\nakyjnRosq6mWrQKCAQEA1QeYCExtHRZ3MUUiXMAhaQEoVr7yVdY4sjfTmLOmTn5n\npev4gPIYheI5+OzQR5D1uiWIPxnxcrDIE8iyHt6HOU1PGQ8juHZrms8AU1pwhtpE\naTx/uVz95NxIKG/8OXV2L0yqtvkkuVO7qgdbcdnhGOkuUe3vqJqgEY+pBjlmK04S\nT4ceGmXHLb4AtsIalZf09320FaQX0l6XM4GmJr+9IR+kwMQudZI9R1hDTJg6iIy2\neImAiRMEis+KAezRBEMJlfRu2L7GNbyCzqCG9VkE6dfFMqxzwmKq78D5c6+vuHF0\nW4Vk3T/PoxgexDrvyJOkhNSPF9ur6kerURpsvMoSzQKCAQEAm2tjJJz9NyTF0DrL\naHQ1tKnMPWtQuMfKVfoRnZknZdgvqN7v9J2dScqLAe/KJi4KeNFYBUi/HnDD1vQh\nUKeOuEYjq+Pz7BdKfFGJriQ1/DCd2MmLcMqd9+0q3wZt2UVm5mciZ29AcWo6NZ6S\nwL9Ig8Vd4JUBJwopcY8tlQTbw/1LKfBDOsX7qO1Za23sdsI3zmkKKRugEzf0vZvt\n+SUlCUUoa6hG7if6BOQO5NWtWtw5lBBNNKOz+SfLbcDF4Jf6SK2Zs8iNvUlXQZZK\nCPlncn78SutpMFmBw6y/dFHuFT8sDj2NgnTEiyJ+9ePkR9zIuJUT2oH5Pk1b4Z3e\nn58czQKCAQEAydQPA1W9TwC43pI8cxmIzd5N5Jm2KQLz5k2kCJm0J8v00StW3nwA\nJeBmwmNDFXrOhJUIl5gxvFKmzK+pqjt0bCLFnN1OH3b6jcou6cnWsLzcccPi0rC6\nz3iwWLd4hMu3tCpz1zUGyRr+wqGDzsL5U8ugmfjOxbPxkZHFNuNs2/x0tqoyKBpj\ncgAA1yXhX/d/HHgZBSPZefMqV58u1ql0O4yqYAO+bJ+ntQ93e3sCgdqnCl5jy/qb\npBPrEdXXVa1ZyJuz5WAhlEnMuI04L/0t/YrzBwaCChnHD62J6UP7PMkoz4j7Pe81\n/rRcedfI1ASlqz9jbtwt7aIHOqjJergMxQKCAQAPuN21Dgo+EG9xrHv45MpQYpJl\nHR/jfaebI9OOt4RiTD6amzr9SEdylsVjAOFD5RMgFT/E+D4LSsIf466LRfmfG6+K\nz+qikjX4YYHEAYieJ65Lo5jUwhqO0DpNT9zZbQjuJwfndSjUtA2w56wMkpA4ynKP\nz/1H3GWqBak56qjL/PAK9q1QjD4CNX6oe6Qxp4VNx9Ci/MdHodPzz+6Hw5yAB1+M\nZsMHSIzj0r6EVLWI7bP1Q7FKcyuThVi6OkRox3tulgnfGIfOIhMnKtP+QayeuhBd\n15tS/8V16ScwTc3Yxy6i+3PAcRcs52v8zzYbdxqErPXszCgq910A9y8D8jya\n-----END RSA PRIVATE KEY-----\n"
+        },
+        {
+          "owner": "admin",
+          "name": "csgship-cert",
+          "displayName": "CSGShip Cert",
+          "scope": "JWT",
+          "type": "x509",
+          "cryptoAlgorithm": "RS256",
+          "bitSize": 4096,
+          "expireInYears": 20,
+          "certificate": "-----BEGIN CERTIFICATE-----\nMIIE2TCCAsGgAwIBAgIDAeJAMA0GCSqGSIb3DQEBCwUAMCYxDjAMBgNVBAoTBWFk\nbWluMRQwEgYDVQQDDAtjZXJ0X3Vpd3RhaDAeFw0yNTA0MjIwMjQ1NDNaFw00NTA0\nMjIwMjQ1NDNaMCYxDjAMBgNVBAoTBWFkbWluMRQwEgYDVQQDDAtjZXJ0X3Vpd3Rh\naDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMbtx+W+pW5PbB99BbQt\nWX0laH9OQ72Hz9P19bDW9L96UlXBniPdePcJKFb6bbJ+TL1GdTOE/bjW71QGc8P3\nwNgqsLk01mrkgh0okbov6UR+C4hOVP+t9S6DIWN0etzyODTlpkWEd9/FU2gVhIRb\nxaHNX0qQXTotzAjs80AFuZnqG3jpF/7SOByE7fFNHXBB7UTPSjVm3EJX3jsGNS6D\n7YtXBZgYDb0Y85pBHAZxbaVp2W49bMBWaUCKLDOiTjKmipJ96N0FKbB5Q0D+vv2e\nNlpdaUQXY9sHtYt8j+Pk4x+61OKfSKYF1nWqO3u33qaMNGiV/L37IBXYeAmceKt6\nVhMG2l50+nG6jVnsLM0j4YnXR3Ry5+K4R8FXeBjcF/fXxbHFulfWUjZg8gz6mPeZ\n0WCMgAXPy7Lk922EMyFV3z6kceO01IbXZj/TSQRfvI7jKrmgO15TGyKJZTgfId3c\nSfCrSDfr2ITu/vPr4AHzF394Mzhy6s35NziYUG49NDBtFigLumQtZoa83h+TX+rD\n4YrBmi5ctFwtcdXfPqtXuVGuqe2X3r+qqk9hUbX0gL000wqD9ZPFNXTAPkAn1J1f\nljqv7Q8fwnmtcBeMMCHcJ6JTt4j5RwPhy4rowdU54pY3xqVLUYvrYXgvDT8Xky7t\nOhaAeL2HIM6rD+wSXKqa9Wp3AgMBAAGjEDAOMAwGA1UdEwEB/wQCMAAwDQYJKoZI\nhvcNAQELBQADggIBAKlrL66aClTcWGvBu/oRTMYRqhUPSNZZ+scoRM0xI/msc8o/\nb4m09kb7O03kgH3TU5elBqEDXPuMqo9JZJkTQoCVSWKEGoWDmz//EH8FyHrM25jr\naOLJE2klHlYTEfYqem4T1TIbyb5Ho5L+ikRdhux+IXb0PrGD9SqRTMfPUnNEs8ws\nSOty+HCStAmEvAI3JRfuu0mEsDGkeiRdq1jQrQs72elVXNAa4ffD3vJOuXQJFTiI\nreEgczTxUgQ2vE0u77/2hB7UPfDGJGx3bOFtQjn59gZ21C6/e4t1DXqnDLaU/so+\n4VuankSYVtTQ+a5Av4c0RP4DJlNpUx4kOEQyJYfSeJ7P8qticHzVVHeHDGl03nMZ\n5pdYrnKnXZOSgRLYp9hANGVdvzx6SMtx0naunUBjdsaKiaCt6q8aHCCCdRsS46gh\nOhDx2dIqHvqHeaiksAHM1+L6gSw7GJ6xFNslG3bAk54vCiDbhYTvmLqyB0ZCXfND\nxueoD47543zpAUfnpn2Dl35vEkV5COh7XIoj766rpHCSef0RBTS/atZn3umjJYoG\ndS+cCRxtXll9qmvND32nl9nE7MIAUndu7daF1Tzd6f11XukRBl34nwxx9/JWfHB3\nLEq+6UmBri7mQdOZd/mwbSAkTlp8J1b4RZ1h+pr1EgaJ0R4YAtYJ6NX7OUnS\n-----END CERTIFICATE-----\n",
+          "privateKey": "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----\n"
         }
       ],
       {{- $existingSecret := lookup "v1" "Secret" .Release.Namespace (printf "%s-init" $serviceName) }}
@@ -505,6 +766,33 @@ data:
           "title": "OpenCSG Verification Code",
           "content": "\u003c!DOCTYPE html\u003e\n\u003chtml lang=\u0022en\u0022\u003e\n\u003chead\u003e\n\u003cmeta charset=\u0022UTF-8\u0022\u003e\n\u003cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1.0\u0022\u003e\n\u003ctitle\u003eVerification Code Email\u003c/title\u003e\n\u003cstyle\u003ebody { font-family: Arial, sans-serif; } .email-container { width: 600px; margin: 0 auto; } .header { text-align: center; } .code { font-size: 24px; margin: 20px 0; text-align: center; } .footer { font-size: 12px; text-align: center; margin-top: 50px; } .footer a { color: #000; text-decoration: none; } .center { text-align: center; } .center a { text-decoration: none; color: #1C8B7F; }\u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\n\u003cdiv class=\u0022email-container\u0022\u003e\n  \u003cdiv class=\u0022header\u0022\u003e\n    \u003cimg src=\u0022https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png\u0022 alt=\u0022OpenCSG Logo\u0022 width=\u0022300\u0022\u003e\n  \u003c/div\u003e\n    \u003cp\u003e\u003cstrong\u003e%{user.friendlyName}\u003c/strong\u003e, here is your verification code\u003c/p\u003e\n    \u003cp\u003eUse this code for your transaction. It's valid for 5 minutes\u003c/p\u003e\n    \u003cdiv class=\u0022code\u0022\u003e\n        %s\n    \u003c/div\u003e\n  \u003chr\u003e\n  \u003cp class=\u0022center\u0022\u003e\n    \u003ca href=\u0022https://opencsg.com\u0022 target=\u0022_blank\u0022\u003eOpenCSG Team\u003c/a\u003e\n  \u003c/p\u003e\n\u003c/div\u003e\n\u003c/body\u003e\n\u003c/html\u003e",
           "enableSignAuthnRequest": false
+        },
+        {{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+        {{- $issuer := dig "oauth" "issuer" "https://gitlab.example.com" $webSvc }}
+        {
+          "owner": "admin",
+          "name": "GitLab_Provider",
+          "displayName": "GitLab Provider",
+          "category": "OAuth",
+          "type": "Custom",
+          "method": "Normal",
+          "clientId": {{ dig "oauth" "clientId" "" $webSvc | quote }},
+          "clientSecret": {{ dig "oauth" "clientSecret" "" $webSvc | quote }},
+          "customAuthUrl": {{ printf "%s/oauth/authorize" $issuer | quote }},
+          "customTokenUrl": {{ printf "%s/oauth/token" $issuer | quote }},
+          "customUserInfoUrl": {{ printf "%s/api/v4/user" $issuer | quote }},
+          "customLogo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/gitlab_favicon.png",
+          "scopes": "read_user openid profile email",
+          "userMapping":
+          {
+            "avatarUrl": "avatar_url",
+            "displayName": "name",
+            "email": "email",
+            "id": "id",
+            "username": "username"
+          },
+          "issuerUrl": {{ $issuer | quote }},
+          "providerUrl": {{ $issuer | quote }}
         }
       ]
     }
