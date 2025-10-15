@@ -11,6 +11,17 @@ set:
       tls:
         enabled: true
         secretName: "test-tls"
+    chartContext:
+      isBuiltIn: false
+  externalUrl: "https://csghub.example.com"
+  hubAPIToken: "239sdj32sdfii23"
+  billing:
+    enabled: true
+    nats:
+      host: "csghub-nats"
+      port: 4222
+      user: "natsAdmin"
+      password: "natsPassword"
 tests:
   - it: Should render configmap correctly
     template: configmap.yaml
@@ -33,3 +44,30 @@ tests:
       - equal:
           path: data.STARSHIP_API_URL
           value: "https://csgship-api.example.com"
+      - equal:
+          path: data.WEB_SVC_API_BASE
+          value: "http://csghub-csgship:8000"
+      - equal:
+          path: data.ACCOUNTING_API_BASE
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.OPENCSG_HUB_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.ACCOUNTING_API_KEY
+          value: "239sdj32sdfii23"
+      - equal:
+          path: data.OPENCSG_HUB_ACCESS_TOKEN
+          value: "239sdj32sdfii23"
+      - equal:
+          path: data.STARSHIP_BILLING_API_BASE
+          value: "http://csghub-billing:8080"
+      - equal:
+          path: data.BILLING_SVC_API_BASE
+          value: "http://csghub-billing:8080"
+      - equal:
+          path: data.AGENTIC_SVC_API_BASE
+          value: "http://csghub-agentic:8000"
+      - equal:
+          path: data.NATS_URL
+          value: "nats://natsAdmin:natsPassword@csghub-nats:4222"

@@ -54,7 +54,7 @@ data:
           "owner": "admin",
           "name": "OpenCSG",
           "displayName": "OpenCSG",
-          "websiteUrl": {{ include "common.endpoint.casdoor" . | quote }},
+          "websiteUrl": {{ include "common.endpoint.web" . | quote }},
           "favicon": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png",
           "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
           "passwordType": "bcrypt",

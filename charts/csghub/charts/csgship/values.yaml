@@ -72,13 +72,6 @@ image:
   pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
   pullSecrets: []                          # Docker registry secrets
 
-## Nats Configuration for billing
-nats: {}
-  # host: "<nats_host>"        # Nats server hostname or IP
-  # port: 6379                  # Nats port number
-  # user: ""                    # Nats authentication user
-  # password: ""                # Nats authentication password
-
 ## Web Configuration
 web:
   name: "csgship"
@@ -136,6 +129,13 @@ billing:
   image:
     repository: "opencsghq/csgship-billing"
     tag: "bl-2.0.1"
+
+  ## Nats Configuration for billing
+  nats: {}
+    # host: "<nats_host>"         # Nats server hostname or IP
+    # port: 6379                  # Nats port number
+    # user: ""                    # Nats authentication user
+    # password: ""                # Nats authentication password
 
 ## Frontend Configuration
 frontend:

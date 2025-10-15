@@ -98,7 +98,7 @@ data:
   {{- $natsConfig := include "common.nats.config" . | fromYaml }}
   NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
   {{- else }}
-  {{- with .Values.nats }}
+  {{- with .Values.billing.nats }}
   NATS_URL: "nats://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}"
   {{- end }}
   {{- end }}

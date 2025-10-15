@@ -86,6 +86,8 @@ spec:
             - secretRef:
                 name: {{ printf "%s-init" $serviceName }}
           env:
+            - name: CSGSHIP_EXTERNAL_ENDPOINT
+              value: {{ include "common.endpoint.webAPI" . | quote }}
             - name: PGHOST
               value: {{ $pgConfig.host | quote }}
             - name: PGPORT
@@ -96,8 +98,6 @@ spec:
               value: {{ $pgConfig.user | quote }}
             - name: PGPASSWORD
               value: {{ $pgConfig.password | quote }}
-            - name: CSGSHIP_EXTERNAL_ENDPOINT
-              value: {{ include "common.endpoint.webAPI" . | quote }}
             - name: OAUTH_CLIENT_ID
               value: {{ $webSvc.oauth.clientId | quote }}
             - name: OAUTH_CLIENT_SECRET

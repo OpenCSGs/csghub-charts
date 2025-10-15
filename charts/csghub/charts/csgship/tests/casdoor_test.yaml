@@ -1,0 +1,256 @@
+suite: Test Casdoor Resources
+templates:
+  - casdoor/configmap.yaml
+  - casdoor/ingress.yaml
+  - casdoor/job.yaml
+  - casdoor/secret.yaml
+  - casdoor/service.yaml
+  - casdoor/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      enabled: true
+      domain: example.cn
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    persistence:
+      storageClass: "nfs-provisioner"
+      accessModes: ["ReadWriteOnce", "ReadWriteMany"]
+      size: "25Gi"
+    postgresql:
+      enabled: true
+  casdoor:
+    name: "casdoor"
+    image:
+      registry: "docker.io"
+      repository: "casbin/casdoor"
+      tag: "v1.800.0"
+      pullPolicy: ""
+    service:
+      type: "ClusterIP"
+      port: 8002
+      protocol: TCP
+    ingress:
+      enabled: true
+    admin: {}
+    postgresql:
+      database: "csghub_casdoor"
+tests:
+  - it: Should render all resources correctly
+    templates:
+      - casdoor/configmap.yaml
+      - casdoor/ingress.yaml
+      - casdoor/job.yaml
+      - casdoor/service.yaml
+      - casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+
+  - it: Should render configmap correctly
+    template: casdoor/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "dataSourceName\\s*=\\s*\"postgresql://csghub:[A-Za-z0-9+/=]{32}@csghub-postgresql:5432/csghub_casdoor\\?sslmode=disable\""
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "origin\\s*=\\s*\"https?://casdoor.example.cn\""
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "websiteUrl":\s*"https?://csgship\.example\.cn"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "homepageUrl":\s*"https?://csgship\.example\.cn"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "name":\s*"root"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "password":\s*".{60}"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "displayName":\s*"root"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "email":\s*"root.example.cn"
+      - isNotNullOrEmpty:
+          path: data["update_casdoor_conf.sql"]
+
+  - it: Should render ingress correctly
+    template: casdoor/ingress.yaml
+    asserts:
+      - contains:
+          path: spec.tls[0].hosts
+          content: "casdoor.example.cn"
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls"
+      - equal:
+          path: spec.rules[0].host
+          value: "casdoor.example.cn"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: "csghub-casdoor"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8002
+
+  - it: Should render ingress correctly with console enabled
+    template: casdoor/ingress.yaml
+    set:
+      casdoor:
+        ingress:
+          tls:
+            secretName: "example-cn-tls-local"
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls-local"
+
+  - it: Should render job correctly
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/busybox:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "CSGSHIP_EXTERNAL_ENDPOINT"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "https://csgship-api.example.cn"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.defaultMode
+          value: 0744
+
+  - it: Should render secret correctly
+    template: casdoor/secret.yaml
+    set:
+      casdoor:
+        admin:
+          name: "adminUser"
+          password: "adminPassword"
+    documentIndex: 0
+    asserts:
+      - equal:
+          decodeBase64: true
+          path: data.INIT_ADMIN_USER
+          value: "adminUser"
+      - matchRegex:
+          decodeBase64: true
+          path: data.INIT_ADMIN_PASSWORD
+          pattern: "adminPassword"
+      - matchRegex:
+          decodeBase64: true
+          path: data.INIT_ADMIN_HTPASSWD
+          pattern: ".{60}"
+
+  - it: Should render service correctly
+    template: casdoor/service.yaml
+    set:
+      casdoor:
+        console:
+          enabled: true
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8002
+
+  - it: Should render deployment with global correctly
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/casbin/casdoor:v1.800.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+
+  - it: Should render deployment with local correctly
+    template: casdoor/deployment.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      casdoor:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+        nodeSelector:
+          diskType: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/casbin/casdoor:v1.800.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/conf"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-casdoor"

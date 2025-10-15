@@ -1,0 +1,197 @@
+suite: Test PostgreSQL Resources
+templates:
+  - postgresql/configmap.yaml
+  - postgresql/secret.yaml
+  - postgresql/service.yaml
+  - postgresql/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    image:
+      registry: ""
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+    persistence:
+      storageClass: "nfs-provisioner"
+      accessModes: ["ReadWriteOnce", "ReadWriteMany"]
+      size: "25Gi"
+    postgresql:
+      enabled: true
+  postgresql:
+    name: "postgresql"
+    image:
+      registry: "docker.io"
+      repository: "opencsghq/postgres"
+      tag: "17.0"
+      pullPolicy: ""
+    service:
+      type: "NodePort"
+      port: 6432
+      protocol: UDP
+    databases: ["db1", "db2"]
+    parameters:
+      max_connections: 666
+      shared_buffers: "1024MB"
+    persistence:
+      size: ""
+tests:
+  - it: Should render configmap correctly
+    template: postgresql/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "include_if_exists = '/var/lib/postgresql/data/postgresql.conf'"
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "max_connections = '666'"
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "shared_buffers = '1024MB'"
+
+  - it: Should render secret correctly
+    template: postgresql/secret.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          decodeBase64: true
+          path: data["POSTGRES_USER"]
+          value: "csghub"
+      - matchRegex:
+          path: data["POSTGRES_PASSWORD"]
+          pattern: "^[A-Za-z0-9+/=]{44}$"
+      - matchRegex:
+          decodeBase64: true
+          path: data["POSTGRES_MULTIPLE_DATABASES"]
+          pattern: "db1,db2"
+
+  - it: Should render service correctly
+    template: postgresql/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 6432
+      - equal:
+          path: spec.ports[0].protocol
+          value: "UDP"
+      - equal:
+          path: spec.ports[0].name
+          value: "postgresql"
+
+  - it: Should render statefulset with global correctly
+    template: postgresql/statefulset.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.serviceName
+          value: "csghub-postgresql"
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "acr-pull-secret"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/postgres:17.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Never"
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value: ["-c", "config_file=/etc/postgresql/runtime.conf"]
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes
+          value: ["ReadWriteOnce", "ReadWriteMany"]
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "nfs-provisioner"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "25Gi"
+
+  - it: Should render statefulset with local correctly
+    template: postgresql/statefulset.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      postgresql:
+        image:
+          pullPolicy: "IfNotPresent"
+          pullSecrets: ["docker-pull-secret"]
+        environments:
+          POSTGRES_DATA: "/var/lib/postgresql/data"
+        persistence:
+          accessModes: ["ReadWriteOnce"]
+          storageClass: "hostPath"
+          size: "20Gi"
+        nodeSelector:
+          diskType: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "docker-pull-secret"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:17.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "POSTGRES_DATA"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "/var/lib/postgresql/data"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes
+          value: ["ReadWriteOnce"]
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "hostPath"
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "20Gi"
