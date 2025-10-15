@@ -1,0 +1,35 @@
+suite: Test CSGShip ConfigMap
+templates:
+  - configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      domain: "example.com"
+      tls:
+        enabled: true
+        secretName: "test-tls"
+tests:
+  - it: Should render configmap correctly
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-csgship"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgship"
+      - equal:
+          path: data.CASDOOR_ENDPOINT
+          value: "https://casdoor.example.com"
+      - equal:
+          path: data.CASDOOR_REDIRECT_URI_PATH
+          value: "/api/v1/account/casdoor/login/callback/"
+      - equal:
+          path: data.STARSHIP_WEB_URL
+          value: "https://csgship.example.com"
+      - equal:
+          path: data.STARSHIP_API_URL
+          value: "https://csgship-api.example.com"

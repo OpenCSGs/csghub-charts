@@ -1,8 +1,10 @@
 apiVersion: v2
-name: csghub
-description: CSGHub charts with CE and EE.
+name: csgship
+description: AI-based code intelligent generation
 home: https://opencsg.com
-icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
+maintainers:
+  - name: OpenCSG Inc.
+    email: support@opencsg.com
 sources:
   - https://github.com/OpenCSGs/csghub-charts
 
@@ -19,13 +21,13 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.11.0
+version: 0.4.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "v1.11.0-ce-ee"
+appVersion: "v0.4.0"
 
 # Defined dependencies for subChart
 dependencies:
@@ -41,34 +43,3 @@ dependencies:
     version: 4.12.7
     repository: file://charts/ingress-nginx
     condition: ingress-nginx.enabled
-  - name: fluentd
-    version: 0.5.2
-    repository: file://charts/fluentd
-    condition: fluentd.enabled
-  - name: loki
-    version: 6.29.0
-    repository: file://charts/loki
-    condition: loki.enabled
-  - name: tempo
-    version: 1.23.3
-    repository: file://charts/tempo
-    condition: tempo.enabled
-  - name: prometheus
-    version: 27.37.0
-    repository: file://charts/prometheus
-    condition: prometheus.enabled
-  - name: runner
-    version: 1.11.0
-    repository: file://charts/runner
-    # repository: https://charts.opencsg.com/repository/csghub
-    condition: runner.enabled
-  - name: dataflow
-    version: 1.11.0
-    repository: file://charts/dataflow
-    # repository: https://charts.opencsg.com/repository/csghub
-    condition: dataflow.enabled
-  - name: csgship
-    version: 0.4.0
-    repository: file://charts/csgship
-    # repository: https://charts.opencsg.com/repository/csgship
-    condition: csgship.enabled
