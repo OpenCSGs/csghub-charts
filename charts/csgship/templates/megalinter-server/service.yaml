@@ -1,0 +1,27 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "megalinter-server" "global" .) | fromYaml }}
+{{- if ($service.enabled | default false) }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: {{ dig "service" "type" "ClusterIP" $service }}
+  ports:
+    - port: {{ dig "service" "port" 8000 $service }}
+      targetPort: 8000
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
+      name: {{ $service.name | trunc 15 }}
+  selector:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}

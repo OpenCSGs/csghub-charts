@@ -1,0 +1,114 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $servicePort := dig "service" "port" 8000 $service }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  ## This is a debug env
+  DJANGO_DEBUG: "False"
+  DJANGO_SETTINGS_MODULE: config.settings
+  C_FORCE_ROOT: "true"
+
+  ## Web Configuration for Casdoor
+  {{- $app := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
+  CASDOOR_ENDPOINT: {{ include "common.endpoint.casdoor" . | quote }}
+  CASDOOR_REDIRECT_URI_PATH: "/api/v1/account/casdoor/login/callback/"
+  CASDOOR_CLIENT_ID: {{ $app.clientId | quote }}
+  CASDOOR_SECRET_KEY: {{ $app.clientSecret | quote }}
+
+  ## Web Configuration for PostgreSQL
+  {{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+  DATABASE_TYPE: "postgresql"
+  DATABASE_HOST: {{ $pgConfig.host | quote }}
+  DATABASE_PORT: {{ $pgConfig.port | quote }}
+  DATABASE_USERNAME: {{ $pgConfig.user | quote }}
+  DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
+  DATABASE_NAME: {{ $pgConfig.database | quote }}
+
+  ## Web Configuration for Redis
+  {{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
+  REDIS_URL: {{ printf ":@%s" $redisConfig.host | quote }}
+  REDIS_PORT: {{ $redisConfig.port | quote }}
+
+  ## Web Configuration
+  {{- $webSvc:= include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+  {{- $webName := include "common.names.custom" (list . $webSvc.name) }}
+  {{- $webPort := dig "service" "port" 8000 $webSvc }}
+  STARSHIP_WEB_URL: {{ include "common.endpoint.web" . | quote }}
+  STARSHIP_API_URL: {{ include "common.endpoint.webAPI" . | quote }}
+  WEB_SVC_API_BASE: {{ printf "http://%s:%v" $webName $webPort | quote }}
+
+  ## Web Configuration for OpenAI assistants API
+  USE_OPENAI_ASSISTANTS_API: "false"
+
+  ## Web Configuration for Accounting
+  # ACCOUNTING_OP_MODE: "has_balance|consume"
+  ACCOUNTING_OP_MODE: ""
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+  {{- $apiToken := dig "ACCOUNTING_API_KEY" (include "csghub.api.token" .) $data }}
+  {{- if .Values.global.chartContext.isBuiltIn }}
+  ACCOUNTING_API_BASE: {{ include "common.endpoint.csghub" . | quote }}
+  ACCOUNTING_API_KEY: {{ $apiToken | quote }}
+  ## Web Configuration for CSGHub
+  OPENCSG_HUB_BASE_URL: {{ include "common.endpoint.csghub" . | quote }}
+  OPENCSG_HUB_ACCESS_TOKEN: {{ $apiToken | quote }}
+  {{- else }}
+  ACCOUNTING_API_BASE: {{ .Values.externalUrl | quote }}
+  ACCOUNTING_API_KEY: {{ .Values.hubAPIToken | quote }}
+  ## Web Configuration for CSGHub
+  OPENCSG_HUB_BASE_URL: {{ .Values.externalUrl | quote }}
+  OPENCSG_HUB_ACCESS_TOKEN: {{ .Values.hubAPIToken | quote }}
+  {{- end }}
+
+  ## Web Configuration for OpenAI
+  LANCEDB_URI: "/code/data/lancedb"
+
+  ## Web Configuration for Billing
+  {{- $billingSvc := include "common.service" (dict "service" "billing" "global" .) | fromYaml }}
+  {{- $billingName := include "common.names.custom" (list . $billingSvc.name) }}
+  {{- $billingPort := dig "service" "port" 8080 $billingSvc }}
+  STARSHIP_BILLING_API_BASE: {{ printf "http://%s:%v" $billingName $billingPort | quote }}
+  BILLING_SVC_API_BASE: {{ printf "http://%s:%v" $billingName $billingPort | quote }}
+
+  ## Web Configuration for Agentic
+  {{- $agenticSvc := include "common.service" (dict "service" "agentic" "global" .) | fromYaml }}
+  {{- $agenticName := include "common.names.custom" (list . $agenticSvc.name) }}
+  {{- $agenticPort := dig "service" "port" 8000 $agenticSvc }}
+  AGENTIC_SVC_API_BASE: {{ printf "http://%s:%v" $agenticName $agenticPort | quote }}
+
+  ## Web Configuration for Megalinter Server
+  {{- $megalinterSvc := include "common.service" (dict "service" "megalinter" "global" .) | fromYaml }}
+  {{- $megalinterName := include "common.names.custom" (list . $megalinterSvc.name) }}
+  {{- $megalinterPort := dig "service" "port" 8000 $megalinterSvc }}
+  MEGALINTER_SVC_API_BASE: {{ printf "http://%s:%v" $megalinterName $megalinterPort }}
+
+  ## Web Configuration for Nats
+  {{- if .Values.global.chartContext.isBuiltIn }}
+  {{- $natsConfig := include "common.nats.config" . | fromYaml }}
+  NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
+  {{- else }}
+  {{- with .Values.nats }}
+  NATS_URL: "nats://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}"
+  {{- end }}
+  {{- end }}
+
+  ## Web Configuration for GitLab OAuth
+  {{- if (dig "issuer" "" $service.oauth) }}
+  SYNC_PERMS_GIT_SERVER: {{ $service.oauth.issuer | trimPrefix "https://" | trimPrefix "http://"  }}
+  {{- end }}
+
+  ## Web Configuration for MegaLinter
+  MEGALINTER_SERVER_REDIS_HOST: {{ $redisConfig.host | quote }}
+  MEGALINTER_SERVER_REDIS_PORT: {{ $redisConfig.port | quote }}
+  MEGALINTER_SERVER_REDIS_QUEUE: "megalinter:queue:requests"

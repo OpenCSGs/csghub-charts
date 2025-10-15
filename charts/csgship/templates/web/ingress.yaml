@@ -1,0 +1,85 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
+{{- if $ingressConfig.enabled }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.className | default "nginx" }}
+  {{- if $ingressConfig.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ include "common.domain.web" . }}
+        - {{ include "common.domain.webAPI" . }}
+      secretName: {{ $ingressConfig.tls.secretName }}
+  {{- end }}
+  rules:
+    {{- $frontendSvc := include "common.service" (dict "service" "frontend" "global" .) | fromYaml }}
+    {{- $frontendName := include "common.names.custom" (list . $frontendSvc.name) }}
+    - host: {{ include "common.domain.web" . }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $frontendName }}
+                port:
+                  number: 80
+            {{- else }}
+              serviceName: {{ $frontendName }}
+              servicePort: 80
+            {{- end }}
+    {{- $agenticSvc := include "common.service" (dict "service" "agentic" "global" .) | fromYaml }}
+    {{- $agenticName := include "common.names.custom" (list . $agenticSvc.name) }}
+    - host: {{ include "common.domain.webAPI" . }}
+      http:
+        paths:
+          - path: /agentic
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $agenticName }}
+                port:
+                  number: 8000
+            {{- else }}
+              serviceName: {{ $agenticName }}
+              servicePort: 8000
+            {{- end }}
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: 8000
+            {{- else }}
+              serviceName: {{ $serviceName }}
+              servicePort: 8000
+            {{- end }}
+{{- end }}

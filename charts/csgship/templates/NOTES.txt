@@ -1,0 +1,31 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+✅ CSGShip has been successfully installed!
+
+---
+
+🔗 CSGShip & 🔐 Casdoor Admin Console
+{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . (printf "%s-init" $service.name)) }}
+{{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
+{{- $defaultUser := $service.admin.name | default "root" }}
+{{- $defaultPass := $service.admin.password | default (include "common.randomPassword" $service.name) }}
+{{- $adminPass := "" }}
+{{- with and $existingSecret $existingSecret.data }}
+  {{- $adminPass = index $existingSecret.data "INIT_ADMIN_PASSWORD" | b64dec }}
+{{- end }}
+
+Access your CSGShip and Casdoor instance:
+
+  🌐 CSGShip: {{ include "common.endpoint.web" . }}
+  🔐 Casdoor Admin Console: {{ include "common.endpoint.casdoor" . }}
+  🔑 Credentials: {{ $defaultUser }} / {{ $adminPass | default $defaultPass }}
+
+Retrieve the root/admin password with:
+  kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
+    -o jsonpath='{.data.INIT_ADMIN_USER}' | base64 -d && \
+  echo -n " / " && \
+  kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
+    -o jsonpath='{.data.INIT_ADMIN_PASSWORD}' | base64 -d
