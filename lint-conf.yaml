@@ -62,24 +62,29 @@ rules:
 extends: default
 # Ignore paths
 ignore:
-    - charts/*/charts/ingress-nginx
-    - charts/*/charts/fluentd
-    - charts/*/charts/loki
-    - charts/*/charts/reloader
-    - charts/*/charts/prometheus
-    - charts/*/charts/tempo
-    - charts/*/charts/runner/charts
-    - charts/*/charts/dataflow/charts
-    - charts/*/charts/runner/templates/configmap-lws.yaml
-    - charts/*/charts/runner/templates/configmap-argo.yaml
-    - charts/*/charts/runner/templates/configmap-knative.yaml
-    - charts/*/charts/runner/templates/secret.yaml
-    - charts/csghub/charts/gitlab-shell/templates/configmap.yaml
-    - charts/csghub/templates/casdoor/configmap.yaml
-    - charts/csghub/templates/casdoor/secret.yaml
-    - charts/csghub/charts/csgship/charts/frontend/templates/configmap.yaml
-    - charts/runner/templates/configmap-lws.yaml
-    - charts/runner/templates/configmap-argo.yaml
-    - charts/runner/templates/configmap-knative.yaml
-    - charts/runner/templates/secret.yaml
-    - charts/csghub/tests/casdoor_test.yaml
+  # General charts ignore rules
+  - charts/*/charts/ingress-nginx
+  - charts/*/charts/fluentd
+  - charts/*/charts/loki
+  - charts/*/charts/reloader
+  - charts/*/charts/prometheus
+  - charts/*/charts/tempo
+  - charts/*/charts/*/charts/ingress-nginx
+  - charts/*/charts/*/charts/fluentd
+  - charts/*/charts/*/charts/loki
+  - charts/*/charts/*/charts/reloader
+  - charts/*/charts/*/charts/prometheus
+  - charts/*/charts/*/charts/tempo
+
+  # Casdoor related ignores
+  - charts/*/templates/casdoor/configmap.yaml
+  - charts/*/templates/casdoor/secret.yaml
+  - charts/*/charts/*/templates/casdoor/configmap.yaml
+  - charts/*/charts/*/templates/casdoor/secret.yaml
+  - charts/*/tests/casdoor_test.yaml
+
+  # Runner related ignores
+  - charts/*/charts/runner/templates/configmap-*.yaml
+  - charts/*/charts/runner/templates/secret.yaml
+  - charts/runner/templates/configmap-*.yaml
+  - charts/runner/templates/secret.yaml
