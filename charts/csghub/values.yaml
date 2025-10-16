@@ -390,6 +390,7 @@ postgresql:
     - "csghub_portal"
     - "csghub_dataflow"
     - "csghub_label_studio"
+    - "csghub_csgship"
 
   parameters: {}                             # PostgreSQL runtime parameters
     # max_connections: 400                   # Dynamic parameters (triggers recreate)

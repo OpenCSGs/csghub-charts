@@ -30,7 +30,7 @@ spec:
   completions: 1
   activeDeadlineSeconds: 1200
   backoffLimit: 5
-  ttlSecondsAfterFinished: 600
+  ttlSecondsAfterFinished: 300
   completionMode: "Indexed"
   template:
     metadata:
