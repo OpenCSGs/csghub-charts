@@ -1,6 +1,6 @@
 dependencies:
 - name: common
-  repository: file://charts/common
+  repository: https://charts.opencsg.com/repository/csghub
   version: 0.1.0
 - name: reloader
   repository: file://charts/reloader
@@ -21,13 +21,13 @@ dependencies:
   repository: file://charts/prometheus
   version: 27.37.0
 - name: runner
-  repository: file://charts/runner
-  version: 1.11.0
+  repository: https://charts.opencsg.com/repository/csghub
+  version: 1.11.1
 - name: dataflow
-  repository: file://charts/dataflow
-  version: 1.11.0
+  repository: https://charts.opencsg.com/repository/csghub
+  version: 1.11.1
 - name: csgship
-  repository: file://charts/csgship
+  repository: https://charts.opencsg.com/repository/csghub
   version: 0.4.0
-digest: sha256:d0febc38ed54583b40387ace54365c2d1dfbf64ff148208816c37eb7e9d030ed
-generated: "2025-10-15T17:25:51.412549+08:00"
+digest: sha256:0516c888e26ba5b80daa59c61f694d5fbed514c6da2a06886f3e2a595ed276d4
+generated: "2025-10-16T13:36:39.414187+08:00"

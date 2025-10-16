@@ -20,20 +20,19 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.11.0
+version: 1.11.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "v1.11.0-ce-ee"
+appVersion: "v1.11.0"
 
 # Defined dependencies for subChart
 dependencies:
   - name: common
     version: 0.1.0
-    repository: file://charts/common
-    # repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/repository/csghub
   - name: ingress-nginx
     version: 4.12.7
     repository: file://charts/ingress-nginx

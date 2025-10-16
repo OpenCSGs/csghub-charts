@@ -25,14 +25,13 @@ version: 1.11.0
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "v1.11.0-ce-ee"
+appVersion: "v1.11.0"
 
 # Defined dependencies for subChart
 dependencies:
   - name: common
     version: 0.1.0
-    repository: file://charts/common
-    # repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/repository/csghub
   - name: reloader
     version: 2.1.4
     repository: file://charts/reloader
@@ -58,17 +57,14 @@ dependencies:
     repository: file://charts/prometheus
     condition: prometheus.enabled
   - name: runner
-    version: 1.11.0
-    repository: file://charts/runner
-    # repository: https://charts.opencsg.com/repository/csghub
+    version: 1.11.1
+    repository: https://charts.opencsg.com/repository/csghub
     condition: runner.enabled
   - name: dataflow
-    version: 1.11.0
-    repository: file://charts/dataflow
-    # repository: https://charts.opencsg.com/repository/csghub
+    version: 1.11.1
+    repository: https://charts.opencsg.com/repository/csghub
     condition: dataflow.enabled
   - name: csgship
     version: 0.4.0
-    repository: file://charts/csgship
-    # repository: https://charts.opencsg.com/repository/csgship
+    repository: https://charts.opencsg.com/repository/csghub
     condition: csgship.enabled
