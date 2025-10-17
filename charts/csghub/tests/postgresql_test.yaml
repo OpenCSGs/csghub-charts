@@ -15,7 +15,7 @@ tests:
         documentIndex: 0
   - it: csghub server should use default config if not specified
     templates:
-      - templates/configmap-server.yaml
+      - templates/configmap-core.yaml
     set:
       global.postgresql.enabled: true
     release:
@@ -50,7 +50,7 @@ tests:
         documentIndex: 1
   - it: when using internal postgresql, should render csghub-server config right
     templates:
-      - configmap-server.yaml
+      - configmap-core.yaml
     set:
       global.postgresql.enabled: true
     release:
@@ -77,7 +77,7 @@ tests:
           value: "Etc/UTC"
   - it: when using internal postgresql, should render csghub-portal config right
     templates:
-      - configmap-portal.yaml
+      - configmap-core.yaml
     set:
       global.postgresql.enabled: true
     release:
@@ -151,7 +151,7 @@ tests:
 
   - it: when using external postgresql, should render csghub-server config right
     templates:
-      - configmap-server.yaml
+      - configmap-core.yaml
     set:
       global.postgresql.enabled: false
       global.postgresql.external.host: "postgresql.opencsg-poc.com"

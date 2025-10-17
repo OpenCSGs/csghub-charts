@@ -71,19 +71,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include  "common.names.custom" (list . "casdoor") }}
-            - configMapRef:
-                name: {{ include  "common.names.custom" (list . "server") }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "nats") }}
+                name: {{ include  "common.names.custom" (list . "core") }}
+          {{- with .Values.server.environments }}
           env:
-            - name: OPENCSG_USER_SERVER_PORT
-              value: "8080"
-            - name: OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL
-              value: {{ printf "%s/server/callback" (include "csghub.external.endpoint" .) }}
-            - name: OPENCSG_ACCOUNTING_NATS_URL
-              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
-            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}

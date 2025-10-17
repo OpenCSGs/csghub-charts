@@ -82,32 +82,16 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
+                name: {{ include "common.names.custom" (list . "core") }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if .Values.global.redis.enabled }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "redis") }}
-            {{- end }}
+          {{- with .Values.server.environments }}
           env:
-            {{- if .Values.global.redis.enabled }}
-            - name: STARHUB_SERVER_REDIS_PASSWORD
-              value: "$(REDIS_PASSWD)"
-            {{- end }}
-            - name: STARHUB_SERVER_SPACE_SESSION_SECRET_KEY
-              value: {{ sha256sum .Release.Name | trunc 32 | quote }}
-            - name: OPENCSG_ACCOUNTING_NATS_URL
-              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
-            {{- if eq (include "global.ingress.tls.enabled" .) "true" }}
-            - name: STARHUB_SERVER_ENABLE_HTTPS
-              value: "true"
-            {{- end }}
-            {{- with .Values.server.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-            {{- end }}
+          {{- end }}
           resources:
             {{- if .Values.autoscaling.enabled }}
             requests:
@@ -184,7 +168,7 @@ spec:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "gateway-moderation") }}
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
+                name: {{ include "common.names.custom" (list . "core") }}
           {{- with .Values.server.environments }}
           env:
             {{- range $key, $value := . }}
@@ -227,24 +211,10 @@ spec:
               name: aigateway
               protocol: TCP
           envFrom:
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "nats") }}
-            {{- if .Values.global.redis.enabled }}
-            - secretRef:
-                name: {{ include "common.names.custom" (list . "redis") }}
-            {{- end }}
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "server") }}
-          env:
-            - name: OPENCSG_AIGATEWAY_PORT
-              value: "8084"
-            {{- if .Values.global.redis.enabled }}
-            - name: STARHUB_SERVER_REDIS_PASSWORD
-              value: "$(REDIS_PASSWD)"
-            {{- end }}
-            - name: OPENCSG_ACCOUNTING_NATS_URL
-              value: "nats://$(NATS_USERNAME):$(NATS_PASSWORD)@{{ include "nats.internal.domain" . }}:{{ include "nats.internal.ports.api" . }}"
+                name: {{ include "common.names.custom" (list . "core") }}
           {{- with .Values.server.environments }}
+          env:
             {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
