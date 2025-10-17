@@ -25,8 +25,8 @@ NOTES:
 {{- define "rproxy.service.ip" -}}
 {{- $kubeDNSClusterIP := include "coredns.system.ip" . -}}
 {{- if $kubeDNSClusterIP }}
-  {{- regexReplaceAll "[0-9]+$" $kubeDNSClusterIP "149" -}}
+  {{- regexReplaceAll "[0-9]+$" $kubeDNSClusterIP "177" -}}
 {{- else -}}
-  {{- "10.96.0.150" -}}
+  {{- "10.96.0.177" -}}
 {{- end -}}
 {{- end }}

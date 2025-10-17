@@ -62,8 +62,8 @@ NOTES:
 {{- define "coredns.service.ip" -}}
 {{- $kubeDNSClusterIP := include "coredns.system.ip" . -}}
 {{- if $kubeDNSClusterIP }}
-  {{- regexReplaceAll "[0-9]+$" $kubeDNSClusterIP "166" -}}
+  {{- regexReplaceAll "[0-9]+$" $kubeDNSClusterIP "176" -}}
 {{- else -}}
-  {{- "10.96.0.167" -}}
+  {{- "10.96.0.176" -}}
 {{- end -}}
 {{- end }}
