@@ -37,7 +37,7 @@ dependencies:
   version: 17.5.0
 - name: dataflow
   repository: file://charts/dataflow
-  version: 1.11.0
+  version: 1.11.1
 - name: csgship
   repository: file://charts/csgship
   version: 0.1.9
@@ -55,6 +55,6 @@ dependencies:
   version: 27.37.0
 - name: runner
   repository: file://charts/runner
-  version: 1.11.0
-digest: sha256:ebc22ef31fc4afd1f1ecc258f96b5809b86e20f328f88af2afdd74842ac2a788
-generated: "2025-09-18T23:22:28.100822+08:00"
+  version: 1.11.1
+digest: sha256:d034e2098ea14adc9c18717f08afe1b4afd85d96bab18187cdfb7c6aacc0978e
+generated: "2025-10-17T10:43:25.086205+08:00"

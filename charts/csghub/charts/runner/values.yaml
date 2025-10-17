@@ -6,7 +6,7 @@ global:
     ## Image registry path (without trailing slash)
     # registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
     ## Image tag format: {{ tag }}-{{ edition }} (e.g., v1.8.1-ee)
-    tag: "v1.11.0-ee"
+    tag: "v1.11.1-ee"
     ## Image pull policy
     pullPolicy: "IfNotPresent"
     ## Kubernetes secrets for pulling images from private registry
@@ -124,7 +124,7 @@ image:
   ## Repository name for the runner image
   repository: "opencsghq/csghub-server"
   ## Image tag version
-  # tag: "v1.11.0-ee"
+  # tag: "v1.11.1-ee"
   ## Image pull policy (Always, IfNotPresent, Never)
   pullPolicy: "IfNotPresent"
   ## List of secret names for pulling from private registries
