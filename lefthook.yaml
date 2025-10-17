@@ -2,8 +2,23 @@
 # Save this file in the project root directory and run: lefthook install
 
 pre-commit:
-  parallel: true
+  parallel: false
   commands:
+    build-dependency:
+      glob: "charts/{csghub,runner,dataflow}/**"
+      run: |
+        echo "📦 Building all Helm chart dependencies..."
+        for chart_dir in charts/*/; do
+          if [ -f "${chart_dir}Chart.yaml" ]; then
+            echo "Building dependencies for $(basename "${chart_dir}")"
+            if ! helm dependency build "${chart_dir}"; then
+              echo "❌ Dependency build failed for $(basename "${chart_dir}")"
+              exit 1
+            fi
+          fi
+        done
+        echo "✅ All chart dependencies built successfully"
+
     # Check Helm chart syntax and structure
     ct-lint:
       glob: "charts/{csghub,runner,dataflow}/**"  # Only run when chart files change
@@ -24,7 +39,6 @@ pre-commit:
           exit 1
         fi
         
-        rm -rf charts/*/charts/*.tgz
         echo "✅ All charts passed linting"
 
     # Check Helm template rendering
@@ -38,12 +52,14 @@ pre-commit:
             chart_name=$(basename "${chart_dir}")
             echo "Testing template rendering for ${chart_name}"
         
-            # Test with default values
+            echo "🔧 Testing template rendering for ${chart_name}"
             if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run > /dev/null 2>&1; then
               echo "❌ Template rendering failed for ${chart_name}"
               helm template "test-${chart_name}" "${chart_dir}" --dry-run
               exit 1
             fi
+        
+            echo "✅ ${chart_name} passed template rendering"
           fi
         done
         echo "✅ All charts passed template rendering"
