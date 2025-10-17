@@ -152,6 +152,10 @@ labelStudio:
     # accessModes: ["ReadWriteMany"]         # Volume access permissions
     # size: "100Gi"                          # Disk space allocation
 
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
 #################################################################
 ##  Built-in Third-party Components                            ##
 #################################################################

@@ -530,6 +530,10 @@ gitaly:
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "200Gi"                            # Disk space allocation
 
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
 ## Embedded GitLab Shell configuration
 gitlabShell:
   image:
