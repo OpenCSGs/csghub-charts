@@ -17,6 +17,7 @@ metadata:
 data:
   runtime.conf: |
     include_if_exists = '/var/lib/postgresql/data/postgresql.conf'
+    max_connections = 300
     {{- range $key, $value := $service.parameters -}}
       {{- if and $key $value }}
     {{ printf "%s = %s" $key ($value | toString | squote ) }}
