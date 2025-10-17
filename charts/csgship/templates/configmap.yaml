@@ -21,11 +21,14 @@ data:
   C_FORCE_ROOT: "true"
 
   ## Web Configuration for Casdoor
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
   {{- $app := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
+  {{- $casdoorClientID := dig "CASDOOR_CLIENT_ID" $app.clientId $data }}
+  {{- $casdoorClientSecret := dig "CASDOOR_SECRET_KEY" $app.clientSecret $data }}
   CASDOOR_ENDPOINT: {{ include "common.endpoint.casdoor" . | quote }}
   CASDOOR_REDIRECT_URI_PATH: "/api/v1/account/casdoor/login/callback/"
-  CASDOOR_CLIENT_ID: {{ $app.clientId | quote }}
-  CASDOOR_SECRET_KEY: {{ $app.clientSecret | quote }}
+  CASDOOR_CLIENT_ID: {{ $casdoorClientID | quote }}
+  CASDOOR_SECRET_KEY: {{ $casdoorClientSecret | quote }}
 
   ## Web Configuration for PostgreSQL
   {{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}

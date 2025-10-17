@@ -29,6 +29,10 @@ SET session.csgship_external_endpoint = :'csgship_external_endpoint';
 SET session.oauth_client_id = :'oauth_client_id';
 SET session.oauth_client_secret = :'oauth_client_secret';
 SET session.oauth_issuer = :'oauth_issuer';
+SET session.csghub_client_id = :'csghub_client_id';
+SET session.csghub_client_secret = :'csghub_client_secret';
+SET session.csgship_client_id = :'csgship_client_id';
+SET session.csgship_client_secret = :'csgship_client_secret';
 
 --
 -- Set Default Schema for All Tables
@@ -49,18 +53,22 @@ END $$;
 -- Update RedirectURLs for CSGHub application
 --
 UPDATE application
-SET redirect_uris = json_build_array(
-    rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor'
-)::text
+SET
+    redirect_uris =
+        json_build_array(rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor')::text,
+    client_id = replace(current_setting('session.csghub_client_id', true), '''', ''),
+    client_secret = replace(current_setting('session.csghub_client_secret', true), '''', '')
 WHERE name = 'CSGHub';
 
 --
 -- Update RedirectURLs for CSGShip application
 --
 UPDATE application
-SET redirect_uris = json_build_array(
-    rtrim( replace(current_setting('session.csgship_external_endpoint', true), '''', ''), '/') || '/api/v1/account/casdoor/login/callback'
-)::text
+SET
+    redirect_uris =
+        json_build_array(rtrim( replace(current_setting('session.csgship_external_endpoint', true), '''', ''), '/') || '/api/v1/account/casdoor/login/callback')::text,
+    client_id = replace(current_setting('session.csgship_client_id', true), '''', ''),
+    client_secret = replace(current_setting('session.csgship_client_secret', true), '''', '')
 WHERE name = 'CSGShip';
 
 --

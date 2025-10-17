@@ -4,7 +4,9 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "service" "frontend" "global" .) | fromYaml }}
+{{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $webSvcName := include "common.names.custom" (list . $webSvc.name) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -14,9 +16,11 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $webSvcName).data | default dict }}
   {{- $app := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
+  {{- $casdoorClientID := dig "CASDOOR_CLIENT_ID" $app.clientId $data }}
   {{- $authorize := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
-  {{- $client := printf "client_id=%s" $app.clientId }}
+  {{- $client := printf "client_id=%s" $casdoorClientID }}
   {{- $redirectUri := printf "redirect_uri=%s/api/v1/account/casdoor/login/callback" (include "common.endpoint.webAPI" .) }}
   config.js: |
     window.envConfig = {

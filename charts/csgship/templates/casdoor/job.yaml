@@ -80,9 +80,15 @@ spec:
                   -v oauth_client_id="'$OAUTH_CLIENT_ID'" \
                   -v oauth_client_secret="'$OAUTH_CLIENT_SECRET'" \
                   -v oauth_issuer="'$OAUTH_ISSUER'" \
+                  -v csghub_client_id="''" \
+                  -v csghub_client_secret="''" \
+                  -v csgship_client_id="'$CSGSHIP_CLIENT_ID'" \
+                  -v csgship_client_secret="'$CSGSHIP_CLIENT_SECRET'" \
                   -f $$sql_file;
               done
           envFrom:
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . $webSvc.name) }}
             - secretRef:
                 name: {{ printf "%s-init" $serviceName }}
           env:
@@ -104,6 +110,10 @@ spec:
               value: {{ $webSvc.oauth.clientSecret | quote }}
             - name: OAUTH_ISSUER
               value: {{ $webSvc.oauth.issuer | quote }}
+            - name: CSGSHIP_CLIENT_ID
+              value: "$(CASDOOR_CLIENT_ID)"
+            - name: CSGSHIP_CLIENT_SECRET
+              value: "$(CASDOOR_SECRET_KEY)"
             {{- with $service.environments }}
             {{- range $key, $value := . }}
             - name: {{ $key }}
