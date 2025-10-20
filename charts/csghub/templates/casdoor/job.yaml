@@ -104,13 +104,13 @@ spec:
               value: {{ $pgConfig.database | quote }}
             - name: PGUSER
               value: {{ $pgConfig.user | quote }}
+            - name: PGPASSWORD
+              value: {{ $pgConfig.password | quote }}
             - name: CSGHUB_CLIENT_ID
               value: "$(STARHUB_SERVER_CASDOOR_CLIENT_ID)"
             - name: CSGHUB_CLIENT_SECRET
               value: "$(STARHUB_SERVER_CASDOOR_CLIENT_SECRET)"
             {{- if .Values.csgship.enabled }}
-            - name: PGPASSWORD
-              value: {{ $pgConfig.password | quote }}
             - name: CSGSHIP_EXTERNAL_ENDPOINT
               value: {{ include "common.endpoint.web" . | quote }}
             {{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
