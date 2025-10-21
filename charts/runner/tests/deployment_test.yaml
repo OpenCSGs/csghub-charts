@@ -13,6 +13,7 @@ set:
   image:
     registry: "docker.io"
     repository: "opencsghq/csghub-server"
+    tag: "v1.11.0"
   logcollector:
     enabled: true
     loki:
