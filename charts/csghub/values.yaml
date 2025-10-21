@@ -21,7 +21,7 @@ global:
   ## Image management
   image:
     # registry: ""                  # Custom image registry (overrides local registry)
-    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.12.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -124,7 +124,7 @@ global:
 image:
   registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.11.0"
+  tag: "v1.12.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -222,14 +222,14 @@ server:
 rproxy:
   ## CoreDNS configuration (deprecated from v1.12.0, retained for compatibility)
   coredns:
-    enabled: true                          # Enable or disable CoreDNS
+    enabled: false                         # Enable or disable CoreDNS
     image:
       repository: "coredns/coredns"        # CoreDNS image repository
       tag: "1.11.1"                        # CoreDNS image tag
 
   ## Nginx configuration (deprecated from v1.12.0, retained for compatibility)
   nginx:
-    enabled: true                          # Enable or disable Nginx
+    enabled: false                         # Enable or disable Nginx
     image:
       repository: "nginx"                  # Nginx image repository
       tag: "latest"                        # Nginx image tag
