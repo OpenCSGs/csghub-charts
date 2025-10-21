@@ -7,6 +7,9 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $argoNamespace := include "namespace.argo" . }}
 {{- $spaceNamespace := include "namespace.spaces" . }}
 {{- $registry := or .Values.global.image.registry "quay.io" }}
+{{- if regexMatch "^.*opencsg-registry.*$" $registry }}
+{{- $registry = trimSuffix "/" $registry | printf "%s/opencsghq" }}
+{{- end }}
 {{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap

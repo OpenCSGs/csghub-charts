@@ -16,6 +16,9 @@
 {{- $knativeNamespace := include "namespace.knative" . }}
 {{- $kourierNamespace := include "namespace.kourier" . }}
 {{- $registry := or .Values.global.image.registry "gcr.io" }}
+{{- if regexMatch "^.*opencsg-registry.*$" $registry }}
+{{- $registry = trimSuffix "/" $registry | printf "%s/opencsghq" }}
+{{- end }}
 {{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap

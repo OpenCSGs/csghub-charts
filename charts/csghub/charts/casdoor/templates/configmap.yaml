@@ -36,7 +36,7 @@ data:
     runmode = prod
     copyrequestbody = true
     driverName = postgres
-    dataSourceName = {{ (printf "user=%s password=%s host=%s port=%s sslmode=disable dbname=%s" $pgConfig.user $pgConfig.password $pgConfig.host $pgConfig.port $pgConfig.database) | quote }}
+    dataSourceName = {{ (printf "user=%s password=%s host=%s port=%v sslmode=disable dbname=%s" $pgConfig.user $pgConfig.password $pgConfig.host $pgConfig.port $pgConfig.database) | quote }}
     dbName =
     tableNamePrefix =
     showSql = false

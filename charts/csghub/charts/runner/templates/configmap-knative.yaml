@@ -16,6 +16,9 @@
 {{- $knativeNamespace := include "namespace.knative" . }}
 {{- $kourierNamespace := include "namespace.kourier" . }}
 {{- $registry := or .Values.global.image.registry "gcr.io" }}
+{{- if regexMatch "^.*opencsg-registry.*$" $registry }}
+{{- $registry = trimSuffix "/" $registry | printf "%s/opencsghq" }}
+{{- end }}
 {{- $registryConfig := include "chart.registryConfig" (dict "service" .Values "global" .) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
@@ -13509,7 +13512,7 @@ data:
         knative.dev/example-checksum: "720ddb97"
     data:
       {{- if or .Values.global.registry.enabled .Values.registry.insecure .Values.global.registry.external.insecure }}
-      registries-skipping-tag-resolving: "{{ $registryConfig.registry }}{{ if .Values.global.image.registry }}, {{ .Values.global.image.registry }}{{ end }}"
+      registries-skipping-tag-resolving: "{{ $registryConfig.registry }}{{ if $registry }}, {{ $registry }}{{ end }}"
       {{- end }}
       queue-sidecar-image: {{ printf "%s/knative-releases/knative.dev/serving/cmd/queue:v1.16.1" $registry }}
     ---
@@ -14732,7 +14735,7 @@ data:
               env:
                 - name: DRAIN_TIME_SECONDS
                   value: "15"
-              image: {{ printf "%s/envoyproxy/envoy:v1.31-latest" (or .Values.global.image.registry "docker.io") }}
+              image: {{ printf "%s/envoyproxy/envoy:v1.31-latest" (or $registry "docker.io") }}
               name: kourier-gateway
               ports:
                 - name: http2-external

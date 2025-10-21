@@ -84,7 +84,7 @@ Generate PostgreSQL Database DSN
 {{- $service := .service -}}
 {{- $global := .global -}}
 {{- $config := include "csghub.postgresql.config" (dict "service" $service "global" $global) | fromYaml -}}
-{{- printf "host=%s port=%s user=%s password=%s dbname=%s sslmode=%s" $config.host $config.port $config.user $config.password $config.database $config.sslmode -}}
+{{- printf "host=%s port=%v user=%s password=%s dbname=%s sslmode=%s" $config.host $config.port $config.user $config.password $config.database $config.sslmode -}}
 {{- end }}
 
 {{/*
@@ -94,5 +94,5 @@ Generate PostgreSQL Database URL
 {{- $service := .service -}}
 {{- $global := .global -}}
 {{- $config := include "csghub.postgresql.config" (dict "service" $service "global" $global) | fromYaml -}}
-{{- printf "postgresql://%s:%s@%s:%s/%s?sslmode=%s&timezone=%s" $config.user $config.password $config.host $config.port $config.database $config.sslmode $config.timezone -}}
+{{- printf "postgresql://%s:%s@%s:%v/%s?sslmode=%s&timezone=%s" $config.user $config.password $config.host $config.port $config.database $config.sslmode $config.timezone -}}
 {{- end }}
