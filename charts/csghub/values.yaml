@@ -577,7 +577,7 @@ casdoor:
   image:
     registry: "docker.io"
     repository: "casbin/casdoor"
-    tag: "v1.799.0"                          # Image version tag
+    tag: "v1.929.0"                          # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
