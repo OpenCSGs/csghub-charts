@@ -86,4 +86,7 @@ data:
   OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
   {{- end }}
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
+
+  ## Runner Configuration for kourier network
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: "auto"
 {{- end }}
