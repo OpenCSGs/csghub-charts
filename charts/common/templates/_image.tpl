@@ -107,7 +107,7 @@ Usage: {{ include "common.image.tag" (dict "tag" "v1.8.0" "context" .) }}
 {{- define "common.image.tag" -}}
 {{- $tag := .tag -}}
 {{- $edition := (.context.Values.global.edition | default "ee") -}}
-{{- if and (or (eq $edition "ce") (eq $edition "ee")) (not (regexMatch "(-ce|-ee)$" $tag)) -}}
+{{- if and (regexMatch "^v[0-9]+\\.[0-9]+\\.[0-9]+$" $tag) (or (eq $edition "ce") (eq $edition "ee")) (not (regexMatch "(-ce|-ee)$" $tag)) -}}
   {{- printf "%s-%s" $tag $edition -}}
 {{- else -}}
   {{- $tag -}}
