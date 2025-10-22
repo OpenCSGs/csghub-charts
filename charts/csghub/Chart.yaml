@@ -30,7 +30,7 @@ appVersion: v1.12.0
 # Defined dependencies for subChart
 dependencies:
   - name: common
-    version: 0.1.0
+    version: 0.1.1
     repository: https://charts.opencsg.com/repository/csghub
   - name: reloader
     version: 2.1.4
