@@ -4,7 +4,7 @@ templates:
   - csghub/rproxy/nginx/configmap.yaml
   - csghub/rproxy/service.yaml
   - csghub/rproxy/deployment.yaml
-  - csghub/rproxy/deployment-coredns.yaml
+  - csghub/rproxy/coredns/deployment.yaml
 release:
   name: csghub
   namespace: csghub
@@ -231,7 +231,7 @@ tests:
           value: "ghcr.io/nginx:latest"
 
   - it: Should render deployment with global correctly
-    template: csghub/rproxy/deployment-coredns.yaml
+    template: csghub/rproxy/coredns/deployment.yaml
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
@@ -275,7 +275,7 @@ tests:
           value: "ssd"
 
   - it: Should render deployment with global correctly
-    template: csghub/rproxy/deployment-coredns.yaml
+    template: csghub/rproxy/coredns/deployment.yaml
     set:
       global:
         image:
