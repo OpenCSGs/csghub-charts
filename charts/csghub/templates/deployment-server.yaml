@@ -93,7 +93,7 @@ spec:
             - |
               until nc -z {{ include "nats.internal.domain" . }} {{ include "nats.internal.ports.api" . }};
               do
-                cho 'Wait for nats to be ready';
+                echo 'Wait for nats to be ready';
                 sleep 2;
               done
         - name: wait-for-temporal
@@ -105,7 +105,7 @@ spec:
             - |
               until nc -z {{ include "temporal.internal.domain" . }} {{ include "temporal.internal.port" . }};
               do
-                cho 'Wait for temporal to be ready';
+                echo 'Wait for temporal to be ready';
                 sleep 2;
               done
       containers:
