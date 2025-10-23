@@ -388,6 +388,9 @@ gateway: {}
 ## Mirror configuration
 mirror: {}
 
+## temporalWorker configuration
+temporalWorker: {}
+
 ## Notification configuration
 notification:
   ## Set timezone
