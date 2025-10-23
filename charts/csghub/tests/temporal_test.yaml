@@ -1,6 +1,6 @@
 suite: Test Temporal Resources
 templates:
-  - temporal/ingress.yaml
+  - temporal/configmap.yaml
   - temporal/secret.yaml
   - temporal/service.yaml
   - temporal/deployment.yaml
@@ -55,8 +55,8 @@ set:
 tests:
   - it: Should render all resources correctly
     templates:
+      - temporal/configmap.yaml
       - temporal/secret.yaml
-      - temporal/ingress.yaml
       - temporal/service.yaml
       - temporal/deployment.yaml
     asserts:
@@ -67,36 +67,36 @@ tests:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "temporal"
 
-  - it: Should render ingress correctly
-    template: temporal/ingress.yaml
-    asserts:
-      - contains:
-          path: spec.tls[0].hosts
-          content: "temporal.example.cn"
-      - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls"
-      - equal:
-          path: spec.rules[0].host
-          value: "temporal.example.cn"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
-          value: "csghub-temporal"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.port.number
-          value: 8081
-
-  - it: Should render ingress correctly with console enabled
-    template: temporal/ingress.yaml
-    set:
-      temporal:
-        ingress:
-          tls:
-            secretName: "example-cn-tls-local"
+  - it: Should render configmap correctly
+    template: temporal/configmap.yaml
     asserts:
       - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls-local"
+          path: data.TEMPORAL_UI_ENABLED
+          value: "true"
+      - equal:
+          path: data.TEMPORAL_ADDRESS
+          value: "csghub-temporal:7234"
+      - equal:
+          path: data.TEMPORAL_UI_PUBLIC_PATH
+          value: "/-/temporal"
+      - equal:
+          path: data.TEMPORAL_AUTH_ENABLED
+          value: "true"
+      - equal:
+          path: data.TEMPORAL_AUTH_TYPE
+          value: "oidc"
+      - equal:
+          path: data.TEMPORAL_AUTH_PROVIDER_URL
+          value: "https://casdoor.example.cn"
+      - equal:
+          path: data.TEMPORAL_AUTH_ISSUER_URL
+          value: "https://casdoor.example.cn"
+      - equal:
+          path: data.TEMPORAL_AUTH_CALLBACK_URL
+          value: "https://csghub.example.cn/-/temporal/auth/sso/callback"
+      - equal:
+          path: data.TEMPORAL_AUTH_SCOPES
+          value: "openid,email,profile"
 
   - it: Should render secret correctly
     template: temporal/secret.yaml
@@ -288,18 +288,6 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
-      - equal:
-          path: spec.template.spec.containers[1].env[0].name
-          value: "TEMPORAL_ADDRESS"
-      - equal:
-          path: spec.template.spec.containers[1].env[0].value
-          value: "csghub-temporal:7234"
-      - equal:
-          path: spec.template.spec.containers[1].env[1].name
-          value: "TEMPORAL_CORS_ORIGINS"
-      - equal:
-          path: spec.template.spec.containers[1].env[1].value
-          value: "https://temporal.example.cn"
 
   - it: Should render deployment with local correctly
     template: temporal/deployment.yaml

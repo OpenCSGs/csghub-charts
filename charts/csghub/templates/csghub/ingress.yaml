@@ -7,6 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $runnerSvc := include "common.service" (dict "service" "runner" "global" .) | fromYaml }}
 {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
 {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
+{{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
@@ -15,6 +16,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $rproxySvcPort := dig "service" "port" 8083 $rproxySvc }}
 {{- $serverSvcName := include "common.names.custom" (list . $serverSvc.name) }}
 {{- $serverSvcPort := dig "service" "port" 8080 $serverSvc }}
+{{- $temporalSvcName := include "common.names.custom" (list . $temporalSvc.name) }}
+{{- $temporalSvcPort := dig "console" "service" "port" "8080" $service }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -33,8 +36,9 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "32k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "16"
     nginx.ingress.kubernetes.io/client-header-timeout: "900"
     nginx.ingress.kubernetes.io/client-body-timeout: "900"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
@@ -135,6 +139,20 @@ spec:
             {{- else }}
               serviceName: {{ include "common.names.custom" (list . "docs") }}
               servicePort: {{ $service.docs.port }}
+            {{- end }}
+          {{- end }}
+          {{- if $temporalSvc.console.enabled }}
+          - path: /-/temporal
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $temporalSvcName }}
+                port:
+                  number: {{ $temporalSvcPort }}
+            {{- else }}
+              serviceName: {{ $temporalSvcName }}
+              servicePort: {{ $temporalSvcPort }}
             {{- end }}
           {{- end }}
     {{- if $runnerSvc.usePublicDomain }}

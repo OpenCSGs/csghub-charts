@@ -431,6 +431,237 @@ data:
         },
         {
           "owner": "admin",
+          "name": "Admin",
+          "displayName": "Admin",
+          "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
+          "homepageUrl": {{ include "common.endpoint.csghub" . | quote }},
+          "organization": "OpenCSG",
+          "cert": "csghub-cert",
+          "enablePassword": true,
+          "enableSignUp": false,
+          "enableSigninSession": false,
+          "enableAutoSignin": false,
+          "enableCodeSignin": false,
+          "enableSamlCompress": false,
+          "enableSamlC14n10": false,
+          "enableSamlPostBinding": false,
+          "enableWebAuthn": false,
+          "enableLinkWithEmail": true,
+          "orgChoiceMode": "Select",
+          "samlReplyUrl": "",
+          "tags": [
+            "is_admin"
+          ],
+          {{- $appAdmin := include "csghub.casdoor.client" "Admin" | fromYaml }}
+          "clientId": {{ $appAdmin.clientId | quote }},
+          "clientSecret": {{ $appAdmin.clientSecret | quote }},
+          "providers": [
+            {
+              "owner": "",
+              "name": "Captcha_Provider",
+              "canSignUp": true,
+              "canSignIn": true,
+              "canUnlink": true,
+              "prompted": false,
+              "rule": "None"
+            }
+          ],
+          "signinMethods": [
+            {
+              "name": "Password",
+              "displayName": "Password",
+              "rule": "All"
+            }
+          ],
+          "signupItems": [
+            {
+              "name": "ID",
+              "visible": false,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "Random"
+            },
+            {
+              "name": "Username",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Display name",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Password",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Confirm password",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            },
+            {
+              "name": "Email",
+              "visible": true,
+              "required": true,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "No verification"
+            },
+            {
+              "name": "Agreement",
+              "visible": false,
+              "required": false,
+              "prompted": false,
+              "label": "",
+              "placeholder": "",
+              "regex": "",
+              "rule": "None"
+            }
+          ],
+          "signinItems": [
+            {
+              "name": "Back button",
+              "visible": false,
+              "label": "\n\u003cstyle\u003e\n  .back-button {\n      top: 65px;\n      left: 15px;\n      position: absolute;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Languages",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-languages {\n      top: 55px;\n      right: 5px;\n      position: absolute;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Logo",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-logo-box {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Signin methods",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .signin-methods {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Username",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-username {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Password",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-password {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Agreement",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-agreement {\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Forgot password?",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-forget-password {\n    display: inline-flex;\n    justify-content: space-between;\n    width: 320px;\n    margin-bottom: 25px;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Login button",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-button-box {\n    margin-bottom: 5px;\n  }\n  .login-button {\n    width: 100%;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Signup link",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .login-signup-link {\n    margin-bottom: 24px;\n    display: flex;\n    justify-content: end;\n}\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "None",
+              "isCustom": false
+            },
+            {
+              "name": "Providers",
+              "visible": true,
+              "label": "\n\u003cstyle\u003e\n  .provider-img {\n      width: 30px;\n      margin: 5px;\n  }\n  .provider-big-img {\n      margin-bottom: 10px;\n  }\n\u003c/style\u003e\n",
+              "placeholder": "",
+              "rule": "small",
+              "isCustom": false
+            }
+          ],
+          "grantTypes": [
+            "authorization_code",
+            "id_token"
+          ],
+          "redirectUris": [
+            "{{ include "common.endpoint.csghub" . }}/api/v1/callback/casdoor"
+          ],
+          "tokenFormat": "JWT",
+          "tokenFields": [],
+          "expireInHours": 168,
+          "refreshExpireInHours": 168,
+          "themeData": {
+            "themeType": "lark",
+            "colorPrimary": "#1C8B7F",
+            "borderRadius": 6,
+            "isCompact": false,
+            "isEnabled": true
+          },
+          "footerHtml": "<C2><A9>2025 OpenCSG. All rights reserved.",
+          "formCSS": "",
+          "formOffset": 2,
+          "formSideHtml": "<style>  .left-model{    text-align: center;    padding: 60px;    background-image: url('https://cdn.jsdelivr.net/gh/OpenCSGs/images/background.png');    background-size: cover;    background-position: center;    position: absolute;    transform: none;    width: 100%;    height: 100%;  }  .side-logo {    display: flex;    align-items: center;  }  .side-logo span {    font-family: Montserrat, sans-serif;    font-weight: 900;    font-size: 2.4rem;    line-height: 1.3;    margin-left: 16px;    color: #404040;  }  .img{    max-width: none;    margin: 41px 0 13px;  }</style><div class='left-model'>  <span class='side-logo'> <img src='' alt='' style='width: 120px'>   </span>  <div class='img'>    <img src='' alt='' style='width: 120px'/>  </div></div>",
+          "failedSigninLimit": 5,
+          "failedSigninFrozenTime": 15
+        },
+        {
+          "owner": "admin",
           "name": "CSGShip",
           "displayName": "CSGShip",
           "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
@@ -438,7 +669,7 @@ data:
           "organization": "OpenCSG",
           "cert": "csgship-cert",
           "enablePassword": true,
-          "enableSignUp": true,
+          "enableSignUp": false,
           "enableSigninSession": false,
           "enableAutoSignin": false,
           "enableCodeSignin": false,
@@ -730,7 +961,8 @@ data:
           "type": "normal-user",
           "avatar": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/robot.png",
           "isAdmin": true,
-          "signupApplication": "CSGHub"
+          "signupApplication": "CSGHub",
+          "tag": "is_admin"
         }
       ],
       "providers": [

@@ -80,6 +80,8 @@ spec:
                   -v oauth_issuer="'$OAUTH_ISSUER'" \
                   -v csghub_client_id="'$CSGHUB_CLIENT_ID'" \
                   -v csghub_client_secret="'$CSGHUB_CLIENT_SECRET'" \
+                  -v admin_client_id="'$ADMIN_CLIENT_ID'" \
+                  -v admin_client_secret="'$ADMIN_CLIENT_SECRET'" \
                   -v csgship_client_id="'$CSGSHIP_CLIENT_ID'" \
                   -v csgship_client_secret="'$CSGSHIP_CLIENT_SECRET'" \
                   -f $$sql_file;
@@ -87,6 +89,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
+            {{- if .Values.temporal.console.enabled }}
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "temporal") }}
+            {{- end }}
             {{- if .Values.csgship.enabled }}
             - configMapRef:
                 name: {{ .Values.csgship.configmap | default (include "common.names.custom" (list . "csgship")) }}
@@ -110,6 +116,12 @@ spec:
               value: "$(STARHUB_SERVER_CASDOOR_CLIENT_ID)"
             - name: CSGHUB_CLIENT_SECRET
               value: "$(STARHUB_SERVER_CASDOOR_CLIENT_SECRET)"
+            {{- if .Values.temporal.console.enabled }}
+            - name: ADMIN_CLIENT_ID
+              value: "$(TEMPORAL_AUTH_CLIENT_ID)"
+            - name: ADMIN_CLIENT_SECRET
+              value: "$(TEMPORAL_AUTH_CLIENT_SECRET)"
+            {{- end }}
             {{- if .Values.csgship.enabled }}
             - name: CSGSHIP_EXTERNAL_ENDPOINT
               value: {{ include "common.endpoint.web" . | quote }}

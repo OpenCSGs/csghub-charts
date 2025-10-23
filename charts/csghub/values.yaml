@@ -620,7 +620,7 @@ temporal:
     protocol: "TCP"                          # Network protocol
 
   console:
-    enabled: false                           # Enable console UI
+    enabled: true                            # Enable console UI
     image:
       repository: "temporalio/ui"            # Console UI image repository
       tag: "2.30.3"                          # Console UI image tag
@@ -680,6 +680,7 @@ ingress-nginx:
     config:
       annotations-risk-level: "Critical"   # Risk level for annotations
       custom-http-errors: "404,500,502,503" # Custom HTTP error codes
+      large-client-header-buffers: "8 32k"
 
     allowSnippetAnnotations: true          # Allow server snippets in annotations
 

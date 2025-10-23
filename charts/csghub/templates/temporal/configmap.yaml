@@ -1,0 +1,35 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
+{{- if $service.console.enabled }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  TEMPORAL_UI_ENABLED: "true"
+  TEMPORAL_ADDRESS: {{ printf "%s:%v" $serviceName $service.service.port | quote }}
+  TEMPORAL_CORS_ORIGINS: {{ include "common.endpoint.csghub" . | quote }}
+  TEMPORAL_CSRF_COOKIE_INSECURE: "true"
+  TEMPORAL_UI_PUBLIC_PATH: "/-/temporal"
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace (include "common.names.custom" (list . "core"))).data | default dict }}
+  {{- $app := include "csghub.casdoor.client" "Admin" | fromYaml }}
+  {{- $casdoorClientID := dig "TEMPORAL_AUTH_CLIENT_ID" $app.clientId $data }}
+  {{- $casdoorClientSecret := dig "TEMPORAL_AUTH_CLIENT_SECRET" $app.clientSecret $data }}
+  TEMPORAL_AUTH_ENABLED: "true"
+  TEMPORAL_AUTH_TYPE: "oidc"
+  TEMPORAL_AUTH_PROVIDER_URL: {{ include "common.endpoint.casdoor" . | quote }}
+  TEMPORAL_AUTH_ISSUER_URL: {{ include "common.endpoint.casdoor" . | quote }}
+  TEMPORAL_AUTH_CLIENT_ID: {{ $casdoorClientID | quote }}
+  TEMPORAL_AUTH_CLIENT_SECRET: {{ $casdoorClientSecret | quote }}
+  TEMPORAL_AUTH_CALLBACK_URL: {{ printf "%s/-/temporal/auth/sso/callback" (include "common.endpoint.csghub" .) | quote }}
+  TEMPORAL_AUTH_SCOPES: "openid,email,profile"
+{{- end }}

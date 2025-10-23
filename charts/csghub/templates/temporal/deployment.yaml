@@ -122,19 +122,16 @@ spec:
             - containerPort: 8080
               name: "console"
               protocol: {{ dig "console" "service" "protocol" "TCP" $service }}
+          envFrom:
+            - configMapRef:
+                name: {{ $serviceName }}
+          {{- with $service.environments }}
           env:
-            - name: TEMPORAL_ADDRESS
-              value: {{ printf "%s:%s" $serviceName ($service.service.port | toString) }}
-            - name: TEMPORAL_CORS_ORIGINS
-              value: {{ include "common.endpoint.temporal" . | quote }}
-            - name: TEMPORAL_CSRF_COOKIE_INSECURE
-              value: "true"
-            {{- with $service.environments }}
-            {{- range $key, $value := . }}
+          {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
-            {{- end }}
-            {{- end }}
+          {{- end }}
+          {{- end }}
           {{- if $service.resources }}
           resources:
             {{- toYaml $service.resources | nindent 12 }}

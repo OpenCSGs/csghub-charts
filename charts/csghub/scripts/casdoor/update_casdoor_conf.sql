@@ -31,6 +31,8 @@ SET session.oauth_client_secret = :'oauth_client_secret';
 SET session.oauth_issuer = :'oauth_issuer';
 SET session.csghub_client_id = :'csghub_client_id';
 SET session.csghub_client_secret = :'csghub_client_secret';
+SET session.admin_client_id = :'admin_client_id';
+SET session.admin_client_secret = :'admin_client_secret';
 SET session.csgship_client_id = :'csgship_client_id';
 SET session.csgship_client_secret = :'csgship_client_secret';
 
@@ -55,10 +57,25 @@ END $$;
 UPDATE application
 SET
     redirect_uris =
-        json_build_array(rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor')::text,
+        json_build_array(
+            rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor'
+        )::text,
     client_id = replace(current_setting('session.csghub_client_id', true), '''', ''),
     client_secret = replace(current_setting('session.csghub_client_secret', true), '''', '')
 WHERE name = 'CSGHub';
+
+--
+-- Update RedirectURLs for Admin application
+--
+UPDATE application
+SET
+    redirect_uris =
+        json_build_array(
+            rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/-/temporal/auth/sso/callback'
+        )::text,
+    client_id = replace(current_setting('session.admin_client_id', true), '''', ''),
+    client_secret = replace(current_setting('session.admin_client_secret', true), '''', '')
+WHERE name = 'Admin';
 
 --
 -- Update RedirectURLs for CSGShip application
