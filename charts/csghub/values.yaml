@@ -361,6 +361,9 @@ dataviewer: {}
 ## Mirror service configuration
 mirror: {}
 
+## temporalWorker configuration
+temporalWorker: {}
+
 #################################################################
 ##  Built-in Third-party Components                            ##
 #################################################################
