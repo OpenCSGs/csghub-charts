@@ -1,0 +1,54 @@
+suite: Test External Infra Resources
+templates:
+  - dataflow/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    postgresql:
+      enabled: false
+      external:
+        host: "10.6.0.10"
+        port: 6432
+        user: "postgres"
+        password: "Postgres2025"
+        sslmode: "prefer"
+    redis:
+      enabled: false
+      external:
+        host: "10.6.0.11"
+        port: 6380
+        password: "Redis2025"
+    mongo:
+      enabled: false
+      external:
+        host: "10.6.0.12"
+        port: 27018
+        user: "mongo"
+        password: "Mongo2025"
+tests:
+  - it: Should render configmap for external correctly
+    template: dataflow/configmap.yaml
+    asserts:
+      - equal:
+          path: data["DATABASE_HOSTNAME"]
+          value: "10.6.0.10"
+      - equal:
+          path: data["DATABASE_PORT"]
+          value: "6432"
+      - equal:
+          path: data["DATABASE_DB"]
+          value: "csghub_dataflow"
+      - equal:
+          path: data["DATABASE_USERNAME"]
+          value: "postgres"
+      - equal:
+          path: data["DATABASE_PASSWORD"]
+          value: "Postgres2025"
+      - equal:
+          path: data["REDIS_HOST_URL"]
+          value: "redis://10.6.0.11:6380"
+      - equal:
+          path: data["MONG_HOST_URL"]
+          value: "mongodb://mongo:Mongo2025@10.6.0.12:27018"

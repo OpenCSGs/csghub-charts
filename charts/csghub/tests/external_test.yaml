@@ -1,0 +1,165 @@
+suite: Test External Infra Resources
+templates:
+  - casdoor/configmap.yaml
+  - csghub/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    postgresql:
+      enabled: false
+      external:
+        host: "10.6.0.10"
+        port: 6432
+        user: "postgres"
+        password: "Postgres2025"
+        sslmode: "prefer"
+    redis:
+      enabled: false
+      external:
+        host: "10.6.0.11"
+        port: 6380
+        password: "Redis2025"
+    mongo:
+      enabled: false
+      external:
+        host: "10.6.0.12"
+        port: 27018
+        user: "mongo"
+        password: "Mongo2025"
+    objectStore:
+      enabled: false
+      external:
+        endpoint: "s3.io"
+        accessKey: "s3"
+        secretKey: "s32025"
+        region: "cn-east-1"
+        secure: "true"
+        pathStyle: "true"
+    registry:
+      enabled: false
+      external:
+        registry: "registry.io"
+        repository: "opencsg"
+        username: "registry"
+        password: "Registry2025"
+        insecure: "false"
+    gitaly:
+      enabled: false
+      external:
+        host: "10.6.0.13"
+        port: "8076"
+        token: "Gitaly2025"
+        storage: "gitaly"
+    dataflow:
+      enabled: false
+      external:
+        host: "10.6.0.14"
+        port: 8080
+tests:
+  - it: Should render casdoor configmap correctly
+    template: casdoor/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "dataSourceName = \"postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_casdoor\\?sslmode=prefer\""
+
+  - it: Should render csghub configmap for portal correctly
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: data["CSGHUB_PORTAL_DATABASE_DSN"]
+          value: "postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_portal?sslmode=prefer"
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_ENDPOINT"]
+          value: "s3.io"
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_ACCESS_KEY_ID"]
+          value: "s3"
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET"]
+          value: "s32025"
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_BUCKET"]
+          value: "csghub-portal-public"
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_REGION"]
+          value: "cn-east-1"
+      - equal:
+          path: data["CSGHUB_PORTAL_S3_ENABLE_SSL"]
+          value: "true"
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT"]
+          value: "s3.io"
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID"]
+          value: "s3"
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET"]
+          value: "s32025"
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_BUCKET"]
+          value: "csghub-portal"
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_REGION"]
+          value: "cn-east-1"
+      - equal:
+          path: data["CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL"]
+          value: "true"
+      - equal:
+          path: data["CSGHUB_PORTAL_REDIS_ADDR"]
+          value: "10.6.0.11:6380"
+
+  - it: Should render csghub configmap for dataflow correctly
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: data["OPENCSG_DATAFLOW_SERVER_HOST"]
+          value: "http://10.6.0.14"
+      - equal:
+          path: data["OPENCSG_DATAFLOW_SERVER_PORT"]
+          value: "8080"
+
+  - it: Should render csghub configmap for server correctly
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: data["STARHUB_SERVER_REDIS_ENDPOINT"]
+          value: "10.6.0.11:6380"
+      - equal:
+          path: data["STARHUB_DATABASE_DSN"]
+          value: "postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_server?sslmode=prefer"
+      - equal:
+          path: data["STARHUB_SERVER_S3_ENDPOINT"]
+          value: "s3.io"
+      - equal:
+          path: data["STARHUB_SERVER_S3_ACCESS_KEY_ID"]
+          value: "s3"
+      - equal:
+          path: data["STARHUB_SERVER_S3_ACCESS_KEY_SECRET"]
+          value: "s32025"
+      - equal:
+          path: data["STARHUB_SERVER_S3_BUCKET"]
+          value: "csghub-server"
+      - equal:
+          path: data["STARHUB_SERVER_S3_REGION"]
+          value: "cn-east-1"
+      - equal:
+          path: data["STARHUB_SERVER_S3_ENABLE_SSL"]
+          value: "true"
+      - equal:
+          path: data["STARHUB_SERVER_S3_BUCKET_LOOKUP"]
+          value: "path"
+      - equal:
+          path: data["STARHUB_SERVER_GITSERVER_TYPE"]
+          value: "gitaly"
+      - equal:
+          path: data["STARHUB_SERVER_GITALY_SERVER_SOCKET"]
+          value: "tcp://10.6.0.13:8076"
+      - equal:
+          path: data["STARHUB_SERVER_GITALY_TOKEN"]
+          value: "Gitaly2025"
+      - equal:
+          path: data["STARHUB_SERVER_GITALY_STORAGE"]
+          value: "gitaly"
