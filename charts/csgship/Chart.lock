@@ -1,12 +1,12 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/repository/csghub
-  version: 0.1.1
+  version: 0.1.2
 - name: reloader
   repository: file://charts/reloader
   version: 2.1.4
 - name: ingress-nginx
   repository: file://charts/ingress-nginx
   version: 4.12.7
-digest: sha256:ae4e44222e27acf2acab297045a2e4ceca67e72ca6089030d3a37e427088bceb
-generated: "2025-10-22T14:16:47.884491+08:00"
+digest: sha256:bdfbc339847ca5d48ba03778289924904d10de8b8c45cd0d02c7315a0862696e
+generated: "2025-10-25T23:58:28.39718+08:00"
