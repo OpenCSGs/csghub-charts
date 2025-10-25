@@ -45,9 +45,6 @@ set:
         tag: "2.30.4"
       service:
         port: 8081
-      auth:
-        user: "testUser"
-        password: "testPassword"
     ingress:
       enabled: true
     postgresql:
@@ -137,18 +134,6 @@ tests:
           decodeBase64: true
           path: data.DEFAULT_NAMESPACE_RETENTION
           value: "7d"
-      - equal:
-          decodeBase64: true
-          path: data.TEMPORAL_USERNAME
-          value: "testUser"
-      - equal:
-          decodeBase64: true
-          path: data.TEMPORAL_PASSWORD
-          value: "testPassword"
-      - matchRegex:
-          decodeBase64: true
-          path: data.auth
-          pattern: ".{60}"
 
   - it: Should render secret correctly
     template: temporal/secret.yaml

@@ -624,9 +624,6 @@ temporal:
     image:
       repository: "temporalio/ui"            # Console UI image repository
       tag: "2.30.3"                          # Console UI image tag
-    auth:
-      user: "temporal"                       # Console authentication user
-      password: ""                           # Console authentication password
     service:
       port: 8080                             # Console service port
       protocol: "TCP"                        # Network protocol

@@ -6,7 +6,7 @@ APP VERSION: {{ .Chart.AppVersion }}
 
 ---
 
-🔗 CSGHub & 🔐 Casdoor Admin Console
+🔗 CSGHub & 🔐 Casdoor & 🕓 Temporal Admin Console
 {{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . (printf "%s-init" $service.name)) }}
 {{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
@@ -17,10 +17,13 @@ APP VERSION: {{ .Chart.AppVersion }}
   {{- $adminPass = index $existingSecret.data "INIT_ADMIN_PASSWORD" | b64dec }}
 {{- end }}
 
-Access your CSGHub and Casdoor instance:
+Access your CSGHub or Casdoor or Temporal instance:
 
   🌐 CSGHub: {{ include "common.endpoint.csghub" . }}
   🔐 Casdoor Admin Console: {{ include "common.endpoint.casdoor" . }}
+  {{- if .Values.temporal.console.enabled }}
+  🕓 Temporal Admin Console: {{ printf "%s/-/temporal" (include "common.endpoint.csghub" .) }}
+  {{- end }}
   🔑 Credentials: {{ $defaultUser }} / {{ $adminPass | default $defaultPass }}
 
 Retrieve the root/admin password with:
@@ -29,21 +32,6 @@ Retrieve the root/admin password with:
   echo -n " / " && \
   kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
     -o jsonpath='{.data.INIT_ADMIN_PASSWORD}' | base64 -d
-
-{{- if .Values.temporal.console.enabled }}
-{{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
-{{- $temporalName := include "common.names.custom" (list . $temporalSvc.name) }}
----
-
-🕓 Temporal Console
-Address: {{ include "common.endpoint.temporal" . }}
-Credentials:
-  kubectl get secret -n {{ .Release.Namespace }} {{ $temporalName }} \
-    -o jsonpath='{.data.TEMPORAL_USERNAME}' | base64 -d && \
-  echo -n " / " && \
-  kubectl get secret -n {{ .Release.Namespace }} {{ $temporalName }} \
-    -o jsonpath='{.data.TEMPORAL_PASSWORD}' | base64 -d
-{{- end }}
 
 {{- if .Values.global.objectStore.enabled }}
 {{- $minioSvc := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
