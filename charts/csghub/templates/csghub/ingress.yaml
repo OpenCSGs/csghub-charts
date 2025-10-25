@@ -8,6 +8,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
 {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
 {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
+{{- $registrySvc := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
@@ -17,7 +18,9 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $serverSvcName := include "common.names.custom" (list . $serverSvc.name) }}
 {{- $serverSvcPort := dig "service" "port" 8080 $serverSvc }}
 {{- $temporalSvcName := include "common.names.custom" (list . $temporalSvc.name) }}
-{{- $temporalSvcPort := dig "console" "service" "port" "8080" $service }}
+{{- $temporalSvcPort := dig "console" "service" "port" "8080" $temporalSvc }}
+{{- $registrySvcName := include "common.names.custom" (list . $registrySvc.name) }}
+{{- $registrySvcPort := dig "console" "service" "port" "5000" $registrySvc }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -153,6 +156,20 @@ spec:
             {{- else }}
               serviceName: {{ $temporalSvcName }}
               servicePort: {{ $temporalSvcPort }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.global.registry.enabled }}
+          - path: /v2
+            pathType: Prefix
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $registrySvcName }}
+                port:
+                  number: {{ $registrySvcPort }}
+            {{- else }}
+              serviceName: {{ $registrySvcName }}
+              servicePort: {{ $registrySvcPort }}
             {{- end }}
           {{- end }}
     {{- if $runnerSvc.usePublicDomain }}

@@ -51,7 +51,7 @@ Credentials:
 {{- if .Values.global.registry.enabled }}
 {{- $registrySvc := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
 {{- $registryName := include "common.names.custom" (list . $registrySvc.name) }}
-{{- $endpointRegistry := include "common.endpoint.registry" . | trimPrefix "http://" | trimPrefix "https://" }}
+{{- $endpointRegistry := include "common.endpoint.csghub" . | trimPrefix "http://" | trimPrefix "https://" }}
 ---
 
 📦 Distribution Registry

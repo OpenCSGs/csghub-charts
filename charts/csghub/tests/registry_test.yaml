@@ -1,7 +1,6 @@
 suite: Test Registry Resources
 templates:
   - registry/configmap.yaml
-  - registry/ingress.yaml
   - registry/secret.yaml
   - registry/service.yaml
   - registry/deployment.yaml
@@ -49,7 +48,6 @@ tests:
   - it: Should render all resources correctly
     templates:
       - registry/configmap.yaml
-      - registry/ingress.yaml
       - registry/secret.yaml
       - registry/service.yaml
       - registry/deployment.yaml
@@ -144,25 +142,6 @@ tests:
       - equal:
           path: data.REGISTRY_STORAGE_S3_FORCEPATHSTYLE
           value: "true"
-
-  - it: Should render ingress correctly
-    template: registry/ingress.yaml
-    asserts:
-      - contains:
-          path: spec.tls[0].hosts
-          content: "registry.example.cn"
-      - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls"
-      - equal:
-          path: spec.rules[0].host
-          value: "registry.example.cn"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
-          value: "csghub-registry"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.port.number
-          value: 5001
 
   - it: Should render secret correctly
     template: registry/secret.yaml

@@ -85,7 +85,7 @@ tests:
           value: "spaces.app.internal"
       - equal:
           path: data.STARHUB_SERVER_DOCKER_REG_BASE
-          value: "registry.example.com/csghub/"
+          value: "csghub.example.com/csghub/"
       - equal:
           path: data.STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET
           value: "csghub-docker-credential"
