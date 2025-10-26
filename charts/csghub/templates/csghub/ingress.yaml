@@ -9,6 +9,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
 {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
 {{- $registrySvc := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
+{{- $labelStudioSvc := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
@@ -21,6 +22,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $temporalSvcPort := dig "console" "service" "port" "8080" $temporalSvc }}
 {{- $registrySvcName := include "common.names.custom" (list . $registrySvc.name) }}
 {{- $registrySvcPort := dig "console" "service" "port" "5000" $registrySvc }}
+{{- $labelStudioSvcName := include "common.names.custom" (list . $labelStudioSvc.name) }}
+{{- $labelStudioSvcPort := dig "console" "service" "port" "8002" $labelStudioSvc }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -67,6 +70,7 @@ metadata:
     {{- end }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
       rewrite ^/docs/(.*) /$1 break;
+      rewrite ^/-/label-studio(/|$)(.*) /$2 break;
     {{- if $service.annotations }}
       {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}
@@ -172,6 +176,18 @@ spec:
               servicePort: {{ $registrySvcPort }}
             {{- end }}
           {{- end }}
+          - path: /-/label-studio(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $labelStudioSvcName }}
+                port:
+                  number: {{ $labelStudioSvcPort }}
+            {{- else }}
+              serviceName: {{ $labelStudioSvcName }}
+              servicePort: {{ $labelStudioSvcPort }}
+            {{- end }}
     {{- if $runnerSvc.usePublicDomain }}
     - host: {{ printf "*.%s" (include "common.domain.public" .) | quote }}
       http:

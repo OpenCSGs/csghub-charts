@@ -671,28 +671,29 @@ ingress-nginx:
       patch:
         image:
           image: "opencsghq/ingress-nginx-kube-webhook-certgen"
-          digest: ""                       # Image digest (do not update)
+          digest: ""                        # Image digest (do not update)
 
     ## Controller configuration
     config:
-      annotations-risk-level: "Critical"   # Risk level for annotations
+      annotations-risk-level: "Critical"    # Risk level for annotations
       custom-http-errors: "404,500,502,503" # Custom HTTP error codes
-      large-client-header-buffers: "8 32k"
+      enable-underscores-in-headers: "true" # Skip underscores headers
+      large-client-header-buffers: "8 32k"  # Allow temporal big header buffer
 
-    allowSnippetAnnotations: true          # Allow server snippets in annotations
+    allowSnippetAnnotations: true           # Allow server snippets in annotations
 
     ## Service configuration
     service:
-      type: *type                          # Service type
+      type: *type                           # Service type
       nodePorts:
-        http: 30080                        # HTTP node port
-        https: 30443                       # HTTPS node port
+        http: 30080                         # HTTP node port
+        https: 30443                        # HTTPS node port
         tcp:
-          22: 30022                        # TCP node port for SSH
+          22: 30022                         # TCP node port for SSH
 
   ## Custom error pages configuration
   defaultBackend:
-    enabled: true                          # Enable custom error pages
+    enabled: true                           # Enable custom error pages
     image:
       image: "opencsghq/ingress-nginx-custom-error-pages"
       tag: "v1.2.0"
