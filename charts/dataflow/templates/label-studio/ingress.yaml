@@ -6,7 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
 {{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
-{{- if $ingressConfig.enabled }}
+{{- if and $ingressConfig.enabled (not .Values.global.chartContext.isBuiltIn) }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $labelStudioPort := dig "service" "port" 8002 $service }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}

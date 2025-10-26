@@ -59,7 +59,7 @@ tests:
           value: "https://csghub.example.com"
       - equal:
           path: data["LABEL_STUDIO_HOST"]
-          value: "label-studio.example.cn"
+          value: "https://label-studio.example.cn"
       - equal:
           path: data["LABEL_STUDIO_PORT"]
           value: "8003"

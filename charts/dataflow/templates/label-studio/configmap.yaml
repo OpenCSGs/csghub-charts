@@ -19,10 +19,11 @@ data:
   ## Dataflow configuration
   {{- if .Values.global.chartContext.isBuiltIn }}
   CSGHUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
+  LABEL_STUDIO_HOST: {{ printf "%s/-/label-studio" (include "common.endpoint.csghub" .) | quote }}
   {{- else }}
   CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
+  LABEL_STUDIO_HOST: {{ include "common.endpoint.labelstudio" . | quote }}
   {{- end }}
-  LABEL_STUDIO_HOST: {{ include "common.domain.labelstudio" . | quote }}
   LABEL_STUDIO_PORT: {{ $service | dig "service" "port" 8002 | quote }}
   DJANGO_DB: "default"
   JSON_LOG: "1"

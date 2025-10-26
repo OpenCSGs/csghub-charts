@@ -20,8 +20,10 @@ data:
   ## Dataflow configuration
   {{- if .Values.global.chartContext.isBuiltIn }}
   CSGHUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
+  STUDIO_JUMP_URL: {{ printf "%s/-/label-studio" (include "common.endpoint.csghub" .) | quote }}
   {{- else }}
   CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
+  STUDIO_JUMP_URL: {{ include "common.endpoint.labelstudio" . | quote }}
   {{- end }}
   DATA_DIR: "/data/dataflow"
   MAX_WORKERS: "99"
@@ -36,6 +38,5 @@ data:
   DATABASE_DB: {{ $pgConfig.database | quote }}
   DATABASE_USERNAME: {{ $pgConfig.user | quote }}
   DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
-  STUDIO_JUMP_URL: {{ include "common.endpoint.labelstudio" . | quote }}
   REDIS_HOST_URL: {{ printf "redis://%s:%v" $redisConfig.host $redisConfig.port | quote }}
   MONG_HOST_URL: {{ printf "mongodb://%s:%s@%s:%v" $mongoConfig.user $mongoConfig.password $mongoConfig.host $mongoConfig.port | quote }}
