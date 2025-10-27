@@ -794,6 +794,7 @@ loki:
   ## Cache configuration
   chunksCache:
     writebackSizeLimit: "10MB"             # Chunks cache writeback size limit
+    connectionLimit: 1000
     resources:
       limits:
         memory: "4096Mi"                   # Memory limit
@@ -801,6 +802,7 @@ loki:
         memory: "2048Mi"                   # Memory request
 
   resultsCache:
+    connectionLimit: 1000
     resources:
       limits:
         memory: "1024Mi"                   # Memory limit
