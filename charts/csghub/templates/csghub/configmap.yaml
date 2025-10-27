@@ -254,3 +254,9 @@ data:
   STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
   {{- end }}
   {{- end }}
+
+  ## Server Configuration for Loki
+  {{- $lokiSvc := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
+  {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
+  {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
