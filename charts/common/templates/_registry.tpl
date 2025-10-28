@@ -29,7 +29,7 @@ Returns: YAML configuration object with registry parameters
   {{- $registrySvc := include "common.service" (dict "service" "registry" "global" $global) | fromYaml -}}
   {{- $registryName := include "common.names.custom" (list $global $registrySvc.name) -}}
   {{- $registryConfig := dict
-    "registry" (include "common.domain.csghub" $global)
+    "registry" (include "common.endpoint.csghub" $global | trimPrefix "http://" | trimPrefix  "https://")
     "repository" $global.Release.Namespace
     "username" "registry"
     "password" (include "common.randomPassword" $registrySvc.name)
