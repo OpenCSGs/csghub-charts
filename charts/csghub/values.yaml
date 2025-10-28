@@ -797,9 +797,9 @@ loki:
     connectionLimit: 1000
     resources:
       limits:
-        memory: "4096Mi"                   # Memory limit
+        memory: "2048Mi"                   # Memory limit
       requests:
-        memory: "2048Mi"                   # Memory request
+        memory: "1024Mi"                   # Memory request
 
   resultsCache:
     connectionLimit: 1000
