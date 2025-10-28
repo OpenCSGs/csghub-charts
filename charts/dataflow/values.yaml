@@ -18,10 +18,11 @@ global:
     service:
       type: &type "LoadBalancer"    # Service type: LoadBalancer or NodePort
 
+  ## Deprecated Section
   ## Image management
   image:
     # registry: ""                  # Custom image registry (overrides local registry)
-    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.12.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -89,7 +90,7 @@ dataflow:
   image:
     registry: "docker.io"
     repository: "opencsghq/dataflow"
-    tag: "20250916"                         # Image version tag
+    tag: "v1.12.0"                          # Image version tag
     pullPolicy: "IfNotPresent"              # Image pull policy
     pullSecrets: []                         # Docker registry secrets
 
@@ -133,7 +134,7 @@ labelStudio:
   image:
     registry: "docker.io"
     repository: "opencsghq/label-studio"
-    tag: "latest"                            # Image version tag
+    tag: "v1.12.0"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
