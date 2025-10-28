@@ -203,7 +203,10 @@ data:
 
     # Install openssh-client for ssh-keygen
     echo "Installing openssh-client..."
-    apt-get update -qq && apt-get install -y openssh-client
+    {{- if regexMatch "opencsg-registry" (.Values.global.image.registry | default "") }}
+    sed -i 's#http://deb.debian.org#https://mirrors.aliyun.com#g' /etc/apt/sources.list
+    {{- end }}
+    apt-get update && apt-get install -y openssh-client
 
     # Create temporary directory
     mkdir -p "$KEYS_DIR"
