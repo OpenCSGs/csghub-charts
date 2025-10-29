@@ -140,11 +140,10 @@ spec:
           volumeMounts:
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
           livenessProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- end }}
           {{- if $service.readinessProbe }}
           readinessProbe:
             {{- toYaml $service.readinessProbe | nindent 12 }}
