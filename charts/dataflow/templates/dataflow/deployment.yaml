@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
-{{- $service := mergeOverwrite (deepCopy $dataflowSvc) (dict "name" "worker") }}
+{{- $service := mergeOverwrite (deepCopy $dataflowSvc) (dict "name" "celery-worker") }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
