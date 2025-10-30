@@ -110,8 +110,9 @@ spec:
                 - "127.0.0.1"
                 - "-p"
                 - "5432"
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 5
+            timeoutSeconds: 10
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}
