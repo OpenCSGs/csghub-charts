@@ -104,6 +104,18 @@ DO $$
 BEGIN
     UPDATE "user"
     SET
+        tag = 'is_admin'
+    WHERE
+        name = 'root';
+
+    RAISE NOTICE 'User tag updated successfully';
+END $$;
+
+--
+DO $$
+BEGIN
+    UPDATE "user"
+    SET
         password_type = (SELECT password_type FROM "user" WHERE name = 'root' LIMIT 1),
         password = (SELECT password FROM "user" WHERE name = 'root' LIMIT 1)
     WHERE
