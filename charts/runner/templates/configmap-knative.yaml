@@ -26,7 +26,7 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
-  serving-crds.yaml: |
+  01_serving-crds.yaml: |
     apiVersion: apiextensions.k8s.io/v1
     kind: CustomResourceDefinition
     metadata:
@@ -6558,7 +6558,7 @@ data:
               type: string
               jsonPath: .spec.image
     ---
-  serving-core.yaml: |
+  02_serving-core.yaml: |
     {{- if ne $runnerSvc.mergingNamespace "single" }}
     apiVersion: v1
     kind: Namespace
@@ -14390,7 +14390,7 @@ data:
         app.kubernetes.io/name: knative-serving
         app.kubernetes.io/version: "1.16.1"
     ---
-  kourier.yaml: |
+  03_kourier.yaml: |
     {{- if eq $runnerSvc.mergingNamespace "disable" }}
     apiVersion: v1
     kind: Namespace
@@ -14912,7 +14912,7 @@ data:
         matchLabels:
           app: 3scale-kourier-gateway
     ---
-  serving-hpa.yaml: |
+  04_serving-hpa.yaml: |
     apiVersion: apps/v1
     kind: Deployment
     metadata:

@@ -17,7 +17,7 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
-  space.yaml: |
+  01_space.yaml: |
     {{- $serviceName := include "common.names.custom" (list . $runnerSvc.name) }}
     {{- $registryConfig := include "common.registry.config" (dict "service" $runnerSvc "global" .) | fromYaml }}
     apiVersion: v1
@@ -76,7 +76,7 @@ data:
         limits.nvidia.com/gpu: "100"
     {{- end }}
 
-  argo.yaml: |
+  02_argo.yaml: |
     {{- if ne $runnerSvc.mergingNamespace "single" }}
     apiVersion: v1
     kind: Namespace
@@ -1454,7 +1454,7 @@ data:
           serviceAccountName: argo
     ---
 
-  rbac.yaml: |
+  03_rbac.yaml: |
     apiVersion: rbac.authorization.k8s.io/v1
     kind: Role
     metadata:

@@ -23,7 +23,7 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
-  manifests.yaml: |
+  01_manifests.yaml: |
     {{- if ne $service.mergingNamespace "single" }}
     apiVersion: v1
     kind: Namespace
