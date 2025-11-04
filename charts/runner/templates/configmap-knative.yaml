@@ -13515,7 +13515,7 @@ data:
       {{- with .Values.global.image.registry }}
         {{- $globalRegistry = . }}
       {{- end }}
-      {{- $localRegistry := include "common.domain.csghub" . }}
+      {{- $localRegistry := include "common.endpoint.csghub" . | trimPrefix "https://" | trimPrefix "http://" }}
       {{- $registryList := list $localRegistry $globalRegistry }}
       registries-skipping-tag-resolving: {{ join "," $registryList | trimSuffix "," | quote }}
       queue-sidecar-image: {{ $queueImage | replace "docker.io" "gcr.io" }}
