@@ -611,7 +611,15 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
     log INFO "Adding NVIDIA Name label based on gpu.product..."
     for NODE in $NODES; do
       if [[ -n "$NODE" ]]; then
-        GPU_PRODUCT=$(kubectl get node "$NODE" -o jsonpath='{.metadata.labels.nvidia\.com/gpu\.product}')
+        for i in {1..12}; do
+          GPU_PRODUCT=$(kubectl get node "$NODE" -o jsonpath='{.metadata.labels.nvidia\.com/gpu\.product}' 2>/dev/null || true)
+          if [[ -z "$GPU_PRODUCT" ]]; then
+            GPU_PRODUCT=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -n1 | tr ' ' '-')
+          fi
+          [[ -n "$GPU_PRODUCT" ]] && break
+          sleep 5
+        done
+
         if [[ -n "$GPU_PRODUCT" ]]; then
           NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/-(Laptop-)?GPU.*$//')
           retry 3 "kubectl label node $NODE nvidia.com/nvidia_name=$NVIDIA_NAME --overwrite"

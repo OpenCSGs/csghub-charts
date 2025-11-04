@@ -334,7 +334,7 @@ dataflow:
 csgship:
   enabled: false
 
-  ## Specify configmap name that can be found be job.
+  ## Specify configmap name that can be found by job.
   # configmap: "csghub-csgship"
 
   ## Disable subCharts same with parent
