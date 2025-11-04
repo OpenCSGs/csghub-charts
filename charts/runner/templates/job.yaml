@@ -60,9 +60,9 @@ spec:
       {{- end }}
       containers:
         - name: {{ $service.name }}
-          image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "opencsghq/omnibus-csghub:toolbox-1.2.6") }}
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "opencsghq/omnibus-csghub:toolbox-1.2.7") }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/opt/csghub/bin/kyml", "-file", "/yamls", "-create" ]
+          command: [ "/opt/csghub/bin/csghub-ctl", "kyml", "--file", "/yamls", "--create", "--update" ]
           {{- with $service.environments }}
           env:
           {{- range $key, $value := . }}
