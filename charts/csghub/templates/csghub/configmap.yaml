@@ -219,7 +219,7 @@ data:
   {{- $rproxySvc := include "common.service" (dict "service" "rproxy" "global" .) | fromYaml }}
   {{- $rproxyPort := dig "service" "port" 8083 $rproxySvc }}
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%v" (include "namespace.spaces" .) $rproxyPort | quote }}
-  {{- $endpoint := include "common.domain.public" . }}
+  {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.usePublicDomain | quote }}
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.pipIndexUrl | quote }}
   {{- $sessionToken := dig "STARHUB_SERVER_SPACE_SESSION_SECRET_KEY" (randNumeric 8 | sha1sum) $data }}
