@@ -42,6 +42,16 @@ SPDX-License-Identifier: APACHE-2.0
 {{- end }}
 
 {{/*
+# csghub External Public Endpoint Helper
+# Generates the complete external public access endpoint for csghub service
+# Usage: {{ include "common.endpoint.public" . }}
+# Returns: Full URL (http://*.public.<domain> or https://*.public.<domain>) based on TLS configuration
+*/}}
+{{- define "common.endpoint.public" }}
+{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.public" .)) -}}
+{{- end }}
+
+{{/*
 Generate global unique HUB_SERVER_API_TOKEN
 
 Usage:

@@ -31,8 +31,8 @@ data:
   STARHUB_SERVER_CLUSTER_REGION: {{ $service.region | default "region-0" | quote }}
 
   ## Runner Configuration for Root Domain
-  {{- $publicDomain := include "common.domain.public" . }}
-  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $publicDomain "" $service.usePublicDomain | quote }}
+  {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $service.usePublicDomain | quote }}
   #### Maybe not used, Domain app.internal is only a Placeholder
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal" (include "namespace.spaces" .) | quote }}
 
