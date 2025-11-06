@@ -61,7 +61,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $service.name }}
-          image: {{ include "common.image.fixed" (dict "ctx" . "service" "redis" "image" "bitnami/kubectl:latest") }}
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "redis" "image" "opencsghq/kubectl:latest") }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           command: [ "/scripts/generate_ssh_keys.sh" ]
           {{- with $service.environments }}
