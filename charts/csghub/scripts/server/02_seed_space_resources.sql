@@ -28,24 +28,23 @@ SELECT pg_catalog.set_config('search_path', 'public', false);
 --
 
 INSERT INTO public.space_resources (id, name, resources, cluster_id)
-SELECT
-    1,
-    'CPU basic · 0.5 vCPU · 1 GB',
-    '{ "cpu": { "type": "Intel", "num": "0.5" }, "memory": "1Gi" }',
-    COALESCE((SELECT cluster_id FROM public.cluster_infos LIMIT 1), '')
-UNION ALL
-SELECT
-    2,
-    'CPU basic · 2 vCPU · 4 GB',
-    '{ "cpu": { "type": "Intel", "num": "2" }, "memory": "4Gi" }',
-    COALESCE((SELECT cluster_id FROM public.cluster_infos LIMIT 1), '')
+SELECT id, name, resources::jsonb, cluster_id
+FROM (VALUES
+    (1, 'CPU basic · 0.5 vCPU · 1 GB', '{"cpu": {"type": "Intel", "num": "0.5"}, "memory": "1Gi"}'),
+    (2, 'CPU basic · 2 vCPU · 4 GB', '{"cpu": {"type": "Intel", "num": "2"}, "memory": "4Gi"}'),
+    (3, 'NVIDIA 4090 * 1 · 4 vCPU · 8 GB', '{"gpu": {"type": "4090", "num": "1", "resource_name": "nvidia.com/gpu", "labels": {"nvidia.com/nvidia_name": "NVIDIA-4090"}}, "cpu": {"type": "Intel", "num": "4"}, "memory": "8Gi"}'),
+    (4, '2 * NVIDIA 4090 * 8 · 4 vCPU · 8 GB', '{"gpu": {"type": "4090", "num": "8", "resource_name": "nvidia.com/gpu", "labels": {"nvidia.com/nvidia_name": "NVIDIA-4090"}}, "cpu": {"type": "Intel", "num": "4"}, "memory": "8Gi", "replicas": 2}')
+) AS data(id, name, resources)
+CROSS JOIN (
+    SELECT COALESCE((SELECT cluster_id FROM public.cluster_infos LIMIT 1), '') AS cluster_id
+) AS cluster
 ON CONFLICT (id)
 DO UPDATE SET
     name = EXCLUDED.name,
     resources = EXCLUDED.resources,
-    cluster_id = CASE
-        WHEN EXCLUDED.cluster_id != '' THEN EXCLUDED.cluster_id
-        ELSE space_resources.cluster_id
+    cluster_id = CASE 
+        WHEN EXCLUDED.cluster_id != '' THEN EXCLUDED.cluster_id 
+        ELSE space_resources.cluster_id 
     END;
 
 --
@@ -58,7 +57,7 @@ BEGIN
     UPDATE public.space_resources
     SET cluster_id = NEW.cluster_id
     WHERE cluster_id = ''
-    AND id IN (1, 2);
+    AND id IN (1, 2, 3, 4);
 
     RETURN NEW;
 END;
