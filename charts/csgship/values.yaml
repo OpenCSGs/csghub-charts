@@ -101,7 +101,7 @@ web:
   postgresql: {}
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
-    # database: "csghub_label_studio"      # Database name
+    # database: "csgship_csgship"          # Database name
     # user: "csghub"                       # Database username
     # password: ""                         # Database password
     # timezone: "Etc/UTC"                  # Database timezone
