@@ -175,8 +175,8 @@ postgresql:
     protocol: "TCP"                          # Network protocol
 
   databases:                                 # Databases to create on startup
-    - "csghub_dataflow"
-    - "csghub_label_studio"
+    - "dataflow_dataflow"
+    - "dataflow_label_studio"
 
   parameters: {}                             # PostgreSQL runtime parameters
     # max_connections: 400                   # Dynamic parameters (triggers recreate)
