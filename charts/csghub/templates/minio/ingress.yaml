@@ -29,6 +29,10 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location = /console {
+        return 301 /console/;
+      }
     {{- if $service.console.enabled }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
       rewrite ^/console/(.*) /$1 break;
