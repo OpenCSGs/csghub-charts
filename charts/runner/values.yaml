@@ -101,6 +101,9 @@ gpuModelLabel:
   typeLabel: "nvidia.com/gpu.product"  # GPU type label
   capacityLabel: "nvidia.com/gpu"      # GPU capacity label
 
+## Knative networking ingress address, eg: http://<ip>:<port>
+applicationEndpoint: ""
+
 ## Knative Serving configuration
 knative:
   serving:

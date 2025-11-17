@@ -139,11 +139,15 @@ tests:
       - equal:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "false"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
+          value: "auto"
 
   - it: Should render configmap correctly
     template: configmap.yaml
     set:
       usePublicDomain: false
+      applicationEndpoint: "http://10.6.0.12:30345"
       tempo:
         address: "https://tempo.example.cn"
     asserts:
@@ -156,3 +160,6 @@ tests:
       - equal:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "true"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
+          value: "http://10.6.0.12:30345"
