@@ -76,5 +76,9 @@ data:
   {{- end }}
 
   ## Runner Configuration for kourier network
+  {{- if $service.applicationEndpoint }}
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
+  {{- else }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: "auto"
+  {{- end }}
 {{- end }}
