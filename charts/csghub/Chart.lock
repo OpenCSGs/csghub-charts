@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/repository/csghub
-  version: 0.1.3
+  version: 0.1.4
 - name: reloader
   repository: file://charts/reloader
   version: 2.1.4
@@ -22,12 +22,12 @@ dependencies:
   version: 27.37.0
 - name: runner
   repository: https://charts.opencsg.com/repository/csghub
-  version: 1.12.0
+  version: 1.12.1
 - name: dataflow
   repository: https://charts.opencsg.com/repository/csghub
   version: 1.12.0
 - name: csgship
   repository: https://charts.opencsg.com/repository/csghub
   version: 0.4.0
-digest: sha256:d0ff0c576b72e1973e5bcce87b27b07c4a58fa60af0445c183cb8b663816c401
-generated: "2025-10-28T17:20:05.794281+08:00"
+digest: sha256:fe778d02e3ce7b992b57df1c557c8207ce3e0ee360f664b8d15f822dbbe9cdcc
+generated: "2025-11-18T13:49:54.349878+08:00"
