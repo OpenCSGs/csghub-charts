@@ -39,10 +39,6 @@ app.kubernetes.io/name: {{ include "common.names.name" $ctx }}
   {{- end }}
   {{- if not $selectorOnly }}
 app.kubernetes.io/managed-by: {{ $ctx.Release.Service }}
-helm.sh/chart: {{ include "common.names.chart" $ctx }}
-    {{- with $ctx.Chart.AppVersion }}
-app.kubernetes.io/version: {{ . | quote }}
-    {{- end }}
   {{- end }}
 
   {{- /* User-defined custom labels */ -}}
