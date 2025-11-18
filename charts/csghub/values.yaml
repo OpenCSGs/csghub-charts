@@ -620,7 +620,7 @@ temporal:
     protocol: "TCP"                          # Network protocol
 
   console:
-    enabled: true                            # Enable console UI
+    enabled: false                           # Enable console UI
     image:
       repository: "temporalio/ui"            # Console UI image repository
       tag: "2.30.3"                          # Console UI image tag
