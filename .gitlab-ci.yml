@@ -19,7 +19,7 @@ package:
     - |
       sed -i "s/^version:.*/version: ${CI_COMMIT_TAG#v}/" charts/csghub/Chart.yaml
       sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}\"/" charts/csghub/Chart.yaml
-      sed -i "s/^    tag:.*/    tag: \"${CI_COMMIT_TAG}\"/" charts/csghub/values.yaml
+      #sed -i "s/^    tag:.*/    tag: \"${CI_COMMIT_TAG}\"/" charts/csghub/values.yaml
       
       echo "Verify version updated:"
       sed -n "/${CI_COMMIT_TAG#v}/p" charts/csghub/{values.yaml,Chart.yaml} | sed 's/^    //g'
