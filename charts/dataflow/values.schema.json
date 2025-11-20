@@ -1,0 +1,199 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "CSGHub Values Schema",
+  "type": "object",
+  "properties": {
+    "global": {
+      "type": "object",
+      "description": "Global Configuration",
+      "properties": {
+        "edition": {
+          "type": "string",
+          "description": "Deployment edition: 'ce' (Community) or 'ee' (Enterprise)"
+        },
+        "ingress": {
+          "type": "object",
+          "description": "Ingress configuration",
+          "properties": {
+            "className": { "type": "string", "description": "Ingress controller class name" },
+            "domain": { "type": "string", "description": "Base domain for accessing csghub" },
+            "useTop": { "type": "boolean", "description": "Use top-level domain directly (true) or subdomain (false)" },
+            "tls": {
+              "type": "object",
+              "description": "TLS/SSL configuration",
+              "properties": {
+                "enabled": { "type": "boolean", "description": "Enable or disable TLS" },
+                "secretName": { "type": "string", "description": "TLS secret name (if enabled)" }
+              },
+              "additionalProperties": false
+            },
+            "service": {
+              "type": "object",
+              "description": "Service configuration",
+              "properties": {
+                "type": { "type": "string", "description": "Service type: LoadBalancer or NodePort" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "description": "Image management",
+          "properties": {
+            "registry": { "type": "string", "description": "Custom image registry (overrides local registry)" },
+            "tag": { "type": "string", "description": "Image tag format: {{version}}-{{edition}}" },
+            "pullPolicy": { "type": "string", "description": "Image pull policy: Always, IfNotPresent, Never" },
+            "pullSecrets": { "type": "array", "description": "Private registry authentication secrets", "items": { "type": "string" } }
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "description": "Persistent volume configuration",
+          "properties": {
+            "storageClass": { "type": "string", "description": "StorageClass name (empty for default)" },
+            "accessModes": { "type": "array", "description": "Volume access modes", "items": { "type": "string" } },
+            "size": { "type": "string", "description": "Default storage capacity" }
+          }
+        },
+        "postgresql": {
+          "type": "object",
+          "description": "PostgreSQL configuration",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Use built-in (true) or external (false)" },
+            "external": {
+              "type": "object",
+              "description": "External PostgreSQL connection",
+              "properties": {
+                "host": { "type": "string", "description": "PostgreSQL host address" },
+                "port": { "type": "integer", "description": "PostgreSQL port" },
+                "user": { "type": "string", "description": "Database username" },
+                "password": { "type": "string", "description": "Database password" },
+                "timezone": { "type": "string", "description": "Database timezone" },
+                "sslmode": { "type": "string", "description": "SSL mode" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "description": "Redis configuration",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Use built-in (true) or external (false)" },
+            "external": {
+              "type": "object",
+              "description": "External Redis configuration",
+              "properties": {
+                "host": { "type": "string", "description": "Redis server hostname or IP" },
+                "port": { "type": "integer", "description": "Redis port number" },
+                "password": { "type": "string", "description": "Redis authentication password" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "mongo": {
+          "type": "object",
+          "description": "MongoDB configuration",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Use built-in (true) or external (false)" },
+            "external": {
+              "type": "object",
+              "description": "External Mongo configuration",
+              "properties": {
+                "host": { "type": "string", "description": "Mongo server hostname or IP" },
+                "port": { "type": "integer", "description": "Mongo port number" },
+                "user": { "type": "string", "description": "Mongo authentication user" },
+                "password": { "type": "string", "description": "Mongo authentication password" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "chartContext": {
+          "type": "object",
+          "description": "SubChart deployment context",
+          "properties": {
+            "isBuiltIn": { "type": "boolean", "description": "Deployed bundled with csghub" }
+          }
+        }
+      }
+    },
+    "externalUrl": { "type": "string", "description": "External CSGHub URL for accessing the hub interface" },
+    "ingress": {
+      "type": "object",
+      "description": "Ingress configuration",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Enable or disable ingress" },
+        "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
+        "tls": {
+          "type": "object",
+          "description": "TLS settings for ingress",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Enable or disable TLS" },
+            "secretName": { "type": "string", "description": "TLS secret name (if enabled)" }
+          }
+        }
+      }
+    },
+    "dataflow": {
+      "type": "object",
+      "description": "Dataflow Configuration",
+      "properties": {
+        "image": {
+          "type": "object",
+          "description": "Image settings (overrides global.image)",
+          "properties": {
+            "registry": { "type": "string", "description": "Image registry" },
+            "repository": { "type": "string", "description": "Image repository" },
+            "tag": { "type": "string", "description": "Image version tag" },
+            "pullPolicy": { "type": "string", "description": "Image pull policy" },
+            "pullSecrets": { "type": "array", "description": "Docker registry secrets", "items": { "type": "string" } }
+          }
+        },
+        "postgresql": {
+          "type": "object",
+          "description": "PostgreSQL configuration",
+          "properties": {
+            "host": { "type": "string", "description": "PostgreSQL host address" },
+            "port": { "type": "integer", "description": "PostgreSQL port" },
+            "database": { "type": "string", "description": "Database name" },
+            "user": { "type": "string", "description": "Database username" },
+            "password": { "type": "string", "description": "Database password" },
+            "timezone": { "type": "string", "description": "Database timezone" },
+            "sslmode": { "type": "string", "description": "SSL mode" }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "description": "Redis configuration",
+          "properties": {
+            "host": { "type": "string", "description": "Redis host" },
+            "port": { "type": "integer", "description": "Redis port" },
+            "password": { "type": "string", "description": "Redis password" }
+          }
+        },
+        "mongo": {
+          "type": "object",
+          "description": "Mongo configuration",
+          "properties": {
+            "host": { "type": "string", "description": "Mongo host" },
+            "port": { "type": "integer", "description": "Mongo port" },
+            "user": { "type": "string", "description": "Mongo user" },
+            "password": { "type": "string", "description": "Mongo password" }
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "description": "Persistent volume configuration",
+          "properties": {
+            "storageClass": { "type": "string", "description": "StorageClass for dynamic provisioning" },
+            "accessModes": { "type": "array", "description": "Volume access permissions", "items": { "type": "string" } },
+            "size": { "type": "string", "description": "Disk space allocation" }
+          }
+        }
+      }
+    }
+  }
+}

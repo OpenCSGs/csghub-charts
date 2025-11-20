@@ -65,7 +65,7 @@ data:
   STARHUB_SERVER_S3_BUCKET: {{ $service.objectStore.bucket | quote }}
   STARHUB_SERVER_S3_REGION: {{ $service.objectStore.region | quote }}
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $service.objectStore.secure | quote }}
-  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" ($service.objectStore.pathStyle | default true) | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $service.objectStore.pathStyle "true") | quote }}
 
   ## Runner Configuration for Tracing logging
   {{- if $service.tempo.address }}

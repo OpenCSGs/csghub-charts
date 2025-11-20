@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CSGHUB Values Schema",
+  "type": "object",
+  "properties": {
+    "global": {
+      "type": "object",
+      "description": "Global Configuration",
+      "properties": {
+        "edition": {
+          "type": "string",
+          "description": "Deployment edition: \"ce\" (Community) or \"ee\" (Enterprise)"
+        },
+        "ingress": {
+          "type": "object",
+          "description": "Ingress configuration",
+          "properties": {
+            "className": {
+              "type": "string",
+              "description": "Ingress controller class name"
+            },
+            "domain": {
+              "type": "string",
+              "description": "Base domain for accessing csghub"
+            },
+            "useTop": {
+              "type": "boolean",
+              "description": "Use top-level domain directly (true) or subdomain (false)"
+            },
+            "host": {
+              "type": "string",
+              "description": "Custom default access domain"
+            },
+            "tls": {
+              "type": "object",
+              "description": "TLS/SSL configuration",
+              "properties": {
+                "enabled": {"type": "boolean", "description": "Enable or disable TLS"},
+                "secretName": {"type": "string", "description": "TLS secret name (if enabled)"}
+              }
+            },
+            "service": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string", "description": "Service type: LoadBalancer or NodePort"}
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "description": "Image management",
+          "properties": {
+            "registry": {"type": "string", "description": "Custom image registry (overrides local registry)"},
+            "tag": {"type": "string", "description": "Image tag format: {{version}}-{{edition}}"},
+            "pullPolicy": {"type": "string", "description": "Image pull policy: Always, IfNotPresent, Never"},
+            "pullSecrets": {"type": "array", "items": {"type": "string"}, "description": "Private registry authentication secrets"}
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "properties": {
+            "storageClass": {"type": "string", "description": "StorageClass name (empty for default)"},
+            "accessModes": {"type": "array", "items": {"type": "string"}, "description": "Volume access modes"},
+            "size": {"type": "string", "description": "Default storage capacity"}
+          }
+        },
+        "postgresql": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "description": "Use built-in (true) or external (false)"},
+            "external": {
+              "type": "object",
+              "properties": {
+                "host": {"type": "string"},
+                "port": {"type": "integer"},
+                "user": {"type": "string"},
+                "password": {"type": "string"},
+                "timezone": {"type": "string"},
+                "sslmode": {"type": "string"}
+              }
+            }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "description": "Use built-in (true) or external (false)"},
+            "external": {
+              "type": "object",
+              "properties": {
+                "host": {"type": "string"},
+                "port": {"type": "integer"},
+                "password": {"type": "string"}
+              }
+            }
+          }
+        },
+        "mongo": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "external": {
+              "type": "object",
+              "properties": {
+                "host": {"type": "string"},
+                "port": {"type": "integer"},
+                "user": {"type": "string"},
+                "password": {"type": "string"}
+              }
+            }
+          }
+        },
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "external": {
+              "type": "object",
+              "properties": {
+                "endpoint": {"type": "string"},
+                "accessKey": {"type": "string"},
+                "secretKey": {"type": "string"},
+                "region": {"type": "string"},
+                "encrypt": {"type": "string"},
+                "secure": {"type": "string"},
+                "pathStyle": {"type": "string"}
+              }
+            }
+          }
+        },
+        "registry": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "external": {
+              "type": "object",
+              "properties": {
+                "registry": {"type": "string"},
+                "repository": {"type": "string"},
+                "username": {"type": "string"},
+                "password": {"type": "string"},
+                "insecure": {"type": "string"}
+              }
+            }
+          }
+        },
+        "gitaly": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "external": {
+              "type": "object",
+              "properties": {
+                "scheme": {"type": "string"},
+                "host": {"type": "string"},
+                "port": {"type": "integer"},
+                "token": {"type": "string"},
+                "storage": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "registry": {"type": "string"},
+        "repository": {"type": "string"},
+        "tag": {"type": "string"},
+        "pullPolicy": {"type": "string"},
+        "pullSecrets": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "portal": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "object",
+          "properties": {"repository": {"type": "string"}}
+        },
+        "ingress": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "annotations": {"type": "object", "additionalProperties": true},
+            "tls": {"type": "object", "additionalProperties": true}
+          }
+        },
+        "docs": {"type": "object", "additionalProperties": true},
+        "postgresql": {"type": "object", "additionalProperties": true},
+        "objectStore": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "server": {"type": "object", "additionalProperties": true},
+    "notifier": {"type": "object", "additionalProperties": true},
+    "payment": {"type": "object", "additionalProperties": true},
+    "gateway": {"type": "object", "additionalProperties": true},
+    "accounting": {"type": "object", "additionalProperties": true},
+    "user": {"type": "object", "additionalProperties": true},
+    "dataviewer": {"type": "object", "additionalProperties": true},
+    "mirror": {"type": "object", "additionalProperties": true},
+    "temporalWorker": {"type": "object", "additionalProperties": true},
+    "postgresql": {"type": "object", "additionalProperties": true},
+    "redis": {"type": "object", "additionalProperties": true},
+    "minio": {"type": "object", "additionalProperties": true},
+    "registry": {"type": "object", "additionalProperties": true},
+    "gitaly": {"type": "object", "additionalProperties": true},
+    "gitlabShell": {"type": "object", "additionalProperties": true},
+    "nats": {"type": "object", "additionalProperties": true},
+    "casdoor": {"type": "object", "additionalProperties": true},
+    "temporal": {"type": "object", "additionalProperties": true}
+  },
+  "additionalProperties": true
+}

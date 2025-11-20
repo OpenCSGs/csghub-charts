@@ -1,0 +1,214 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "CSGHub Runner Values Schema",
+  "type": "object",
+  "properties": {
+    "global": {
+      "type": "object",
+      "description": "Global Configuration",
+      "properties": {
+        "ingress": {
+          "type": "object",
+          "description": "Ingress configuration",
+          "properties": {
+            "className": {
+              "type": "string",
+              "description": "Ingress controller class name"
+            },
+            "domain": {
+              "type": "string",
+              "description": "Base domain for accessing csghub"
+            },
+            "useTop": {
+              "type": "boolean",
+              "description": "Use top-level domain directly (true) or subdomain (false)"
+            },
+            "tls": {
+              "type": "object",
+              "description": "TLS/SSL configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable or disable TLS"
+                },
+                "secretName": {
+                  "type": "string",
+                  "description": "TLS secret name (if enabled)"
+                }
+              }
+            },
+            "service": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Service type: LoadBalancer or NodePort"
+                }
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "description": "Global image configuration",
+          "properties": {
+            "registry": { "type": "string" },
+            "tag": { "type": "string" },
+            "pullPolicy": { "type": "string" },
+            "pullSecrets": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "registry": {
+          "type": "object",
+          "description": "Disable internal Registry",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "objectStore": {
+          "type": "object",
+          "description": "Disable internal ObjectStore",
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "chartContext": {
+          "type": "object",
+          "properties": {
+            "isBuiltIn": { "type": "boolean", "description": "Deployed bundled with csghub" }
+          }
+        }
+      }
+    },
+    "externalUrl": { "type": "string", "description": "External CSGHub URL for accessing the hub interface" },
+    "image": {
+      "type": "object",
+      "properties": {
+        "registry": { "type": "string" },
+        "repository": { "type": "string" },
+        "tag": { "type": "string" },
+        "pullPolicy": { "type": "string" },
+        "pullSecrets": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
+        "tls": { "type": "object" }
+      }
+    },
+    "hubAPIToken": { "type": "string", "description": "API token for authenticating with CSGHub API" },
+    "originClusterID": { "type": "string", "description": "Unique identifier for the origin cluster" },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "level": { "type": "string", "enum": ["info", "warning", "debug", "error"] }
+      }
+    },
+    "name": { "type": "string", "description": "Defined resource name" },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "port": { "type": "integer" },
+        "protocol": { "type": "string" }
+      }
+    },
+    "region": { "type": "string" },
+    "interval": { "type": "integer" },
+    "namespace": { "type": "string" },
+    "autoConfigure": { "type": "boolean" },
+    "kymlMode": { "type": "string", "enum": ["create", "update", "replace"] },
+    "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"] },
+    "usePublicDomain": { "type": "boolean" },
+    "pipIndexUrl": { "type": "string" },
+    "extraBuildArgs": { "type": "array", "items": { "type": "string" } },
+    "modelRegistry": { "type": "string" },
+    "gpuModelLabel": {
+      "type": "object",
+      "properties": {
+        "typeLabel": { "type": "string" },
+        "capacityLabel": { "type": "string" }
+      }
+    },
+    "applicationEndpoint": { "type": "string" },
+    "knative": {
+      "type": "object",
+      "properties": {
+        "serving": {
+          "type": "object",
+          "properties": {
+            "domain": { "type": "string" },
+            "services": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "domain": { "type": "string" },
+                  "host": { "type": "string" },
+                  "port": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rbac": {
+      "type": "object",
+      "properties": {
+        "create": { "type": "boolean" },
+        "serviceAccountName": { "type": "string" }
+      }
+    },
+    "logcollector": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "loki": { "type": "object", "properties": { "address": { "type": "string" } } }
+      }
+    },
+    "tempo": { "type": "object", "properties": { "address": { "type": "string" } } },
+    "registry": {
+      "type": "object",
+      "description": "External registry configuration",
+      "properties": {
+        "registry": { "type": "string", "description": "External registry URL" },
+        "repository": { "type": "string", "description": "Repository namespace" },
+        "username": { "type": "string", "description": "Registry username" },
+        "password": { "type": "string", "description": "Registry password" },
+        "insecure": { "type": "string", "description": "Disable TLS/SSL encryption" }
+      },
+      "additionalProperties": false
+    },
+    "objectStore": {
+      "type": "object",
+      "description": "External object storage configuration",
+      "properties": {
+        "endpoint": { "type": "string", "description": "Object storage endpoint URL" },
+        "accessKey": { "type": "string", "description": "Access key for authentication" },
+        "secretKey": { "type": "string", "description": "Secret key for authentication" },
+        "bucket": { "type": "string", "description": "Bucket name" },
+        "region": { "type": "string", "description": "Storage region" },
+        "secure": { "type": "string", "description": "Use secure TLS certificates" },
+        "encrypt": { "type": "string", "description": "Enable TLS encryption" },
+        "pathStyle": { "type": "string", "description": "Use path-style addressing" }
+      },
+      "additionalProperties": false
+    },
+    "podAnnotations": { "type": "object", "additionalProperties": { "type": "string" } },
+    "podLabels": { "type": "object", "additionalProperties": { "type": "string" } },
+    "podSecurityContext": { "type": "object" },
+    "securityContext": { "type": "object" },
+    "environments": { "type": "object" },
+    "annotations": { "type": "object" },
+    "resourceQuota": { "type": "object", "properties": { "enabled": { "type": "boolean" } } },
+    "resources": { "type": "object" },
+    "nodeSelector": { "type": "object" },
+    "tolerations": { "type": "array", "items": { "type": "object" } },
+    "affinity": { "type": "object" }
+  }
+}
