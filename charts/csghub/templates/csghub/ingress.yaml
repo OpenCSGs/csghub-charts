@@ -79,7 +79,10 @@ spec:
   {{- if $ingressConfig.tls.enabled }}
   tls:
     - hosts:
-        - {{ include "common.domain.minio" . }}
+        - {{ include "common.domain.csghub" . }}
+        {{- if $runnerSvc.usePublicDomain }}
+        - {{ printf "*.%s" (include "common.domain.public" .) | quote }}
+        {{- end }}
       secretName: {{ $ingressConfig.tls.secretName }}
   {{- end }}
   rules:
