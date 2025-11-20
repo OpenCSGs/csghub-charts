@@ -148,9 +148,9 @@ objectStore: {}                            # External object storage
   # secretKey: ""                          # Secret key for authentication
   # bucket: "csghub-registry"              # Bucket name
   # region: ""                             # Storage region
-  # secure: false                          # Use secure TLS certificates
-  # encrypt: false                         # Enable TLS encryption
-  # pathStyle: true                        # Use path-style addressing
+  # secure: "false"                        # Use secure TLS certificates
+  # encrypt: "false"                       # Enable TLS encryption
+  # pathStyle: "true"                      # Use path-style addressing
 
 ## Pod Metadata
 podAnnotations: {}

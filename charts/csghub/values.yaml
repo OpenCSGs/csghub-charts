@@ -10,6 +10,8 @@ global:
     # className: "nginx"            # Ingress controller class name
     domain: "example.com"           # Base domain for accessing csghub
     useTop: false                   # Use top-level domain directly (true) or subdomain (false)
+    ## Custom default access domain instead of <release>.<domain>,
+    # host: ""                      # Prefix or full domain: "test" → test.example.com, "test.example.com" → test.example.com
     ## TLS/SSL configuration
     tls:
       enabled: false                # Enable or disable TLS
@@ -169,9 +171,9 @@ portal:
     # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-portal-public"       # Bucket name
     # region: ""                           # Storage region
-    # secure: false                        # Use secure TLS certificates
-    # encrypt: false                       # Enable TLS encryption
-    # pathStyle: true                      # Use path-style addressing
+    # secure: "false"                      # Use secure TLS certificates
+    # encrypt: "false"                     # Enable TLS encryption
+    # pathStyle: "true"                    # Use path-style addressing
 
 ## Main service logic and API interface
 server:
@@ -214,9 +216,9 @@ server:
     # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-server"              # Bucket name
     # region: ""                           # Storage region
-    # secure: false                        # Use secure TLS certificates
-    # encrypt: false                       # Enable TLS encryption
-    # pathStyle: true                      # Use path-style addressing
+    # secure: "false"                      # Use secure TLS certificates
+    # encrypt: "false"                     # Enable TLS encryption
+    # pathStyle: "true"                    # Use path-style addressing
 
 ## Reverse proxy configuration
 rproxy:
@@ -500,9 +502,9 @@ registry:
     # secretKey: ""                          # Secret key for authentication
     # bucket: "csghub-registry"              # Bucket name
     # region: ""                             # Storage region
-    # secure: false                          # Use secure TLS certificates
-    # encrypt: false                         # Enable TLS encryption
-    # pathStyle: true                        # Use path-style addressing
+    # secure: "false"                        # Use secure TLS certificates
+    # encrypt: "false"                       # Enable TLS encryption
+    # pathStyle: "true"                      # Use path-style addressing
 
 ## Embedded Gitaly configuration
 gitaly:

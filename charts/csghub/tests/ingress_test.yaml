@@ -1,0 +1,119 @@
+suite: Test Ingress Resources
+templates:
+  - csghub/ingress.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    ingress:
+      enabled: true
+      domain: example.cn
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+  portal:
+    name: "portal"
+  runner:
+    usePublicDomain: true
+tests:
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-portal"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "portal"
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/cors-allow-origin"]
+          value: "https://csghub.example.cn"
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - csghub.example.cn
+            - "*.public.example.cn"
+      - equal:
+          path: spec.tls[0].secretName
+          value: "example-cn-tls"
+      - equal:
+          path: spec.rules[0].host
+          value: "csghub.example.cn"
+      - equal:
+          path: spec.rules[1].host
+          value: "*.public.example.cn"
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          useTop: true
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/cors-allow-origin"]
+          value: "https://example.cn"
+      - equal:
+          path: spec.rules[0].host
+          value: "example.cn"
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - example.cn
+            - "*.public.example.cn"
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          useTop: true
+          host: "opencsg"
+      runner:
+        usePublicDomain: false
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/cors-allow-origin"]
+          value: "https://opencsg.example.cn"
+      - equal:
+          path: spec.rules[0].host
+          value: "opencsg.example.cn"
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - opencsg.example.cn
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          useTop: true
+          host: "csghub.example.com"
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/cors-allow-origin"]
+          value: "https://csghub.example.com"
+      - equal:
+          path: spec.rules[0].host
+          value: "csghub.example.com"
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          tls:
+            enabled: false
+          useTop: true
+          host: "csghub.example.com"
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/cors-allow-origin"]
+          value: "http://csghub.example.com"
+      - equal:
+          path: spec.rules[0].host
+          value: "csghub.example.com"
