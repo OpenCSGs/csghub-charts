@@ -44,16 +44,16 @@ set:
     repository: "csghub"
     username: "registry"
     password: "asK2ksdhfsdf"
-    insecure: true
+    insecure: "true"
   objectStore:
     endpoint: "https://s4.example.cn"
     accessKey: "minio"
     secretKey: "sdfkasd"
     bucket: "csghub-runner"
     region: "cn-north-1"
-    secure: true
-    encrypt: false
-    pathStyle: true
+    secure: "true"
+    encrypt: "false"
+    pathStyle: "true"
 tests:
   - it: Should render configmap correctly
     template: configmap.yaml

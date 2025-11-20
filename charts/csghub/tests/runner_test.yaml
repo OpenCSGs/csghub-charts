@@ -141,7 +141,7 @@ tests:
           external:
             registry: "registry.io"
             repository: "test"
-            insecure: false
+            insecure: "false"
         objectStore:
           enabled: false
           external:

@@ -49,7 +49,7 @@ set:
       enabled: false
       external:
         host: "10.6.0.13"
-        port: "8076"
+        port: 8076
         token: "Gitaly2025"
         storage: "gitaly"
     dataflow:
