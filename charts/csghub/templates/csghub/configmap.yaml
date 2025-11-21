@@ -260,3 +260,8 @@ data:
   {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
   {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
+
+  ## Additional environments for all csghub deployments
+  {{- range $key, $value := .Values.environments }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}

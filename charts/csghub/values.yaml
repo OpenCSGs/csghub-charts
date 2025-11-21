@@ -134,6 +134,9 @@ image:
 logging:
   level: "info"                            # Log level: info, warning, debug, error
 
+## Environments configuration
+environments: {}
+
 ## Portal service configuration
 portal:
   ## Image settings (overrides global.image)
