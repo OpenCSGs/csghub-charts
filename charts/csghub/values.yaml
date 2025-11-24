@@ -312,6 +312,9 @@ runner:
           # host: "192.168.18.10"        # API server host address
           # port: "30213"                # NodePort value when type=NodePort
 
+  logcollector:
+    enabled: true
+
   ## Disable subCharts same with parent
   ingress-nginx:
     enabled: false

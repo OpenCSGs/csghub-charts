@@ -87,6 +87,13 @@ Returns:
 */}}
 {{- define "wait-for-loki" }}
 {{- $service := include "common.service" . | fromYaml -}}
+{{- $lokiAddress := $service.logcollector.loki.address }}
+{{- if .Values.global.chartContext.isBuiltIn }}
+{{- $lokiSvc := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
+{{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
+{{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
+{{- $lokiAddress = printf "http://%s:%v" $lokiSvcName $lokiSvcPort }}
+{{- end }}
 - name: wait-for-loki
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
   imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
@@ -94,7 +101,7 @@ Returns:
     - /bin/sh
     - -c
     - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "%s/ready" (required "Loki address is required" $service.logcollector.loki.address) }}";
+      until wget --spider --timeout=5 --tries=1 "{{ printf "%s/ready" (required "Loki address is required" $lokiAddress) }}";
       do
         echo 'Waiting for Loki to be ready...';
         sleep 5;
