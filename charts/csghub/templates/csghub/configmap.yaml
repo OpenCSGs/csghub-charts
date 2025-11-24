@@ -144,7 +144,7 @@ data:
   {{- if eq .Values.global.edition "saas" }}
   OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
   OPENCSG_PAYMENT_BILL_BUCKET: {{ $paymentSvc.billingBucket | quote }}
-  OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $paymentSvc.name)) | quote }}
+  OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $accountingSvc.name)) | quote }}
   OPENCSG_PAYMENT_SERVER_PORT: {{ $paymentSvc | dig "service" "port" 8090 | quote }}
   {{- end }}
 
