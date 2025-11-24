@@ -52,13 +52,7 @@ data:
   CSGHUB_PORTAL_PRIVATE_S3_BUCKET: {{ $portalS3Config.bucket | quote }}
   CSGHUB_PORTAL_PRIVATE_S3_REGION: {{ $portalS3Config.region | quote }}
   CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ $portalS3Config.secure | quote }}
-  ## Portal Configuration for SMTP
-  {{- with $portalSvc.smtp }}
-  CSGHUB_PORTAL_MAILER_HOST: {{ .host | quote }}
-  CSGHUB_PORTAL_MAILER_PORT: {{ .port | quote }}
-  CSGHUB_PORTAL_MAILER_USERNAME: {{ .username | quote }}
-  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .password | quote }}
-  {{- end }}
+  ## Portal Configuration for Redis
   CSGHUB_PORTAL_REDIS_ADDR: {{ printf "%s:%v" $portalRedisConfig.host $portalRedisConfig.port | quote }}
   {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $portalRedisConfig.password) }}
   CSGHUB_PORTAL_REDIS_PASSWORD: {{ $portalRedisConfig.password | quote }}
@@ -118,7 +112,13 @@ data:
   {{- $notifierSvc := include "common.service" (dict "service" "notifier" "global" .) | fromYaml }}
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $notifierSvc.name)) | quote }}
   STARHUB_SERVER_NOTIFIER_PORT: {{ $notifierSvc | dig "service" "port" 8095 | quote }}
-  {{- with $portalSvc.smtp }}
+  {{- with $notifierSvc.smtp }}
+  ## Portal configuration for SMTP
+  CSGHUB_PORTAL_MAILER_HOST: {{ .host | quote }}
+  CSGHUB_PORTAL_MAILER_PORT: {{ .port | quote }}
+  CSGHUB_PORTAL_MAILER_USERNAME: {{ .username | quote }}
+  CSGHUB_PORTAL_MAILER_PASSWORD: {{ .password | quote }}
+  ## Server configuration for SMTP
   STARHUB_SERVER_MAILER_HOST: {{ .host | quote }}
   STARHUB_SERVER_MAILER_PORT: {{ .port | quote }}
   STARHUB_SERVER_MAILER_USERNAME: {{ .username | quote }}
