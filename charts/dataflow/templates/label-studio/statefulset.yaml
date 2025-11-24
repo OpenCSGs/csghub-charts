@@ -90,8 +90,8 @@ spec:
           livenessProbe:
             tcpSocket:
               port: 8002
-            initialDelaySeconds: 30
-            periodSeconds: 5
+            initialDelaySeconds: 50
+            periodSeconds: 10
             timeoutSeconds: 20
             failureThreshold: 5
           {{- if $service.readinessProbe }}
