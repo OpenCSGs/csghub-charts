@@ -293,7 +293,9 @@ runner:
   ## Package and image management
   pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
   extraBuildArgs: []                     # Extra Kaniko build arguments
-  modelRegistry: ""                      # Model image configuration
+  model:                                 # Model image configuration
+    deployTimeout: "60"                  # Timeout (in seconds) for model deployment operations
+    registry: ""                         # Custom image registry for model-related images (empty uses global registry)
 
   ## GPU resource configuration
   gpuModelLabel:

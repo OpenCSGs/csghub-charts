@@ -167,10 +167,11 @@ data:
   STARHUB_JWT_SIGNING_KEY: {{ $jwtToken | quote }}
 
   ## Server Configuration for Model
+  {{- $runnerSvc := include "common.service" (dict "service" "runner" "global" .) | fromYaml }}
+  STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.model.deployTimeout | default 60 | quote }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   ## Server Configuration for Model
-  {{- $runnerSvc := include "common.service" (dict "service" "runner" "global" .) | fromYaml }}
-  {{- $registry := or $runnerSvc.modelRegistry .Values.global.image.registry "docker.io" }}
+  {{- $registry := or $runnerSvc.model.registry .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
 
   ## Server Configuration for Multiple-Sync

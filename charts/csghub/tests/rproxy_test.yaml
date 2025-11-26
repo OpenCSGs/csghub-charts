@@ -42,11 +42,11 @@ set:
       serving:
         services:
           - domain: "app1.internal"
-            host: 10.0.6.10
-            port: 30022
+            host: "10.0.6.10"
+            port: "30022"
           - domain: "app2.internal"
-            host: 10.0.6.11
-            port: 30023
+            host: "10.0.6.11"
+            port: "30023"
 tests:
   - it: Should render coredns configmap correctly
     template: csghub/rproxy/coredns/configmap.yaml

@@ -64,8 +64,9 @@ data:
   {{- $typeLabel := $service.gpuModelLabel.typeLabel }}
   {{- $capacityLabel := $service.gpuModelLabel.capacityLabel }}
   STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
+  STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.model.deployTimeout | default 60 | quote }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
-  {{- $registry := or $service.modelRegistry .Values.global.image.registry "docker.io" }}
+  {{- $registry := or $service.model.registry .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
   STARHUB_SERVER_CLUSTER_ID: {{ $service.originClusterID | quote }}
 
