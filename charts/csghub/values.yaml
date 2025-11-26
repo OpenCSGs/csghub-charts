@@ -300,6 +300,8 @@ runner:
     typeLabel: "nvidia.com/gpu.product"  # GPU type label
     capacityLabel: "nvidia.com/gpu"      # GPU capacity label
 
+  applicationEndpoint: ""
+
   ## Knative Serving configuration
   knative:
     serving:

@@ -88,5 +88,11 @@ data:
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
 
   ## Runner Configuration for kourier network
-  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: "auto"
+  ## Runner Configuration for kourier network
+  {{- if $service.applicationEndpoint }}
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
+  {{- else }}
+  {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.kourier" .) (include "common.domain.cluster" .) }}
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
+  {{- end }}
 {{- end }}
