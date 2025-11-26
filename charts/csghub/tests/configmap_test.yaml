@@ -34,7 +34,9 @@ set:
     interval: 30
     region: "cn-north-1"
     usePublicDomain: true
-    modelRegistry: "model.io"
+    model:
+      deployTimeout: "120"
+      registry: "model.io"
     service:
       port: 8072
     gpuModelLabel:
@@ -113,6 +115,9 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
           value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "120"
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
           value: "model.io"

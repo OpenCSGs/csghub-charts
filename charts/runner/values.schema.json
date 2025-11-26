@@ -125,7 +125,6 @@
     "usePublicDomain": { "type": "boolean" },
     "pipIndexUrl": { "type": "string" },
     "extraBuildArgs": { "type": "array", "items": { "type": "string" } },
-    "modelRegistry": { "type": "string" },
     "gpuModelLabel": {
       "type": "object",
       "properties": {

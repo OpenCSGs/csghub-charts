@@ -30,7 +30,9 @@ set:
   interval: 30
   namespace: "spaces"
   usePublicDomain: true
-  modelRegistry: "model.io"
+  model:
+    deployTimeout: "120"
+    registry: "model.io"
   knative:
     serving:
       domain: "example.com"
@@ -112,6 +114,9 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
           value: "https://csghub.example.cn"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "120"
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
           value: "model.io"
