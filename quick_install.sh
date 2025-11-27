@@ -26,6 +26,7 @@ DRY_RUN=false
 GHPROXY=""
 EXTRA_ARGS=()
 INTERFACE=""
+TIMEOUT=300
 
 ################################################################################
 # Logging and Error Handling
@@ -76,12 +77,13 @@ Options:
   --ingress-service-type <type>    Set ingress service type (default: NodePort)
   --kourier-service-type <type>    Set Kourier service type (default: NodePort)
   --interface <name>               Specify the network interface to use (default: first default route interface)
+  --timeout                        Specify timeout to wait for pods ready
   --help                           Show this help and exit
 EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,enable-gpu,edition:,install-cn,hosts-alias,enable-csgship,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,knative-domain:,ingress-service-type:,kourier-service-type,interface: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,enable-gpu,edition:,install-cn,hosts-alias,enable-csgship,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,knative-domain:,ingress-service-type:,kourier-service-type,interface:,timeout: -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
@@ -101,6 +103,7 @@ while true; do
     --ingress-service-type) INGRESS_SERVICE_TYPE="$2"; shift 2 ;;
     --kourier-service-type) KOURIER_SERVICE_TYPE="$2"; shift 2 ;;
     --interface) INTERFACE="$2"; shift 2 ;;
+    --timeout) TIMEOUT="$2"; shift 2 ;;
     -h|--help) usage ;;
     --) shift; break ;;
     *) log ERRO "Unknown argument: $1"; usage ;;
@@ -278,7 +281,7 @@ manage_service() {
 
 wait_for_pods_ready() {
   local ns=$1
-  local timeout=${2:-300}
+  local timeout=${2:-$TIMEOUT}
   log INFO "Waiting for all pods in namespace $ns to be Ready..."
   run_cmd "kubectl wait --for=condition=Ready pods --all -n $ns --timeout=${timeout}s"
 }
@@ -496,7 +499,7 @@ if [[ "${DRY_RUN:-false}" == "true" ]]; then
   log CMD "Would run: kubectl wait --for=condition=Ready node --all --timeout=300s"
 else
   retry 5 "kubectl wait --for=condition=Ready node --all --timeout=300s"
-  wait_for_pods_ready kube-system 300
+  wait_for_pods_ready kube-system
 fi
 
 ################################################################################
@@ -568,7 +571,7 @@ if [[ "${ENABLE_NFS_PV:-true}" == "true" ]]; then
       --set storageClass.name=nfs-client \
       ${NFS_EXTRA_ARGS[*]}"
 
-    wait_for_pods_ready nfs-provisioner 180
+    wait_for_pods_ready nfs-provisioner
   else
     log WARN "NFS_SERVER not set, skipping NFS provisioner installation."
   fi
@@ -590,7 +593,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
     --set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery"
 
   log INFO "Waiting for NVIDIA Device Plugin pods..."
-  wait_for_pods_ready nvdp 300
+  wait_for_pods_ready nvdp
 fi
 
 ################################################################################
