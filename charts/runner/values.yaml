@@ -148,7 +148,7 @@ objectStore: {}                            # External object storage
   # endpoint: ""                           # Object storage endpoint URL
   # accessKey: ""                          # Access key for authentication
   # secretKey: ""                          # Secret key for authentication
-  # bucket: "csghub-registry"              # Bucket name
+  # bucket: "csghub-runner"                # Bucket name
   # region: ""                             # Storage region
   # secure: "false"                        # Use secure TLS certificates
   # encrypt: "false"                       # Enable TLS encryption
