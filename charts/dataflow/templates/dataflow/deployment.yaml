@@ -68,12 +68,61 @@ spec:
           image: {{ include "common.image" (list . $service.image) }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           command:
-            - "/bin/sh"
+            - "/bin/bash"
             - "-c"
             - |
-              MILLISECOND_TIMESTAMP=$$(date +%s%3N);
-              NODENAME=worker_$$MILLISECOND_TIMESTAMP@$$(hostname -f);
-              celery -A data_celery.main:celery_app worker --loglevel={{ .Values.worker.logging.level }} --pool=gevent -n $$NODENAME
+              #!/bin/bash
+              set -e
+
+              POOL_DIR=/data/dataflow/worker_ids
+              MAX_WORKERS=50
+
+              # Create the worker ID pool directory
+              mkdir -p "$POOL_DIR"
+
+              # Initialize worker ID files (only create if not exists)
+              for i in $(seq 0 $((MAX_WORKERS-1))); do
+                FILE="$POOL_DIR/worker-$(printf '%02d' "$i")"
+                [ -f "$FILE" ] || touch "$FILE"
+              done
+
+              # Try to acquire an exclusive lock on one worker file
+              WORKER_NAME=""
+              for f in "$POOL_DIR"/worker-*; do
+                [ -e "$f" ] || continue
+
+                # Open a file descriptor for the worker file
+                exec {fd}>"$f"
+
+                # Try to acquire a non-blocking exclusive lock
+                if flock -n "$fd"; then
+                  WORKER_NAME=dataflow@celery-$(basename "$f")
+                  echo "Acquired worker name: $WORKER_NAME"
+                  LOCK_FD=$fd
+                  break
+                else
+                  # Lock failed; close the FD
+                  exec {fd}>&-
+                fi
+              done
+
+              # No worker file available → exit with error
+              if [ -z "$WORKER_NAME" ]; then
+                echo "No available worker_name in pool!" >&2
+                exit 1
+              fi
+
+              # Cleanup handler: release file lock on exit
+              cleanup() {
+                exec {LOCK_FD}>&-
+              }
+              trap cleanup EXIT
+
+              # Start Celery worker with the acquired worker name
+              celery -A data_celery.main:celery_app worker \
+              --loglevel={{ .Values.worker.logging.level }} \
+              --pool=gevent \
+              -n "$WORKER_NAME"
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "dataflow") }}
