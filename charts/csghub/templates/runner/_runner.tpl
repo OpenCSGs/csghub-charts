@@ -16,8 +16,11 @@ Returns:
 {{- $service := .service -}}
 {{- $global := .global -}}
 
+{{- $runnerRegistry := include "common.registry.config" (dict "service" $service "global" $global) | fromYaml }}
+
+{{- $kanikoCache := printf "--cache-repo=%s/%s" $runnerRegistry.registry $runnerRegistry.repository }}
 {{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" -}}
-{{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" "--cache-repo=registry.cn-beijing.aliyuncs.com/opencsg_space/kaniko-cache") }}
+{{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" $kanikoCache) }}
 
 {{- if $service.pipIndexUrl }}
   {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) -}}
