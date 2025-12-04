@@ -10,6 +10,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
 {{- $registrySvc := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
 {{- $labelStudioSvc := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
+{{- $xnetSvc := include "common.service" (dict "service" "xnet" "global" .) | fromYaml }}
 {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" .) | fromYaml }}
 {{- if $ingressConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
@@ -24,6 +25,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $registrySvcPort := dig "console" "service" "port" "5000" $registrySvc }}
 {{- $labelStudioSvcName := include "common.names.custom" (list . $labelStudioSvc.name) }}
 {{- $labelStudioSvcPort := dig "console" "service" "port" "8002" $labelStudioSvc }}
+{{- $xnetSvcName := include "common.names.custom" (list . $xnetSvc.name) }}
+{{- $xnetSvcPort := dig "service" "port" 8097 $xnetSvc }}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
@@ -71,6 +74,7 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       rewrite ^/docs/(.*) /$1 break;
       rewrite ^/-/label-studio(/|$)(.*) /$2 break;
+      rewrite ^/xnet/(.*) /$1 break;
     {{- if $service.annotations }}
       {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}
@@ -151,20 +155,18 @@ spec:
               servicePort: {{ $service.docs.port }}
             {{- end }}
           {{- end }}
-          {{- if $temporalSvc.console.enabled }}
-          - path: /-/temporal
+          - path: /xnet
             pathType: ImplementationSpecific
             backend:
             {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
               service:
-                name: {{ $temporalSvcName }}
+                name: {{ $xnetSvcName }}
                 port:
-                  number: {{ $temporalSvcPort }}
+                  number: {{ $xnetSvcPort }}
             {{- else }}
-              serviceName: {{ $temporalSvcName }}
-              servicePort: {{ $temporalSvcPort }}
+              serviceName: {{ $xnetSvcName }}
+              servicePort: {{ $xnetSvcPort }}
             {{- end }}
-          {{- end }}
           {{- if .Values.global.registry.enabled }}
           - path: /v2
             pathType: Prefix
@@ -177,6 +179,20 @@ spec:
             {{- else }}
               serviceName: {{ $registrySvcName }}
               servicePort: {{ $registrySvcPort }}
+            {{- end }}
+          {{- end }}
+          {{- if $temporalSvc.console.enabled }}
+          - path: /-/temporal
+            pathType: ImplementationSpecific
+            backend:
+            {{- if eq (include "common.capabilities.ingress.apiVersion" .) "networking.k8s.io/v1" }}
+              service:
+                name: {{ $temporalSvcName }}
+                port:
+                  number: {{ $temporalSvcPort }}
+            {{- else }}
+              serviceName: {{ $temporalSvcName }}
+              servicePort: {{ $temporalSvcPort }}
             {{- end }}
           {{- end }}
           - path: /-/label-studio(/|$)(.*)

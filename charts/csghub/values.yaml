@@ -23,7 +23,7 @@ global:
   ## Image management
   image:
     # registry: ""                  # Custom image registry (overrides local registry)
-    tag: "v1.12.1"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.14.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -126,7 +126,7 @@ global:
 image:
   registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.12.1"
+  tag: "v1.14.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -196,6 +196,19 @@ server:
   swaggerAPI:
     enabled: false                         # Enable Swagger API assistants
 
+  ## Agent configuration
+  agent:
+    agenthub: {}
+      # host: ""                           # AgentHub address
+      # token: ""                          # AgentHub Token
+      # CodeInstanceQuotaPerUser: 5
+      # LangflowInstanceQuotaPerUser: 5
+
+  ## CSGBot configuration
+  csgbot: {}
+    # host: ""                             # CSGBot address
+    # port: ""                             # CSGBot port
+
   ## Database configuration
   postgresql: {}
     # host: "<pg_host>"                    # PostgreSQL host address
@@ -222,6 +235,11 @@ server:
     # secure: "false"                      # Use secure TLS certificates
     # encrypt: "false"                     # Enable TLS encryption
     # pathStyle: "true"                    # Use path-style addressing
+
+  ## XNet storage configuration
+  xnet: {}
+    # endpoint: ""                         # Xnet endpoint
+    # apiKey: ""                           # Server Hub API Token
 
 ## Reverse proxy configuration
 rproxy:
@@ -273,6 +291,43 @@ gateway:
     # accessKeySecret: ""                  # Secret key for authentication
     # region: ""                           # Service region
     # enableSSL: true                      # Enable SSL/TLS for secure communication
+
+## XNet service configuration
+xnet:
+  image:
+    repository: "opencsghq/csghub-xnet"
+    tag: "v1.14.0"
+
+  ## Service configuration
+  service: {}
+    # port: 8097
+
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_xnet"              # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
+
+  ## Redis configuration
+  redis: {}
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+    # password: ""                         # Redis authentication password
+
+  ## Object storage configuration
+  objectStore: {}
+    # endpoint: ""                         # Object storage endpoint URL
+    # accessKey: ""                        # Access key for authentication
+    # secretKey: ""                        # Secret key for authentication
+    # bucket: "csghub-xnet"                # Bucket name
+    # region: ""                           # Storage region
+    # secure: "false"                      # Use secure TLS certificates
+    # encrypt: "false"                     # Enable TLS encryption
+    # pathStyle: "true"                    # Use path-style addressing
 
 ## Runner configuration
 runner:
@@ -401,6 +456,7 @@ postgresql:
     - "csghub_dataflow"
     - "csghub_label_studio"
     - "csghub_csgship"
+    - "csghub_xnet"
 
   parameters: {}                             # PostgreSQL runtime parameters
     # max_connections: 400                   # Dynamic parameters (triggers recreate)
@@ -473,6 +529,8 @@ minio:
     - name: "csghub-portal-public"
       policy: "download"
     - name: "csghub-runner"
+      policy: "none"
+    - name: "csghub-xnet"
       policy: "none"
 
   persistence:
@@ -592,7 +650,7 @@ casdoor:
   image:
     registry: "docker.io"
     repository: "casbin/casdoor"
-    tag: "v1.929.0"                          # Image version tag
+    tag: "v2.79.0"                           # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 

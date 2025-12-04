@@ -1,0 +1,67 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "xnet" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  ## XNet configuration for server
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+  {{- $xnetApiToken := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $data }}
+  STARHUB_SERVER_API_TOKEN: {{ $xnetApiToken | quote }}
+  {{- $svcPort := dig "service" "port" 8097 $service }}
+  STARHUB_SERVER_XNET_SERVER_PORT: {{ $svcPort | quote }}
+  STARHUB_SERVER_CAS_URL: {{ printf "%s/xnet" (include "common.endpoint.csghub" .) | quote }}
+
+  ## XNet configuration for PostgreSQL
+  {{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+  STARHUB_DATABASE_DRIVER: "pg"
+  STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "service" $service "global" .) | quote }}
+  STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timzone | default "Asia/Shanghai" | quote }}
+
+  ## XNet configuration for ObjectStore
+  {{- $s3Config := include "common.s3.config" (dict "service" $service "global" .) | fromYaml }}
+  STARHUB_XNET_XORB_S3_URL: {{ printf "%s/%s" $s3Config.externalEndpoint $s3Config.bucket | quote }}
+  STARHUB_XNET_XORB_SIGNED_URL_EXPIRE_HOURS: {{ $service.signedUrlExpireHours | default 3 | quote }}
+  STARHUB_SERVER_S3_ENDPOINT: {{ $s3Config.externalEndpoint | trimPrefix "http://" | trimPrefix "https://" | quote }}
+  STARHUB_SERVER_S3_INTERNAL_ENDPOINT: {{ $s3Config.endpoint | trimPrefix "http://" | trimPrefix "https://" | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $s3Config.accessKey | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $s3Config.secretKey | quote }}
+  STARHUB_SERVER_S3_XORB_BUCKET: {{ $s3Config.bucket | quote }}
+  STARHUB_SERVER_S3_REGION: {{ $s3Config.region | quote }}
+  STARHUB_SERVER_S3_ENABLE_SSL: {{ $s3Config.secure | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $s3Config.pathStyle "true") | quote }}
+
+  ## XNet configuration for Redis
+  {{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
+  STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $redisConfig.host $redisConfig.port | quote }}
+  STARHUB_SERVER_REDIS_USER: {{ $redisConfig.user | quote }}
+  STARHUB_SERVER_REDIS_PASSWORD: {{ $redisConfig.password | quote }}
+
+  ## XNet configuration for JWT
+  {{- $jwtToken := dig "STARHUB_JWT_SIGNING_KEY" (randNumeric 8 | sha1sum) $data }}
+  STARHUB_JWT_SIGNING_KEY: {{ $jwtToken | quote }}
+
+  ## XNet configuration for NATS
+  {{- $natsConfig := include "common.nats.config" . | fromYaml }}
+  OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
+
+  ## XNet configuration for Prometheus
+  {{- $promeSvc := include "common.service" (dict "service" "prometheus" "global" .) | fromYaml }}
+  {{- if $promeSvc.enabled }}
+  {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
+  {{- $promePort := dig "service" "port" 80 $promeSvc }}
+  STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%v/api/v1/query" $promeHost $promePort | quote }}
+  {{- with $promeSvc.ingress.basicAuth }}
+  STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
+  {{- end }}
+  {{- end }}
