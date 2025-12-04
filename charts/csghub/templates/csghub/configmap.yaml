@@ -262,6 +262,26 @@ data:
   {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
 
+  ## Server Configuration for Agent
+  OPENCSG_AGENT_AUTOHUB_SERVICE_HOST: ""
+  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ $serverSvc.agent.agenthub.host | quote }}
+  OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ $serverSvc.agent.agenthub.token | quote }}
+  STARHUB_SERVER_AGENT_CODE_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agent.agenthub.CodeInstanceQuotaPerUser | default 5 | quote }}
+  STARHUB_SERVER_AGENT_LANGFLOW_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agent.agenthub.LangflowInstanceQuotaPerUser | default 5 | quote }}
+
+  ## Server Configuration for CSGBot
+  OPENCSG_CSGBOT_SERVER_HOST: {{ $serverSvc.csgbot.host | quote }}
+  OPENCSG_CSGBOT_SERVER_PORT: {{ $serverSvc.csgbot.port | quote }}
+
+  ## Server Configuration for XNet
+  {{- $xnetSvc := include "common.service" (dict "service" "xnet" "global" .) | fromYaml }}
+  {{- $xnetSvcName := include "common.names.custom" (list . $xnetSvc.name) }}
+  {{- $xnetSvcPort := dig "service" "port" 8097 $xnetSvc }}
+  {{- $XNetData := (lookup "v1" "ConfigMap" .Release.Namespace $xnetSvcName).data | default dict }}
+  {{- $xnetApiToken := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $XNetData }}
+  STARHUB_SERVER_XNET_ENDPOINT: {{ $serverSvc.xnet.endpoint | default (printf "%s/xnet" (include "common.endpoint.csghub" .)) | quote }}
+  STARHUB_SERVER_XNET_API_KEY: {{ $serverSvc.xnet.apiToken | default $xnetApiToken | quote }}
+
   ## Additional environments for all csghub deployments
   {{- range $key, $value := .Values.environments }}
   {{ $key }}: {{ $value | quote }}
