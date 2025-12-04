@@ -198,16 +198,16 @@ server:
 
   ## Agent configuration
   agent:
-    agenthub: {}
+    langflow: {}
       # host: ""                           # AgentHub address
       # token: ""                          # AgentHub Token
-      # CodeInstanceQuotaPerUser: 5
-      # LangflowInstanceQuotaPerUser: 5
+      # instanceQuotaPerUser: 5
+      # codeInstanceQuotaPerUser: 5
 
   ## CSGBot configuration
   csgbot: {}
     # host: ""                             # CSGBot address
-    # port: ""                             # CSGBot port
+    # port: "8070"                         # CSGBot port
 
   ## Database configuration
   postgresql: {}
