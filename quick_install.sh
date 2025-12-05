@@ -11,20 +11,28 @@ KUBECONFIG="/root/.kube/config"
 export DEBIAN_FRONTEND=noninteractive
 
 # Default values
-ENABLE_NVIDIA_GPU=false
-ENABLE_CSGSHIP=false
-HOSTS_ALIAS=true
-ENABLE_NFS_PV=true
 DOMAIN=""
+DATA_DIR="/var/lib/rancher/k3s"
+
+ENABLE_NVIDIA_GPU=false
+ENABLE_NFS_PV=true
+ENABLE_CSGSHIP=false
+
+INSTALL_CN=false
+HOSTS_ALIAS=true
+EDITION="ee"
+
+EXTRA_ARGS=()
+
+DRY_RUN=false
+VERBOSE=false
+
+GHPROXY=""
 KNATIVE_INTERNAL_DOMAIN="$DOMAIN"
+
 INGRESS_SERVICE_TYPE="NodePort"
 KOURIER_SERVICE_TYPE="$INGRESS_SERVICE_TYPE"
-EDITION="ee"
-INSTALL_CN=false
-VERBOSE=false
-DRY_RUN=false
-GHPROXY=""
-EXTRA_ARGS=()
+
 INTERFACE=""
 TIMEOUT=300
 
@@ -61,34 +69,39 @@ trap '[[ "${DRY_RUN:-false}" == "true" ]] || log ERRO "Error on line $LINENO: Co
 usage() {
   cat <<EOF
 Usage: $0 [OPTIONS]
-Options:
-  --domain <domain>                Target domain (required)
+
+Required:
+  --domain <domain>                Target domain for installation
+
+Optional:
+  --data <data_dir>                Custom data directory for K3S and components
   --enable-gpu                     Enable NVIDIA GPU support
-  --enable-nfs-pv                  Enable NFS server and persistent volume support
-  --edition [ee|ce]                Edition type (default: ee)
-  --install-cn                     Use CN registry mirror
-  --hosts-alias                    Enable adding domain aliases to /etc/hosts
-  --enable-csgship                 Enable CSGShip service
-  --extra-args "<args>"            Additional Helm chart parameters to pass, e.g. "--set replicas=2"
-  --dry-run                        Print commands only, do not execute (safe simulation)
-  --verbose                        Enable detailed logging
-  --ghproxy <url>                  Set GitHub proxy for raw.githubusercontent.com and github.com links (eg: https://ghfast.top)
-  --knative-domain <domain>        Set Knative internal domain (default: =domain)
-  --ingress-service-type <type>    Set ingress service type (default: NodePort)
-  --kourier-service-type <type>    Set Kourier service type (default: NodePort)
-  --interface <name>               Specify the network interface to use (default: first default route interface)
-  --timeout                        Specify timeout to wait for pods ready
-  --help                           Show this help and exit
+  --enable-nfs-pv                  Enable NFS server and RWX persistent volumes
+  --edition <ee|ce>                Edition type (default: ee)
+  --install-cn                     Use CN registry mirrors for faster downloads
+  --hosts-alias                    Add local /etc/hosts aliases for services
+  --enable-csgship                 Enable the CSGShip service
+  --extra-args "<args>"            Additional Helm parameters (e.g. --set key=value)
+  --dry-run                        Print the commands without executing them
+  --verbose                        Enable verbose logging output
+  --ghproxy <url>                  GitHub proxy for helm/script downloads (e.g. https://ghfast.top)
+  --knative-domain <domain>        Knative internal domain (default: same as --domain)
+  --ingress-service-type <type>    Ingress service type (default: NodePort)
+  --kourier-service-type <type>    Kourier service type (default: NodePort)
+  --interface <name>               Network interface to use (default: auto-detected)
+  --timeout <seconds>              Timeout for waiting pods to become Ready
+  --help                           Show this help message and exit
 EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,enable-gpu,edition:,install-cn,hosts-alias,enable-csgship,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,knative-domain:,ingress-service-type:,kourier-service-type,interface:,timeout: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,edition:,install-cn,hosts-alias,enable-csgship,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,knative-domain:,ingress-service-type:,kourier-service-type:,interface:,timeout: -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
   case "$1" in
     --domain) DOMAIN="$2"; shift 2 ;;
+    --data) DATA_DIR="$2"; shift 2 ;;
     --enable-gpu) ENABLE_NVIDIA_GPU=true; shift ;;
     --edition) EDITION="$2"; shift 2 ;;
     --install-cn) INSTALL_CN=true; shift ;;
@@ -435,6 +448,8 @@ fi
 log INFO "Using network interface: $interface (IP: $ip_addr)"
 
 run_cmd "mkdir -p /etc/rancher/k3s"
+run_cmd "mkdir -p ${DATA_DIR}"
+[[ -w "$DATA_DIR" ]] || log ERRO "DATA_DIR is not writable: $DATA_DIR"
 
 # registries.yaml creation: use safe_write to avoid file writes in dry-run
 cat <<EOF | safe_write /etc/rancher/k3s/registries.yaml
@@ -450,6 +465,7 @@ K3S_ENV=(
 )
 
 K3S_ARGS=(
+  "--data-dir=${DATA_DIR}"
   "--disable=traefik"
   "--node-name=k3s-master"
   "--flannel-iface=${interface}"
