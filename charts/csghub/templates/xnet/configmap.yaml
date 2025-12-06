@@ -45,7 +45,9 @@ data:
   {{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
   STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $redisConfig.host $redisConfig.port | quote }}
   STARHUB_SERVER_REDIS_USER: {{ $redisConfig.user | quote }}
+  {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $redisConfig.password) }}
   STARHUB_SERVER_REDIS_PASSWORD: {{ $redisConfig.password | quote }}
+  {{- end }}
 
   ## XNet configuration for JWT
   {{- $jwtToken := dig "STARHUB_JWT_SIGNING_KEY" (randNumeric 8 | sha1sum) $data }}
