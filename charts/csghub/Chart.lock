@@ -25,9 +25,9 @@ dependencies:
   version: 1.14.0
 - name: dataflow
   repository: https://charts.opencsg.com/repository/csghub
-  version: 1.12.0
+  version: 1.14.0
 - name: csgship
   repository: https://charts.opencsg.com/repository/csghub
   version: 0.4.0
-digest: sha256:9c40358879b9abc2af4f997ce6cea49658c35bbde0b6ba7047d9f19f92ed471a
-generated: "2025-12-04T22:24:23.311626+08:00"
+digest: sha256:959d727ec50a92645dbdd1e069d05478a17fa59a276d399950ecd4c41b28916d
+generated: "2025-12-06T17:29:56.453628+08:00"

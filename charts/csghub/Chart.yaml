@@ -61,7 +61,7 @@ dependencies:
     repository: https://charts.opencsg.com/repository/csghub
     condition: runner.enabled
   - name: dataflow
-    version: 1.12.0
+    version: 1.14.0
     repository: https://charts.opencsg.com/repository/csghub
     condition: dataflow.enabled
   - name: csgship
