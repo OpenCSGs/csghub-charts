@@ -640,7 +640,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
         done
 
         if [[ -n "$GPU_PRODUCT" ]]; then
-          NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/-(Laptop-)?GPU.*$//')
+          NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/GeForce-//;s/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/-(Laptop-)?GPU.*$//')
           retry 3 "kubectl label node $NODE nvidia.com/nvidia_name=$NVIDIA_NAME --overwrite"
         fi
       fi
