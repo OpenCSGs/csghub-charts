@@ -58,19 +58,6 @@ BEGIN
                  LPAD(v_deleted_count::TEXT, 4),
                  LPAD(ROUND(EXTRACT(EPOCH FROM v_execution_time) * 1000, 3)::TEXT, 8);
 
-    -- Delete namespaces where path starts with 'CSG_'
-    v_operation_start_time := clock_timestamp();
-    DELETE FROM namespaces
-    WHERE mirrored = true
-    AND path LIKE 'CSG\_%' ESCAPE '\';
-    GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
-    v_total_deleted_count := v_total_deleted_count + v_deleted_count;
-    v_execution_time := clock_timestamp() - v_operation_start_time;
-    RAISE NOTICE '✓ %: % rows deleted (% ms)',
-                 RPAD('namespaces', v_max_name_length),
-                 LPAD(v_deleted_count::TEXT, 4),
-                 LPAD(ROUND(EXTRACT(EPOCH FROM v_execution_time) * 1000, 3)::TEXT, 8);
-
     -- Delete users where username starts with 'CSG_'
     v_operation_start_time := clock_timestamp();
     DELETE FROM users
@@ -86,6 +73,19 @@ BEGIN
     v_execution_time := clock_timestamp() - v_operation_start_time;
     RAISE NOTICE '✓ %: % rows deleted (% ms)',
                  RPAD('users', v_max_name_length),
+                 LPAD(v_deleted_count::TEXT, 4),
+                 LPAD(ROUND(EXTRACT(EPOCH FROM v_execution_time) * 1000, 3)::TEXT, 8);
+
+    -- Delete namespaces where path starts with 'CSG_'
+    v_operation_start_time := clock_timestamp();
+    DELETE FROM namespaces
+    WHERE mirrored = true
+    AND path LIKE 'CSG\_%' ESCAPE '\';
+    GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
+    v_total_deleted_count := v_total_deleted_count + v_deleted_count;
+    v_execution_time := clock_timestamp() - v_operation_start_time;
+    RAISE NOTICE '✓ %: % rows deleted (% ms)',
+                 RPAD('namespaces', v_max_name_length),
                  LPAD(v_deleted_count::TEXT, 4),
                  LPAD(ROUND(EXTRACT(EPOCH FROM v_execution_time) * 1000, 3)::TEXT, 8);
 
