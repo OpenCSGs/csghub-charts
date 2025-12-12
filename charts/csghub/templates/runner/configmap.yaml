@@ -89,7 +89,6 @@ data:
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
 
   ## Runner Configuration for kourier network
-  ## Runner Configuration for kourier network
   {{- if $service.applicationEndpoint }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
   {{- else }}
