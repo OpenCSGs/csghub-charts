@@ -57,21 +57,21 @@ Returns: YAML configuration object with S3 connection parameters
         "pathStyle" (.pathStyle | default $s3Config.pathStyle)
       ) $s3Config -}}
     {{- end -}}
+  {{- end -}}
 
-    {{- /* Service-level external override (highest priority) */ -}}
-    {{- with $service.objectStore -}}
-      {{- $s3Config = merge (dict
-        "endpoint" (.endpoint | default $s3Config.endpoint)
-        "externalEndpoint" (.endpoint | default $s3Config.externalEndpoint)
-        "region" (.region | default $s3Config.region)
-        "accessKey" (.accessKey | default $s3Config.accessKey)
-        "secretKey" (.secretKey | default $s3Config.secretKey)
-        "bucket" (.bucket | default $s3Config.bucket)
-        "encrypt" (.encrypt | default $s3Config.encrypt)
-        "secure" (.secure | default $s3Config.secure)
-        "pathStyle" (.pathStyle | default $s3Config.pathStyle)
-      ) $s3Config -}}
-    {{- end -}}
+  {{- /* Service-level external override (highest priority) */ -}}
+  {{- with $service.objectStore -}}
+    {{- $s3Config = merge (dict
+      "endpoint" (.endpoint | default $s3Config.endpoint)
+      "externalEndpoint" (.endpoint | default $s3Config.externalEndpoint)
+      "region" (.region | default $s3Config.region)
+      "accessKey" (.accessKey | default $s3Config.accessKey)
+      "secretKey" (.secretKey | default $s3Config.secretKey)
+      "bucket" (.bucket | default $s3Config.bucket)
+      "encrypt" (.encrypt | default $s3Config.encrypt)
+      "secure" (.secure | default $s3Config.secure)
+      "pathStyle" (.pathStyle | default $s3Config.pathStyle)
+    ) $s3Config -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}

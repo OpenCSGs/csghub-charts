@@ -55,16 +55,16 @@ Returns: YAML configuration object with MongoDB connection parameters
         "password" (.password | default $mongoConfig.password)
       ) $mongoConfig -}}
     {{- end -}}
+  {{- end -}}
 
-    {{- /* Service-level external Mongo configuration (higher priority) */ -}}
-    {{- with $service.mongo -}}
-      {{- $mongoConfig = merge (dict
-        "host" (.host | default $mongoConfig.host)
-        "port" (.port | default $mongoConfig.port)
-        "user" (.user | default $mongoConfig.user)
-        "password" (.password | default $mongoConfig.password)
-      ) $mongoConfig -}}
-    {{- end -}}
+  {{- /* Service-level external Mongo configuration (higher priority) */ -}}
+  {{- with $service.mongo -}}
+    {{- $mongoConfig = merge (dict
+      "host" (.host | default $mongoConfig.host)
+      "port" (.port | default $mongoConfig.port)
+      "user" (.user | default $mongoConfig.user)
+      "password" (.password | default $mongoConfig.password)
+    ) $mongoConfig -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}
