@@ -73,14 +73,13 @@ Returns: YAML configuration object with Dataflow connection parameters
         "port" (.port | default $dataflowConfig.port)
       ) $dataflowConfig -}}
     {{- end -}}
-
-    {{- /* Service-level external Dataflow configuration (higher priority) */ -}}
-    {{- with $service.dataflow -}}
-      {{- $dataflowConfig = merge (dict
-        "host" (.host | default $dataflowConfig.host)
-        "port" (.port | default $dataflowConfig.port)
-      ) $dataflowConfig -}}
-    {{- end -}}
+  {{- end -}}
+  {{- /* Service-level external Dataflow configuration (higher priority) */ -}}
+  {{- with $service.dataflow -}}
+    {{- $dataflowConfig = merge (dict
+      "host" (.host | default $dataflowConfig.host)
+      "port" (.port | default $dataflowConfig.port)
+    ) $dataflowConfig -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}

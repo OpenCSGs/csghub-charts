@@ -57,17 +57,17 @@ Returns: YAML configuration object with registry parameters
         "insecure" (.insecure | default $registryConfig.insecure)
       ) $registryConfig -}}
     {{- end -}}
+  {{- end -}}
 
-    {{- /* Service-level external registry configuration (higher priority) */ -}}
-    {{- with $service.registry -}}
-      {{- $registryConfig = merge (dict
-        "registry" (.registry | default $registryConfig.registry)
-        "repository" (.repository | default $registryConfig.repository)
-        "username" (.username | default $registryConfig.username)
-        "password" (.password | default $registryConfig.password)
-        "insecure" (.insecure | default $registryConfig.insecure)
-      ) $registryConfig -}}
-    {{- end -}}
+  {{- /* Service-level external registry configuration (higher priority) */ -}}
+  {{- with $service.registry -}}
+    {{- $registryConfig = merge (dict
+      "registry" (.registry | default $registryConfig.registry)
+      "repository" (.repository | default $registryConfig.repository)
+      "username" (.username | default $registryConfig.username)
+      "password" (.password | default $registryConfig.password)
+      "insecure" (.insecure | default $registryConfig.insecure)
+    ) $registryConfig -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}

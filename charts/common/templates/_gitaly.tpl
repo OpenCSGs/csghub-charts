@@ -52,17 +52,17 @@ Returns: YAML configuration object with Gitaly connection parameters
         "scheme" (.scheme | default $gitalyConfig.scheme)
       ) $gitalyConfig -}}
     {{- end -}}
+  {{- end -}}
 
-    {{- /* Service-level external Gitaly configuration (higher priority) */ -}}
-    {{- with $service.gitaly -}}
-      {{- $gitalyConfig = merge (dict
-        "host" (.host | default $gitalyConfig.host)
-        "port" ((.port | default $gitalyConfig.port) | toString)
-        "storage" (.storage | default $gitalyConfig.storage)
-        "token" (.token | default $gitalyConfig.token)
-        "scheme" (.scheme | default $gitalyConfig.scheme)
-      ) $gitalyConfig -}}
-    {{- end -}}
+  {{- /* Service-level external Gitaly configuration (higher priority) */ -}}
+  {{- with $service.gitaly -}}
+    {{- $gitalyConfig = merge (dict
+      "host" (.host | default $gitalyConfig.host)
+      "port" ((.port | default $gitalyConfig.port) | toString)
+      "storage" (.storage | default $gitalyConfig.storage)
+      "token" (.token | default $gitalyConfig.token)
+      "scheme" (.scheme | default $gitalyConfig.scheme)
+    ) $gitalyConfig -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}
