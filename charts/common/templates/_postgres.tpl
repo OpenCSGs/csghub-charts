@@ -57,19 +57,19 @@ Returns: YAML configuration object with PostgreSQL connection parameters
         "sslmode" (.sslmode | default $postgresqlConfig.sslmode)
       ) $postgresqlConfig -}}
     {{- end -}}
+  {{- end -}}
 
-    {{- /* Service-level external PostgreSQL configuration (higher priority) */ -}}
-    {{- with $service.postgresql -}}
-      {{- $postgresqlConfig = merge (dict
-        "host" (.host | default $postgresqlConfig.host)
-        "port" (.port | default $postgresqlConfig.port)
-        "user" (.user | default $postgresqlConfig.user)
-        "password" (.password | default $postgresqlConfig.password)
-        "database" (.database | default $postgresqlConfig.database)
-        "timezone" (.timezone | default $postgresqlConfig.timezone)
-        "sslmode" (.sslmode | default $postgresqlConfig.sslmode)
-      ) $postgresqlConfig -}}
-    {{- end -}}
+  {{- /* Service-level external PostgreSQL configuration (higher priority) */ -}}
+  {{- with $service.postgresql -}}
+    {{- $postgresqlConfig = merge (dict
+      "host" (.host | default $postgresqlConfig.host)
+      "port" (.port | default $postgresqlConfig.port)
+      "user" (.user | default $postgresqlConfig.user)
+      "password" (.password | default $postgresqlConfig.password)
+      "database" (.database | default $postgresqlConfig.database)
+      "timezone" (.timezone | default $postgresqlConfig.timezone)
+      "sslmode" (.sslmode | default $postgresqlConfig.sslmode)
+    ) $postgresqlConfig -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}

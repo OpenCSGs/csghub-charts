@@ -52,17 +52,17 @@ Returns: YAML configuration object with Redis connection parameters
         "password" (.password | default $redisConfig.password)
       ) $redisConfig -}}
     {{- end -}}
+  {{- end -}}
 
-    {{- /* Service-level external Redis configuration (higher priority) */ -}}
-    {{- with $service.redis -}}
-      {{- $redisConfig = merge (dict
-        "host" (.host | default $redisConfig.host)
-        "port" (.port | default $redisConfig.port)
-        "database" (.database | default $redisConfig.database)
-        "user" (.user | default $redisConfig.user)
-        "password" (.password | default $redisConfig.password)
-      ) $redisConfig -}}
-    {{- end -}}
+  {{- /* Service-level external Redis configuration (higher priority) */ -}}
+  {{- with $service.redis -}}
+    {{- $redisConfig = merge (dict
+      "host" (.host | default $redisConfig.host)
+      "port" (.port | default $redisConfig.port)
+      "database" (.database | default $redisConfig.database)
+      "user" (.user | default $redisConfig.user)
+      "password" (.password | default $redisConfig.password)
+    ) $redisConfig -}}
   {{- end -}}
 
   {{- /* Validate required configurations */ -}}
