@@ -31,7 +31,8 @@ data:
   {{- $lokiSvc := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
   {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
   {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
-  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
+  {{- $lokiAddress := $service.logcollector.loki.address | default (printf "http://%s:%v" $lokiSvcName $lokiSvcPort) }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ $lokiAddress | quote }}
   STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME: {{ $serviceName | quote }}
 
   ## Runner Configuration for Space

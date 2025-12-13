@@ -88,13 +88,14 @@ Returns:
 */}}
 {{- define "wait-for-loki" }}
 {{- $service := include "common.service" . | fromYaml -}}
-{{- $lokiAddress := $service.logcollector.loki.address }}
+{{- $lokiAddress := "" }}
 {{- if .Values.global.chartContext.isBuiltIn }}
 {{- $lokiSvc := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
 {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
 {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
 {{- $lokiAddress = printf "http://%s:%v" $lokiSvcName $lokiSvcPort }}
 {{- end }}
+{{- $lokiAddress = $service.logcollector.loki.address }}
 - name: wait-for-loki
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
   imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
