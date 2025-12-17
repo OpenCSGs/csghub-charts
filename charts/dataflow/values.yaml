@@ -21,7 +21,8 @@ global:
   ## Deprecated Section
   ## Image management
   image:
-    # registry: ""                  # Custom image registry (overrides local registry)
+    registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
+    registryPolicy: "default"       # default or force, force will overwrite all others registries
     tag: "v1.14.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
@@ -250,6 +251,7 @@ ingress-nginx:
 
     ## Image configuration
     image:
+      registry: "docker.io"
       image: "opencsghq/ingress-nginx-controller"
       digest: ""                           # Image digest (do not update)
 
@@ -257,6 +259,7 @@ ingress-nginx:
     admissionWebhooks:
       patch:
         image:
+          registry: "docker.io"
           image: "opencsghq/ingress-nginx-kube-webhook-certgen"
           digest: ""                       # Image digest (do not update)
 
@@ -281,6 +284,7 @@ ingress-nginx:
   defaultBackend:
     enabled: true                          # Enable custom error pages
     image:
+      registry: "docker.io"
       image: "opencsghq/ingress-nginx-custom-error-pages"
       tag: "v1.2.0"
     extraVolumes:

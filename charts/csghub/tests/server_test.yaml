@@ -10,7 +10,8 @@ release:
 set:
   global:
     image:
-      registry: ""
+      registry: "docker.io"
+      registryPolicy: "default"
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     postgresql:
@@ -144,6 +145,7 @@ tests:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registryPolicy: "force"
       server:
         image:
           pullPolicy: "IfNotPresent"
