@@ -295,8 +295,11 @@ gateway:
 ## XNet service configuration
 xnet:
   image:
+    registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
     tag: "v1.14.0"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
 
   ## Service configuration
   service: {}
