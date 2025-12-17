@@ -40,7 +40,7 @@ dependencies:
     repository: file://charts/ingress-nginx
     condition: ingress-nginx.enabled
   - name: reloader
-    version: 2.1.4
+    version: 2.2.7
     repository: file://charts/reloader
     condition: reloader.enabled
   - name: prometheus
