@@ -36,7 +36,7 @@ dependencies:
     version: 0.1.4
     repository: https://charts.opencsg.com/repository/csghub
   - name: ingress-nginx
-    version: 4.12.7
+    version: 4.14.1
     repository: file://charts/ingress-nginx
     condition: ingress-nginx.enabled
   - name: reloader

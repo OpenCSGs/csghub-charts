@@ -7,6 +7,6 @@ dependencies:
   version: 2.2.7
 - name: ingress-nginx
   repository: file://charts/ingress-nginx
-  version: 4.12.7
-digest: sha256:0ebcf7dca27f5d01434b92f70f00ad49788b7f3ed1bc46c8a0fd72284781dcc3
-generated: "2025-12-17T16:28:12.830839+08:00"
+  version: 4.14.1
+digest: sha256:adfbaa083bf5c299c086b8bcfe3e2e24165f0bd7b321fc61801674dbf88ae40f
+generated: "2025-12-17T17:32:35.338883+08:00"
