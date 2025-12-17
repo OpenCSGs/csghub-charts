@@ -35,7 +35,7 @@ dependencies:
     version: 0.1.4
     repository: https://charts.opencsg.com/repository/csghub
   - name: reloader
-    version: 2.1.4
+    version: 2.2.7
     repository: file://charts/reloader
     condition: reloader.enabled
   - name: ingress-nginx
