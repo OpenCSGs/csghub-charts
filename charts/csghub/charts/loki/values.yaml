@@ -71,7 +71,7 @@ loki:
     timeoutSeconds: 1
   image:
     # -- The Docker registry
-    registry: docker.io
+    # registry: docker.io
     # -- Docker image repository
     repository: grafana/loki
     # -- Overrides the image tag whose default is the chart's appVersion
