@@ -4,12 +4,12 @@ dependencies:
   version: 0.1.4
 - name: ingress-nginx
   repository: file://charts/ingress-nginx
-  version: 4.12.7
+  version: 4.14.1
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
 - name: prometheus
   repository: file://charts/prometheus
   version: 27.37.0
-digest: sha256:297a8f9e30566e1ff9a66ac3811c09e7022359a9181689fdd452ce970c7f7974
-generated: "2025-12-17T16:28:10.204837+08:00"
+digest: sha256:5ae0567047739408e219bcf969a5741579a96b8ef4369851ddb463572933ad42
+generated: "2025-12-17T17:32:39.582539+08:00"
