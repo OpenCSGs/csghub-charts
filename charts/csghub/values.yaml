@@ -22,7 +22,8 @@ global:
 
   ## Image management
   image:
-    # registry: ""                  # Custom image registry (overrides local registry)
+    registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
+    registryPolicy: "default"       # default or force, force will overwrite all others registries
     tag: "v1.14.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
@@ -788,7 +789,7 @@ fluentd:
 ## Reloader configuration
 reloader:
   image:
-    name: "opencsghq/stakater-reloader"    # Reloader image name
+    repository: "opencsghq/stakater-reloader"    # Reloader image name
 
 ## Loki log aggregation configuration
 loki:
@@ -798,16 +799,8 @@ loki:
       # username: "loki"
       # password: "loki"
 
-  memcached:
-    image:
-      registry: "docker.io"                # Memcached image registry
-
   memcachedExporter:
     enabled: false                         # Disable memcached exporter
-
-  sidecar:
-    image:
-      registry: "docker.io"                # Sidecar image registry
 
   deploymentMode: "SingleBinary"           # Deployment mode: SingleBinary or MicroServices
 

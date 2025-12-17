@@ -16,7 +16,8 @@ set:
         enabled: true
         secretName: "test-tls"
     image:
-      registry: ""
+      registry: "docker.io"
+      registryPolicy: "default"
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
@@ -227,6 +228,7 @@ tests:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registryPolicy: "force"
       dataflow:
         image:
           pullPolicy: "IfNotPresent"
@@ -266,6 +268,7 @@ tests:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registryPolicy: "force"
       dataflow:
         image:
           pullPolicy: "IfNotPresent"
