@@ -5,7 +5,7 @@
 global:
   image:
     # -- Registry host to pull images from.
-    registry: registry.k8s.io
+    registry: docker.io
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
