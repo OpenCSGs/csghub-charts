@@ -21,9 +21,13 @@ Returns: Full image path in format "registry/repository:tag"
   {{- $globalImage := default dict $context.Values.global.image -}}
 
   {{- /* Merge global and local image configuration with priority */ -}}
-  {{- $registry := or $globalImage.registry $localImage.registry -}}
+  {{- $registry := or $localImage.registry $globalImage.registry -}}
   {{- $repository := or $localImage.repository $globalImage.repository -}}
   {{- $tag := or $localImage.tag $globalImage.tag -}}
+
+  {{- if eq $globalImage.registryPolicy "force" }}
+    {{- $registry = or $globalImage.registry "opencsg-registry.cn-beijing.cr.aliyuncs.com" -}}
+  {{- end }}
 
   {{- if not $registry }}
     {{- $registry = regexFind "^[^/]+" $repository }}
@@ -76,7 +80,10 @@ Returns: Full image path in format "registry/repository"
     {{- $localImage = $ctx.Values.image }}
   {{- end -}}
 
-  {{- $registry := or $globalImage.registry $localImage.registry -}}
+  {{- $registry := or $localImage.registry $globalImage.registry -}}
+  {{- if eq $globalImage.registryPolicy "force" }}
+    {{- $registry = or $globalImage.registry "opencsg-registry.cn-beijing.cr.aliyuncs.com" -}}
+  {{- end }}
 
   {{- if not $registry }}
     {{- $registry = regexFind "^[^/]+" $image }}
