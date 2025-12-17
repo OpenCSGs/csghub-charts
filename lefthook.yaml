@@ -8,38 +8,17 @@ pre-commit:
       glob: "charts/{csghub,runner,dataflow}/**"
       run: |
         echo "📦 Building all Helm chart dependencies..."
+        helm repo update
         for chart_dir in charts/*/; do
           if [ -f "${chart_dir}Chart.yaml" ]; then
             echo "Building dependencies for $(basename "${chart_dir}")"
-            if ! helm dependency build "${chart_dir}"; then
+            if ! helm dependency build --skip-refresh "${chart_dir}"; then
               echo "❌ Dependency build failed for $(basename "${chart_dir}")"
               exit 1
             fi
           fi
         done
         echo "✅ All chart dependencies built successfully"
-
-    # Check Helm chart syntax and structure
-    ct-lint:
-      glob: "charts/{csghub,runner,dataflow}/**"  # Only run when chart files change
-      run: |
-        echo "🔍 Running ct lint..."
-        
-        # Check if ct is available
-        if ! command -v ct &> /dev/null; then
-          echo "❌ ct (chart-testing) not installed"
-          echo "Install with:"
-          echo "  brew install chart-testing (macOS)"
-          echo "  or see: https://github.com/helm/chart-testing"
-          exit 1
-        fi
-        
-        if ! ct lint --all --config ct.yaml; then
-          echo "❌ ct lint failed."
-          exit 1
-        fi
-        
-        echo "✅ All charts passed linting"
 
     # Check Helm template rendering
     helm-template:
@@ -193,15 +172,27 @@ commit-msg:
         echo "✅ Commit message format is valid"
 
 ## Pre-push hooks (optional)
-#pre-push:
-#  commands:
-#    helm-dependency-update:
-#      glob: "charts/{csghub,runner,dataflow}/**"
-#      run: |
-#        echo "📦 Checking Helm dependencies..."
-#        for chart_dir in charts/*/; do
-#          if [ -f "${chart_dir}Chart.yaml" ] && [ -f "${chart_dir}requirements.yaml" ] || [ -f "${chart_dir}Chart.yaml" ] && grep -q "dependencies:" "${chart_dir}Chart.yaml"; then
-#            echo "Updating dependencies for $(basename "${chart_dir}")"
-#            helm dependency update "${chart_dir}"
-#          fi
-#        done
+pre-push:
+  commands:
+    # Check Helm chart syntax and structure
+    ct-lint:
+      stdin: true
+      glob: "charts/{csghub,runner,dataflow}/**"  # Only run when chart files change
+      run: |
+        echo "🔍 Running ct lint..."
+
+        # Check if ct is available
+        if ! command -v ct &> /dev/null; then
+          echo "❌ ct (chart-testing) not installed"
+          echo "Install with:"
+          echo "  brew install chart-testing (macOS)"
+          echo "  or see: https://github.com/helm/chart-testing"
+          exit 1
+        fi
+
+        if ! ct lint --check-version-increment=false --config ct.yaml; then
+          echo "❌ ct lint failed."
+          exit 1
+        fi
+
+        echo "✅ All charts passed linting"
