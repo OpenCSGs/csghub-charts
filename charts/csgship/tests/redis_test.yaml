@@ -9,7 +9,8 @@ release:
 set:
   global:
     image:
-      registry: ""
+      registry: "docker.io"
+      registryPolicy: "default"
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
@@ -18,6 +19,8 @@ set:
       size: "25Gi"
     redis:
       enabled: true
+    chartContext:
+      isBuiltIn: false
   redis:
     name: "redis"
     image:
@@ -119,6 +122,7 @@ tests:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registryPolicy: "force"
       redis:
         image:
           pullPolicy: "IfNotPresent"

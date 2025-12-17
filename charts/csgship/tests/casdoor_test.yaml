@@ -20,7 +20,8 @@ set:
       service:
         type: LoadBalancer
     image:
-      registry: ""
+      registry: "docker.io"
+      registryPolicy: "default"
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
     persistence:
@@ -29,6 +30,8 @@ set:
       size: "25Gi"
     postgresql:
       enabled: true
+    chartContext:
+      isBuiltIn: false
   casdoor:
     name: "casdoor"
     image:
@@ -226,6 +229,7 @@ tests:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registryPolicy: "force"
       casdoor:
         image:
           pullPolicy: "IfNotPresent"

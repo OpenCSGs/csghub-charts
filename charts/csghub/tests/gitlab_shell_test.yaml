@@ -19,7 +19,8 @@ set:
       service:
         type: LoadBalancer
     image:
-      registry: ""
+      registry: "docker.io"
+      registryPolicy: "default"
       pullPolicy: "Never"
       pullSecrets: ["acr-pull-secret"]
   gitlabShell:
@@ -140,6 +141,7 @@ tests:
       global:
         image:
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registryPolicy: "force"
       gitlabShell:
         image:
           pullPolicy: "IfNotPresent"
