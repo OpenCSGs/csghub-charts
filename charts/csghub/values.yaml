@@ -497,7 +497,7 @@ minio:
   image:
     registry: "docker.io"
     repository: "minio/minio"
-    tag: "RELEASE.2024-12-18T13-15-44Z"      # Image version tag
+    tag: "RELEASE.2025-09-07T16-13-09Z"      # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
