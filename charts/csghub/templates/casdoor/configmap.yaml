@@ -5,6 +5,11 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $configData := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict -}}
+{{- $config := dict }}
+{{- if $configData }}
+  {{- $config = (index $configData "init_data.json" | fromYaml) | default dict }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -191,7 +196,14 @@ data:
           ]
         }
       ],
+      {{- $apps := index $config "applications" | default list }}
       "applications": [
+        {{- $csghubApp := dict -}}
+        {{- range $i, $app := $apps }}
+          {{- if eq $app.name "CSGHub" }}
+            {{- $csghubApp = $app }}
+          {{- end }}
+        {{- end }}
         {
           "owner": "admin",
           "name": "CSGHub",
@@ -213,8 +225,8 @@ data:
           "orgChoiceMode": "Select",
           "samlReplyUrl": "",
           {{- $appCsghub := include "csghub.casdoor.client" "CSGHub" | fromYaml }}
-          "clientId": {{ $appCsghub.clientId | quote }},
-          "clientSecret": {{ $appCsghub.clientSecret | quote }},
+          "clientId": {{ $csghubApp.clientId | default $appCsghub.clientId | quote }},
+          "clientSecret": {{ $csghubApp.clientSecret | default $appCsghub.clientSecret | quote }},
           "providers": [
             {
               "owner": "",
@@ -429,6 +441,12 @@ data:
           "failedSigninLimit": 5,
           "failedSigninFrozenTime": 15
         },
+        {{- $adminApp := dict -}}
+        {{- range $i, $app := $apps }}
+          {{- if eq $app.name "Admin" }}
+            {{- $adminApp = $app }}
+          {{- end }}
+        {{- end }}
         {
           "owner": "admin",
           "name": "Admin",
@@ -453,8 +471,8 @@ data:
             "is_admin"
           ],
           {{- $appAdmin := include "csghub.casdoor.client" "Admin" | fromYaml }}
-          "clientId": {{ $appAdmin.clientId | quote }},
-          "clientSecret": {{ $appAdmin.clientSecret | quote }},
+          "clientId": {{ $adminApp.clientId | default $appAdmin.clientId | quote }},
+          "clientSecret": {{ $adminApp.clientSecret | default $appAdmin.clientSecret | quote }},
           "providers": [
             {
               "owner": "",
@@ -660,6 +678,12 @@ data:
           "failedSigninLimit": 5,
           "failedSigninFrozenTime": 15
         },
+        {{- $csgshipApp := dict -}}
+        {{- range $i, $app := $apps }}
+          {{- if eq $app.name "CSGShip" }}
+            {{- $csgshipApp = $app }}
+          {{- end }}
+        {{- end }}
         {
           "owner": "admin",
           "name": "CSGShip",
@@ -681,8 +705,8 @@ data:
           "orgChoiceMode": "Select",
           "samlReplyUrl": "",
           {{- $appCsgship := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
-          "clientId": {{ $appCsgship.clientId | quote }},
-          "clientSecret": {{ $appCsgship.clientSecret | quote }},
+          "clientId": {{ $csgshipApp.clientId | default $appCsgship.clientId | quote }},
+          "clientSecret": {{ $csgshipApp.clientSecret | default $appCsgship.clientSecret | quote }},
           "providers": [
             {
               "owner": "",
