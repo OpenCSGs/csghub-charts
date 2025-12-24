@@ -6,6 +6,11 @@ SPDX-License-Identifier: APACHE-2.0
 {{- if not .Values.global.chartContext.isBuiltIn }}
 {{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $configData := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict -}}
+{{- $config := dict }}
+{{- if $configData }}
+  {{- $config = (index $configData "init_data.json" | fromYaml) | default dict }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -192,7 +197,14 @@ data:
           ]
         }
       ],
+      {{- $apps := index $config "applications" | default list }}
       "applications": [
+        {{- $csgshipApp := dict -}}
+        {{- range $i, $app := $apps }}
+          {{- if eq $app.name "CSGShip" }}
+            {{- $csgshipApp = $app }}
+          {{- end }}
+        {{- end }}
         {
           "owner": "admin",
           "name": "CSGShip",
@@ -214,8 +226,8 @@ data:
           "orgChoiceMode": "Select",
           "samlReplyUrl": "",
           {{- $appCsgship := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
-          "clientId": {{ $appCsgship.clientId | quote }},
-          "clientSecret": {{ $appCsgship.clientSecret | quote }},
+          "clientId": {{ $csgshipApp.clientId | default $appCsgship.clientId | quote }},
+          "clientSecret": {{ $csgshipApp.clientSecret | default  $appCsgship.clientSecret | quote }},
           "providers": [
             {
               "owner": "",
