@@ -8,6 +8,7 @@ set:
   global:
     ingress:
       domain: "example.cn"
+      host: ""
       tls:
         enabled: true
         secretName: "example-cn-tls"
@@ -48,3 +49,14 @@ tests:
       - equal:
           path: spec.tls[0].secretName
           value: "example-cn-tls-local"
+
+  - it: Should render ingress correctly
+    template: ingress.yaml
+    set:
+      global:
+        ingress:
+          host: "runner.example.com"
+    asserts:
+      - contains:
+          path: spec.tls[0].hosts
+          content: "runner.example.com"
