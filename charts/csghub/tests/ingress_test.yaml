@@ -35,7 +35,7 @@ tests:
           path: spec.tls[0].hosts
           value:
             - csghub.example.cn
-            - "*.public.example.cn"
+            - "*.csghub.example.cn"
       - equal:
           path: spec.tls[0].secretName
           value: "example-cn-tls"
@@ -44,7 +44,7 @@ tests:
           value: "csghub.example.cn"
       - equal:
           path: spec.rules[1].host
-          value: "*.public.example.cn"
+          value: "*.csghub.example.cn"
 
   - it: Should render all resources correctly
     template: csghub/ingress.yaml
@@ -63,7 +63,7 @@ tests:
           path: spec.tls[0].hosts
           value:
             - example.cn
-            - "*.public.example.cn"
+            - "*.csghub.example.cn"
 
   - it: Should render all resources correctly
     template: csghub/ingress.yaml
@@ -117,3 +117,47 @@ tests:
       - equal:
           path: spec.rules[0].host
           value: "csghub.example.com"
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          useTop: true
+          host: "csghub.example.com"
+    asserts:
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - csghub.example.com
+            - "*.csghub.example.com"
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          useTop: true
+          host: "csghub.example.com"
+          publicHost: "spaces.example.com"
+    asserts:
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - csghub.example.com
+            - "*.spaces.example.com"
+
+  - it: Should render all resources correctly
+    template: csghub/ingress.yaml
+    set:
+      global:
+        ingress:
+          useTop: true
+          host: "csghub.example.com"
+          publicHost: "spaces"
+    asserts:
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - csghub.example.com
+            - "*.spaces.example.cn"

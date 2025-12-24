@@ -8,6 +8,8 @@ set:
   global:
     ingress:
       domain: "example.com"
+      host: ""
+      publicHost: ""
       tls:
         enabled: true
         secretName: "test-tls"
@@ -81,7 +83,7 @@ tests:
           value: "cn-north-1"
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "public.example.com"
+          value: "csghub.example.com"
       - equal:
           path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
           value: "spaces.app.internal"
