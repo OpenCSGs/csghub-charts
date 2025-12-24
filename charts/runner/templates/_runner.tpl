@@ -11,7 +11,16 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 {{- define "common.domain.runner" -}}
 {{- $service := include "common.service" . | fromYaml }}
-{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
+{{- $host := .Values.global.ingress.host }}
+{{- if $host }}
+  {{- if contains "." $host }}
+      {{- $host -}}
+  {{- else }}
+      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
+  {{- end }}
+{{- else }}
+  {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
+{{- end }}
 {{- end }}
 
 {{/*

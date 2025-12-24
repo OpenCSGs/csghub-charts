@@ -7,6 +7,9 @@ global:
     # className: "nginx"            # Ingress controller class name
     domain: "example.com"           # Base domain for accessing csghub
     useTop: false                   # Use top-level domain directly (true) or subdomain (false)
+    ## Custom default access domain instead of <release>.<domain>,
+    # host: ""                      # Prefix or full domain: "test" → test.example.com, "test.example.com" → test.example.com
+    # publicHost: ""                # Same with `host`, but for inference/finetune/space/mcp
     ## TLS/SSL configuration
     tls:
       enabled: false                # Enable or disable TLS

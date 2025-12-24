@@ -10,11 +10,17 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.csghub" -}}
-{{- $sub := .Release.Name }}
-{{- if .Values.global.ingress.useTop }}
-{{- $sub = "" }}
+{{- $host := .Values.global.ingress.host }}
+{{- if $host }}
+  {{- if contains "." $host }}
+      {{- $host -}}
+  {{- else }}
+      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
+  {{- end }}
+{{- else }}
+  {{- $sub := ternary "" .Release.Name .Values.global.ingress.useTop }}
+  {{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
 {{- end }}
-{{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
 {{- end }}
 
 {{/*
@@ -24,11 +30,24 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.public" -}}
-{{- $sub := "public" }}
-{{- if .Values.global.ingress.useTop }}
-{{- $sub = "" }}
+{{- $publicHost := .Values.global.ingress.publicHost }}
+{{- $host := .Values.global.ingress.host }}
+{{- if $publicHost }}
+  {{- if contains "." $publicHost }}
+      {{- $publicHost -}}
+  {{- else }}
+      {{- include "common.domain" (dict "ctx" . "sub" $publicHost) -}}
+  {{- end }}
+{{- else if $host }}
+  {{- if contains "." $host }}
+      {{- $host -}}
+  {{- else }}
+      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
+  {{- end }}
+{{- else }}
+  {{- $sub := .Release.Name }}
+  {{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
 {{- end }}
-{{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
 {{- end }}
 
 {{/*
