@@ -11,7 +11,6 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 {{- define "common.domain.csghub" -}}
 {{- $host := .Values.global.ingress.host }}
-
 {{- if $host }}
   {{- if contains "." $host }}
       {{- $host -}}
@@ -31,8 +30,24 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.public" -}}
-{{- $sub := "public" }}
-{{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
+{{- $publicHost := .Values.global.ingress.publicHost }}
+{{- $host := .Values.global.ingress.host }}
+{{- if $publicHost }}
+  {{- if contains "." $publicHost }}
+      {{- $publicHost -}}
+  {{- else }}
+      {{- include "common.domain" (dict "ctx" . "sub" $publicHost) -}}
+  {{- end }}
+{{- else if $host }}
+  {{- if contains "." $host }}
+      {{- $host -}}
+  {{- else }}
+      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
+  {{- end }}
+{{- else }}
+  {{- $sub := .Release.Name }}
+  {{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
+{{- end }}
 {{- end }}
 
 {{/*
