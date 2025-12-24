@@ -586,7 +586,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
   restart_service
   run_cmd "timeout 10s helm repo add nvdp https://nvidia.github.io/k8s-device-plugin --force-update"
   run_cmd "timeout 10s helm upgrade -i nvdp nvdp/nvidia-device-plugin --namespace nvdp --create-namespace \
-    --version v0.17.4 \
+    --version v0.18.0 \
     --set gfd.enabled=true \
     --set runtimeClassName=nvidia \
     --set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin \
