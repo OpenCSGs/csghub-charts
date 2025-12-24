@@ -8,6 +8,8 @@ set:
   global:
     ingress:
       domain: "example.com"
+      host: ""
+      publicHost: ""
       tls:
         enabled: true
         secretName: "test-tls"
@@ -89,7 +91,7 @@ tests:
           value: "es-west-1"
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "public.example.com"
+          value: "csghub.example.com"
       - equal:
           path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
           value: "spaces.app.internal"
@@ -168,3 +170,37 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
           value: "http://10.6.0.12:30345"
+
+  - it: Should render configmap correctly
+    template: configmap.yaml
+    set:
+      global:
+        ingress:
+          host: "public"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "public.example.com"
+
+  - it: Should render configmap correctly
+    template: configmap.yaml
+    set:
+      global:
+        ingress:
+          host: "spaces.example.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "spaces.example.com"
+
+  - it: Should render configmap correctly
+    template: configmap.yaml
+    set:
+      global:
+        ingress:
+          host: "spaces.example.com"
+          publicHost: "public.space.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "public.space.com"
