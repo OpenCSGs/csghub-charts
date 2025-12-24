@@ -16,11 +16,9 @@ DATA_DIR="/var/lib/rancher/k3s"
 
 ENABLE_NVIDIA_GPU=false
 ENABLE_NFS_PV=true
-ENABLE_CSGSHIP=false
 
 INSTALL_CN=false
 HOSTS_ALIAS=true
-EDITION="ee"
 
 EXTRA_ARGS=()
 
@@ -28,10 +26,6 @@ DRY_RUN=false
 VERBOSE=false
 
 GHPROXY=""
-KNATIVE_INTERNAL_DOMAIN="$DOMAIN"
-
-INGRESS_SERVICE_TYPE="NodePort"
-KOURIER_SERVICE_TYPE="$INGRESS_SERVICE_TYPE"
 
 INTERFACE=""
 TIMEOUT=300
@@ -77,17 +71,12 @@ Optional:
   --data <data_dir>                Custom data directory for K3S and components
   --enable-gpu                     Enable NVIDIA GPU support
   --enable-nfs-pv                  Enable NFS server and RWX persistent volumes
-  --edition <ee|ce>                Edition type (default: ee)
   --install-cn                     Use CN registry mirrors for faster downloads
   --hosts-alias                    Add local /etc/hosts aliases for services
-  --enable-csgship                 Enable the CSGShip service
   --extra-args "<args>"            Additional Helm parameters (e.g. --set key=value)
   --dry-run                        Print the commands without executing them
   --verbose                        Enable verbose logging output
   --ghproxy <url>                  GitHub proxy for helm/script downloads (e.g. https://ghfast.top)
-  --knative-domain <domain>        Knative internal domain (default: same as --domain)
-  --ingress-service-type <type>    Ingress service type (default: NodePort)
-  --kourier-service-type <type>    Kourier service type (default: NodePort)
   --interface <name>               Network interface to use (default: auto-detected)
   --timeout <seconds>              Timeout for waiting pods to become Ready
   --help                           Show this help message and exit
@@ -95,7 +84,7 @@ EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,edition:,install-cn,hosts-alias,enable-csgship,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,knative-domain:,ingress-service-type:,kourier-service-type:,interface:,timeout: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout: -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
@@ -103,18 +92,13 @@ while true; do
     --domain) DOMAIN="$2"; shift 2 ;;
     --data) DATA_DIR="$2"; shift 2 ;;
     --enable-gpu) ENABLE_NVIDIA_GPU=true; shift ;;
-    --edition) EDITION="$2"; shift 2 ;;
     --install-cn) INSTALL_CN=true; shift ;;
     --hosts-alias) HOSTS_ALIAS=true; shift ;;
-    --enable-csgship) ENABLE_CSGSHIP=true; shift ;;
     --enable-nfs-pv) ENABLE_NFS_PV=true; shift ;;
     --extra-args) EXTRA_ARGS+=($2); shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --verbose) VERBOSE=true; shift ;;
     --ghproxy) GHPROXY="$2"; shift 2 ;;
-    --knative-domain) KNATIVE_INTERNAL_DOMAIN="$2"; shift 2 ;;
-    --ingress-service-type) INGRESS_SERVICE_TYPE="$2"; shift 2 ;;
-    --kourier-service-type) KOURIER_SERVICE_TYPE="$2"; shift 2 ;;
     --interface) INTERFACE="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
     -h|--help) usage ;;
@@ -657,46 +641,43 @@ run_cmd "helm repo update"
 
 # Compose extra args array for helm
 if [[ "$ENABLE_NFS_PV" == "true" ]]; then
-  EXTRA_ARGS+=(--set dataflow.dataflow.persistence.storageClass='nfs-client')
-  EXTRA_ARGS+=(--set csgship.web.persistence.storageClass='nfs-client')
+  HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.storageClass='nfs-client')
+  HELM_EXTRA_ARGS+=(--set csgship.web.persistence.storageClass='nfs-client')
 else
-  EXTRA_ARGS+=(--set dataflow.dataflow.persistence.accessModes[0]="ReadWriteOnce")
+  HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.accessModes[0]="ReadWriteOnce")
 fi
-if [[ "$ENABLE_CSGSHIP" == "true" ]]; then
-  EXTRA_ARGS+=(--set csgship.enabled=true)
-fi
+
+HELM_EXTRA_ARGS+=(--set global.edition='ee')
+HELM_EXTRA_ARGS+=(--set global.ingress.domain="${DOMAIN}")
+HELM_EXTRA_ARGS+=(--set global.ingress.service.type=NodePort)
+HELM_EXTRA_ARGS+=(--set ingress-nginx.controller.service.type=NodePort)
+HELM_EXTRA_ARGS+=(--set csgship.enabled='false')
+
 if [[ "$INSTALL_CN" == "true" ]]; then
-  EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
+  HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
 fi
+
+HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
 
 # Helm install/upgrade with proper array handling
 if [[ "${DRY_RUN:-false}" == "true" ]]; then
   log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
-    --set global.edition='${EDITION}' --set csgship.enabled='${ENABLE_CSGSHIP}' \
-    --set global.ingress.domain='${DOMAIN}' --set global.ingress.service.type='${INGRESS_SERVICE_TYPE}' \
-    --set ingress-nginx.controller.service.type='${INGRESS_SERVICE_TYPE}' ${EXTRA_ARGS[*]} | tee ./login.txt"
+    ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
 else
   retry 3 helm upgrade --install csghub csghub/csghub \
     --namespace csghub \
     --create-namespace \
-    --set global.edition="$EDITION" \
-    --set csgship.enabled="$ENABLE_CSGSHIP" \
-    --set global.ingress.domain="$DOMAIN" \
-    --set global.ingress.service.type="$INGRESS_SERVICE_TYPE" \
-    --set ingress-nginx.controller.service.type="$INGRESS_SERVICE_TYPE" \
-    "${EXTRA_ARGS[@]}" | tee ./login.txt
+    "${HELM_EXTRA_ARGS[@]}" | tee ./login.txt
 fi
 
 # Patch kourier svc to NodePort, wait for it to be created first
-if [[ "$INGRESS_SERVICE_TYPE" == "NodePort" ]]; then
-  log INFO "Waiting for kourier service to be created in kourier-system namespace..."
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would wait for kourier svc in kourier-system and patch to NodePort"
-  else
-    retry 10 "kubectl get svc kourier -n kourier-system"
-    log INFO "Patching kourier to NodePort..."
-    run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n kourier-system"
-  fi
+log INFO "Waiting for kourier service to be created in kourier-system namespace..."
+if [[ "${DRY_RUN:-false}" == "true" ]]; then
+  log CMD "Would wait for kourier svc in kourier-system and patch to NodePort"
+else
+  retry 10 "kubectl get svc kourier -n kourier-system"
+  log INFO "Patching kourier to NodePort..."
+  run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n kourier-system"
 fi
 
 ################################################################################
