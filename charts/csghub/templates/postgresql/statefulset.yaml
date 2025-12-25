@@ -96,8 +96,10 @@ spec:
           livenessProbe:
             tcpSocket:
               port: 5432
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            initialDelaySeconds: 15
+            periodSeconds: 7
+            timeoutSeconds: 5
+            failureThreshold: 10
           readinessProbe:
             exec:
               command:
@@ -110,9 +112,9 @@ spec:
                 - "127.0.0.1"
                 - "-p"
                 - "5432"
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            timeoutSeconds: 10
+            initialDelaySeconds: 15
+            periodSeconds: 7
+            timeoutSeconds: 5
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}
