@@ -268,7 +268,10 @@ ingress-nginx:
       annotations-risk-level: "Critical"    # Risk level for annotations
       custom-http-errors: "404,500,502,503" # Custom HTTP error codes
       enable-underscores-in-headers: "true" # Skip underscores headers
+      compute-full-forwarded-for: "true"   # Enable computation of full X-Forwarded-For header
+      use-forwarded-headers: "true"        # Trust and use X-Forwarded-* headers for client info
 
+    ## Annotations configuration
     allowSnippetAnnotations: true          # Allow server snippets in annotations
 
     ## Service configuration
