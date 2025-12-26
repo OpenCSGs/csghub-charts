@@ -72,9 +72,11 @@ metadata:
       }
     {{- end }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      rewrite ^/docs/(.*) /$1 break;
-      rewrite ^/-/label-studio(/|$)(.*) /$2 break;
-      rewrite ^/xnet/(.*) /$1 break;
+      if ($host = {{ include "common.domain.csghub" . | quote }}) {
+        rewrite ^/docs/(.*) /$1 break;
+        rewrite ^/-/label-studio(/|$)(.*) /$2 break;
+        rewrite ^/xnet/(.*) /$1 break;
+      }
     {{- if $service.annotations }}
       {{- toYaml $service.annotations | nindent 4 }}
     {{- end }}
