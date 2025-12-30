@@ -30,6 +30,10 @@ GHPROXY=""
 INTERFACE=""
 TIMEOUT=300
 
+K3S_SERVER=""
+K3S_TOKEN=""
+
+
 ################################################################################
 # Logging and Error Handling
 ################################################################################
@@ -79,12 +83,14 @@ Optional:
   --ghproxy <url>                  GitHub proxy for helm/script downloads (e.g. https://ghfast.top)
   --interface <name>               Network interface to use (default: auto-detected)
   --timeout <seconds>              Timeout for waiting pods to become Ready
+  --k3s-server <server_url>        Join an existing K3S cluster as an agent node
+  --k3s-token <server_token>       K3S cluster join token (required with --k3s-server)
   --help                           Show this help message and exit
 EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token: -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
@@ -101,6 +107,8 @@ while true; do
     --ghproxy) GHPROXY="$2"; shift 2 ;;
     --interface) INTERFACE="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
+    --k3s-server) K3S_SERVER="$2"; shift 2 ;;
+    --k3s-token) K3S_TOKEN="$2"; shift 2 ;;
     -h|--help) usage ;;
     --) shift; break ;;
     *) log ERRO "Unknown argument: $1"; usage ;;
@@ -217,14 +225,15 @@ restart_service() {
     return 0
   fi
 
+  local service=k3s
+  if [[ ! -z "$K3S_SERVER" ]]; then
+    service="k3s-agent"
+  fi
+
   if command -v systemctl &>/dev/null; then
-    run_cmd "systemctl restart k3s"
+    run_cmd "systemctl restart ${service}"
   elif command -v rc-service &>/dev/null; then
-    run_cmd "rc-service k3s restart"
-  else
-    log WARN "Cannot determine service manager, restarting k3s manually."
-    run_cmd "pkill -9 k3s || true"
-    run_cmd "nohup k3s server >/var/log/k3s-restart.log 2>&1 &"
+    run_cmd "rc-service ${service} restart"
   fi
 }
 
@@ -450,11 +459,30 @@ K3S_ENV=(
 
 K3S_ARGS=(
   "--data-dir=${DATA_DIR}"
-  "--disable=traefik"
-  "--node-name=k3s-master"
   "--flannel-iface=${interface}"
   "--kubelet-arg=eviction-hard="
 )
+
+if [[ -z "$K3S_SERVER" ]]; then
+  log INFO "Installing K3S server node..."
+  K3S_ARGS+=(
+    "--node-name=k3s-master"
+    "--disable=traefik"
+  )
+else
+  log INFO "Installing K3S agent node..."
+  if [[ -z "$K3S_TOKEN" ]]; then
+    log ERRO "--k3s-token is required when --k3s-server is set"
+    log WARN "Get join token from ${DATA_DIR}/server/token"
+    exit 1
+  fi
+
+  K3S_ENV+=(
+    "K3S_URL=$K3S_SERVER"
+    "K3S_TOKEN=$K3S_TOKEN"
+  )
+  K3S_ARGS+=("--node-name=k3s-agent-${ip_addr//./-}")
+fi
 
 if [[ "$INSTALL_CN" == "true" ]]; then
   K3S_URL="https://rancher-mirror.rancher.cn/k3s/k3s-install.sh"
@@ -473,6 +501,11 @@ log INFO "Waiting for k3s started..."
 if [[ "${DRY_RUN:-false}" == "true" ]]; then
   log CMD "Would wait for /etc/rancher/k3s/k3s.yaml to be created"
 else
+  log WARN "Please copy server ~/.kube/config to agent /etc/rancher/k3s/k3s.yaml."
+  user_input=""
+  while [[ "$user_input" != "continue" ]]; do
+    read -rp "Type 'continue' to proceed: " user_input
+  done
   retry 10 "test -f /etc/rancher/k3s/k3s.yaml"
 fi
 
@@ -485,13 +518,15 @@ fi
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 log INFO "K3S installed (or simulated)."
 
-mkdir -p ~/.kube
-if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  log CMD "Would copy /etc/rancher/k3s/k3s.yaml to ~/.kube/config and sed replace 127.0.0.1 with ${ip_addr}"
-else
-  cp -f /etc/rancher/k3s/k3s.yaml ~/.kube/config
-  chmod 0400 ~/.kube/config
-  sed -i "s/127.0.0.1/${ip_addr}/g" ~/.kube/config
+if [[ -z "$K3S_SERVER" ]]; then
+  mkdir -p ~/.kube
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log CMD "Would copy /etc/rancher/k3s/k3s.yaml to ~/.kube/config and sed replace 127.0.0.1 with ${ip_addr}"
+  else
+    cp -f /etc/rancher/k3s/k3s.yaml ~/.kube/config
+    chmod 0400 ~/.kube/config
+    sed -i "s/127.0.0.1/${ip_addr}/g" ~/.kube/config
+  fi
 fi
 
 log INFO "Waiting for K3S nodes to become Ready..."
@@ -505,7 +540,7 @@ fi
 ################################################################################
 # PVC ReadWriteMany Support (NFS Subdir External Provisioner)
 ################################################################################
-if [[ "${ENABLE_NFS_PV:-true}" == "true" ]]; then
+if [[ "${ENABLE_NFS_PV:-true}" == "true" && -z "$K3S_SERVER" ]]; then
   NFS_SERVER="${ip_addr:-}"
   NFS_PATH="${NFS_PATH:-/data/sharedir}"
 
@@ -584,16 +619,18 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
   log INFO "Installing NVIDIA device plugin and configuring runtime..."
   run_cmd "nvidia-ctk runtime configure --runtime=containerd --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml"
   restart_service
-  run_cmd "timeout 10s helm repo add nvdp https://nvidia.github.io/k8s-device-plugin --force-update"
-  run_cmd "timeout 10s helm upgrade -i nvdp nvdp/nvidia-device-plugin --namespace nvdp --create-namespace \
-    --version v0.18.0 \
-    --set gfd.enabled=true \
-    --set runtimeClassName=nvidia \
-    --set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin \
-    --set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery"
+  if [[ -z "$K3S_SERVER" ]]; then
+    run_cmd "timeout 10s helm repo add nvdp https://nvidia.github.io/k8s-device-plugin --force-update"
+    run_cmd "timeout 10s helm upgrade -i nvdp nvdp/nvidia-device-plugin --namespace nvdp --create-namespace \
+      --version v0.18.0 \
+      --set gfd.enabled=true \
+      --set runtimeClassName=nvidia \
+      --set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin \
+      --set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery"
 
-  log INFO "Waiting for NVIDIA Device Plugin pods..."
-  wait_for_pods_ready nvdp
+    log INFO "Waiting for NVIDIA Device Plugin pods..."
+    wait_for_pods_ready nvdp
+  fi
 fi
 
 ################################################################################
@@ -635,61 +672,62 @@ fi
 ################################################################################
 # Install CSGHub Helm Chart
 ################################################################################
-log INFO "Installing CSGHub Helm Chart..."
-run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/repository/csghub/ --force-update"
-run_cmd "helm repo update"
+if [[ -z "$K3S_SERVER" ]]; then
+  log INFO "Installing CSGHub Helm Chart..."
+  run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/repository/csghub/ --force-update"
+  run_cmd "helm repo update"
 
-# Compose extra args array for helm
-if [[ "$ENABLE_NFS_PV" == "true" ]]; then
-  HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.storageClass='nfs-client')
-  HELM_EXTRA_ARGS+=(--set csgship.web.persistence.storageClass='nfs-client')
-else
-  HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.accessModes[0]="ReadWriteOnce")
-fi
+  # Compose extra args array for helm
+  if [[ "$ENABLE_NFS_PV" == "true" ]]; then
+    HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.storageClass='nfs-client')
+    HELM_EXTRA_ARGS+=(--set csgship.web.persistence.storageClass='nfs-client')
+  else
+    HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.accessModes[0]="ReadWriteOnce")
+  fi
 
-HELM_EXTRA_ARGS+=(--set global.edition='ee')
-HELM_EXTRA_ARGS+=(--set global.ingress.domain="${DOMAIN}")
-HELM_EXTRA_ARGS+=(--set global.ingress.service.type=NodePort)
-HELM_EXTRA_ARGS+=(--set ingress-nginx.controller.service.type=NodePort)
-HELM_EXTRA_ARGS+=(--set csgship.enabled='false')
+  HELM_EXTRA_ARGS+=(--set global.edition='ee')
+  HELM_EXTRA_ARGS+=(--set global.ingress.domain="${DOMAIN}")
+  HELM_EXTRA_ARGS+=(--set global.ingress.service.type=NodePort)
+  HELM_EXTRA_ARGS+=(--set ingress-nginx.controller.service.type=NodePort)
+  HELM_EXTRA_ARGS+=(--set csgship.enabled='false')
 
-if [[ "$INSTALL_CN" == "true" ]]; then
-  HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
-fi
+  if [[ "$INSTALL_CN" == "true" ]]; then
+    HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
+  fi
 
-HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
+  HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
 
-# Helm install/upgrade with proper array handling
-if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
-    ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
-else
-  retry 3 helm upgrade --install csghub csghub/csghub \
-    --namespace csghub \
-    --create-namespace \
-    "${HELM_EXTRA_ARGS[@]}" | tee ./login.txt
-fi
+  # Helm install/upgrade with proper array handling
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
+      ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
+  else
+    retry 3 helm upgrade --install csghub csghub/csghub \
+      --namespace csghub \
+      --create-namespace \
+      "${HELM_EXTRA_ARGS[@]}" | tee ./login.txt
+  fi
 
-# Patch kourier svc to NodePort, wait for it to be created first
-log INFO "Waiting for kourier service to be created in kourier-system namespace..."
-if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  log CMD "Would wait for kourier svc in kourier-system and patch to NodePort"
-else
-  retry 10 "kubectl get svc kourier -n kourier-system"
-  log INFO "Patching kourier to NodePort..."
-  run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n kourier-system"
-fi
+  # Patch kourier svc to NodePort, wait for it to be created first
+  log INFO "Waiting for kourier service to be created in kourier-system namespace..."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log CMD "Would wait for kourier svc in kourier-system and patch to NodePort"
+  else
+    retry 10 "kubectl get svc kourier -n kourier-system"
+    log INFO "Patching kourier to NodePort..."
+    run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n kourier-system"
+  fi
 
 ################################################################################
 # Configure local hosts alias
 ################################################################################
-if [[ "$HOSTS_ALIAS" == "true" ]]; then
-  log INFO "Configuring local domain aliases..."
+  if [[ "$HOSTS_ALIAS" == "true" ]]; then
+    log INFO "Configuring local domain aliases..."
 
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would apply ConfigMap for coredns-custom with domain ${DOMAIN} and ip ${ip_addr}"
-  else
-    run_cmd "kubectl apply -f -" <<EOF
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+      log CMD "Would apply ConfigMap for coredns-custom with domain ${DOMAIN} and ip ${ip_addr}"
+    else
+      run_cmd "kubectl apply -f -" <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -704,6 +742,9 @@ data:
         ${ip_addr} minio.${DOMAIN} minio
         ${ip_addr} csgship.${DOMAIN} csgship
         ${ip_addr} csgship-api.${DOMAIN} csgship-api
+        ${ip_addr} runner.${DOMAIN} runner
+        ${ip_addr} dataflow.${DOMAIN} dataflow
+        ${ip_addr} label-studio.${DOMAIN} label-studio
       }
     }
 
@@ -716,22 +757,26 @@ data:
       errors
     }
 EOF
-  fi
-
-  entries=(
-    "${ip_addr} csghub.${DOMAIN} csghub"
-    "${ip_addr} casdoor.${DOMAIN} casdoor"
-    "${ip_addr} minio.${DOMAIN} minio"
-    "${ip_addr} csgship.${DOMAIN} csgship"
-    "${ip_addr} csgship-api.${DOMAIN} csgship-api"
-  )
-  for entry in "${entries[@]}"; do
-    if [[ "${DRY_RUN:-false}" == "true" ]]; then
-      log CMD "Would append to /etc/hosts: $entry"
-    elif ! grep -qF "$entry" /etc/hosts; then
-      echo "$entry" >> /etc/hosts
     fi
-  done
+
+    entries=(
+      "${ip_addr} csghub.${DOMAIN} csghub"
+      "${ip_addr} casdoor.${DOMAIN} casdoor"
+      "${ip_addr} minio.${DOMAIN} minio"
+      "${ip_addr} csgship.${DOMAIN} csgship"
+      "${ip_addr} csgship-api.${DOMAIN} csgship-api"
+      "${ip_addr} runner.${DOMAIN} runner"
+      "${ip_addr} dataflow.${DOMAIN} dataflow"
+      "${ip_addr} label-studio.${DOMAIN} label-studio"
+    )
+    for entry in "${entries[@]}"; do
+      if [[ "${DRY_RUN:-false}" == "true" ]]; then
+        log CMD "Would append to /etc/hosts: $entry"
+      elif ! grep -qF "$entry" /etc/hosts; then
+        echo "$entry" >> /etc/hosts
+      fi
+    done
+  fi
 fi
 
 ################################################################################
