@@ -677,7 +677,6 @@ fi
 if [[ -z "$K3S_SERVER" ]]; then
   log INFO "Installing CSGHub Helm Chart..."
   run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/repository/csghub/ --force-update"
-  run_cmd "helm repo update"
 
   # Compose extra args array for helm
   if [[ "$ENABLE_NFS_PV" == "true" ]]; then
