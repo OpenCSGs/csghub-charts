@@ -380,7 +380,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
         log CMD "Would fetch NVIDIA GPG key and add to /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg"
       else
         if [ ! -f /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg ]; then
-          retry 3 "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor --yes -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg"
+          retry 5 "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor --yes -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg"
         else
           log INFO "NVIDIA GPG key already exists, skipping download"
         fi
@@ -390,7 +390,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
         log CMD "Would create /etc/apt/sources.list.d/nvidia-container-toolkit.list with NVIDIA repo"
       else
         if [ ! -f /etc/apt/sources.list.d/nvidia-container-toolkit.list ]; then
-          retry 3 "curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#' | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list"
+          retry 5 "curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#' | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list"
         else
           log INFO "NVIDIA container toolkit list already exists, skipping"
         fi
@@ -405,7 +405,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
         log CMD "Would add NVIDIA yum repo file /etc/yum.repos.d/nvidia-container-toolkit.repo"
       else
         if [ ! -f /etc/yum.repos.d/nvidia-container-toolkit.repo ]; then
-          retry 3 "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | tee /etc/yum.repos.d/nvidia-container-toolkit.repo"
+          retry 5 "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | tee /etc/yum.repos.d/nvidia-container-toolkit.repo"
         else
           log INFO "NVIDIA container toolkit list already exists, skipping"
         fi
@@ -704,7 +704,7 @@ if [[ -z "$K3S_SERVER" ]]; then
     log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
       ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
   else
-    retry 3 helm upgrade --install csghub csghub/csghub \
+    retry 5 helm upgrade --install csghub csghub/csghub \
       --namespace csghub \
       --create-namespace \
       "${HELM_EXTRA_ARGS[@]}" | tee ./login.txt
