@@ -1,16 +1,12 @@
-workflow:
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+$/
-      
+
 stages:
   - package
-  - publish
+  - uploads
 
 variables:
   CHART_PATH: "charts/csghub"
   HELM_REGISTRY: "https://charts.opencsg.com/repository/csghub"
   CHARTS: "charts/csghub charts/runner charts/dataflow charts/csgship"
-
 
 package:
   stage: package
@@ -37,8 +33,22 @@ package:
           --upload-file "$pkg" \
           "${HELM_REGISTRY}" || echo $?
       done
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+$/
   artifacts:
     paths:
       - "*.tgz"
     expire_in: 1 week
+
+uploads:
+  stage: uploads
+  image: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsg_public/helmpack/chart-testing:v3.13.0
+  script:
+    - |
+      curl -f -u ${CHART_USER}:${CHART_PASSWORD} \
+        --upload-file quick_install.sh \
+        https://charts.opencsg.com/repository/scripts/
+  rules:
+    - changes:
+        - quick_install.sh
 
