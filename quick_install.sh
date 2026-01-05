@@ -595,13 +595,16 @@ if [[ "${ENABLE_NFS_PV:-true}" == "true" && -z "$K3S_SERVER" ]]; then
     log INFO "Configuring NFS dynamic provisioner (server: $NFS_SERVER, path: $NFS_PATH)..."
 
     NFS_EXTRA_ARGS+=()
+    NFS_SUBDIR_CHART_URL="https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/"
     if [[ "$INSTALL_CN" == "true" ]]; then
       NFS_EXTRA_ARGS+=(--set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/sig-storage/nfs-subdir-external-provisioner)
       NFS_EXTRA_ARGS+=(--set image.tag=v4.0.2)
+
+      NFS_SUBDIR_CHART_URL="https://charts.opencsg.com/repository/nfs-subdir-external-provisioner/"
     fi
 
-    run_cmd "timeout 30s helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/ --force-update"
-    run_cmd "timeout 30s helm upgrade --install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    run_cmd "timeout 30s helm repo add nfs $NFS_SUBDIR_CHART_URL --force-update"
+    run_cmd "timeout 30s helm upgrade --install nfs-subdir-external-provisioner nfs/nfs-subdir-external-provisioner \
       --namespace nfs-provisioner --create-namespace \
       --set nfs.server=${NFS_SERVER} \
       --set nfs.path=${NFS_PATH} \
@@ -621,14 +624,23 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
   log INFO "Installing NVIDIA device plugin and configuring runtime..."
   run_cmd "nvidia-ctk runtime configure --runtime=containerd --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml"
   restart_service
+
+  NVDP_EXTRA_ARGS+=()
+  NVDP_CHART_URL="https://nvidia.github.io/k8s-device-plugin/"
+  if [[ "$INSTALL_CN" == "true" ]]; then
+    NVDP_EXTRA_ARGS+=(--set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin)
+    NVDP_EXTRA_ARGS+=(--set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery)
+
+    NVDP_CHART_URL="https://charts.opencsg.com/repository/k8s-device-plugin/"
+  fi
+
   if [[ -z "$K3S_SERVER" ]]; then
-    run_cmd "timeout 10s helm repo add nvdp https://nvidia.github.io/k8s-device-plugin --force-update"
+    run_cmd "timeout 10s helm repo add nvdp $NVDP_CHART_URL --force-update"
     run_cmd "timeout 10s helm upgrade -i nvdp nvdp/nvidia-device-plugin --namespace nvdp --create-namespace \
       --version v0.18.0 \
       --set gfd.enabled=true \
       --set runtimeClassName=nvidia \
-      --set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin \
-      --set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery"
+      ${NVDP_EXTRA_ARGS[*]}"
 
     log INFO "Waiting for NVIDIA Device Plugin pods..."
     wait_for_pods_ready nvdp
