@@ -500,7 +500,9 @@ log INFO "Waiting for k3s started..."
 # In dry-run emulate presence of file
 if [[ "${DRY_RUN:-false}" == "true" ]]; then
   log CMD "Would wait for /etc/rancher/k3s/k3s.yaml to be created"
-else
+fi
+
+if [[ -n "$K3S_SERVER" ]]; then
   log WARN "Please copy server ~/.kube/config to agent /etc/rancher/k3s/k3s.yaml."
   user_input=""
   while [[ "$user_input" != "continue" ]]; do
