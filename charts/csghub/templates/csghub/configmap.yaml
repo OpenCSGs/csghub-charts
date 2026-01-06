@@ -139,6 +139,9 @@ data:
   {{- end }}
   {{- end }}
 
+  ## Server Configuration for Skipping LFS Files Validation
+  STARHUB_SERVER_SKIP_LFS_FILE_VALIDATION: "true"
+
   ## Server Configuration for Payment
   {{- $paymentSvc := include "common.service" (dict "service" "payment" "global" .) | fromYaml }}
   {{- if eq .Values.global.edition "saas" }}
