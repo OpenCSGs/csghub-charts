@@ -454,7 +454,7 @@ EOF
 
 K3S_URL="https://get.k3s.io"
 K3S_ENV=(
-  "INSTALL_K3S_VERSION=v1.30.4+k3s1"
+  "INSTALL_K3S_VERSION=v1.34.3+k3s1"
 )
 
 K3S_ARGS=(
