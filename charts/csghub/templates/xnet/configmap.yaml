@@ -67,3 +67,11 @@ data:
   STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
   {{- end }}
   {{- end }}
+
+  ## XNet configuration for Tracing logging
+  {{- $tempoSvc := include "common.service" (dict "service" "tempo" "global" .) | fromYaml }}
+  {{- $tempoHost := include "common.names.custom" (list . "tempo") }}
+  {{- if $tempoSvc.enabled }}
+  OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
+  {{- end }}
+  OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
