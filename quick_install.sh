@@ -32,6 +32,7 @@ TIMEOUT=300
 
 K3S_SERVER=""
 K3S_TOKEN=""
+K3S_VERSION="v1.34.3+k3s1"
 
 
 ################################################################################
@@ -85,12 +86,13 @@ Optional:
   --timeout <seconds>              Timeout for waiting pods to become Ready
   --k3s-server <server_url>        Join an existing K3S cluster as an agent node
   --k3s-token <server_token>       K3S cluster join token (required with --k3s-server)
+  --k3s-version <version>          K3S cluster version (e.g. v1.34.3+k3s1)
   --help                           Show this help message and exit
 EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token:,k3s-version: -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
@@ -109,6 +111,7 @@ while true; do
     --timeout) TIMEOUT="$2"; shift 2 ;;
     --k3s-server) K3S_SERVER="$2"; shift 2 ;;
     --k3s-token) K3S_TOKEN="$2"; shift 2 ;;
+    --k3s-version) K3S_VERSION="$2"; shift 2 ;;
     -h|--help) usage ;;
     --) shift; break ;;
     *) log ERRO "Unknown argument: $1"; usage ;;
@@ -454,7 +457,7 @@ EOF
 
 K3S_URL="https://get.k3s.io"
 K3S_ENV=(
-  "INSTALL_K3S_VERSION=v1.34.3+k3s1"
+  "INSTALL_K3S_VERSION=${K3S_VERSION}"
 )
 
 K3S_ARGS=(
