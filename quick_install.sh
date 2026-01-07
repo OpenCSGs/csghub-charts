@@ -736,6 +736,40 @@ if [[ -z "$K3S_SERVER" ]]; then
 ################################################################################
   if [[ "$HOSTS_ALIAS" == "true" ]]; then
     log INFO "Configuring local domain aliases..."
+    
+    NEW_DOMAIN="csghub.${DOMAIN}"
+    PUBLIC_DOMAIN="public.${DOMAIN}"
+    USE_TOP=false
+    HOST_SET=false
+    for arg in "${HELM_EXTRA_ARGS[@]}"; do
+      case "$arg" in
+        global.ingress.host=*)
+          value="${arg#*=}"
+          if [[ "$value" != *.* ]]; then
+            NEW_DOMAIN="${value}.${DOMAIN}"
+          else
+            NEW_DOMAIN="$value"
+          fi
+          HOST_SET=true
+          ;;
+        global.ingress.publicHost=*)
+          value="${arg#*=}"
+          if [[ "$value" != *.* ]]; then
+            PUBLIC_DOMAIN="${value}.${DOMAIN}"
+          else
+            PUBLIC_DOMAIN="$value"
+          fi
+          ;;
+        global.ingress.useTop=*)
+          value="${arg#*=}"
+          [[ "$value" == "true" ]] && USE_TOP=true
+          ;;
+      esac
+    done
+
+    if [[ "$USE_TOP" == "true" && "$HOST_SET" != "true" ]]; then
+      NEW_DOMAIN="${DOMAIN}"
+    fi
 
     if [[ "${DRY_RUN:-false}" == "true" ]]; then
       log CMD "Would apply ConfigMap for coredns-custom with domain ${DOMAIN} and ip ${ip_addr}"
@@ -750,7 +784,7 @@ data:
   ${DOMAIN}.server: |
     ${DOMAIN} {
       hosts {
-        ${ip_addr} csghub.${DOMAIN} csghub
+        ${ip_addr} ${NEW_DOMAIN} csghub
         ${ip_addr} casdoor.${DOMAIN} casdoor
         ${ip_addr} minio.${DOMAIN} minio
         ${ip_addr} csgship.${DOMAIN} csgship
@@ -761,9 +795,9 @@ data:
       }
     }
 
-  public.${DOMAIN}.server: |
-    public.${DOMAIN} {
-      template IN A public.${DOMAIN} {
+  ${PUBLIC_DOMAIN}.server: |
+    ${PUBLIC_DOMAIN} {
+      template IN A ${PUBLIC_DOMAIN} {
         answer "{{ .Name }} 3600 IN A ${ip_addr}"
       }
       log
@@ -773,7 +807,7 @@ EOF
     fi
 
     entries=(
-      "${ip_addr} csghub.${DOMAIN} csghub"
+      "${ip_addr} ${NEW_DOMAIN} csghub"
       "${ip_addr} casdoor.${DOMAIN} casdoor"
       "${ip_addr} minio.${DOMAIN} minio"
       "${ip_addr} csgship.${DOMAIN} csgship"
