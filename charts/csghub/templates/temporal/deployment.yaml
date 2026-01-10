@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -82,9 +83,15 @@ spec:
           resources:
             {{- toYaml $service.resources | nindent 12 }}
           {{- end }}
-          {{- if $service.volumeMounts }}
+          {{- if or $service.volumeMounts (ne $pgConfig.sslmode "disable") }}
           volumeMounts:
+          {{- if ne $pgConfig.sslmode "disable" }}
+            - name: certs
+              mountPath: "/etc/certs"
+          {{- end }}
+          {{- if $service.volumeMounts }}
             {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
           {{- end }}
           livenessProbe:
             tcpSocket:
@@ -166,9 +173,16 @@ spec:
           tty: {{ $service.tty }}
           {{- end }}
           {{- end }}
-      {{- if $service.volumes }}
+      {{- if or $service.volumes (ne $pgConfig.sslmode "disable") }}
       volumes:
+      {{- if ne $pgConfig.sslmode "disable" }}
+        - name: certs
+          secret:
+            secretName: {{ printf "%s-certs" $serviceName }}
+      {{- end }}
+      {{- if $service.volumes }}
         {{- toYaml $service.volumes | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
