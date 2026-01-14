@@ -61,6 +61,7 @@ spec:
       initContainers:
         {{- include "wait-for-postgresql" (dict "service" $service "global" .) | nindent 8 }}
         {{- include "wait-for-redis" (dict "service" $service "global" .)  | nindent 8 }}
+        {{- include "wait-for-temporal" . | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
