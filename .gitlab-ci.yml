@@ -49,6 +49,7 @@ uploads:
         --upload-file quick_install.sh \
         https://charts.opencsg.com/repository/scripts/
   rules:
-    - changes:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
         - quick_install.sh
 
