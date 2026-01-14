@@ -67,7 +67,7 @@ hubAPIToken: ""
 
 ## Global image configuration
 image:
-  registry: "docker.io"                    # Docker registry
+  # registry: "docker.io"                    # Docker registry
   repository: "opencsghq/csgship-web"
   tag: "v0.4.0"                            # Image version tag
   pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
@@ -168,7 +168,7 @@ secscan:
 ## Embedded PostgreSQL configuration
 postgresql:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/postgres"
     tag: "15.10"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -195,7 +195,7 @@ postgresql:
 ## Built-in Redis configuration
 redis:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "redis"
     tag: "7.2.5"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -220,7 +220,7 @@ casdoor:
     # password: ""                           # Admin password
 
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "casbin/casdoor"
     tag: "v2.79.0"                           # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
