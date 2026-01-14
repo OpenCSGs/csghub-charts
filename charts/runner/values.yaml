@@ -46,7 +46,7 @@ externalUrl: "https://csghub.example.com"
 
 ## Global image configuration
 image:
-  registry: "docker.io"                    # Docker registry
+  # registry: "docker.io"                    # Docker registry
   repository: "opencsghq/csghub-server"
   tag: "v1.14.0"                           # Image version tag
   pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
