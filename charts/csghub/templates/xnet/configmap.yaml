@@ -75,3 +75,9 @@ data:
   OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
   {{- end }}
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
+
+  ## XNet Configuration for Workflow
+  {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
+  {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
+  {{- $temporalPort := $temporalSvc | dig "service" "port" 7233 | toString }}
+  OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "%s:%s" $temporalHost $temporalPort | quote }}
