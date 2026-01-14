@@ -82,4 +82,7 @@ data:
   {{- else }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: "auto"
   {{- end }}
+
+  ## Runner Configuration for LWS
+  STARHUB_SERVER_RUNNER_NETWORK_INTERFACE: {{ $service.networkInterface | quote }}
 {{- end }}

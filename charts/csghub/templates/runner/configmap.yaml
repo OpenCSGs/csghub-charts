@@ -96,4 +96,7 @@ data:
   {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.kourier" .) (include "common.domain.cluster" .) }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
   {{- end }}
+
+  ## Runner Configuration for LWS
+  STARHUB_SERVER_RUNNER_NETWORK_INTERFACE: {{ $service.networkInterface | quote }}
 {{- end }}
