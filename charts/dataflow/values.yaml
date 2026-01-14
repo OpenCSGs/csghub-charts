@@ -89,7 +89,7 @@ ingress:
 dataflow:
   ## Image settings (overrides global.image)
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/dataflow"
     tag: "v1.15.0"                          # Image version tag
     pullPolicy: "IfNotPresent"              # Image pull policy
@@ -133,7 +133,7 @@ worker:
 labelStudio:
   ## Image settings (overrides global.image)
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/label-studio"
     tag: "v1.15.0"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -191,7 +191,7 @@ postgresql:
 ## Built-in Redis configuration
 redis:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "redis"
     tag: "7.2.5"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -212,7 +212,7 @@ redis:
 ## Built-in MongoDB configuration
 mongo:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/mongo"
     tag: "8.0.12"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy

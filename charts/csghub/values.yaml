@@ -126,7 +126,7 @@ global:
 ## All CSGHub services using this as default local image configuration (except Portal)
 ## Global image configuration
 image:
-  registry: "docker.io"
+  # registry: "docker.io"
   repository: "opencsghq/csghub-server"
   tag: "v1.15.0"
   pullPolicy: "IfNotPresent"
@@ -297,7 +297,7 @@ gateway:
 ## XNet service configuration
 xnet:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
     tag: "v1.15.0"
     pullPolicy: "IfNotPresent"
@@ -442,7 +442,7 @@ temporalWorker: {}
 ## Embedded PostgreSQL configuration
 postgresql:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/postgres"
     tag: "15.10"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -475,7 +475,7 @@ postgresql:
 ## Built-in Redis configuration
 redis:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "redis"
     tag: "7.2.5"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -496,7 +496,7 @@ redis:
 ## Embedded MinIO configuration
 minio:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "minio/minio"
     tag: "RELEASE.2025-09-07T16-13-09Z"      # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -546,7 +546,7 @@ minio:
 ## Embedded Registry configuration
 registry:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "registry"
     tag: "2.8.3"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -630,7 +630,7 @@ gitlabShell:
 ## Embedded NATS configuration
 nats:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "nats"
     tag: "2.10.16"                           # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -653,7 +653,7 @@ casdoor:
     # password: ""                           # Admin password
 
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "casbin/casdoor"
     tag: "v2.79.0"                           # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -683,7 +683,7 @@ casdoor:
 ## Embedded Temporal configuration
 temporal:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "temporalio/auto-setup"
     tag: "1.25.1"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
