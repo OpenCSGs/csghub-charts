@@ -80,6 +80,9 @@ spec:
               mountPath: /var/opt/gitaly/repositories
             - name: config
               mountPath: /etc/gitaly
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
           {{- if $service.resources }}
           resources:
             {{- toYaml $service.resources | nindent 12 }}
@@ -116,6 +119,9 @@ spec:
         - name: config
           configMap:
             name: {{ $serviceName }}
+      {{- if $service.volumes }}
+        {{- toYaml $service.volumes | nindent 8 }}
+      {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}

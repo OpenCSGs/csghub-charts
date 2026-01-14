@@ -91,6 +91,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
           {{- if $service.resources }}
           resources:
             {{- toYaml $service.resources | nindent 12 }}
