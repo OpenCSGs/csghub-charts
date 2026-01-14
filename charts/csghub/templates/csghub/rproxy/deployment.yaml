@@ -188,12 +188,18 @@ spec:
           tty: {{ $service.tty }}
           {{- end }}
         {{- end }}
-      {{- if $service.nginx.enabled }}
+      {{- if or $service.nginx.enabled $service.volumes }}
       volumes:
+        {{- if $service.nginx.enabled }}
         - name: config
           configMap:
             name: {{ printf "%s-nginx" $serviceName }}
+        {{- end }}
+      {{- if $service.volumes }}
+        {{- toYaml $service.volumes | nindent 8 }}
       {{- end }}
+      {{- end }}
+
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}

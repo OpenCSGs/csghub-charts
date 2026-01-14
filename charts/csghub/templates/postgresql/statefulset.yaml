@@ -89,6 +89,9 @@ spec:
             - name: runtime
               mountPath: /etc/postgresql/runtime.conf
               subPath: runtime.conf
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
           {{- if $service.resources }}
           resources:
             {{- toYaml $service.resources | nindent 12 }}
@@ -137,6 +140,9 @@ spec:
         - name: runtime
           configMap:
             name: {{ $serviceName }}
+      {{- if $service.volumes }}
+        {{- toYaml $service.volumes | nindent 8 }}
+      {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}
