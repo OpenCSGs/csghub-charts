@@ -712,6 +712,8 @@ if [[ -z "$K3S_SERVER" ]]; then
 
   if [[ "$INSTALL_CN" == "true" ]]; then
     HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
+    HELM_EXTRA_ARGS+=(--set gitaly.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
+    HELM_EXTRA_ARGS+=(--set gitlabShell.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
   fi
 
   HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
@@ -721,6 +723,7 @@ if [[ -z "$K3S_SERVER" ]]; then
     log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
       ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
   else
+    retry 2 kubectl delete jobs --all -n csghub
     retry 5 helm upgrade --install csghub csghub/csghub \
       --namespace csghub \
       --create-namespace \
