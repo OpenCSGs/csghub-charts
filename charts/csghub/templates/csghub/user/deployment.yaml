@@ -92,6 +92,9 @@ spec:
           volumeMounts:
             - name: jwt-token-cert
               mountPath: /starhub-bin/casdoor
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
           livenessProbe:
             tcpSocket:
               port: 8080
@@ -125,6 +128,9 @@ spec:
           secret:
             {{- $casdoorCert := printf "%s-certs" $casdoorSvc.name }}
             secretName: {{ include "common.names.custom" (list . $casdoorCert) }}
+      {{- if $service.volumes }}
+        {{- toYaml $service.volumes | nindent 8 }}
+      {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}

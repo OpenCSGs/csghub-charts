@@ -86,6 +86,9 @@ spec:
           volumeMounts:
             - name: auth
               mountPath: /auth
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
           livenessProbe:
             tcpSocket:
               port: 5000
@@ -126,6 +129,9 @@ spec:
         - name: auth
           secret:
             secretName: {{ $serviceName }}
+      {{- if $service.volumes }}
+        {{- toYaml $service.volumes | nindent 8 }}
+      {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}
