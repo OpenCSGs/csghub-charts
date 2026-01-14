@@ -48,6 +48,7 @@ log() {
     INFO) color="\033[0;32m" ;;
     WARN) color="\033[0;33m" ;;
     ERRO) color="\033[0;31m" ;;
+    ATTE) color="\033[0;34m" ;;
     CMD)  color="\033[0;36m" ;;
     *) color="\033[0m" ;;
   esac
@@ -501,34 +502,36 @@ run_cmd "curl -sfL ${K3S_URL} | ${K3S_ENV[*]} sh -s - ${K3S_ARGS[*]}"
 
 log INFO "Waiting for k3s started..."
 # In dry-run emulate presence of file
+K3S_KUBE_CONFIG="/etc/rancher/k3s/k3s.yaml"
 if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  log CMD "Would wait for /etc/rancher/k3s/k3s.yaml to be created"
+  log CMD "Would wait for ${K3S_KUBE_CONFIG} to be created"
 fi
 
-if [[ -n "$K3S_SERVER" ]]; then
-  log WARN "Please copy server ~/.kube/config to agent /etc/rancher/k3s/k3s.yaml."
+if [[ -n "$K3S_SERVER" && "${DRY_RUN:-false}" != "true" && ! -f "$K3S_KUBE_CONFIG" ]]; then
+  log ATTE "Please copy server ~/.kube/config from the master node to agent ${K3S_KUBE_CONFIG}."
   user_input=""
   while [[ "$user_input" != "continue" ]]; do
     read -rp "Type 'continue' to proceed: " user_input
   done
-  retry 10 "test -f /etc/rancher/k3s/k3s.yaml"
+
+  retry 10 "test -f ${K3S_KUBE_CONFIG}"
 fi
 
 if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  log CMD "Would chmod 0400 /etc/rancher/k3s/k3s.yaml"
+  log CMD "Would chmod 0400 ${K3S_KUBE_CONFIG}"
 else
-  chmod 0400 /etc/rancher/k3s/k3s.yaml || true
+  chmod 0400 "$K3S_KUBE_CONFIG" || true
 fi
 
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+export KUBECONFIG="$K3S_KUBE_CONFIG"
 log INFO "K3S installed (or simulated)."
 
 if [[ -z "$K3S_SERVER" ]]; then
   mkdir -p ~/.kube
   if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would copy /etc/rancher/k3s/k3s.yaml to ~/.kube/config and sed replace 127.0.0.1 with ${ip_addr}"
+    log CMD "Would copy ${K3S_KUBE_CONFIG} to ~/.kube/config and sed replace 127.0.0.1 with ${ip_addr}"
   else
-    cp -f /etc/rancher/k3s/k3s.yaml ~/.kube/config
+    cp -f "$K3S_KUBE_CONFIG" ~/.kube/config
     chmod 0400 ~/.kube/config
     sed -i "s/127.0.0.1/${ip_addr}/g" ~/.kube/config
   fi
@@ -869,8 +872,12 @@ EOF
   restart_service
 fi
 
+log INFO "CSGHub installation finished."
+log ATTE "Local domain resolution:"
+log ATTE "  • Configure /etc/hosts on worker nodes based on the master /etc/hosts"
+log ATTE "Access CSGHub:"
+log ATTE "  • CSGHub may take longer to become ready"
+log ATTE "  • Check status with: kubectl get pods -n csghub"
+log ATTE "  • Login info saved to: ./login.txt"
 log INFO "✅ Installation completed successfully."
-log INFO "Login info saved to ./login.txt"
-log INFO "CSGHub application may take longer to become ready"
-log INFO "You can check this using the command 'kubectl get pods -A'."
 [[ "${DRY_RUN:-false}" == "true" ]] && log INFO "Dry-run mode completed: no changes applied."
