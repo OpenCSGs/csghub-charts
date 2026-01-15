@@ -4,9 +4,8 @@ stages:
   - uploads
 
 variables:
-  CHART_PATH: "charts/csghub"
   HELM_REGISTRY: "https://charts.opencsg.com/repository/csghub"
-  CHARTS: "charts/csghub charts/runner charts/dataflow charts/csgship"
+  CHARTS: "charts/common charts/runner charts/dataflow charts/csgship charts/csghub"
 
 package:
   stage: package
