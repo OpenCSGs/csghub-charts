@@ -799,7 +799,7 @@ fluentd:
 ## Reloader configuration
 reloader:
   image:
-    repository: "opencsghq/stakater-reloader"    # Reloader image name
+    name: "opencsghq/stakater-reloader"    # Reloader image name
 
 ## Loki log aggregation configuration
 loki:
