@@ -5,7 +5,7 @@ description: CSGHub is an open-source platform designed for managing Large Langu
   It allows users to upload, download, store, verify, and distribute LLM assets like DeepSeek,Llama etc.via a web interface,
   git command line, a natural language Chatbot, or CSGHub SDK.
 home: https://opencsg.com
-icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
+icon: https://raw.githubusercontent.com/OpenCSGs/csghub-charts/main/icons/icon.png
 sources:
   - https://github.com/OpenCSGs/csghub-charts
 

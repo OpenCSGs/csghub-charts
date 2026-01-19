@@ -5,7 +5,7 @@ description: OpenCSG dataflow is a one-stop data processing platform designed to
   while addressing enterprise challenges in data management such as inefficiency, adaptability gaps, and security
   and compliance issues.
 home: https://opencsg.com
-icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
+icon: https://raw.githubusercontent.com/OpenCSGs/csghub-charts/main/icons/icon.png
 sources:
   - https://github.com/OpenCSGs/csghub-charts
 
