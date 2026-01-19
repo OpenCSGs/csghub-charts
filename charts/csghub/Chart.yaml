@@ -34,7 +34,7 @@ appVersion: v1.15.0
 dependencies:
   - name: common
     version: 0.1.6
-    repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.7
     repository: file://charts/reloader
@@ -61,13 +61,13 @@ dependencies:
     condition: prometheus.enabled
   - name: runner
     version: 1.15.0
-    repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/csghub
     condition: runner.enabled
   - name: dataflow
     version: 1.15.0
-    repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/csghub
     condition: dataflow.enabled
   - name: csgship
     version: 0.4.0
-    repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/csghub
     condition: csgship.enabled

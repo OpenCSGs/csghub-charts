@@ -1,6 +1,6 @@
 dependencies:
 - name: common
-  repository: https://charts.opencsg.com/repository/csghub
+  repository: https://charts.opencsg.com/csghub
   version: 0.1.6
 - name: ingress-nginx
   repository: file://charts/ingress-nginx
@@ -11,5 +11,5 @@ dependencies:
 - name: prometheus
   repository: file://charts/prometheus
   version: 27.37.0
-digest: sha256:ef49879b747a7a50e25d7143e3bb195509e0372d64c9b2e44a5f4eb7486616a7
-generated: "2025-12-17T17:37:34.591351+08:00"
+digest: sha256:7bc08c8fa9b88c2ab2234f1b0d33a3155bb6216c09641768c58b7be70f2d5495
+generated: "2026-01-19T17:42:58.70732+08:00"
