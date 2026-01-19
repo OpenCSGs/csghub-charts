@@ -78,9 +78,9 @@ spec:
       containers:
       {{- with (merge .Values.image .Values.global.image) }}
       {{- if eq .registry "ghcr.io" }}
-      - image: "{{ .registry }}/{{ $.Values.image.name }}:{{ .tag }}"
+      - image: "{{ $.Values.image.repository }}:{{ .tag }}"
       {{- else }}
-      - image: "{{ .registry }}/{{ .repository }}:{{ .tag }}"
+      - image: "{{ .registry }}/{{ .name }}:{{ .tag }}"
       {{- end }}
       {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
