@@ -177,7 +177,7 @@ pre-push:
     # Check Helm chart syntax and structure
     ct-lint:
       stdin: true
-      glob: "charts/{csghub,runner,dataflow}/**"  # Only run when chart files change
+      glob: "charts/{csghub,runner,dataflow,csgship,common}/**"  # Only run when chart files change
       run: |
         echo "🔍 Running ct lint..."
 
