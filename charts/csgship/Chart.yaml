@@ -34,7 +34,7 @@ appVersion: v0.4.0
 dependencies:
   - name: common
     version: 0.1.6
-    repository: https://charts.opencsg.com/repository/csghub
+    repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.7
     repository: file://charts/reloader
