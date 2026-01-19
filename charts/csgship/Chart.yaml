@@ -2,6 +2,7 @@ apiVersion: v2
 name: csgship
 description: AI-based code intelligent generation
 home: https://opencsg.com
+icon: https://raw.githubusercontent.com/OpenCSGs/csghub-charts/main/icons/icon.png
 maintainers:
   - name: OpenCSG Inc.
     email: support@opencsg.com
