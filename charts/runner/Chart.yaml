@@ -3,7 +3,7 @@ name: runner
 description: Responsible for deploying and managing application instances in the Kubernetes cluster to
   ensure fast building and continuous delivery of applications.
 home: https://opencsg.com
-icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
+icon: https://raw.githubusercontent.com/OpenCSGs/csghub-charts/main/icons/icon.png
 sources:
   - https://github.com/OpenCSGs/csghub-charts
 
