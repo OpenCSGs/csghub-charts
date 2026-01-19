@@ -606,7 +606,7 @@ if [[ "${ENABLE_NFS_PV:-true}" == "true" && -z "$K3S_SERVER" ]]; then
       NFS_EXTRA_ARGS+=(--set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/sig-storage/nfs-subdir-external-provisioner)
       NFS_EXTRA_ARGS+=(--set image.tag=v4.0.2)
 
-      NFS_SUBDIR_CHART_URL="https://charts.opencsg.com/repository/nfs-subdir-external-provisioner/"
+      NFS_SUBDIR_CHART_URL="https://charts.opencsg.com/nfs-subdir-external-provisioner/"
     fi
 
     run_cmd "timeout 30s helm repo add nfs $NFS_SUBDIR_CHART_URL --force-update"
@@ -637,7 +637,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
     NVDP_EXTRA_ARGS+=(--set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin)
     NVDP_EXTRA_ARGS+=(--set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery)
 
-    NVDP_CHART_URL="https://charts.opencsg.com/repository/k8s-device-plugin/"
+    NVDP_CHART_URL="https://charts.opencsg.com/k8s-device-plugin/"
   fi
 
   if [[ -z "$K3S_SERVER" ]]; then
@@ -694,7 +694,7 @@ fi
 ################################################################################
 if [[ -z "$K3S_SERVER" ]]; then
   log INFO "Installing CSGHub Helm Chart..."
-  run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/repository/csghub/ --force-update"
+  run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/csghub/ --force-update"
 
   # Compose extra args array for helm
   if [[ "$ENABLE_NFS_PV" == "true" ]]; then
