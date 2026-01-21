@@ -107,13 +107,13 @@ gpuModelLabel:
   typeLabel: "nvidia.com/gpu.product"  # GPU type label
   capacityLabel: "nvidia.com/gpu"      # GPU capacity label
 
-  ## Knative networking configuration
-  ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
-  applicationEndpoint: ""
+## Knative networking configuration
+## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
+applicationEndpoint: ""
 
-  ## Host network interface name used for inter-node communication during distributed (LWS) inference
-  ## e.g. eth0
-  networkInterface: ""
+## Host network interface name used for inter-node communication during distributed (LWS) inference
+## e.g. eth0
+networkInterface: ""
 
 ## Knative Serving configuration
 knative:
