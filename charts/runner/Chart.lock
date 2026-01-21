@@ -10,6 +10,6 @@ dependencies:
   version: 2.2.7
 - name: prometheus
   repository: file://charts/prometheus
-  version: 27.37.0
-digest: sha256:7bc08c8fa9b88c2ab2234f1b0d33a3155bb6216c09641768c58b7be70f2d5495
-generated: "2026-01-19T17:42:58.70732+08:00"
+  version: 28.6.0
+digest: sha256:ad6fa6ac0dc11b1e469827d8a14dfa0c95de1f301eb095cb0efb45367ab0040e
+generated: "2026-01-21T18:32:41.749561+08:00"
