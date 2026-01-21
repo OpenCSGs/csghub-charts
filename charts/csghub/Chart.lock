@@ -19,7 +19,7 @@ dependencies:
   version: 1.23.3
 - name: prometheus
   repository: file://charts/prometheus
-  version: 27.37.0
+  version: 28.6.0
 - name: runner
   repository: https://charts.opencsg.com/csghub
   version: 1.15.0
@@ -29,5 +29,5 @@ dependencies:
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.0
-digest: sha256:c025c8c92af8f242d7b567c9d690b8230f5ebe73a298c9cbd5f52ee3729e6923
-generated: "2026-01-19T17:43:55.223009+08:00"
+digest: sha256:011a95c87950e86e630383b0841e5f4fdddadf4f50285647fe48ae6f282ea36d
+generated: "2026-01-20T16:14:17.318469+08:00"
