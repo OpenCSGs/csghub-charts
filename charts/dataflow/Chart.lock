@@ -8,8 +8,5 @@ dependencies:
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
-- name: prometheus
-  repository: file://charts/prometheus
-  version: 27.37.0
-digest: sha256:7bc08c8fa9b88c2ab2234f1b0d33a3155bb6216c09641768c58b7be70f2d5495
-generated: "2026-01-19T17:42:52.837833+08:00"
+digest: sha256:48af2f16f89192153cf1839253cff9f39302ba2e4658e9623310015187f5ec59
+generated: "2026-01-21T19:05:23.136726+08:00"

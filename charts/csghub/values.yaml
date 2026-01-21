@@ -402,8 +402,6 @@ dataflow:
     enabled: false
   reloader:
     enabled: false
-  prometheus:
-    enabled: false
   postgresql:
     enabled: false
   redis:
