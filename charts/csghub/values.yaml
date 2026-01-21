@@ -586,8 +586,8 @@ registry:
 ## Embedded Gitaly configuration
 gitaly:
   image:
-    registry: "registry.gitlab.com"
-    repository: "gitlab-org/build/cng/gitaly"
+    # registry: "docker.io"
+    repository: "opencsghq/gitlab-gitaly"
     tag: "v17.5.0"                           # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
@@ -614,8 +614,8 @@ gitaly:
 ## Embedded GitLab Shell configuration
 gitlabShell:
   image:
-    registry: "registry.gitlab.com"
-    repository: "gitlab-org/build/cng/gitlab-shell"
+    # registry: "docker.io"
+    repository: "opencsghq/gitlab-shell"
     tag: "v17.5.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
