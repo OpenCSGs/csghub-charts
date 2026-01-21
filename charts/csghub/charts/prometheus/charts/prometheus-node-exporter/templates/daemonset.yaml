@@ -50,7 +50,7 @@ spec:
         {{- $servicePort := ternary .Values.kubeRBACProxy.port .Values.service.port .Values.kubeRBACProxy.enabled }}
         {{- $servicePortReference := ternary .Values.kubeRBACProxy.port .Values.service.portName .Values.kubeRBACProxy.enabled }}
         - name: node-exporter
-          image: {{ include "prometheus-node-exporter.image" . }}
+          image: {{ include "common.image" (list . .Values.image) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --path.procfs=/host/proc
@@ -266,10 +266,16 @@ spec:
         {{- include "prometheus-node-exporter.imagePullSecrets" (dict "Values" .Values "imagePullSecrets" .Values.imagePullSecrets) | indent 8 }}
       {{- end }}
       hostNetwork: {{ .Values.hostNetwork }}
+      {{- if kindIs "bool" .Values.hostUsers }}
+      hostUsers: {{ .Values.hostUsers }}
+      {{- end }}
       hostPID: {{ .Values.hostPID }}
       hostIPC: {{ .Values.hostIPC }}
       affinity:
         {{- include "prometheus-node-exporter.mergedAffinities" . | nindent 8 }}
+      {{- with .Values.dnsPolicy }}
+      dnsPolicy: {{ . }}
+      {{- end }}
       {{- with .Values.dnsConfig }}
       dnsConfig:
         {{- toYaml . | nindent 8 }}
