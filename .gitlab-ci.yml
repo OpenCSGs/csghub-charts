@@ -4,7 +4,6 @@ stages:
   - uploads
 
 variables:
-  HELM_REGISTRY: "https://charts.opencsg.com/repository/csghub"
   CHARTS: "charts/common charts/runner charts/dataflow charts/csgship charts/csghub"
 
 package:
@@ -28,9 +27,9 @@ package:
       echo "📤 Uploading all charts..."
       for pkg in *.tgz; do
         echo "→ Uploading $pkg"
-        curl -sSf -u "${HELM_REGISTRY_USER}:${HELM_REGISTRY_PASSWORD}" \
+        curl -sSf -u "${CHART_USER}:${CHART_PASSWORD}" \
           --upload-file "$pkg" \
-          "${HELM_REGISTRY}" || echo $?
+          https://charts.opencsg.com/repository/csghub/ || echo $?
       done
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+$/
