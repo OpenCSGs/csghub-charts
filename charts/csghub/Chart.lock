@@ -22,12 +22,12 @@ dependencies:
   version: 27.37.0
 - name: runner
   repository: https://charts.opencsg.com/repository/csghub
-  version: 1.14.0
+  version: 1.14.1
 - name: dataflow
   repository: https://charts.opencsg.com/repository/csghub
   version: 1.14.0
 - name: csgship
   repository: https://charts.opencsg.com/repository/csghub
   version: 0.4.0
-digest: sha256:33972aacfbe44136f4ad6f5fd3bbe2381afae16fb3dc1ba115a03a5b253f093a
-generated: "2025-12-17T17:37:58.58233+08:00"
+digest: sha256:9dce3fbfe37bf46a792ff8f676e4cccb7f45c0b595c54f7fa2649c6401421978
+generated: "2026-01-22T10:37:40.962463+08:00"
