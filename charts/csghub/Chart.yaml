@@ -1,6 +1,9 @@
 apiVersion: v2
 name: csghub
-description: CSGHub charts with CE and EE.
+description: CSGHub is an open-source platform designed for managing Large Language Models (LLM) assets, offering an
+  efficient way to handle the entire LLM and their assets such as datasets, spaces and codes etc.
+  It allows users to upload, download, store, verify, and distribute LLM assets like DeepSeek,Llama etc.via a web interface,
+  git command line, a natural language Chatbot, or CSGHub SDK.
 home: https://opencsg.com
 icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
 sources:
@@ -19,13 +22,13 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.14.1
+version: 1.14.2
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: v1.14.1
+appVersion: v1.14.2
 
 # Defined dependencies for subChart
 dependencies:
@@ -57,7 +60,7 @@ dependencies:
     repository: file://charts/prometheus
     condition: prometheus.enabled
   - name: runner
-    version: 1.14.1
+    version: 1.14.2
     repository: https://charts.opencsg.com/repository/csghub
     condition: runner.enabled
   - name: dataflow
