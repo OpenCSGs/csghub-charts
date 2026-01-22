@@ -8,9 +8,6 @@ dependencies:
 - name: ingress-nginx
   repository: file://charts/ingress-nginx
   version: 4.14.1
-- name: fluentd
-  repository: file://charts/fluentd
-  version: 0.5.2
 - name: loki
   repository: file://charts/loki
   version: 6.29.0
@@ -29,5 +26,5 @@ dependencies:
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.0
-digest: sha256:011a95c87950e86e630383b0841e5f4fdddadf4f50285647fe48ae6f282ea36d
-generated: "2026-01-20T16:14:17.318469+08:00"
+digest: sha256:e3b283e5f0636030513c3cca6caf62df2b80bc6c36b509a03485058bfc6a89fc
+generated: "2026-01-22T12:56:09.304077+08:00"
