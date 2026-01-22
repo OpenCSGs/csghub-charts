@@ -43,10 +43,6 @@ dependencies:
     version: 4.14.1
     repository: file://charts/ingress-nginx
     condition: ingress-nginx.enabled
-  - name: fluentd
-    version: 0.5.2
-    repository: file://charts/fluentd
-    condition: fluentd.enabled
   - name: loki
     version: 6.29.0
     repository: file://charts/loki
