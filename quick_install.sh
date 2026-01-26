@@ -660,6 +660,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
   log INFO "Labeling nodes for NVIDIA GPU..."
   if [[ "${DRY_RUN:-false}" == "true" ]]; then
     log CMD "Would query kubectl get nodes and label each node with nvidia labels"
+    export NVIDIA_NAME="NVIDIA-A10"
   else
     NODES=$(kubectl get nodes -o jsonpath='{.items[*].metadata.name}')
     for NODE in $NODES; do
@@ -683,6 +684,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
         if [[ -n "$GPU_PRODUCT" ]]; then
           NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/GeForce-//;s/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/-(Laptop-)?GPU.*$//')
           retry 3 "kubectl label node $NODE nvidia.com/nvidia_name=$NVIDIA_NAME --overwrite"
+          export NVIDIA_NAME
         fi
       fi
     done
@@ -738,6 +740,32 @@ if [[ -z "$K3S_SERVER" ]]; then
     retry 10 "kubectl get svc kourier -n kourier-system"
     log INFO "Patching kourier to NodePort..."
     run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n kourier-system"
+  fi
+
+  if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
+    GPU_NAME="${NVIDIA_NAME#*-}"
+
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+      log INFO "GPU resource for CSGHub would be initialized (dry-run)."
+      log CMD "kubectl exec -i csghub-postgresql-0 -n csghub -- psql -U csghub -d csghub_server <<EOF
+INSERT INTO space_resources(name, resources, cluster_id)
+SELECT REPLACE(name, '4090', '$GPU_NAME'),
+       REPLACE(resources, '4090', '$GPU_NAME'),
+       cluster_id
+FROM space_resources
+WHERE name ~ '4090';
+EOF"
+    else
+      run_cmd "kubectl exec -i csghub-postgresql-0 -n csghub -- psql -U csghub -d csghub_server <<EOF
+INSERT INTO space_resources(name, resources, cluster_id)
+SELECT REPLACE(name, '4090', '$GPU_NAME'),
+       REPLACE(resources, '4090', '$GPU_NAME'),
+       cluster_id
+FROM space_resources
+WHERE name ~ '4090';
+EOF"
+      log INFO "GPU resource for CSGHub initialized."
+    fi
   fi
 
 ################################################################################
@@ -874,6 +902,8 @@ EOF
 
   restart_service
 fi
+
+run_cmd "kubectl config set-context --current --namespace=csghub"
 
 log INFO "CSGHub installation finished."
 log ATTE "Local domain resolution:"
