@@ -67,3 +67,7 @@ dependencies:
     version: 0.4.0
     repository: https://charts.opencsg.com/csghub
     condition: csgship.enabled
+  - name: memmachine
+    version: 0.1.0
+    repository: file://charts/memmachine
+    condition: memmachine.enabled
