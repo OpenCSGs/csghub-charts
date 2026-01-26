@@ -211,6 +211,17 @@ server:
     # host: ""                             # CSGBot address
     # port: "8070"                         # CSGBot port
 
+  ## Memory service client configuration
+  memory:
+    enabled: true                          # Enable memory service integration
+    host: "http://memmachine"              # Memory service host
+    port: 8085                             # Memory service port
+    basePath: "/api/v2"                    # Memory service base path
+    apiKey: ""                             # Memory service API key
+    timeoutSeconds: 10                     # Request timeout in seconds
+    retryCount: 1                          # Retry attempts
+    retryDelayMillis: 100                  # Retry delay in milliseconds
+
   ## Database configuration
   postgresql: {}
     # host: "<pg_host>"                    # PostgreSQL host address
@@ -424,6 +435,78 @@ csgship:
     enabled: false
   casdoor:
     enabled: false
+
+## MemMachine configuration
+memmachine:
+  enabled: false
+
+  image:
+    registry: ""
+    repository: "memmachine/memmachine"
+    tag: "v0.2.3-cpu"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  service:
+    type: "ClusterIP"
+    port: 8080
+
+  serviceAccount:
+    create: false
+    name: ""
+    automountServiceAccountToken: false
+
+  env: {}
+  extraEnv: []
+  extraEnvFrom: []
+
+  model:
+    embedding:
+      baseUrl: ""                         # OpenAI-compatible embedding endpoint (e.g. https://api.example.com/v1)
+      apiKey: ""                          # API key for embedding endpoint
+      model: ""                           # Embedding model name
+      dimensions: 1536                    # Embedding dimensions
+    chat:
+      baseUrl: ""                         # OpenAI-compatible chat endpoint (e.g. https://api.example.com/v1)
+      apiKey: ""                          # API key for chat endpoint
+      model: ""                           # Chat model name
+
+  resources: {}
+
+  podAnnotations: {}
+  podLabels: {}
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes: ["ReadWriteOnce"]
+    size: "10Gi"
+    mountPath: "/tmp/memory_logs"
+
+  extraVolumes: []
+  extraVolumeMounts: []
+
+  livenessProbe:
+    httpGet:
+      path: /api/v2/health
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /api/v2/health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
 
 ## Accounting service configuration
 accounting: {}
