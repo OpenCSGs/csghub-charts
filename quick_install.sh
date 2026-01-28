@@ -296,6 +296,20 @@ wait_for_pods_ready() {
   run_cmd "kubectl wait --for=condition=Ready pods --all -n $ns --timeout=${timeout}s"
 }
 
+wait_for_pod_ready() {
+  local ns=$1
+  local label_selector=$2
+  local timeout=${3:-$TIMEOUT}
+
+  if [[ -z "$label_selector" ]]; then
+    log ERRO "wait_for_pod_ready requires a label selector (namespace: $ns)"
+    return 1
+  fi
+
+  log INFO "Waiting for pod in namespace $ns with label [$label_selector] to be Ready..."
+  run_cmd "kubectl wait --for=condition=Ready pod -n $ns -l '$label_selector,!job-name' --timeout=${timeout}s"
+}
+
 ################################################################################
 # Detect OS and install dependencies (dry-run aware)
 ################################################################################
@@ -683,6 +697,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
 
         if [[ -n "$GPU_PRODUCT" ]]; then
           NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/GeForce-//;s/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/-(Laptop-)?GPU.*$//')
+          [[ "$NVIDIA_NAME" != NVIDIA-* ]] && NVIDIA_NAME="NVIDIA-$NVIDIA_NAME"
           retry 3 "kubectl label node $NODE nvidia.com/nvidia_name=$NVIDIA_NAME --overwrite"
           export NVIDIA_NAME
         fi
@@ -753,16 +768,21 @@ SELECT REPLACE(name, '4090', '$GPU_NAME'),
        REPLACE(resources, '4090', '$GPU_NAME'),
        cluster_id
 FROM space_resources
-WHERE name ~ '4090';
+WHERE name ~ '4090'
+ON CONFLICT(name)
+DO NOTHING;
 EOF"
     else
+      wait_for_pod_ready csghub app.kubernetes.io/service=server 60
       run_cmd "kubectl exec -i csghub-postgresql-0 -n csghub -- psql -U csghub -d csghub_server <<EOF
 INSERT INTO space_resources(name, resources, cluster_id)
 SELECT REPLACE(name, '4090', '$GPU_NAME'),
        REPLACE(resources, '4090', '$GPU_NAME'),
        cluster_id
 FROM space_resources
-WHERE name ~ '4090';
+WHERE name ~ '4090'
+ON CONFLICT(name)
+DO NOTHING;
 EOF"
       log INFO "GPU resource for CSGHub initialized."
     fi
