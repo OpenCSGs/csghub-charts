@@ -60,6 +60,21 @@ spec:
         - name: {{ . }}
       {{- end }}
       {{- end }}
+      initContainers:
+        - name: clear-pgdata-as-needed
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
+          imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              if [ -d /var/lib/postgresql/data/lost+found ]; then
+                echo "Found lost+found directory, removing it..."
+                rm -rf /var/lib/postgresql/data/lost+found
+              fi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
