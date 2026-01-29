@@ -85,4 +85,7 @@ data:
 
   ## Runner Configuration for LWS
   STARHUB_SERVER_RUNNER_NETWORK_INTERFACE: {{ $service.networkInterface | quote }}
+
+  ## Runner Configuration for Spaces
+  STARHUB_SERVER_RUNNER_STORAGE_CLASS: {{ $service.storageClassName | quote }}
 {{- end }}
