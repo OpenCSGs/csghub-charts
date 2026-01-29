@@ -465,7 +465,7 @@ memmachine:
       baseUrl: ""                         # OpenAI-compatible embedding endpoint (e.g. https://api.example.com/v1)
       apiKey: ""                          # API key for embedding endpoint
       model: ""                           # Embedding model name
-      dimensions: 1536                    # Embedding dimensions
+      dimensions: 0                       # Embedding dimensions
     chat:
       baseUrl: ""                         # OpenAI-compatible chat endpoint (e.g. https://api.example.com/v1)
       apiKey: ""                          # API key for chat endpoint
