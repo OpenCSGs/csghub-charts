@@ -35,6 +35,7 @@ data:
       session:
       - profile_prompt
 
+    {{ $model := .Values.model | default dict }}
     resources:
       databases:
         profile_storage:
@@ -63,18 +64,22 @@ data:
       embedders:
         openai_compatible_embedder:
           provider: openai
+          {{ with $model.embedding }}
           config:
-            model: {{ .Values.model.embedding.model | quote }}
-            api_key: {{ .Values.model.embedding.apiKey | quote }}
-            base_url: {{ .Values.model.embedding.baseUrl | quote }}
-            dimensions: {{ .Values.model.embedding.dimensions }}
+            model: {{ .model | default "" | quote }}
+            api_key: {{ .apiKey | default "" | quote }}
+            base_url: {{ .baseUrl | default "" | quote }}
+            dimensions: {{ .dimensions | default 0 }}
+          {{ end }}
       language_models:
         openai_compatible_model:
           provider: openai-chat-completions
+          {{ with $model.chat }}
           config:
-            model: {{ .Values.model.chat.model | quote }}
-            api_key: {{ .Values.model.chat.apiKey | quote }}
-            base_url: {{ .Values.model.chat.baseUrl | quote }}
+            model: {{ .model | default "" | quote }}
+            api_key: {{ .apiKey | default "" | quote }}
+            base_url: {{ .baseUrl | default "" | quote }}
+          {{ end }}
       rerankers:
         default_reranker:
           provider: embedder

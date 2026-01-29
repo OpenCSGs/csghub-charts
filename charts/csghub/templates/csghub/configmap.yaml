@@ -104,14 +104,17 @@ data:
   OPENCSG_DATAFLOW_SERVER_PORT: {{ $dataflowConfig.port | quote }}
 
   ## Server Configuration for Memory Service
-  OPENCSG_MEMORY_SERVER_ENABLED: {{ .Values.server.memory.enabled | quote }}
-  OPENCSG_MEMORY_SERVER_HOST: {{ .Values.server.memory.host | quote }}
-  OPENCSG_MEMORY_SERVER_PORT: {{ .Values.server.memory.port | quote }}
-  OPENCSG_MEMORY_SERVER_BASE_PATH: {{ .Values.server.memory.basePath | quote }}
-  OPENCSG_MEMORY_SERVER_API_KEY: {{ .Values.server.memory.apiKey | quote }}
-  OPENCSG_MEMORY_SERVER_TIMEOUT_SECONDS: {{ .Values.server.memory.timeoutSeconds | quote }}
-  OPENCSG_MEMORY_SERVER_RETRY_COUNT: {{ .Values.server.memory.retryCount | quote }}
-  OPENCSG_MEMORY_SERVER_RETRY_DELAY_MILLIS: {{ .Values.server.memory.retryDelayMillis | quote }}
+  {{- $memSvc := include "common.service" (dict "service" "memmachine" "global" .) | fromYaml }}
+  {{- $memConfig := $serverSvc.memory | default dict }}
+  {{- $memEnabled := gt (len $memConfig) 0 }}
+  OPENCSG_MEMORY_SERVER_ENABLED: {{ ternary "true" "false" $memEnabled | quote }}
+  OPENCSG_MEMORY_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $memSvc.name)) | quote }}
+  OPENCSG_MEMORY_SERVER_PORT: {{ $memSvc | dig "service" "port" 8080 | quote }}
+  OPENCSG_MEMORY_SERVER_BASE_PATH: {{ $serverSvc.memory.basePath | quote }}
+  OPENCSG_MEMORY_SERVER_API_KEY: {{ $serverSvc.memory.apiKey | quote }}
+  OPENCSG_MEMORY_SERVER_TIMEOUT_SECONDS: {{ $serverSvc.memory.timeoutSeconds | quote }}
+  OPENCSG_MEMORY_SERVER_RETRY_COUNT: {{ $serverSvc.memory.retryCount | quote }}
+  OPENCSG_MEMORY_SERVER_RETRY_DELAY_MILLIS: {{ $serverSvc.memory.retryDelayMillis | quote }}
 
   ## Server Configuration for Dataviewer
   {{- $dataviewerSvc := include "common.service" (dict "service" "dataviewer" "global" .) | fromYaml }}
