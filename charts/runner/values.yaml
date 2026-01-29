@@ -111,9 +111,13 @@ gpuModelLabel:
 ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
 applicationEndpoint: ""
 
-## Host network interface name used for inter-node communication during distributed (LWS) inference
+## Host network interface name used for intern communication during distributed (LWS) inference
 ## e.g. eth0
 networkInterface: ""
+
+## Kubernetes StorageClass name for persistent volume provisioning for space
+# Example values: "local-path", "gp2"
+storageClassName: ""
 
 ## Knative Serving configuration
 knative:
