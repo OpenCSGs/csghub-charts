@@ -69,11 +69,13 @@ extraEnv: []
 extraEnvFrom: []
 
 model:
+  # Optional. Remove this entire block to start without configured models.
+  # Model-dependent endpoints will return 503 until models are configured at runtime.
   embedding:
     baseUrl: ""
     apiKey: ""
     model: ""
-    dimensions: 1536
+    dimensions: 0
   chat:
     baseUrl: ""
     apiKey: ""
