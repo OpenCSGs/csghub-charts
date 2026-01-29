@@ -26,5 +26,8 @@ dependencies:
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.0
-digest: sha256:4d5c02617d7542ec38199473401382ff1159fe828be54e3a1540f79959b54271
-generated: "2026-01-29T14:56:44.726593+08:00"
+- name: memmachine
+  repository: file://charts/memmachine
+  version: 0.1.0
+digest: sha256:d29c632458cf795544a53807b29d9407a27cba156626df9f34a930bfad01b0c6
+generated: "2026-01-29T21:24:06.598443+08:00"
