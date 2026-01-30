@@ -43,7 +43,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{- define "memmachine.image" -}}
-{{- $registry := .image.registry | default "" -}}
+{{- $registry := (or .image.registry .global.image.registry "") -}}
 {{- $repository := .image.repository -}}
 {{- $tag := .image.tag -}}
 {{- if $registry -}}

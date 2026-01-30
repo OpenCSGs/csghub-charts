@@ -4,9 +4,8 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  registry: ""
   repository: "memmachine/memmachine"
-  tag: "v0.2.3-cpu"
+  tag: "v0.2.5-cpu"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -16,7 +15,6 @@ service:
 
 postgres:
   image:
-    registry: "docker.io"
     repository: "pgvector/pgvector"
     tag: "pg16"
     pullPolicy: "IfNotPresent"
@@ -36,7 +34,6 @@ postgres:
 
 neo4j:
   image:
-    registry: "docker.io"
     repository: "neo4j"
     tag: "5.23-community"
     pullPolicy: "IfNotPresent"

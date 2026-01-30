@@ -34,7 +34,7 @@ spec:
       {{- end }}
       containers:
         - name: postgres
-          image: {{ include "memmachine.image" (dict "image" .Values.postgres.image) }}
+          image: {{ include "memmachine.image" (dict "image" .Values.postgres.image "global" (or .Values.global (dict "image" (dict "registry" "docker.io")))) }}
           imagePullPolicy: {{ or .Values.postgres.image.pullPolicy .Values.global.image.pullPolicy }}
           ports:
             - name: postgres
@@ -53,7 +53,7 @@ spec:
             - name: memmachine-postgres-data
               mountPath: {{ .Values.postgres.persistence.mountPath }}
         - name: neo4j
-          image: {{ include "memmachine.image" (dict "image" .Values.neo4j.image) }}
+          image: {{ include "memmachine.image" (dict "image" .Values.neo4j.image "global" (or .Values.global (dict "image" (dict "registry" "docker.io")))) }}
           imagePullPolicy: {{ or .Values.neo4j.image.pullPolicy .Values.global.image.pullPolicy }}
           ports:
             - name: neo4j-http
@@ -84,7 +84,7 @@ spec:
             - name: memmachine-neo4j-plugins
               mountPath: {{ .Values.neo4j.persistence.mounts.plugins }}
         - name: memmachine
-          image: {{ include "memmachine.image" (dict "image" .Values.image) }}
+          image: {{ include "memmachine.image" (dict "image" .Values.image "global" (or .Values.global (dict "image" (dict "registry" "docker.io")))) }}
           imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy }}
           ports:
             - name: http
