@@ -798,13 +798,6 @@ ingress-nginx:
       - name: "custom-error-pages"
         mountPath: "/www"
 
-## Fluentd log collection configuration
-fluentd:
-  enabled: false                           # Enable or disable Fluentd
-  image:
-    repository: "opencsghq/fluent-fluentd-kubernetes-daemonset" # Fluentd image
-  fileConfigs: {}                          # Fluentd file sources configuration
-
 ## Reloader configuration
 reloader:
   image:
@@ -910,7 +903,7 @@ prometheus:
 
 ## MemMachine configuration
 memmachine:
-  enabled: true
+  enabled: false
 
   model:
     embedding:
