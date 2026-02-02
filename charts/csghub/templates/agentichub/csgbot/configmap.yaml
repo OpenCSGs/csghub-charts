@@ -1,0 +1,48 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "service" "csgbot" "global" .) | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  csgbot.toml: |
+    # CSGBot Production Configuration
+
+    [ llm ]
+    model-id = "openai/anthropic/claude-sonnet-4"
+    model-base-url = "https://openrouter.ai/api/v1"
+    model-api-key = ""
+    temperature = 0.1
+
+    [ planner ]
+    max-replan-count = 3
+
+    [ csgsandbox ]
+    sandbox-image = "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-sandbox-python-runner:latest"
+    sandbox-service-url = "http://172.19.5.117:9090"
+    workspace-volume-prefix = "/data/csgsandbox_volumes"
+
+    [ user-feedback ]
+    gitlab-url = ""
+    gitlab-project-id = ""
+
+    # Epic backlog: https://git-devops.opencsg.com/groups/product/agentichub/-/epics/19
+    # 19 is its epic_iid.
+    gitlab-epic-id = ""
+
+    # GitLab private token for authentication (set via environment variable USER_FEEDBACK_GITLAB_TOKEN)
+    # Do NOT commit actual tokens to this file
+    gitlab-token = ""
+
+    [ logger ]
+    # Disable genius chat debug logging (logs to genius_chat_logs/)
+    disable-genius-chat = false

@@ -198,19 +198,6 @@ server:
   swaggerAPI:
     enabled: false                         # Enable Swagger API assistants
 
-  ## Agent configuration
-  agent:
-    langflow: {}
-      # host: ""                           # AgentHub address
-      # token: ""                          # AgentHub Token
-      # instanceQuotaPerUser: 5
-      # codeInstanceQuotaPerUser: 5
-
-  ## CSGBot configuration
-  csgbot: {}
-    # host: ""                             # CSGBot address
-    # port: "8070"                         # CSGBot port
-
   ## Memory service client configuration
   memory:
     enabled: true                          # Enable memory service integration
@@ -418,6 +405,73 @@ dataflow:
   redis:
     enabled: false
 
+# AgenticHub configuration
+agenticflow:
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/agenticflow"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service configuration
+  service: {}
+    # port: 7860
+
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_agentichub"              # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
+
+  ## Redis configuration
+  redis: {}
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+    # password: ""                         # Redis authentication password
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "10Gi"                            # Disk space allocation
+
+# CSGBot configuration
+csgbot:
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/csgbot"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service configuration
+  service: {}
+    # port: 8070
+
+  ## Model configuration
+  model:
+    chat:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+    codesouler:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+    superAgent:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+    aigateway:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+
+# CSGShip configuration
 csgship:
   enabled: false
 
@@ -910,7 +964,7 @@ prometheus:
 
 ## MemMachine configuration
 memmachine:
-  enabled: true
+  enabled: false
 
   model:
     embedding:

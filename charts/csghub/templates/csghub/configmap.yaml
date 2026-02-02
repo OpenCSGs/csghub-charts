@@ -266,15 +266,23 @@ data:
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
 
   ## Server Configuration for Agent
+  {{- $agenticflowSvc := include "common.service" (dict "service" "agenticflow" "global" .) | fromYaml }}
+  {{- $agenticflowSvcName := include "common.names.custom" (list . $agenticflowSvc.name) }}
+  {{- $agenticflowSvcPort := dig "service" "port" 7860 $agenticflowSvc }}
   OPENCSG_AGENT_AUTOHUB_SERVICE_HOST: ""
-  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ $serverSvc.agent.langflow.host | quote }}
-  OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ $serverSvc.agent.langflow.token | quote }}
-  STARHUB_SERVER_AGENT_CODE_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agent.langflow.codeInstanceQuotaPerUser | default 5 | quote }}
-  STARHUB_SERVER_AGENT_LANGFLOW_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agent.langflow.instanceQuotaPerUser | default 5 | quote }}
+  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ printf "http://%s:%v" $agenticflowSvcName $agenticflowSvcPort | quote }}
+  {{- $agenticflowData := (lookup "v1" "ConfigMap" .Release.Namespace $agenticflowSvcName).data | default dict }}
+  {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $agenticflowData }}
+  OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ $agenticflowToken | quote }}
+  STARHUB_SERVER_AGENT_CODE_INSTANCE_QUOTA_PER_USER: "5"
+  STARHUB_SERVER_AGENT_LANGFLOW_INSTANCE_QUOTA_PER_USER: "5"
 
   ## Server Configuration for CSGBot
-  OPENCSG_CSGBOT_SERVER_HOST: {{ $serverSvc.csgbot.host | quote }}
-  OPENCSG_CSGBOT_SERVER_PORT: {{ $serverSvc.csgbot.port | quote }}
+  {{- $csgbotSvc := include "common.service" (dict "service" "csgbot" "global" .) | fromYaml }}
+  {{- $csgbotSvcName := include "common.names.custom" (list . $csgbotSvc.name) }}
+  {{- $csgbotSvcPort := dig "service" "port" 8070 $csgbotSvc }}
+  OPENCSG_CSGBOT_SERVER_HOST: {{ printf "http://%s" $csgbotSvcName | quote }}
+  OPENCSG_CSGBOT_SERVER_PORT: {{ $csgbotSvcPort | quote }}
 
   ## Server Configuration for XNet
   {{- $xnetSvc := include "common.service" (dict "service" "xnet" "global" .) | fromYaml }}
