@@ -7,8 +7,8 @@ SPDX-License-Identifier: APACHE-2.0
 Construct the external endpoint for csghub with flexible configuration.
 
 Priority:
-1. Service-specific ingress configuration
-2. Global ingress configuration
+1. Service-specific gateway configuration
+2. Global gateway configuration
 
 Parameters can be passed as a dict with:
 - ctx: The Helm context
@@ -18,35 +18,29 @@ Parameters can be passed as a dict with:
 Usage:
 {{ include "common.endpoint" (dict "ctx" . "service" .Values.webapp "domain" "app.example.com") }}
 */}}
-{{- define "common.endpoint" -}}
-  {{- /* Parse parameters */ -}}
-  {{- $ctx := .ctx -}}
-  {{- $service := .service | default dict -}}
-  {{- $domain := .domain -}}
+{{- define "common.endpoint" }}
+  {{- /* Parse parameters */}}
+  {{- $ctx := .ctx }}
+  {{- $service := .service | default dict }}
+  {{- $domain := .domain }}
 
-  {{- /* Get merged ingress configuration using common.ingress.config */ -}}
-  {{- $ingressConfig := include "common.ingress.config" (dict "service" $service "global" $ctx) | fromYaml -}}
+  {{- /* Get merged gateway configuration using common.gateway.config */}}
+  {{- $gatewayConfig := include "common.gateway.config" (dict "ctx" $ctx "service" $service) | fromYaml }}
   
-  {{- /* Determine protocol and port based on configuration */ -}}
-  {{- $protocol := "http" -}}
-  {{- $port := "" -}}
+  {{- /* Determine protocol and port based on configuration */}}
+  {{- $scheme := "http" }}
+  {{- if $gatewayConfig.tls.enabled }}
+    {{- $scheme = "https" }}
+  {{- end }}
   
-  {{- if $ingressConfig.tls.enabled -}}
-    {{- $protocol = "https" -}}
-  {{- end -}}
-  
-  {{- if eq $ingressConfig.service.type "NodePort" -}}
-    {{- if $ingressConfig.tls.enabled -}}
-      {{- $port = "30443" -}}
-    {{- else -}}
-      {{- $port = "30080" -}}
-    {{- end -}}
-  {{- end -}}
-  
-  {{- /* Construct the endpoint URL */ -}}
-  {{- if $port -}}
-    {{- printf "%s://%s:%s" $protocol $domain $port -}}
-  {{- else -}}
-    {{- printf "%s://%s" $protocol $domain -}}
-  {{- end -}}
+  {{- /* Construct the endpoint URL */}}
+  {{- if eq $gatewayConfig.service.type "LoadBalancer" }}
+    {{- printf "%s://%s" $scheme $domain -}}
+  {{- else }}
+    {{- if $gatewayConfig.tls.enabled }}
+      {{- printf "%s://%s:%v" $scheme $domain $gatewayConfig.service.nodePorts.https -}}
+    {{- else }}
+      {{- printf "%s://%s:%v" $scheme $domain $gatewayConfig.service.nodePorts.http -}}
+    {{- end }}
+  {{- end }}
 {{- end -}}
