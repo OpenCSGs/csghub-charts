@@ -9,18 +9,9 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "common.domain.runner" . }}
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
-{{- define "common.domain.runner" -}}
+{{- define "common.domain.runner" }}
 {{- $service := include "common.service" . | fromYaml }}
-{{- $host := .Values.global.ingress.host }}
-{{- if $host }}
-  {{- if contains "." $host }}
-      {{- $host -}}
-  {{- else }}
-      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
-  {{- end }}
-{{- else }}
-  {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
-{{- end }}
+{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 
 {{/*
@@ -37,33 +28,33 @@ SPDX-License-Identifier: APACHE-2.0
 Generate Kaniko build arguments for runner.
 
 Usage:
-  {{ include "runner.kaniko.args" (dict "service" $servicename "global" .) }}
+  {{ include "runner.kaniko.args" (dict "ctx" . "service" $servicename) }}
 
 Returns:
   A single-line, comma-separated string of Kaniko build arguments.
 */}}
-{{- define "runner.kaniko.args" -}}
-{{- $service := .service -}}
-{{- $global := .global -}}
+{{- define "runner.kaniko.args" }}
+{{- $service := .service }}
+{{- $ctx := .ctx }}
 
 {{- $kanikoCache := printf "--cache-repo=%s/%s" $service.registry.registry $service.registry.repository }}
-{{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" -}}
+{{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" }}
 {{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" $kanikoCache) }}
 
 {{- if $service.pipIndexUrl }}
-  {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) -}}
+  {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) }}
 {{- end }}
 
-{{- $csghubEndpoint := include "common.endpoint.csghub" $global }}
-{{- if not $global.Values.global.chartContext.isBuiltIn }}
+{{- $csghubEndpoint := include "common.endpoint.csghub" $ctx }}
+{{- if not $ctx.Values.global.chartContext.isBuiltIn }}
 {{- $csghubEndpoint = $service.externalUrl }}
 {{- end }}
-{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint -}}
-{{- $args = concat $args (list $hfEndpoint) -}}
+{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint }}
+{{- $args = concat $args (list $hfEndpoint) }}
 
 {{- $insecure := false }}
-{{- if $global.Values.global.chartContext.isBuiltIn }}
-  {{- $insecure = or $global.Values.global.registry.enabled $global.Values.global.registry.external.insecure }}
+{{- if $ctx.Values.global.chartContext.isBuiltIn }}
+  {{- $insecure = or $ctx.Values.global.registry.enabled $ctx.Values.global.registry.external.insecure }}
 {{- else }}
   {{- $insecure = $service.registry.insecure }}
 {{- end }}
@@ -74,11 +65,11 @@ Returns:
     "--skip-tls-verify-pull"
     "--insecure"
     "--insecure-pull"
-  ) -}}
+  ) }}
 {{- end }}
 
 {{- range $service.extraBuildArgs }}
-  {{- $args = concat $args (list .) -}}
+  {{- $args = concat $args (list .) }}
 {{- end }}
 
 {{- join "," $args | nospace -}}
@@ -99,7 +90,7 @@ Returns:
 {{- $service := include "common.service" . | fromYaml }}
 {{- $lokiAddress := $service.logcollector.loki.address }}
 {{- if .Values.global.chartContext.isBuiltIn }}
-{{- $lokiSvc := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
+{{- $lokiSvc := include "common.service" (dict "ctx" . "service" "loki") | fromYaml }}
 {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
 {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
 {{- $lokiAddress = printf "http://%s:%v" $lokiSvcName $lokiSvcPort }}

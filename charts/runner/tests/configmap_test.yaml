@@ -6,10 +6,9 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      domain: "example.com"
-      host: ""
-      publicHost: ""
+    gateway:
+      external:
+        domain: "csghub.example.com"
       tls:
         enabled: true
         secretName: "test-tls"
@@ -175,8 +174,9 @@ tests:
     template: configmap.yaml
     set:
       global:
-        ingress:
-          host: "public"
+        gateway:
+          external:
+            domain: "public.example.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
@@ -186,8 +186,9 @@ tests:
     template: configmap.yaml
     set:
       global:
-        ingress:
-          host: "spaces.example.com"
+        gateway:
+          external:
+            domain: "spaces.example.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
@@ -197,9 +198,10 @@ tests:
     template: configmap.yaml
     set:
       global:
-        ingress:
-          host: "spaces.example.com"
-          publicHost: "public.space.com"
+        gateway:
+          external:
+            domain: "spaces.example.com"
+            public: "public.space.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN

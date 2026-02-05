@@ -52,7 +52,7 @@ spec:
       serviceAccountName: {{ $service.rbac.serviceAccountName }}
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
       {{- end }}
-      {{- $serverImage := include "csghub.service.image" (dict "service" $service "context" .) | fromYaml }}
+      {{- $serverImage := include "csghub.service.image" (dict "ctx" . "service" $service) | fromYaml }}
       {{- with (or $serverImage.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}
