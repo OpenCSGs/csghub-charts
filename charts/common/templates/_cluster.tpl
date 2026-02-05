@@ -13,33 +13,33 @@ This function attempts to detect the cluster domain by checking:
 
 Usage: {{ include "common.domain.cluster" . }}
 */}}
-{{- define "common.domain.cluster" -}}
-  {{- $clusterDomain := "" -}}
+{{- define "common.domain.cluster" }}
+  {{- $clusterDomain := "" }}
 
-  {{- /* Try to get domain from kube-dns ConfigMap */ -}}
-  {{- $kubeDNS := (lookup "v1" "ConfigMap" "kube-system" "kube-dns") -}}
-  {{- if $kubeDNS -}}
-    {{- if $kubeDNS.data.domain -}}
-      {{- $clusterDomain = $kubeDNS.data.domain -}}
-    {{- end -}}
-  {{- end -}}
+  {{- /* Try to get domain from kube-dns ConfigMap */}}
+  {{- $kubeDNS := (lookup "v1" "ConfigMap" "kube-system" "kube-dns") }}
+  {{- if $kubeDNS }}
+    {{- if $kubeDNS.data.domain }}
+      {{- $clusterDomain = $kubeDNS.data.domain }}
+    {{- end }}
+  {{- end }}
 
-  {{- /* Fallback to CoreDNS ConfigMap */ -}}
-  {{- if not $clusterDomain -}}
-    {{- $coreDNS := (lookup "v1" "ConfigMap" "kube-system" "coredns") -}}
-    {{- if $coreDNS -}}
-      {{- if $coreDNS.data.Corefile -}}
-        {{- if contains "cluster.local" $coreDNS.data.Corefile -}}
-          {{- $clusterDomain = "cluster.local" -}}
-        {{- end -}}
-      {{- end -}}
-    {{- end -}}
-  {{- end -}}
+  {{- /* Fallback to CoreDNS ConfigMap */}}
+  {{- if not $clusterDomain }}
+    {{- $coreDNS := (lookup "v1" "ConfigMap" "kube-system" "coredns") }}
+    {{- if $coreDNS }}
+      {{- if $coreDNS.data.Corefile }}
+        {{- if contains "cluster.local" $coreDNS.data.Corefile }}
+          {{- $clusterDomain = "cluster.local" }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
 
-  {{- /* Final fallback to default cluster domain */ -}}
-  {{- if not $clusterDomain -}}
-    {{- $clusterDomain = "cluster.local" -}}
-  {{- end -}}
+  {{- /* Final fallback to default cluster domain */}}
+  {{- if not $clusterDomain }}
+    {{- $clusterDomain = "cluster.local" }}
+  {{- end }}
 
   {{- $clusterDomain -}}
 {{- end -}}

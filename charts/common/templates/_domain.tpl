@@ -24,7 +24,7 @@ Get base domain from external.domain:
   {{- if ge (len $parts) 3 }}
     {{- regexReplaceAll "^[^.]+\\." $domain "" -}}
   {{- else }}
-    {{- $domain }}
+    {{- $domain -}}
   {{- end }}
 {{- end }}
 
