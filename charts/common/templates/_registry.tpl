@@ -8,11 +8,11 @@ SPDX-License-Identifier: APACHE-2.0
 Generate Registry Configuration
 
 Usage:
-{{ include "common.registry.config" (dict "service" .Values.servicename "global" .) }}
+{{ include "common.registry.config" (dict "ctx" . "service" .Values.servicename) }}
 
 Parameters:
 - service: Service-specific configuration values (e.g., .Values.api)
-- global: Global configuration values (e.g., .)
+- ctx: Global configuration values (e.g., .)
 
 Configuration priority:
 1. Internal registry (if enabled)
@@ -21,71 +21,71 @@ Configuration priority:
 
 Returns: YAML configuration object with registry parameters
 */}}
-{{- define "common.registry.config" -}}
-  {{- $service := .service -}}
-  {{- $global := .global -}}
+{{- define "common.registry.config" }}
+  {{- $service := .service }}
+  {{- $ctx := .ctx }}
 
-  {{- /* Default configuration for internal registry */ -}}
-  {{- $registrySvc := include "common.service" (dict "service" "registry" "global" $global) | fromYaml -}}
-  {{- $registryName := include "common.names.custom" (list $global $registrySvc.name) -}}
+  {{- /* Default configuration for internal registry */}}
+  {{- $registrySvc := include "common.service" (dict "ctx" $ctx "service" "registry") | fromYaml }}
+  {{- $registryName := include "common.names.custom" (list $ctx $registrySvc.name) }}
   {{- $registryConfig := dict
-    "registry" (include "common.endpoint.csghub" $global | trimPrefix "http://" | trimPrefix  "https://")
-    "repository" $global.Release.Namespace
+    "registry" (include "common.endpoint.csghub" $ctx | trimPrefix "http://" | trimPrefix  "https://")
+    "repository" $ctx.Release.Namespace
     "username" "registry"
     "password" (include "common.randomPassword" $registrySvc.name)
     "insecure" "false"
-  -}}
+  }}
 
-  {{- /* If internal registry is enabled and secret exists, use existing credentials */ -}}
-  {{- if $global.Values.global.registry.enabled -}}
-    {{- $secret := lookup "v1" "Secret" $global.Release.Namespace $registryName -}}
-    {{- if and $secret $secret.data -}}
-      {{- $_ := set $registryConfig "username" ((index $secret.data "REGISTRY_USERNAME" | b64dec) | default $registryConfig.username) -}}
-      {{- $_ := set $registryConfig "password" ((index $secret.data "REGISTRY_PASSWORD" | b64dec) | default $registryConfig.password) -}}
-    {{- end -}}
-  {{- end -}}
+  {{- /* If internal registry is enabled and secret exists, use existing credentials */}}
+  {{- if $ctx.Values.global.registry.enabled }}
+    {{- $secret := lookup "v1" "Secret" $ctx.Release.Namespace $registryName }}
+    {{- if and $secret $secret.data }}
+      {{- $_ := set $registryConfig "username" ((index $secret.data "REGISTRY_USERNAME" | b64dec) | default $registryConfig.username) }}
+      {{- $_ := set $registryConfig "password" ((index $secret.data "REGISTRY_PASSWORD" | b64dec) | default $registryConfig.password) }}
+    {{- end }}
+  {{- end }}
 
-  {{- /* Override with external registry configuration if internal is disabled */ -}}
-  {{- if not $global.Values.global.registry.enabled -}}
-    {{- /* Global external registry configuration */ -}}
-    {{- with $global.Values.global.registry.external -}}
+  {{- /* Override with external registry configuration if internal is disabled */}}
+  {{- if not $ctx.Values.global.registry.enabled }}
+    {{- /* Global external registry configuration */}}
+    {{- with $ctx.Values.global.registry.external }}
       {{- $registryConfig = merge (dict
         "registry" (.registry | default $registryConfig.registry)
         "repository" (.repository | default $registryConfig.repository)
         "username" (.username | default $registryConfig.username)
         "password" (.password | default $registryConfig.password)
         "insecure" (.insecure | default $registryConfig.insecure)
-      ) $registryConfig -}}
-    {{- end -}}
-  {{- end -}}
+      ) $registryConfig }}
+    {{- end }}
+  {{- end }}
 
-  {{- /* Service-level external registry configuration (higher priority) */ -}}
-  {{- with $service.registry -}}
+  {{- /* Service-level external registry configuration (higher priority) */}}
+  {{- with $service.registry }}
     {{- $registryConfig = merge (dict
       "registry" (.registry | default $registryConfig.registry)
       "repository" (.repository | default $registryConfig.repository)
       "username" (.username | default $registryConfig.username)
       "password" (.password | default $registryConfig.password)
       "insecure" (.insecure | default $registryConfig.insecure)
-    ) $registryConfig -}}
-  {{- end -}}
+    ) $registryConfig }}
+  {{- end }}
 
-  {{- /* Validate required configurations */ -}}
-  {{- if not $registryConfig.registry -}}
-    {{- fail "Registry endpoint must be set" -}}
-  {{- end -}}
+  {{- /* Validate required configurations */}}
+  {{- if not $registryConfig.registry }}
+    {{ fail "Registry endpoint must be set" }}
+  {{- end }}
 
-  {{- if not $registryConfig.repository -}}
-    {{- fail "Registry repository must be set" -}}
-  {{- end -}}
+  {{- if not $registryConfig.repository }}
+    {{ fail "Registry repository must be set" }}
+  {{- end }}
 
-  {{- if not $registryConfig.username -}}
-    {{- fail "Registry username must be set" -}}
-  {{- end -}}
+  {{- if not $registryConfig.username }}
+    {{ fail "Registry username must be set" }}
+  {{- end }}
 
-  {{- if not $registryConfig.password -}}
-    {{- fail "Registry password must be set" -}}
-  {{- end -}}
+  {{- if not $registryConfig.password }}
+    {{ fail "Registry password must be set" }}
+  {{- end }}
 
   {{- $registryConfig | toYaml -}}
 {{- end -}}

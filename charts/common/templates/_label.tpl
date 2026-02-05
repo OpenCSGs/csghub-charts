@@ -8,29 +8,29 @@ Kubernetes standard labels template with flexible configuration options.
 
 Usage examples:
 1. Basic usage: {{ include "common.labels" . }}
-2. With service name: {{ include "common.labels" (dict "context" . "service" "my-service") }}
-3. Selector only: {{ include "common.labels" (dict "context" . "selector" true) }}
-4. With custom labels: {{ include "common.labels" (dict "context" . "customLabels" (dict "env" "prod")) }}
-5. Combined options: {{ include "common.labels" (dict "context" . "service" "api" "selector" true "customLabels" (dict "tier" "backend")) }}
+2. With service name: {{ include "common.labels" (dict "ctx" . "service" "my-service") }}
+3. Selector only: {{ include "common.labels" (dict "ctx" . "selector" true) }}
+4. With custom labels: {{ include "common.labels" (dict "ctx" . "customLabels" (dict "env" "prod")) }}
+5. Combined options: {{ include "common.labels" (dict "ctx" . "service" "api" "selector" true "customLabels" (dict "tier" "backend")) }}
 */}}
-{{- define "common.labels" -}}
-  {{- /* Initialize parameters with defaults */ -}}
-  {{- $ctx := . -}}
-  {{- $customLabels := dict -}}
-  {{- $service := "" -}}
-  {{- $selectorOnly := false -}}
+{{- define "common.labels" }}
+  {{- /* Initialize parameters with defaults */}}
+  {{- $ctx := . }}
+  {{- $customLabels := dict }}
+  {{- $service := "" }}
+  {{- $selectorOnly := false }}
 
-  {{- /* Parse input arguments - support both direct context and dict format */ -}}
-  {{- if kindIs "map" . -}}
-    {{- if hasKey . "context" -}}
-      {{- $ctx = .context -}}
-      {{- $customLabels = .customLabels | default dict -}}
-      {{- $service = .service | default "" -}}
-      {{- $selectorOnly = .selector | default false -}}
-    {{- end -}}
-  {{- end -}}
+  {{- /* Parse input arguments - support both direct context and dict format */}}
+  {{- if kindIs "map" . }}
+    {{- if hasKey . "ctx" }}
+      {{- $ctx = .ctx }}
+      {{- $customLabels = .customLabels | default dict }}
+      {{- $service = .service | default "" }}
+      {{- $selectorOnly = .selector | default false }}
+    {{- end }}
+  {{- end }}
 
-  {{- /* Core Kubernetes labels - no indentation for YAML output */ -}}
+  {{- /* Core Kubernetes labels - no indentation for YAML output */}}
 app.kubernetes.io/instance: {{ $ctx.Release.Name }}
   {{- if $service }}
 app.kubernetes.io/name: {{ $service }}
@@ -41,11 +41,11 @@ app.kubernetes.io/name: {{ include "common.names.name" $ctx }}
 app.kubernetes.io/managed-by: {{ $ctx.Release.Service }}
   {{- end }}
 
-  {{- /* User-defined custom labels */ -}}
+  {{- /* User-defined custom labels */}}
   {{- range $key, $value := $customLabels }}
 {{ $key }}: {{ $value | quote }}
-  {{- end -}}
-{{- end -}}
+  {{- end }}
+{{- end }}
 
 {{/*
 Selector labels - includes only the minimal labels needed for pod selection.
@@ -53,19 +53,19 @@ Perfect for use in Deployment, StatefulSet, and DaemonSet selectors.
 
 Usage: {{ include "common.labels.selector" . }}
 */}}
-{{- define "common.labels.selector" -}}
-  {{- include "common.labels" (dict "selector" true "context" .) -}}
-{{- end -}}
+{{- define "common.labels.selector" }}
+  {{- include "common.labels" (dict "ctx" . "selector" true) -}}
+{{- end }}
 
 {{/*
 Service-specific selector labels with custom service name.
 Ideal for Service resource selectors when you need to override the default app name.
 
-Usage: {{ include "common.serviceSelectorLabels" (dict "context" . "service" "my-service") }}
+Usage: {{ include "common.serviceSelectorLabels" (dict "ctx" . "service" "my-service") }}
 */}}
-{{- define "common.serviceSelectorLabels" -}}
-  {{- include "common.labels" (dict "selector" true "service" .service "context" .context) -}}
-{{- end -}}
+{{- define "common.serviceSelectorLabels" }}
+  {{- include "common.labels" (dict "ctx" .ctx "selector" true "service" .service) -}}
+{{- end }}
 
 {{/*
 Minimal selector labels for network policies.
@@ -73,9 +73,9 @@ Provides the most basic label matching for network policy rules to avoid over-se
 
 Usage: {{ include "common.labels.selector.netpol" . }}
 */}}
-{{- define "common.labels.selector.netpol" -}}
+{{- define "common.labels.selector.netpol" }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end -}}
+{{- end }}
 
 {{/*
 Complete labels including all metadata labels.
@@ -83,6 +83,6 @@ Use this when you need all available labels (e.g., for Prometheus monitoring).
 
 Usage: {{ include "common.labels.complete" . }}
 */}}
-{{- define "common.labels.complete" -}}
-  {{- include "common.labels" (dict "context" . "selector" false) -}}
-{{- end -}}
+{{- define "common.labels.complete" }}
+  {{- include "common.labels" (dict "ctx" . "selector" false) -}}
+{{- end }}
