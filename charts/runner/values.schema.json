@@ -7,43 +7,41 @@
       "type": "object",
       "description": "Global Configuration",
       "properties": {
-        "ingress": {
+        "gateway": {
           "type": "object",
-          "description": "Ingress configuration",
+          "description": "Gateway API configuration",
           "properties": {
-            "className": {
+            "controllerName": {
               "type": "string",
-              "description": "Ingress controller class name"
+              "description": "GatewayClass controller name, e.g. envoy, istio, cilium"
             },
-            "domain": {
-              "type": "string",
-              "description": "Base domain for accessing csghub"
-            },
-            "useTop": {
-              "type": "boolean",
-              "description": "Use top-level domain directly (true) or subdomain (false)"
-            },
-            "tls": {
+            "external": {
               "type": "object",
-              "description": "TLS/SSL configuration",
+              "description": "External domain configuration",
               "properties": {
-                "enabled": {
-                  "type": "boolean",
-                  "description": "Enable or disable TLS"
-                },
-                "secretName": {
+                "domain": {
                   "type": "string",
-                  "description": "TLS secret name (if enabled)"
+                  "description": "Base external domain for Gateway routes"
                 }
               }
             },
             "service": {
               "type": "object",
+              "description": "Gateway Service configuration",
               "properties": {
                 "type": {
                   "type": "string",
-                  "description": "Service type: LoadBalancer or NodePort"
+                  "enum": ["LoadBalancer", "NodePort"],
+                  "description": "Service type for Gateway"
                 }
+              }
+            },
+            "tls": {
+              "type": "object",
+              "description": "TLS configuration for Gateway",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "secretName": { "type": "string" }
               }
             }
           }
@@ -89,14 +87,6 @@
         "tag": { "type": "string" },
         "pullPolicy": { "type": "string" },
         "pullSecrets": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "ingress": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean" },
-        "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
-        "tls": { "type": "object" }
       }
     },
     "hubAPIToken": { "type": "string", "description": "API token for authenticating with CSGHub API" },
@@ -208,6 +198,23 @@
     "resources": { "type": "object" },
     "nodeSelector": { "type": "object" },
     "tolerations": { "type": "array", "items": { "type": "object" } },
-    "affinity": { "type": "object" }
+    "affinity": { "type": "object" },
+    "gateway": {
+      "type": "object",
+      "description": "Gateway API enablement",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable Gateway API"
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "secretName": { "type": "string" }
+          }
+        }
+      }
+    }
   }
 }
