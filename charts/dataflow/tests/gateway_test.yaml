@@ -1,0 +1,34 @@
+suite: Test Dataflow Gateway
+templates:
+  - gateway.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    gateway:
+      controllerName: "gateway.envoyproxy.io/gatewayclass-controller"
+      external:
+        domain: "csghub.example.cn"
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+tests:
+  - it: Should render gateway correctly
+    template: gateway.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.controllerName
+          value: "gateway.envoyproxy.io/gatewayclass-controller"
+
+  - it: Should render gateway correctly
+    template: gateway.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.listeners[1].protocol
+          value: "HTTPS"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "example-cn-tls"

@@ -1,0 +1,54 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if not .Values.global.chartContext.isBuiltIn }}
+{{- $gateway := .Values.global.gateway }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: csghub-gateway
+spec:
+  controllerName: {{ $gateway.controllerName }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: listeners
+  namespace: {{ .Release.Namespace }}
+spec:
+  gatewayClassName: csghub-gateway
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- if $gateway.tls.enabled }}
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ $gateway.tls.secretName }}
+          {{- $dataflowSvc := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
+          {{- $dataflowGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $dataflowSvc) | fromYaml }}
+          {{- if $dataflowGatewayConfig.tls.secretName }}
+          - kind: Secret
+            name: {{ $dataflowGatewayConfig.tls.secretName }}
+          {{- end }}
+          {{- $labelStudioSvc := include "common.service" (dict "ctx" . "service" "labelStudio") | fromYaml }}
+          {{- $labelStudioGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $labelStudioSvc) | fromYaml }}
+          {{- if $labelStudioGatewayConfig.tls.secretName }}
+          - kind: Secret
+            name: {{ $labelStudioGatewayConfig.tls.secretName }}
+          {{- end }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
+{{- end }}

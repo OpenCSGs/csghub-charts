@@ -8,20 +8,20 @@ SPDX-License-Identifier: APACHE-2.0
 # Creates a Kubernetes init container that waits for MongoDB service to become ready
 # Verifies health endpoint before proceeding with pod startup
 #
-# Usage: {{ include "wait-for-mongo" (dict "service" $service "global" .) }}
+# Usage: {{ include "wait-for-mongo" (dict "ctx" . "service" $service) }}
 #
 # Dependencies:
 #   - common.names.custom template (naming)
 #   - common.image template (image reference helper)
 */}}
 {{- define "wait-for-mongo" }}
-{{- $service := .service -}}
-{{- $global := .global -}}
-{{- $mongoSvc := include "common.service" (dict "service" "mongo" "global" $global) | fromYaml -}}
-{{- $mongoConfig := include "common.mongo.config" (dict "service" $service "global" $global) | fromYaml -}}
+{{- $ctx := .ctx }}
+{{- $service := .service }}
+{{- $mongoSvc := include "common.service" (dict "ctx" $ctx "service" "mongo") | fromYaml }}
+{{- $mongoConfig := include "common.mongo.config" (dict "ctx" $ctx "service" $service) | fromYaml }}
 - name: wait-for-mongo
-  image: {{ include "common.image" (list $global $mongoSvc.image) }}
-  imagePullPolicy: {{ or $mongoSvc.image.pullPolicy $global.Values.global.image.pullPolicy | quote }}
+  image: {{ include "common.image" (list $ctx $mongoSvc.image) }}
+  imagePullPolicy: {{ or $mongoSvc.image.pullPolicy $ctx.Values.global.image.pullPolicy | quote }}
   command:
     - /bin/sh
     - -c

@@ -2,21 +2,39 @@
 ##  Global Configuration                                       ##
 #################################################################
 global:
-  ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
-  edition: "ee"
+  ## Gateway configuration
+  gateway:
+    ## GatewayClass controller that will reconcile Gateway / HTTPRoute resources.
+    ## Choose the controller according to the Gateway implementation you use.
+    ## Examples:
+    ## - gateway.envoyproxy.io/gatewayclass-controller  (Envoy Gateway)
+    ## - istio.io/gateway-controller                    (Istio)
+    ## - io.cilium/gateway-controller                   (Cilium)
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
 
-  ## Ingress configuration
-  ingress:
-    # className: "nginx"            # Ingress controller class name
-    domain: "example.com"           # Base domain for accessing csghub
-    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
-    ## TLS/SSL configuration
-    tls:
-      enabled: false                # Enable or disable TLS
-      # secretName: ""              # TLS secret name (if enabled)
-    ## Service configuration
+    ## Gateway service configuration
+    ## type: Service type (LoadBalancer or NodePort)
+    ## nodePorts: Optional NodePort mapping (if using NodePort)
     service:
-      type: &type "LoadBalancer"    # Service type: LoadBalancer or NodePort
+      type: "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      nodePorts: {}
+        # http: 30080
+        # https: 30443
+        # gitssh: 30022
+
+    ## Base external domain used to expose CSGHub services
+    external:
+      domain: "csghub.example.com"  # e.g. csghub.example.com, example.com
+        # public: ""                  # Optional public access domain override.
+        # If empty, the domain will be derived automatically.
+        # NOTE: When base domain is a second-level domain (e.g. example.com),
+        # a subdomain (e.g. csghub.example.com) will be used internally
+        # to avoid overly broad wildcard routing such as *.example.com
+
+    ## TLS/SSL configuration for Gateway
+    tls:
+      enabled: false                # Enable TLS termination on the Gateway
+      # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
 
   ## Deprecated Section
   ## Image management
@@ -77,14 +95,6 @@ global:
 ## External CSGHub URL for accessing the hub interface
 externalUrl: "https://csghub.example.com"
 
-## Ingress configuration
-ingress:
-  enabled: true                            # Enable or disable ingress
-  annotations: {}                          # Ingress-nginx annotations
-  tls: {}                                  # TLS settings for ingress
-    # enabled: false                       # Enable or disable TLS
-    # secretName: ""                       # TLS secret name (if enabled)
-
 ## Dataflow Configuration
 dataflow:
   ## Image settings (overrides global.image)
@@ -94,6 +104,13 @@ dataflow:
     tag: "v1.15.1"                          # Image version tag
     pullPolicy: "IfNotPresent"              # Image pull policy
     pullSecrets: []                         # Docker registry secrets
+
+  ## Gateway configuration
+  gateway:
+    enabled: true                            # Enable or disable gateway
+    tls: {}                                  # TLS settings for gateway
+      # enabled: false                       # Enable or disable TLS
+      # secretName: ""                       # TLS secret name (if enabled)
 
   ## Database configuration
   postgresql: {}
@@ -139,6 +156,13 @@ labelStudio:
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
+  ## Gateway configuration
+  gateway:
+    enabled: true                            # Enable or disable gateway
+    tls: {}                                  # TLS settings for gateway
+      # enabled: false                       # Enable or disable TLS
+      # secretName: ""                       # TLS secret name (if enabled)
+
   ## Database configuration
   postgresql: {}
     # host: "<pg_host>"                    # PostgreSQL host address
@@ -176,8 +200,8 @@ postgresql:
     protocol: "TCP"                          # Network protocol
 
   databases:                                 # Databases to create on startup
-    - "dataflow_dataflow"
-    - "dataflow_label_studio"
+    - "csghub_dataflow"
+    - "csghub_label_studio"
 
   parameters: {}                             # PostgreSQL runtime parameters
     # max_connections: 400                   # Dynamic parameters (triggers recreate)
@@ -237,66 +261,6 @@ mongo:
 ##  PLEASE DO NOT UPDATE!!!                                    ##
 #################################################################
 ## Do not modify it unless you know the purpose of the modification.
-
-## Ingress-nginx configuration
-ingress-nginx:
-  enabled: true                            # Enable NGINX Ingress Controller
-
-  ## TCP services configuration
-  tcp:
-    22: "csghub/csghub-gitlab-shell:22"    # Forward TCP traffic on port 22
-
-  controller:
-    progressDeadlineSeconds: 600           # Deployment progress deadline
-
-    ## Image configuration
-    image:
-      registry: "docker.io"
-      image: "opencsghq/ingress-nginx-controller"
-      digest: ""                           # Image digest (do not update)
-
-    ## Admission webhooks configuration
-    admissionWebhooks:
-      patch:
-        image:
-          registry: "docker.io"
-          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
-          digest: ""                       # Image digest (do not update)
-
-    ## Controller configuration
-    config:
-      annotations-risk-level: "Critical"    # Risk level for annotations
-      custom-http-errors: "404,500,502,503" # Custom HTTP error codes
-      enable-underscores-in-headers: "true" # Skip underscores headers
-      compute-full-forwarded-for: "true"   # Enable computation of full X-Forwarded-For header
-      use-forwarded-headers: "true"        # Trust and use X-Forwarded-* headers for client info
-
-    ## Annotations configuration
-    allowSnippetAnnotations: true          # Allow server snippets in annotations
-
-    ## Service configuration
-    service:
-      type: *type                          # Service type
-      nodePorts:
-        http: 30080                        # HTTP node port
-        https: 30443                       # HTTPS node port
-        tcp:
-          22: 30022                        # TCP node port for SSH
-
-  ## Custom error pages configuration
-  defaultBackend:
-    enabled: true                          # Enable custom error pages
-    image:
-      registry: "docker.io"
-      image: "opencsghq/ingress-nginx-custom-error-pages"
-      tag: "v1.2.0"
-    extraVolumes:
-      - name: "custom-error-pages"
-        configMap:
-          name: "ingress-nginx-custom-errors"
-    extraVolumeMounts:
-      - name: "custom-error-pages"
-        mountPath: "/www"
 
 ## Reloader configuration
 reloader:

@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: 1.16.0
+description: The Common Chart is a Helm library chart that provides reusable templates
+  and standardized configurations for Kubernetes applications. It serves as a shared
+  foundation to ensure consistency, reduce duplication, and simplify maintenance across
+  all your Helm charts.
+icon: https://cdn.jsdelivr.net/gh/OpenCSGs/images/favicon.png
+name: common
+type: application
+version: 0.2.0
