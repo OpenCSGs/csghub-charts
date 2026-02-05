@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if not .Values.global.chartContext.isBuiltIn }}
-{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -60,7 +60,7 @@ spec:
       {{- end }}
       {{- end }}
       initContainers:
-        {{- include "wait-for-postgresql" (dict "service" $service "global" .) | nindent 8 }}
+        {{- include "wait-for-postgresql" (dict "ctx" . "service" $service) | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
