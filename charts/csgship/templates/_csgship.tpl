@@ -9,8 +9,8 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "common.domain.web" . }}
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
-{{- define "common.domain.web" -}}
-{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- define "common.domain.web" }}
+{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 
@@ -30,8 +30,8 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "common.domain.webAPI" . }}
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
-{{- define "common.domain.webAPI" -}}
-{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- define "common.domain.webAPI" }}
+{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" (printf "%s-api" $service.name)) -}}
 {{- end }}
 
@@ -48,19 +48,19 @@ SPDX-License-Identifier: APACHE-2.0
 {{/*
 Resolve service image with proper tag
 Usage:
-  {{ include "csgship.service.image" (dict "service" .Values.rproxy "context" .) }}
+  {{ include "csgship.service.image" (dict "ctx" . "service" .Values.rproxy) }}
 */}}
-{{- define "csgship.service.image" -}}
-{{- $service := .service -}}
-{{- $context := .context -}}
+{{- define "csgship.service.image" }}
+{{- $ctx := .ctx }}
+{{- $service := .service }}
 
-{{- $baseImage := deepCopy (default (dict) $context.Values.image) -}}
-{{- $serviceImage := deepCopy (default (dict) $service.image) -}}
+{{- $baseImage := deepCopy (default (dict) $ctx.Values.image) }}
+{{- $serviceImage := deepCopy (default (dict) $service.image) }}
 
-{{- $mergedImage := mergeOverwrite $baseImage $serviceImage -}}
+{{- $mergedImage := mergeOverwrite $baseImage $serviceImage }}
 
 {{- $mergedImage | toYaml -}}
-{{- end -}}
+{{- end }}
 
 {{- /*
 # CSGShip Web Readiness Check Template
@@ -74,9 +74,9 @@ Usage:
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-web" }}
-{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml -}}
-{{- $serviceName := include "common.names.custom" (list . $service.name) -}}
-{{- $serverPort := dig "service" "port" 8000 $service | toString -}}
+{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $serverPort := dig "service" "port" 8000 $service | toString }}
 - name: wait-for-web
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "web" "image" "busybox:latest") }}
   imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy | quote }}

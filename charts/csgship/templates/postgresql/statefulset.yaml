@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if and .Values.global.postgresql.enabled (not .Values.global.chartContext.isBuiltIn) }}
-{{- $service := include "common.service" (dict "service" "postgresql" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "postgresql") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet

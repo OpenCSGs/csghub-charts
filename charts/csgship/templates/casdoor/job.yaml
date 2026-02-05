@@ -4,10 +4,10 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if not .Values.global.chartContext.isBuiltIn }}
-{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
-{{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
+{{- $webSvc := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+{{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
 apiVersion: batch/v1
 kind: Job
 metadata:

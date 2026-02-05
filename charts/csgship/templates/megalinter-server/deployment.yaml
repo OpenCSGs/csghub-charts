@@ -3,9 +3,9 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "megalinterServer" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "megalinterServer") | fromYaml }}
 {{- if ($service.enabled | default false) }}
-{{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- $webSvc := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment

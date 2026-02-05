@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -195,7 +195,7 @@ data:
             listen 80;
             server_name {{ include "common.domain.webAPI" . }};
 
-            {{- $agenticSvc := include "common.service" (dict "service" "agentic" "global" .) | fromYaml }}
+            {{- $agenticSvc := include "common.service" (dict "ctx" . "service" "agentic") | fromYaml }}
             {{- $agenticName := include "common.names.custom" (list . $agenticSvc.name) }}
             {{- $agenticPort := dig "service" "port" 8000 $agenticSvc }}
             location /agentic {
@@ -214,7 +214,7 @@ data:
                 proxy_cache off;
             }
 
-            {{- $webSvc:= include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+            {{- $webSvc:= include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
             {{- $webName := include "common.names.custom" (list . $webSvc.name) }}
             {{- $webPort := dig "service" "port" 8000 $webSvc }}
             location / {

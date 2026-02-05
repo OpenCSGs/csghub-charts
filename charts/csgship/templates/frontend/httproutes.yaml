@@ -1,0 +1,40 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "frontend") | fromYaml }}
+{{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $service) | fromYaml }}
+{{- if and $gatewayConfig.enabled (not .Values.global.chartContext.isBuiltIn) }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels -}}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+    - name: listeners
+      {{- if .Values.global.gateway.tls.enabled }}
+      sectionName: https
+      {{- else }}
+      sectionName: http
+      {{- end }}
+  hostnames:
+    - {{ include "common.domain.web" . }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ $serviceName }}
+          port: {{ dig "service" "port" 80 $service }}
+  {{- end }}
