@@ -9,8 +9,8 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "common.domain.labelstudio" . }}
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
-{{- define "common.domain.labelstudio" -}}
-{{- $service := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
+{{- define "common.domain.labelstudio" }}
+{{- $service := include "common.service" (dict "ctx" . "service" "labelStudio") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 

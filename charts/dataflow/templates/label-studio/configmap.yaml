@@ -3,10 +3,10 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "labelStudio" "global" .) | fromYaml }}
-{{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "labelStudio") | fromYaml }}
+{{- $dataflowSvc := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+{{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

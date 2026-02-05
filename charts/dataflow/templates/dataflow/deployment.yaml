@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $dataflowSvc := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $dataflowSvc := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
 {{- $service := mergeOverwrite (deepCopy $dataflowSvc) (dict "name" "celery-worker") }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
@@ -60,9 +60,9 @@ spec:
       {{- end }}
       {{- end }}
       initContainers:
-        {{- include "wait-for-postgresql" (dict "service" $dataflowSvc "global" .) | nindent 8 }}
-        {{- include "wait-for-redis" (dict "service" $service "global" .) | nindent 8 }}
-        {{- include "wait-for-mongo" (dict "service" $service "global" .) | nindent 8 }}
+        {{- include "wait-for-postgresql" (dict "ctx" . "service" $dataflowSvc) | nindent 8 }}
+        {{- include "wait-for-redis" (dict "ctx" . "service" $service) | nindent 8 }}
+        {{- include "wait-for-mongo" (dict "ctx" . "service" $service) | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}

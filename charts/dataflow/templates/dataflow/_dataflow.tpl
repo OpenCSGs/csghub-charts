@@ -10,7 +10,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.dataflow" -}}
-{{- $service := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 
