@@ -30,7 +30,7 @@ Usage examples:
     {{- end }}
   {{- end }}
 
-  {{- /* Core Kubernetes labels - no indentation for YAML output */}}
+  {{- /* Core Kubernetes labels - no indentation for YAML output */ -}}
 app.kubernetes.io/instance: {{ $ctx.Release.Name }}
   {{- if $service }}
 app.kubernetes.io/name: {{ $service }}
