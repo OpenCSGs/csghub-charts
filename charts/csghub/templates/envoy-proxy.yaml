@@ -16,11 +16,11 @@ spec:
   provider:
     type: Kubernetes
     kubernetes:
-      {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
+    {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
       envoyDeployment:
         container:
           image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
-      {{- end }}
+    {{- end }}
       {{- if eq (dig "service" "type" "LoadBalancer" $gateway) "NodePort" }}
       envoyService:
         type: NodePort
