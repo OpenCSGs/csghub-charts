@@ -102,8 +102,8 @@ tests:
           path: spec.rules[0]
           value:
             backendRefs:
-            - name: csghub-minio
-              port: 9002
+              - name: csghub-minio
+                port: 9002
             filters:
               - cors:
                   allowCredentials: true
