@@ -1,0 +1,235 @@
+suite: Test Gateway Resources
+templates:
+  - gateway.yaml
+  - csghub/httproutes.yaml
+  - csghub/httproutes-wildcard.yaml
+  - csghub/httproutes-redirect.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    gateway:
+      external:
+        domain: "csghub.example.cn"
+        public: ""
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: LoadBalancer
+        nodePorts:
+          http: 30080
+          https: 30443
+          gitssh: 30022
+    registry:
+      enabled: true
+  dataflow:
+    labelStudio:
+      enabled: true
+  temporal:
+    console:
+      enabled: true
+  runner:
+    usePublicDomain: true
+  server:
+    gitlabShell:
+      sshPort: 22
+tests:
+  - it: Should render gateway resource correctly
+    template: gateway.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: "https"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "example-cn-tls"
+      - equal:
+          path: spec.listeners[2].port
+          value: 22
+
+  - it: Should render gateway resource correctly
+    template: gateway.yaml
+    documentIndex: 1
+    set:
+      casdoor:
+        gateway:
+          tls:
+            secretName: "casdoor-cn-tls"
+      minio:
+        gateway:
+          tls:
+            secretName: "minio-cn-tls"
+      portal:
+        gateway:
+          tls:
+            secretName: "portal-cn-tls"
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: "https"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "example-cn-tls"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[1].name
+          value: "casdoor-cn-tls"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[2].name
+          value: "minio-cn-tls"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[3].name
+          value: "portal-cn-tls"
+
+  - it: Should render httpRoutes resources correctly
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: apiVersion
+          value: "gateway.networking.k8s.io/v1"
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - equal:
+          path: spec.rules[0]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: csghub-portal
+                port: 8090
+            timeouts:
+              request: 15s
+      - equal:
+          path: spec.rules[1]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /api
+              - path:
+                  type: RegularExpression
+                  value: /(hf|csg|ms)/
+            filters:
+              - type: CORS
+                cors:
+                  allowOrigins:
+                    - "https://casdoor.example.cn"
+                  allowCredentials: true
+            backendRefs:
+              - name: csghub-server
+                port: 8080
+            timeouts:
+              request: 60s
+      - equal:
+          path: spec.rules[4]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /v2
+            backendRefs:
+              - name: csghub-registry
+                port: 5000
+            timeouts:
+              backendRequest: 30m
+      - equal:
+          path: spec.rules[6]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /-/temporal
+            backendRefs:
+              - name: csghub-temporal
+                port: 8080
+            timeouts:
+              request: 60s
+
+  - it: Should render httpRoutes resources correctly
+    template: csghub/httproutes.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: false
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+
+  - it: Should render httpRoutes resources correctly
+    template: csghub/httproutes-wildcard.yaml
+    asserts:
+      - equal:
+          path: apiVersion
+          value: "gateway.networking.k8s.io/v1"
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - contains:
+          path: spec.hostnames
+          content: "*.csghub.example.cn"
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: csghub-rproxy
+                port: 8083
+            timeouts:
+              request: 60s
+
+
+  - it: Should render httpRoutes resources correctly
+    template: csghub/httproutes-redirect.yaml
+    asserts:
+      - equal:
+          path: apiVersion
+          value: "gateway.networking.k8s.io/v1"
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - contains:
+          path: spec.hostnames
+          content:
+            "csghub.example.cn"
+      - contains:
+          path: spec.hostnames
+          content:
+            "minio.example.cn"
+      - contains:
+          path: spec.hostnames
+          content:
+            "casdoor.example.cn"
+      - contains:
+          path: spec.hostnames
+          content:
+            "*.csghub.example.cn"
+      - equal:
+          path: spec.rules
+          value:
+            - filters:
+                - type: RequestRedirect
+                  requestRedirect:
+                    scheme: https
+                    statusCode: 301
