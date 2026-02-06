@@ -21,7 +21,7 @@ set:
         port: 6380
         password: "Redis2025"
 tests:
-  - it: Should render configmap for external correctly
+  - it: Should render ConfigMap for external correctly
     template: configmap.yaml
     asserts:
       - equal:
