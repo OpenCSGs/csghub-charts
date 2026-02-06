@@ -37,13 +37,13 @@ spec:
             name: {{ $gateway.tls.secretName }}
           {{- $webSvc := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
           {{- $webGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $webSvc) | fromYaml }}
-          {{- if $webGatewayConfig.tls.secretName }}
+          {{- if ne $webGatewayConfig.tls.secretName $gateway.tls.secretName }}
           - kind: Secret
             name: {{ $webGatewayConfig.tls.secretName }}
           {{- end }}
           {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
           {{- $casdoorGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $casdoorSvc) | fromYaml }}
-          {{- if $casdoorGatewayConfig.tls.secretName }}
+          {{- if ne $casdoorGatewayConfig.tls.secretName $gateway.tls.secretName }}
           - kind: Secret
             name: {{ $casdoorGatewayConfig.tls.secretName }}
           {{- end }}
