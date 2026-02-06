@@ -25,19 +25,19 @@ pre-commit:
       glob: "charts/{csghub,runner,dataflow}/**"
       run: |
         echo "🔍 Running Helm template dry-run..."
-        
+
         for chart_dir in charts/*/; do
           if [ -f "${chart_dir}Chart.yaml" ]; then
             chart_name=$(basename "${chart_dir}")
             echo "Testing template rendering for ${chart_name}"
-        
+
             echo "🔧 Testing template rendering for ${chart_name}"
             if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run > /dev/null 2>&1; then
               echo "❌ Template rendering failed for ${chart_name}"
               helm template "test-${chart_name}" "${chart_dir}" --dry-run
               exit 1
             fi
-        
+
             echo "✅ ${chart_name} passed template rendering"
           fi
         done
@@ -48,14 +48,14 @@ pre-commit:
       glob: "charts/{csghub,runner,dataflow}/**"
       run: |
         echo "🔍 Running Helm unittest..."
-        
+
         # Check if helm unittest plugin is installed
         if ! helm plugin list | grep -q unittest; then
           echo "❌ Helm unittest plugin not installed. Install with:"
           echo "   helm plugin install https://github.com/helm-unittest/helm-unittest"
           exit 1
         fi
-        
+
         # Run unit tests for each chart
         exit_code=0
         for chart_dir in charts/*/; do
@@ -66,7 +66,7 @@ pre-commit:
             fi
           fi
         done
-        
+
         if [ $exit_code -ne 0 ]; then
           echo "❌ Some unit tests failed"
           exit 1
@@ -78,28 +78,28 @@ pre-commit:
       glob: "charts/{csghub,runner,dataflow}/**"
       run: |
         echo "🔍 Validating YAML syntax for all charts..."
-        
+
         if ! command -v yamllint &> /dev/null; then
           echo "⚠️ yamllint not installed, skipping"
           exit 0
         fi
-        
+
         # Error patterns to ignore
         IGNORE_PATTERNS="expected the node content|too many spaces inside braces"
-        
+
         exit_code=0
         for chart_dir in charts/*/; do
           if [ -f "${chart_dir}Chart.yaml" ]; then
             chart_name=$(basename "${chart_dir}")
             echo "Validating ${chart_name}"
-        
+
             # Run yamllint and get the output
             lint_output=$(yamllint -c ./lint-conf.yaml "${chart_dir}" 2>&1)
-        
+
             # Separate the file name and error message, and then filter them separately
             real_errors=""
             current_file=""
-        
+
             while IFS= read -r line; do
               # Check if it is a file name line (usually contains .yaml or .yml)
               if echo "$line" | grep -q -E "\.ya?ml"; then
@@ -116,7 +116,7 @@ pre-commit:
                 fi
               fi
             done <<< "$lint_output"
-        
+
             # Report an error only if there are non-ignored errors
             if [ -n "$real_errors" ]; then
               echo "❌ ${chart_name} validation failed:"
@@ -129,7 +129,7 @@ pre-commit:
             fi
           fi
         done
-        
+
         if [ $exit_code -ne 0 ]; then
           echo "❌ Some charts failed YAML validation"
           exit 1
@@ -143,9 +143,9 @@ commit-msg:
       run: |
         echo "🔍 Checking commit message format..."
         commit_msg=$(cat {1})
-        
+
         # Check Conventional Commits format
-        if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|build|ci|perf)(\([a-zA-Z0-9_-]+\))?: .+"; then
+        if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|build)(\([a-zA-Z0-9_-]+\))?: .+"; then
           echo "❌ Commit message should follow Conventional Commits format:"
           echo "   feat: add new feature"
           echo "   fix: fix bug"
@@ -155,20 +155,18 @@ commit-msg:
           echo "   test: add tests"
           echo "   chore: maintenance tasks"
           echo "   build: build system changes"
-          echo "   ci: CI configuration changes"
-          echo "   perf: performance improvements"
           echo ""
           echo "Your message: $commit_msg"
           exit 1
         fi
-        
+
         # Check message length
         if [ ${#commit_msg} -gt 100 ]; then
           echo "❌ Commit message should be less than 100 characters"
           echo "Current length: ${#commit_msg}"
           exit 1
         fi
-        
+
         echo "✅ Commit message format is valid"
 
 ## Pre-push hooks (optional)
