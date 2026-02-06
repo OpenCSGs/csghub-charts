@@ -1,13 +1,10 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.1.6
+  version: 0.2.0
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
-- name: ingress-nginx
-  repository: file://charts/ingress-nginx
-  version: 4.14.1
 - name: loki
   repository: file://charts/loki
   version: 6.29.0
@@ -29,5 +26,8 @@ dependencies:
 - name: memmachine
   repository: file://charts/memmachine
   version: 0.1.0
-digest: sha256:d29c632458cf795544a53807b29d9407a27cba156626df9f34a930bfad01b0c6
-generated: "2026-01-29T21:24:06.598443+08:00"
+- name: gateway-helm
+  repository: file://charts/gateway-helm
+  version: v1.6.3
+digest: sha256:161be6b526fd80ac758550cb51dc2f6cd9fe122b8885b85a20b289a3fd832c53
+generated: "2026-02-05T18:07:33.341463+08:00"

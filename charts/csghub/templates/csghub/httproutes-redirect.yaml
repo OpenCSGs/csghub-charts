@@ -1,0 +1,36 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.global.gateway.tls.enabled }}
+{{- $service := include "common.service" (dict "ctx" . "service" "portal") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ printf "%s-redirect" $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+    - name: listeners
+      sectionName: http
+  hostnames:
+    - {{ include "common.domain.csghub" . | quote }}
+    - {{ include "common.domain.casdoor" . | quote }}
+    - {{ include "common.domain.minio" . | quote }}
+    - {{ printf "*.%s" (include "common.domain.public" .) | quote }}
+  rules:
+      - filters:
+          - type: RequestRedirect
+            requestRedirect:
+              scheme: https
+              statusCode: 301
+{{- end }}
