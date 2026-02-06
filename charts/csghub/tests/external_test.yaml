@@ -58,14 +58,14 @@ set:
         host: "10.6.0.14"
         port: 8080
 tests:
-  - it: Should render casdoor configmap correctly
+  - it: Should render casdoor ConfigMap correctly
     template: casdoor/configmap.yaml
     asserts:
       - matchRegex:
           path: data["app.conf"]
           pattern: "dataSourceName = \"postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_casdoor\\?sslmode=prefer\""
 
-  - it: Should render csghub configmap for portal correctly
+  - it: Should render csghub ConfigMap for portal correctly
     template: csghub/configmap.yaml
     asserts:
       - equal:
@@ -111,7 +111,7 @@ tests:
           path: data["CSGHUB_PORTAL_REDIS_ADDR"]
           value: "10.6.0.11:6380"
 
-  - it: Should render csghub configmap for dataflow correctly
+  - it: Should render csghub ConfigMap for dataflow correctly
     template: csghub/configmap.yaml
     asserts:
       - equal:
@@ -121,7 +121,7 @@ tests:
           path: data["OPENCSG_DATAFLOW_SERVER_PORT"]
           value: "8080"
 
-  - it: Should render csghub configmap for server correctly
+  - it: Should render csghub ConfigMap for server correctly
     template: csghub/configmap.yaml
     asserts:
       - equal:

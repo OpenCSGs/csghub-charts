@@ -7,8 +7,9 @@ release:
 set:
   global:
     edition: "ee"
-    ingress:
-      domain: "example.com"
+    gateway:
+      external:
+        domain: "csghub.example.com"
       tls:
         enabled: true
         secretName: "test-tls"
@@ -61,7 +62,7 @@ set:
   prometheus:
     enabled: true
 tests:
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
     template: csghub/configmap.yaml
     asserts:
       - equal:
@@ -155,7 +156,7 @@ tests:
           path: data.STARHUB_SERVER_PROMETHEUS_API_ADDRESS
           value: "http://csghub-prometheus-server:80/api/v1/query"
 
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
     template: csghub/configmap.yaml
     set:
       global:

@@ -6,10 +6,10 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      domain: "example.com"
-      host: ""
-      publicHost: ""
+    gateway:
+      external:
+        domain: "csghub.example.com"
+        public: ""
       tls:
         enabled: true
         secretName: "test-tls"
@@ -48,7 +48,7 @@ set:
   minio:
     name: "minio"
 tests:
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
     template: runner/configmap.yaml
     asserts:
       - equal:
@@ -139,7 +139,19 @@ tests:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "true"
 
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
+    template: runner/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            public: "test.example.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "test.example.com"
+
+  - it: Should render ConfigMap correctly
     template: runner/configmap.yaml
     set:
       global:

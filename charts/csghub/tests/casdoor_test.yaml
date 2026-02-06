@@ -1,7 +1,7 @@
 suite: Test Casdoor Resources
 templates:
   - casdoor/configmap.yaml
-  - casdoor/ingress.yaml
+  - casdoor/httproutes.yaml
   - casdoor/job.yaml
   - casdoor/secret.yaml
   - casdoor/service.yaml
@@ -11,9 +11,10 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
+    gateway:
       enabled: true
-      domain: example.cn
+      external:
+        domain: "csghub.example.cn"
       tls:
         enabled: true
         secretName: "example-cn-tls"
@@ -41,7 +42,7 @@ set:
       type: "ClusterIP"
       port: 8002
       protocol: TCP
-    ingress:
+    gateway:
       enabled: true
     admin: {}
     postgresql:
@@ -50,7 +51,7 @@ tests:
   - it: Should render all resources correctly
     templates:
       - casdoor/configmap.yaml
-      - casdoor/ingress.yaml
+      - casdoor/httproutes.yaml
       - casdoor/job.yaml
       - casdoor/service.yaml
       - casdoor/deployment.yaml
@@ -62,7 +63,7 @@ tests:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "casdoor"
 
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
     template: casdoor/configmap.yaml
     asserts:
       - matchRegex:
@@ -98,36 +99,18 @@ tests:
       - isNotNullOrEmpty:
           path: data["update_casdoor_conf.sql"]
 
-  - it: Should render ingress correctly
-    template: casdoor/ingress.yaml
+  - it: Should render httpRoutes correctly
+    template: casdoor/httproutes.yaml
     asserts:
       - contains:
-          path: spec.tls[0].hosts
+          path: spec.hostnames
           content: "casdoor.example.cn"
       - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls"
-      - equal:
-          path: spec.rules[0].host
-          value: "casdoor.example.cn"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
+          path: spec.rules[0].backendRefs[0].name
           value: "csghub-casdoor"
       - equal:
-          path: spec.rules[0].http.paths[0].backend.service.port.number
+          path: spec.rules[0].backendRefs[0].port
           value: 8002
-
-  - it: Should render ingress correctly with console enabled
-    template: casdoor/ingress.yaml
-    set:
-      casdoor:
-        ingress:
-          tls:
-            secretName: "example-cn-tls-local"
-    asserts:
-      - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls-local"
 
   - it: Should render job correctly
     template: casdoor/job.yaml
