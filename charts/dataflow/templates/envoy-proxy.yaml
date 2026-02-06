@@ -1,0 +1,43 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $gateway := .Values.global.gateway }}
+{{- if regexMatch "envoyproxy" $gateway.controllerName }}
+{{- $serviceName := include "common.names.custom" (list . "envoy-proxy-custom") }}
+{{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" dict) | fromYaml }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+    {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
+      envoyDeployment:
+        container:
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+    {{- end }}
+      {{- if eq (dig "service" "type" "LoadBalancer" $gateway) "NodePort" }}
+      envoyService:
+        type: NodePort
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              ports:
+                - name: http-80
+                  port: 80
+                  targetPort: 10080
+                  nodePort: {{ $gatewayConfig.service.nodePorts.http }}
+                {{- if $gatewayConfig.tls.enabled }}
+                - name: http-443
+                  port: 443
+                  targetPort: 10443
+                  nodePort: {{ $gatewayConfig.service.nodePorts.https }}
+                {{- end }}
+      {{- end }}
+{{- end }}
