@@ -63,31 +63,13 @@ extends: default
 # Ignore paths
 ignore:
   # General charts ignore rules
-  - charts/*/charts/ingress-nginx
-  - charts/*/charts/fluentd
-  - charts/*/charts/loki
-  - charts/*/charts/reloader
-  - charts/*/charts/prometheus
-  - charts/*/charts/tempo
-  - charts/*/charts/*/charts/ingress-nginx
-  - charts/*/charts/*/charts/fluentd
-  - charts/*/charts/*/charts/loki
-  - charts/*/charts/*/charts/reloader
-  - charts/*/charts/*/charts/prometheus
-  - charts/*/charts/*/charts/tempo
+  - charts/*/charts/*
 
   # Casdoor related ignores
   - charts/*/templates/casdoor/configmap.yaml
   - charts/*/templates/casdoor/secret.yaml
-  - charts/*/charts/*/templates/casdoor/configmap.yaml
-  - charts/*/charts/*/templates/casdoor/secret.yaml
   - charts/*/tests/casdoor_test.yaml
 
   # Runner related ignores
-  - charts/*/charts/runner/templates/configmap-*.yaml
-  - charts/*/charts/runner/templates/secret.yaml
   - charts/runner/templates/configmap-*.yaml
   - charts/runner/templates/secret.yaml
-
-  # Memmachine related ignores
-  - charts/*/charts/memmachine
