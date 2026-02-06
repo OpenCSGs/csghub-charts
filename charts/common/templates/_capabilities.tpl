@@ -46,7 +46,7 @@ Return the appropriate apiVersion for cronjob.
   {{- else }}
     {{- print "batch/v1" -}}
   {{- end }}
-{{- end-}}
+{{- end }}
 
 {{/*
 Return the appropriate apiVersion for daemonset.
