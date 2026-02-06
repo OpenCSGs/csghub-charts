@@ -1,6 +1,7 @@
 suite: Test Runner Gateway
 templates:
   - gateway.yaml
+  - envoy-proxy.yaml
   - httproutes.yaml
 release:
   name: csghub
@@ -16,6 +17,12 @@ set:
         secretName: "example-cn-tls"
       service:
         type: "NodePort"
+        nodePorts:
+          http: 30080
+          https: 30443
+          gitssh: 30022
+    image:
+      registry: "docker.io"
     chartContext:
       isBuiltIn: false
   name: "runner-svc"
@@ -65,3 +72,42 @@ tests:
       - equal:
           path: spec.rules[0].backendRefs[0].port
           value: 8082
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            nodePorts:
+              http: 30880
+              https: 30444
+              gitssh: 30222
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30880
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30444
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.36.4"

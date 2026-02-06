@@ -6,8 +6,9 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      domain: "example.com"
+    gateway:
+      external:
+        domain: "example.com"
       tls:
         enabled: true
         secretName: "test-tls"

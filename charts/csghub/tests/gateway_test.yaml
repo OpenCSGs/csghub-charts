@@ -1,6 +1,7 @@
 suite: Test Gateway Resources
 templates:
   - gateway.yaml
+  - envoy-proxy.yaml
   - csghub/httproutes.yaml
   - csghub/httproutes-wildcard.yaml
   - csghub/httproutes-redirect.yaml
@@ -18,10 +19,8 @@ set:
         secretName: "example-cn-tls"
       service:
         type: LoadBalancer
-        nodePorts:
-          http: 30080
-          https: 30443
-          gitssh: 30022
+    image:
+      registry: "docker.io"
     registry:
       enabled: true
   dataflow:
@@ -233,3 +232,96 @@ tests:
                   requestRedirect:
                     scheme: https
                     statusCode: 301
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: "NodePort"
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+    asserts:
+      - isKind:
+          of: "EnvoyProxy"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
+          value: 30022
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: "NodePort"
+            nodePorts:
+              http: 30880
+              https: 30444
+              gitssh: 30222
+      server:
+        gitlabShell:
+          sshPort: 222
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30880
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30444
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
+          value: 30222
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].name
+          value: "tcp-222"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].port
+          value: 222
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].targetPort
+          value: 10222
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: "NodePort"
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+          tls:
+            enabled: false
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30022
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.36.4"

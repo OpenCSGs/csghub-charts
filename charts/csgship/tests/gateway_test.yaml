@@ -1,4 +1,4 @@
-suite: Test Dataflow Gateway
+suite: Test Gateway Resources
 templates:
   - gateway.yaml
   - envoy-proxy.yaml
@@ -8,71 +8,63 @@ release:
 set:
   global:
     gateway:
-      controllerName: "gateway.envoyproxy.io/gatewayclass-controller"
       external:
         domain: "csghub.example.cn"
+        public: ""
       tls:
         enabled: true
         secretName: "example-cn-tls"
       service:
-        type: "NodePort"
+        type: LoadBalancer
         nodePorts:
           http: 30080
           https: 30443
           gitssh: 30022
-    image:
-      registry: "docker.io"
-  server:
-    gitlabShell:
-      sshPort: "22"
 tests:
-  - it: Should render gateway correctly
-    template: gateway.yaml
-    documentIndex: 0
-    asserts:
-      - equal:
-          path: spec.controllerName
-          value: "gateway.envoyproxy.io/gatewayclass-controller"
-
-  - it: Should render gateway correctly
+  - it: Should render gateway resource correctly
     template: gateway.yaml
     documentIndex: 1
     asserts:
       - equal:
-          path: spec.listeners[1].protocol
-          value: "HTTPS"
+          path: spec.listeners[1].name
+          value: "https"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
           value: "example-cn-tls"
 
-  - it: Should render gateway correctly
+  - it: Should render gateway resource correctly
     template: gateway.yaml
     documentIndex: 1
     set:
-      dataflow:
+      casdoor:
         gateway:
           tls:
-            secretName: "csghub-dataflow-tls"
-      labelStudio:
+            secretName: "casdoor-cn-tls"
+      web:
         gateway:
           tls:
-            secretName: "csghub-label-studio-tls"
+            secretName: "web-cn-tls"
     asserts:
       - equal:
-          path: spec.listeners[1].protocol
-          value: "HTTPS"
+          path: spec.listeners[1].name
+          value: "https"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
           value: "example-cn-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[1].name
-          value: "csghub-dataflow-tls"
+          value: "web-cn-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[2].name
-          value: "csghub-label-studio-tls"
+          value: "casdoor-cn-tls"
 
   - it: Should render envoy-proxy correctly
     template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
     asserts:
       - isKind:
           of: "EnvoyProxy"
@@ -92,6 +84,7 @@ tests:
       global:
         gateway:
           service:
+            type: NodePort
             nodePorts:
               http: 30880
               https: 30444
