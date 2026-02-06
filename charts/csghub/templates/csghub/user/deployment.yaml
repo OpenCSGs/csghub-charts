@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "user" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "user") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -52,7 +52,7 @@ spec:
       serviceAccountName: {{ $service.serviceAccountName }}
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
       {{- end }}
-      {{- $serverImage := include "csghub.service.image" (dict "service" $service "context" .) | fromYaml }}
+      {{- $serverImage := include "csghub.service.image" (dict "ctx" . "service" $service) | fromYaml }}
       {{- with (or $serverImage.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}
@@ -123,7 +123,7 @@ spec:
           tty: {{ $service.tty }}
           {{- end }}
       volumes:
-        {{- $casdoorSvc := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+        {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
         - name: jwt-token-cert
           secret:
             {{- $casdoorCert := printf "%s-certs" $casdoorSvc.name }}

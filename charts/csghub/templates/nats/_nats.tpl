@@ -15,7 +15,7 @@ SPDX-License-Identifier: APACHE-2.0
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-nats" }}
-{{- $service := include "common.service" (dict "service" "nats" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "nats") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-nats
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}

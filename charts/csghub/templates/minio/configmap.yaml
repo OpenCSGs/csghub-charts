@@ -4,7 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- if .Values.global.objectStore.enabled }}
-{{- $service := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap

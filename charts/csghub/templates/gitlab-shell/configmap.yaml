@@ -3,9 +3,9 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "gitlabShell" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "gitlabShell") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- $gitalyConfig := include "common.gitaly.config" (dict "service" $service "global" .) | fromYaml }}
+{{- $gitalyConfig := include "common.gitaly.config" (dict "ctx" . "service" $service) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -32,7 +32,7 @@ data:
     # only listen on a Unix domain socket. For Unix domain sockets use
     # "http+unix://<urlquoted-path-to-socket>", e.g.
     # "http+unix://%2Fpath%2Fto%2Fsocket"
-    {{- $serverSvc := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
+    {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
     {{- $serverHost := include "common.names.custom" (list . $serverSvc.name) }}
     {{- $serverPort := dig "service" "port" 8080 $serverSvc | toString}}
     gitlab_url: {{ printf "http://%s:%s" $serverHost $serverPort | quote }}

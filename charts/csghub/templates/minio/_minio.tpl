@@ -10,7 +10,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.minio" -}}
-{{- $service := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 
@@ -36,7 +36,7 @@ SPDX-License-Identifier: APACHE-2.0
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-minio" }}
-{{- $service := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-minio
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "minio" "image" "busybox:latest") }}
