@@ -54,7 +54,7 @@ spec:
       serviceAccountName: {{ $service.serviceAccountName }}
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
       {{- end }}
-      {{- $secscanImage := include "csgship.service.image" (dict "service" $service "context" .) | fromYaml }}
+      {{- $secscanImage := include "csgship.service.image" (dict "ctx" . "service" $service) | fromYaml }}
       {{- with (or $secscanImage.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}
