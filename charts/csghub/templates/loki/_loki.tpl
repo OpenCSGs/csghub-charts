@@ -10,7 +10,7 @@ SPDX-License-Identifier: APACHE-2.0
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.loki" -}}
-{{- $service := include "common.service" (dict "service" "loki" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "loki") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 

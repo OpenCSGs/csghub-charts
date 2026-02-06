@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "gitlabShell" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "gitlabShell") | fromYaml }}
 {{- if $service.rbac.create }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1

@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "server" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: batch/v1
 kind: Job
@@ -51,7 +51,7 @@ spec:
       serviceAccountName: {{ $service.serviceAccountName }}
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
       {{- end }}
-      {{- $serverImage := include "csghub.service.image" (dict "service" $service "context" .) | fromYaml }}
+      {{- $serverImage := include "csghub.service.image" (dict "ctx" . "service" $service) | fromYaml }}
       {{- with (or $serverImage.pullSecrets .Values.image.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
       {{- range . }}

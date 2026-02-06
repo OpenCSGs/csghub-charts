@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "xnet" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "xnet") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -23,13 +23,13 @@ data:
   STARHUB_SERVER_CAS_URL: {{ printf "%s/xnet" (include "common.endpoint.csghub" .) | quote }}
 
   ## XNet configuration for PostgreSQL
-  {{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+  {{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
   STARHUB_DATABASE_DRIVER: "pg"
-  STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "service" $service "global" .) | quote }}
+  STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "ctx" . "service" $service) | quote }}
   STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timzone | default "Asia/Shanghai" | quote }}
 
   ## XNet configuration for ObjectStore
-  {{- $s3Config := include "common.s3.config" (dict "service" $service "global" .) | fromYaml }}
+  {{- $s3Config := include "common.s3.config" (dict "ctx" . "service" $service) | fromYaml }}
   STARHUB_XNET_XORB_S3_URL: {{ printf "%s/%s" $s3Config.externalEndpoint $s3Config.bucket | quote }}
   STARHUB_XNET_XORB_SIGNED_URL_EXPIRE_HOURS: {{ $service.signedUrlExpireHours | default 3 | quote }}
   STARHUB_SERVER_S3_ENDPOINT: {{ $s3Config.externalEndpoint | trimPrefix "http://" | trimPrefix "https://" | quote }}
@@ -42,7 +42,7 @@ data:
   STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $s3Config.pathStyle "true") | quote }}
 
   ## XNet configuration for Redis
-  {{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
+  {{- $redisConfig := include "common.redis.config" (dict "ctx" . "service" $service) | fromYaml }}
   STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $redisConfig.host $redisConfig.port | quote }}
   STARHUB_SERVER_REDIS_USER: {{ $redisConfig.user | quote }}
   {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $redisConfig.password) }}
@@ -58,18 +58,18 @@ data:
   OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
 
   ## XNet configuration for Prometheus
-  {{- $promeSvc := include "common.service" (dict "service" "prometheus" "global" .) | fromYaml }}
+  {{- $promeSvc := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}
   {{- if $promeSvc.enabled }}
   {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
   {{- $promePort := dig "service" "port" 80 $promeSvc }}
   STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%v/api/v1/query" $promeHost $promePort | quote }}
-  {{- with $promeSvc.ingress.basicAuth }}
+  {{- with $promeSvc.gateway.basicAuth }}
   STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
   {{- end }}
   {{- end }}
 
   ## XNet configuration for Tracing logging
-  {{- $tempoSvc := include "common.service" (dict "service" "tempo" "global" .) | fromYaml }}
+  {{- $tempoSvc := include "common.service" (dict "ctx" . "service" "tempo") | fromYaml }}
   {{- $tempoHost := include "common.names.custom" (list . "tempo") }}
   {{- if $tempoSvc.enabled }}
   OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
@@ -77,7 +77,7 @@ data:
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
 
   ## XNet Configuration for Workflow
-  {{- $temporalSvc := include "common.service" (dict "service" "temporal" "global" .) | fromYaml }}
+  {{- $temporalSvc := include "common.service" (dict "ctx" . "service" "temporal") | fromYaml }}
   {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
   {{- $temporalPort := $temporalSvc | dig "service" "port" 7233 | toString }}
   OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "%s:%s" $temporalHost $temporalPort | quote }}

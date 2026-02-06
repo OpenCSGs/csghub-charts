@@ -3,8 +3,8 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "accounting" "global" .) | fromYaml }}
-{{- $paymentSvc := include "common.service" (dict "service" "payment" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "accounting") | fromYaml }}
+{{- $paymentSvc := include "common.service" (dict "ctx" . "service" "payment") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service

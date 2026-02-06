@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $configData := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict -}}
 {{- $config := dict }}
@@ -25,7 +25,7 @@ data:
     runmode = prod
     copyrequestbody = true
     driverName = postgres
-    dataSourceName = {{ include "csghub.postgresql.dsn" (dict "service" $service "global" .) | quote }}
+    dataSourceName = {{ include "csghub.postgresql.dsn" (dict "ctx" . "service" $service) | quote }}
     dbName =
     tableNamePrefix =
     showSql = false
@@ -981,7 +981,7 @@ data:
           "passwordSalt": "OpenCSG",
           "passwordType": "bcrypt",
           "displayName": {{ $defaultUser | quote }},
-          "email": {{ printf "%s@%s" $defaultUser .Values.global.ingress.domain | quote }},
+          "email": {{ printf "%s@%s" $defaultUser (include "domain.base" .) | quote }},
           "type": "normal-user",
           "avatar": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/robot.png",
           "isAdmin": true,
@@ -1023,7 +1023,7 @@ data:
           "content": "\u003c!DOCTYPE html\u003e\n\u003chtml lang=\u0022en\u0022\u003e\n\u003chead\u003e\n\u003cmeta charset=\u0022UTF-8\u0022\u003e\n\u003cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1.0\u0022\u003e\n\u003ctitle\u003eVerification Code Email\u003c/title\u003e\n\u003cstyle\u003ebody { font-family: Arial, sans-serif; } .email-container { width: 600px; margin: 0 auto; } .header { text-align: center; } .code { font-size: 24px; margin: 20px 0; text-align: center; } .footer { font-size: 12px; text-align: center; margin-top: 50px; } .footer a { color: #000; text-decoration: none; } .center { text-align: center; } .center a { text-decoration: none; color: #1C8B7F; }\u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\n\u003cdiv class=\u0022email-container\u0022\u003e\n  \u003cdiv class=\u0022header\u0022\u003e\n    \u003cimg src=\u0022https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png\u0022 alt=\u0022OpenCSG Logo\u0022 width=\u0022300\u0022\u003e\n  \u003c/div\u003e\n    \u003cp\u003e\u003cstrong\u003e%{user.friendlyName}\u003c/strong\u003e, here is your verification code\u003c/p\u003e\n    \u003cp\u003eUse this code for your transaction. It's valid for 5 minutes\u003c/p\u003e\n    \u003cdiv class=\u0022code\u0022\u003e\n        %s\n    \u003c/div\u003e\n  \u003chr\u003e\n  \u003cp class=\u0022center\u0022\u003e\n    \u003ca href=\u0022https://opencsg.com\u0022 target=\u0022_blank\u0022\u003eOpenCSG Team\u003c/a\u003e\n  \u003c/p\u003e\n\u003c/div\u003e\n\u003c/body\u003e\n\u003c/html\u003e",
           "enableSignAuthnRequest": false
         },
-        {{- $webSvc := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+        {{- $webSvc := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
         {{- $issuer := dig "oauth" "issuer" "https://gitlab.example.com" $webSvc }}
         {
           "owner": "admin",
