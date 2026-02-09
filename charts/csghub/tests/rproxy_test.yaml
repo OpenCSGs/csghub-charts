@@ -10,6 +10,7 @@ release:
   namespace: csghub
 set:
   global:
+    edition: "ee"
     image:
       registry: "docker.io"
       registryPolicy: "default"
