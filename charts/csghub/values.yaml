@@ -41,9 +41,9 @@ global:
 
   ## Image management
   image:
-    registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
+    registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.15.1"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -146,7 +146,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.15.1"
+  tag: "v1.16.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -327,7 +327,7 @@ xnet:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
-    tag: "v1.15.1"
+    tag: "v1.16.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -861,3 +861,6 @@ memmachine:
       baseUrl: ""                         # OpenAI-compatible chat endpoint (e.g. https://api.example.com/v1)
       apiKey: ""                          # API key for chat endpoint
       model: ""                           # Chat model name
+
+envoy:
+  enabled: true
