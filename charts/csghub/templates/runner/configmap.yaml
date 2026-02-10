@@ -54,7 +54,7 @@ data:
   ## Runner Configuration for PyPI Source
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $service.pipIndexUrl | quote }}
   ## Runner Configuration for ImageBuilder
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/git:2.36.2"
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/git:2.52.0"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/kaniko-executor:v1.24.0"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL: "300"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: "300"

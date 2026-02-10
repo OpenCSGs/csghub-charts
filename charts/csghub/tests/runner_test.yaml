@@ -95,7 +95,7 @@ tests:
           value: "csghub-docker-credential"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
-          value: "acr.io/opencsghq/git:2.36.2"
+          value: "acr.io/opencsghq/git:2.52.0"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
           value: "acr.io/opencsghq/kaniko-executor:v1.24.0"
