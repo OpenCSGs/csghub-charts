@@ -540,7 +540,7 @@ minio:
     protocol: "TCP"                          # Network protocol
 
   console:
-    enabled: true                            # Enable console UI
+    enabled: false                           # Enable console UI
     service:
       port: 9001                             # Console service port
       protocol: "TCP"                        # Network protocol
