@@ -122,6 +122,9 @@ tests:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
           value: "model.io"
       - equal:
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE
+          value: "acr.io"
+      - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
           value: "minio"
       - equal:

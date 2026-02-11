@@ -39,6 +39,8 @@ data:
   ## Runner Configuration for Kaniko
   STARHUB_SERVER_DOCKER_REG_BASE: {{ printf "%s/%s/" $service.registry.registry $service.registry.repository | quote }}
   STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET: {{ include "common.names.custom" (list . "docker-credential") | quote }}
+  ## Runner Configuration for space-runtime
+  STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE: {{ or .Values.global.image.registry "docker.io" | quote }}
   ## Runner Configuration for PyPI Source
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $service.pipIndexUrl | quote }}
   ## Runner Configuration for ImageBuilder
