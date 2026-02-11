@@ -45,7 +45,7 @@ spec:
             value: /api
         - path:
             type: RegularExpression
-            value: /(hf|csg|ms)/
+            value: ^/(hf|csg|ms)(/.*)?$
       filters:
         - type: CORS
           cors:
@@ -142,4 +142,18 @@ spec:
           port: {{ dig "console" "service" "port" "8080" $temporalSvc }}
       timeouts:
         request: 60s
+    {{- end }}
+    {{- $runnerSvc := include "common.service" (dict "ctx" . "service" "runner") | fromYaml }}
+    {{- $rproxySvc := include "common.service" (dict "ctx" . "service" "rproxy") | fromYaml }}
+    {{- $rproxySvcName := include "common.names.custom" (list . $rproxySvc.name) }}
+    {{- if not $runnerSvc.usePublicDomain }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /endpoint/
+      backendRefs:
+        - name: {{ $rproxySvcName }}
+          port: {{ dig "service" "port" 8083 $rproxySvc }}
+      timeouts:
+        request: 15m
     {{- end }}
