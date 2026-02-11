@@ -398,6 +398,10 @@ runner:
   ## e.g. eth0
   networkInterface: ""
 
+  ## Kubernetes StorageClass name for persistent volume provisioning for space
+  # Example values: "local-path", "gp2"
+  storageClassName: ""
+
   ## Knative Serving configuration
   knative:
     serving:
