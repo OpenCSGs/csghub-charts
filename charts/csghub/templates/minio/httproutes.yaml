@@ -44,8 +44,19 @@ spec:
     {{- if $service.console.enabled }}
     - matches:
         - path:
-            type: PathPrefix
+            type: Exact
             value: /console
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /console/
+            statusCode: 301
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /console/
       filters:
         - type: URLRewrite
           urlRewrite:
