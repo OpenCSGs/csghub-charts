@@ -117,7 +117,7 @@ tests:
                   value: /api
               - path:
                   type: RegularExpression
-                  value: /(hf|csg|ms)/
+                  value: ^/(hf|csg|ms)(/.*)?$
             filters:
               - type: CORS
                 cors:
