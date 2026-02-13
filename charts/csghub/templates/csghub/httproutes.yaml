@@ -157,3 +157,20 @@ spec:
       timeouts:
         request: 15m
     {{- end }}
+    {{- $aiGatewaySvc := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
+    {{- $aiGatewaySvcName := include "common.names.custom" (list . $aiGatewaySvc.name) }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /aigateway
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: {{ $aiGatewaySvcName }}
+          port: {{ dig "service" "port" "8094" $aiGatewaySvc.aigateway }}
+      timeouts:
+        request: 10s

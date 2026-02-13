@@ -307,8 +307,8 @@ notifier:
 payment:
   billingBucket: "csghub-billing"          # Bucket for storing billing data
 
-## Gateway service configuration
-gateway:
+## AIGateway service configuration
+aigateway:
   ## AI Gateway configuration
   aigateway: {}
 

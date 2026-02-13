@@ -57,6 +57,8 @@ data:
   {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $portalRedisConfig.password) }}
   CSGHUB_PORTAL_REDIS_PASSWORD: {{ $portalRedisConfig.password | quote }}
   {{- end }}
+  ## Portal Configuration for AIGateway
+  CSGHUB_PORTAL_AI_GATEWAY_HOST: {{ printf "%s/aigateway" (include "common.endpoint.csghub" .) | quote }}
 
   ## Accounting Configuration
   {{- $accountingSvc := include "common.service" (dict "ctx" . "service" "accounting") | fromYaml }}
@@ -74,8 +76,8 @@ data:
   OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL: {{ printf "%s/server/callback" (include "common.endpoint.csghub" .) | quote }}
 
   ## Moderation Configuration
-  {{- $gatewaySvc := include "common.service" (dict "ctx" . "service" "gateway") | fromYaml }}
-  {{- $moderationSvc := $gatewaySvc.moderation }}
+  {{- $aiGatewaySvc := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
+  {{- $moderationSvc := $aiGatewaySvc.moderation }}
   {{- if $moderationSvc.enabled }}
   CSGHUB_PORTAL_SENSITIVE_CHECK: "true"
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "true"
@@ -84,10 +86,12 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_SECRET: {{ $moderationSvc.accessKeySecret | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_REGION: {{ $moderationSvc.region | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ $moderationSvc.enableSSL | quote }}
-  OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $gatewaySvc.name)) | quote }}
+  OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $aiGatewaySvc.name)) | quote }}
   OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" 8089 | quote }}
+  OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "true"
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
+  OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "false"
   {{- end }}
 
   ## Server Configuration for Workflow
@@ -152,7 +156,7 @@ data:
   {{- end }}
 
   ## Server Configuration for Payment
-  {{- $aigatewaySvc := $gatewaySvc.aigateway }}
+  {{- $aigatewaySvc := $aiGatewaySvc.aigateway }}
   OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" 8094 | quote }}
 
   ## Server Configuration
@@ -297,6 +301,9 @@ data:
   OPENCSG_MEMORY_SERVER_TIMEOUT_SECONDS: {{ $serverSvc.memory.timeoutSeconds | quote }}
   OPENCSG_MEMORY_SERVER_RETRY_COUNT: {{ $serverSvc.memory.retryCount | quote }}
   OPENCSG_MEMORY_SERVER_RETRY_DELAY_MILLIS: {{ $serverSvc.memory.retryDelayMillis | quote }}
+
+  ## Server Configuration for S3 Proxy
+  STARHUB_SERVER_STORAGE_GATEWAY_ENABLE_PRESIGNED_URL_PROXY: "false"
 
   ## Additional environments for all csghub deployments
   {{- range $key, $value := .Values.environments }}
