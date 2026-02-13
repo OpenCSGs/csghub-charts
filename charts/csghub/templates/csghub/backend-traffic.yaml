@@ -1,0 +1,77 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $gateway := .Values.global.gateway }}
+{{- if regexMatch "envoyproxy" $gateway.controllerName }}
+{{- $customErrorName := include "common.names.custom" (list . "custom-error-pages") }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: {{ $customErrorName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: "custom-error-pages"
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  {{- $service := include "common.service" (dict "ctx" . "service" "portal") | fromYaml }}
+  {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+  targetSelectors:
+    - kind: HTTPRoute
+      matchLabels:
+        {{- include "common.labels" . | nindent 8 }}
+  responseOverride:
+    - match:
+        statusCodes:
+          - type: Value
+            value: 404
+      response:
+        contentType: text/html; charset=UTF-8
+        body:
+          type: ValueRef
+          valueRef:
+            group: ""
+            kind: ConfigMap
+            name: {{ $customErrorName }}
+            key: "404.html"
+    - match:
+        statusCodes:
+          - type: Value
+            value: 500
+      response:
+        contentType: text/html; charset=UTF-8
+        body:
+          type: ValueRef
+          valueRef:
+            group: ""
+            kind: ConfigMap
+            name: {{ $customErrorName }}
+            key: "500.html"
+    - match:
+        statusCodes:
+          - type: Value
+            value: 502
+      response:
+        contentType: text/html; charset=UTF-8
+        body:
+          type: ValueRef
+          valueRef:
+            group: ""
+            kind: ConfigMap
+            name: {{ $customErrorName }}
+            key: "502.html"
+    - match:
+        statusCodes:
+          - type: Value
+            value: 503
+      response:
+        contentType: text/html; charset=UTF-8
+        body:
+          type: ValueRef
+          valueRef:
+            group: ""
+            kind: ConfigMap
+            name: {{ $customErrorName }}
+            key: "503.html"
+{{- end }}
