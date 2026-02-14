@@ -303,7 +303,7 @@ data:
   OPENCSG_MEMORY_SERVER_RETRY_DELAY_MILLIS: {{ $serverSvc.memory.retryDelayMillis | quote }}
 
   ## Server Configuration for S3 Proxy
-  STARHUB_SERVER_STORAGE_GATEWAY_ENABLE_PRESIGNED_URL_PROXY: "false"
+  STARHUB_SERVER_STORAGE_GATEWAY_ENABLE_PRESIGNED_URL_PROXY: {{ $serverSvc.enablePresignedUrlProxy | quote }}
 
   ## Additional environments for all csghub deployments
   {{- range $key, $value := .Values.environments }}
