@@ -14,35 +14,116 @@ metadata:
     app.kubernetes.io/service: {{ $serviceName }}
     {{- include "common.labels" . | nindent 4 }}
 data:
-  csgbot.toml: |
-    # CSGBot Production Configuration
+  csgbog.toml: |
+    [llm]
+    model-id = {{ $service.config.llm.modelId | quote }}
+    model-base-url = {{ $service.config.llm.modelBaseUrl | quote }}
+    temperature =  {{ $service.config.llm.temperature | quote }}
+    # If true, use the user's access token to request the model from CSGHub's AI Gateway
+    use-csghub-aigateway = {{ $service.config.llm.useCsghubAIGateway }}
 
-    [ llm ]
-    model-id = "openai/anthropic/claude-sonnet-4"
-    model-base-url = "https://openrouter.ai/api/v1"
-    model-api-key = ""
-    temperature = 0.1
+    [database]
+    file = {{ $service.config.database.file | quote }}
 
-    [ planner ]
-    max-replan-count = 3
+    [opencsg]
+    hub-base-url = {{ include "common.endpoint.csghub"  . | quote }}
+    hub-admin-user-uuid = {{ $service.config.opencsg.hubAdminUserUuid | quote }}
+    base-url = {{ include "common.endpoint.csghub" . | quote }}
+    starship-api-url = {{ printf "https://starship-api.%s:6443" .Values.global.ingress.domain | quote }}
+    docs-dir = {{ $service.config.docsDir | quote }}
 
-    [ csgsandbox ]
-    sandbox-image = "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-sandbox-python-runner:latest"
-    sandbox-service-url = "http://172.19.5.117:9090"
-    workspace-volume-prefix = "/data/csgsandbox_volumes"
+    [opencsg.mcp-urls]
+    model = {{ $service.config.mcpurls.model | quote }}
+    dataset = {{ $service.config.mcpurls.dataset | quote }}
+    code = {{ $service.config.mcpurls.code | quote }}
+    finetune = {{ $service.config.mcpurls.finetune | quote }}
+    inference = {{ $service.config.mcpurls.inference | quote }}
 
-    [ user-feedback ]
-    gitlab-url = ""
-    gitlab-project-id = ""
+    [opencsg.mcp-proxy-servers.web-fetch]
+    url = {{ $service.config.mcpProxyServersWebFetch.url | quote }}
+    transport = {{ $service.config.mcpProxyServersWebFetch.transport | quote }}
+    requires-jwt = {{ $service.config.mcpProxyServersWebFetch.requiresJwt }}
 
-    # Epic backlog: https://git-devops.opencsg.com/groups/product/agentichub/-/epics/19
-    # 19 is its epic_iid.
-    gitlab-epic-id = ""
+    [aigateway]
+    base-url = {{ printf "https://aigateway.%s" .Values.global.ingress.domain | quote }}
+    model-id = {{ $service.config.aigateway.modelId | quote }}
 
-    # GitLab private token for authentication (set via environment variable USER_FEEDBACK_GITLAB_TOKEN)
-    # Do NOT commit actual tokens to this file
-    gitlab-token = ""
+    [workflow]
+    base-url = {{ printf "https://workflow.%s" .Values.global.ingress.domain | quote }}
 
-    [ logger ]
-    # Disable genius chat debug logging (logs to genius_chat_logs/)
-    disable-genius-chat = false
+    [langflow]
+    base-url = {{ printf "https://workflow.%s" .Values.global.ingress.domain | quote }}
+
+    [code-sandbox]
+    image = {{ $service.config.codeSandbox.image | quote }}
+    service-url = {{ $service.config.codeSandbox.serviceUrl | quote }}
+
+    [claude-code]
+    cmd-template = {{ $service.config.claudeCode.cmdTemplate | quote }}
+    default-model = {{ $service.config.claudeCode.defaultModel | quote }}
+    stream-mode = {{ $service.config.claudeCode.streamMode | quote }}
+
+    [codesouler]
+    cmd-template = {{ $service.config.codesouler.cmdTemplate | quote }}
+    use-agent-template = {{ $service.config.codesouler.useAgentTemplate | quote }}
+    use-mcp-template = {{ $service.config.codesouler.useMcpTemplate | quote }}
+    data-dir = {{ $service.config.codesouler.dataDir | quote }}
+    remote-repo-dir = {{ $service.config.codesouler.remoteRepoDir | quote }}
+
+    [dataset]
+    user-name = {{ $service.config.dataset.userName | quote }}
+
+    [search]
+    engine = {{ $service.config.search.engine | quote }}
+    use-jd-gateway = {{ $service.config.search.useJdGateway }}
+    count = {{ $service.config.search.count }}
+    timeout = {{ $service.config.search.timeout }}
+    thread-num = {{ $service.config.search.threadNum }}
+
+    [deep-research]
+    query-decompose-max-size = {{ $service.config.deepResearch.queryDecomposeMaxSize }}
+    report-length = {{ $service.config.deepResearch.reportLength }}
+    answer-length = {{ $service.config.deepResearch.answerLength }}
+    single-page-max-size = {{ $service.config.deepResearch.singlePageMaxSize }}
+    report-model = {{ $service.config.deepResearch.reportModel | quote }}
+
+    [integrations]
+    file-server-url = {{ $service.config.integrations.fileServerUrl | quote }}
+    notification-url = {{ printf "%s/api/v1/notifications?current_user=csgbot" (include "common.endpoint.csghub" .) | quote }}
+    feishu-notification-enabled = {{ $service.config.integrations.feishuNotificationEnabled }}
+    phoenix-endpoint = {{ $service.config.integrations.phoenixEndpoint | quote }}
+    memmemmachine-url = {{ $service.config.integrations.memmemmachineUrl | quote }}
+
+    [logging]
+    log-path = {{ $service.config.logging.logPath | quote }}
+    disable-genius-chat = {{ $service.config.logging.disableGeniusChat }}
+    disable-planner-chat = {{ $service.config.logging.disablePlannerChat }}
+
+    [planner]
+    max-replan-count = {{ $service.config.planner.maxReplanCount }}
+    max-clarification-rounds = {{ $service.config.planner.maxClarificationRounds }}
+    executor = {{ $service.config.planner.executor | quote }}
+    require-plan-confirmation = {{ $service.config.planner.requirePlanConfirmation }}
+
+    [genius-sandbox]
+    sandbox-image = {{ $service.config.geniusSandbox.sandboxImage | quote }}
+    sandbox-service-url = {{ $service.config.geniusSandbox.sandboxServiceUrl | quote }}
+    workspace-volume-prefix = {{ $service.config.geniusSandbox.workspaceVolumePrefix | quote }}
+
+    [external-docs]
+    enabled = {{ $service.config.externalDocs.enabled }}
+
+    [external-docs.apis]
+    "CSGHUB" = "{{ include "common.endpoint.csghub" . }}api/v1/swagger/doc.json"
+
+
+## AgenticHub Token Custom
+  MODEL_API_KEY: {{ $service.environment.modelApiKey | quote }}
+  OPENCSG_HUB_ACCESS_TOKEN: {{ $service.environment.hubAccessToken | quote }}
+  WORKFLOW_ACCESS_TOKEN: {{ $service.environment.workflowAccessToken | quote }}
+  SERPER_SEARCH_API_KEY: {{ $service.environment.serperApiKey | quote }}
+  SERPAPI_API_KEY: {{ $service.environment.serpApiKey | quote }}
+  JINA_SEARCH_API_KEY: {{ $service.environment.jinaApiKey | quote }}
+  LANGFLOW_ACCESS_TOKEN: {{ $service.environment.langflowAccessToken | quote }}
+  DATASET_USER_TOKEN: {{ $service.environment.datasetUserToken | quote }}
+  USER_FEEDBACK_GITLAB_TOKEN: {{ $service.environment.gitlabToken | quote }}

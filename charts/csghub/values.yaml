@@ -471,6 +471,92 @@ csgbot:
       apiKey: ""
       model: ""
 
+  ##Credentials config
+  environment:
+    modelApiKey: ""
+    hubAccessToken: ""
+    workflowAccessToken: ""
+    langflowAccessToken: ""
+    serperApiKey: ""
+    serpApiKey: ""
+    jinaApiKey: ""
+    datasetUserToken: ""
+    gitlabToken: ""
+
+  ##Configmap configuration
+  config:
+    llm:
+      modelId: ""
+      modelBaseUrl: ""
+      temperature: 0.1
+      useCsghubAigateway: false
+    database:
+      file: "agno.db"
+    opencsg:
+      hubAdminUserUuid: ""
+      docsDir: "opencsg-docs/docs"
+    mcpurls:
+      model: ""
+      dataset: ""
+      code: ""
+      finetune: ""
+      inference: ""
+    mcpProxyServersWebFetch:
+      url: ""
+      transport: "http"
+      requiresJwt: true
+    aigateway:
+      modelId: ""
+    codeSandbox:
+      image: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-sandbox-python-runner:0.0.11"
+      serviceUrl: ""
+    claudeCode:
+      cmdTemplate: "ccr code --model {model} -p '{query}'{stream_mode}"
+      defaultModel: "claude-sonnet-4"
+      streamMode: " --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions"
+    codesouler:
+      cmdTemplate: "codesouler chat '{query}'{api_key}{api_base}{model}{mcp_headers_part}{history_part} -o stream-json"
+      useAgentTemplate: "codesouler agent use {agent_file_path}"
+      useMcpTemplate: 'codesouler mcp add ''{"get_available_tools":{"url":"{domain}/api/v1/csgbot/mcp/get_available_tools/mcp"}}'''
+      dataDir: "codesouler_data"
+      remoteRepoDir: "codesouler_data/repos"
+    dataset:
+      userName: ""
+    search:
+      engine: ""
+      useJdGateway: true
+      count: 10
+      timeout: 10
+      threadNum: 4
+    deepResearch:
+      queryDecomposeMaxSize: 8
+      reportLength: 20000
+      answerLength: 15000
+      singlePageMaxSize: 10000
+      reportModel: ""
+    integrations:
+      fileServerUrl: ""
+      feishuNotificationEnabled: true
+      phoenixEndpoint: ""
+      memmemmachineUrl: ""
+    logging:
+      logPath: "logs/server.log"
+      disableGeniusChat: false
+      disablePlannerChat: false
+    planner:
+      maxReplanCount: 3
+      maxClarificationRounds: 3
+      executor: "simple"
+      requirePlanConfirmation: true
+    geniusSandbox:
+      sandboxImage: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-genius-sandbox-python-runner:latest"
+      sandboxServiceUrl: ""
+      workspaceVolumePrefix: "/data/csgsandbox_volumes"
+    externalDocs:
+      enabled: false
+    externalDocsApis:
+      "CSGHUB": "%s://%s/api/v1/swagger/doc.json"
+
 # CSGShip configuration
 csgship:
   enabled: false
