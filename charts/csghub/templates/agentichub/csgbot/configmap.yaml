@@ -29,7 +29,7 @@ data:
     hub-base-url = {{ include "common.endpoint.csghub"  . | quote }}
     hub-admin-user-uuid = {{ $service.config.opencsg.hubAdminUserUuid | quote }}
     base-url = {{ include "common.endpoint.csghub" . | quote }}
-    starship-api-url = {{ printf "https://starship-api.%s:6443" .Values.global.gateway.domain | quote }}
+    starship-api-url = {{ printf "https://starship-api.%s:6443" .Values.global.gateway.external.domain | quote }}
     docs-dir = {{ $service.config.docsDir | quote }}
 
     [opencsg.mcp-urls]
@@ -45,14 +45,14 @@ data:
     requires-jwt = {{ $service.config.mcpProxyServersWebFetch.requiresJwt }}
 
     [aigateway]
-    base-url = {{ printf "https://aigateway.%s" .Values.global.gateway.domain | quote }}
+    base-url = {{ printf "https://aigateway.%s" .Values.global.gateway.external.domain | quote }}
     model-id = {{ $service.config.aigateway.modelId | quote }}
 
     [workflow]
-    base-url = {{ printf "https://workflow.%s" .Values.global.gateway.domain | quote }}
+    base-url = {{ printf "https://workflow.%s" .Values.global.gateway.external.domain | quote }}
 
     [langflow]
-    base-url = {{ printf "https://workflow.%s" .Values.global.gateway.domain | quote }}
+    base-url = {{ printf "https://workflow.%s" .Values.global.gateway.external.domain | quote }}
 
     [code-sandbox]
     image = {{ $service.config.codeSandbox.image | quote }}
