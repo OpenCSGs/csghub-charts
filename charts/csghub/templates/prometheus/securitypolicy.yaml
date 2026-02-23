@@ -1,0 +1,31 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if and $service.gateway.enabled (regexMatch "envoyproxy" .Values.global.gateway.controllerName) }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: {{ $serviceName }}
+    basicAuth:
+      users:
+        name: {{ $serviceName }}
+        namespace: {{ .Release.Namespace }}
+      forwardUsernameHeader: "X-Forwarded-User"
+{{- end }}

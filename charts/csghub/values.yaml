@@ -5,27 +5,45 @@ global:
   ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
   edition: "ee"
 
-  ## Ingress configuration
-  ingress:
-    # className: "nginx"            # Ingress controller class name
-    domain: "example.com"           # Base domain for accessing csghub
-    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
-    ## Custom default access domain instead of <release>.<domain>,
-    # host: ""                      # Prefix or full domain: "test" → test.example.com, "test.example.com" → test.example.com
-    # publicHost: ""                # Same with `host`, but for inference/finetune/space/mcp
-    ## TLS/SSL configuration
-    tls:
-      enabled: false                # Enable or disable TLS
-      # secretName: ""              # TLS secret name (if enabled)
-    ## Service configuration
+  ## Gateway configuration
+  gateway:
+    ## GatewayClass controller that will reconcile Gateway / HTTPRoute resources.
+    ## Choose the controller according to the Gateway implementation you use.
+    ## Examples:
+    ## - gateway.envoyproxy.io/gatewayclass-controller  (Envoy Gateway)
+    ## - istio.io/gateway-controller                    (Istio)
+    ## - io.cilium/gateway-controller                   (Cilium)
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+    ## Gateway service configuration
+    ## type: Service type (LoadBalancer or NodePort)
+    ## nodePorts: Optional NodePort mapping (if using NodePort)
     service:
-      type: &type "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      type: "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      nodePorts: {}
+        # http: 30080
+        # https: 30443
+        # gitssh: 30022
+
+    ## Base external domain used to expose CSGHub services
+    external:
+      domain: "csghub.example.com"   # e.g. csghub.example.com, example.com
+      # public: "public.example.com" # Optional public access domain override.
+                                     # If empty, the domain will be derived automatically.
+                                     # NOTE: When base domain is a second-level domain (e.g. example.com),
+                                     # a subdomain (e.g. csghub.example.com) will be used internally
+                                     # to avoid overly broad wildcard routing such as *.example.com
+
+    ## TLS/SSL configuration for Gateway
+    tls:
+      enabled: false                # Enable TLS termination on the Gateway
+      # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
 
   ## Image management
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.15.1"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -128,7 +146,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.15.1"
+  tag: "v1.16.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -145,11 +163,10 @@ portal:
   image:
     repository: "opencsghq/csghub-portal"  # Portal image repository
 
-  ## Ingress configuration
-  ingress:
-    enabled: true                          # Enable or disable ingress
-    annotations: {}                        # Ingress-nginx annotations
-    tls: {}                                # TLS settings for ingress
+  ## Gateway configuration
+  gateway:
+    enabled: true                          # Enable or disable gateway
+    tls: {}                                # TLS settings for gateway
       # enabled: false                     # Enable or disable TLS
       # secretName: ""                     # TLS secret name (if enabled)
 
@@ -197,6 +214,22 @@ server:
   ## API documentation
   swaggerAPI:
     enabled: false                         # Enable Swagger API assistants
+
+  ## S3 Proxy
+  enablePresignedUrlProxy: true            # Enable S3 proxy
+
+  ## Agent configuration
+  agent:
+    langflow: {}
+      # host: ""                           # AgentHub address
+      # token: ""                          # AgentHub Token
+      # instanceQuotaPerUser: 5
+      # codeInstanceQuotaPerUser: 5
+
+  ## CSGBot configuration
+  csgbot: {}
+    # host: ""                             # CSGBot address
+    # port: "8070"                         # CSGBot port
 
   ## Memory service client configuration
   memory:
@@ -277,8 +310,8 @@ notifier:
 payment:
   billingBucket: "csghub-billing"          # Bucket for storing billing data
 
-## Gateway service configuration
-gateway:
+## AIGateway service configuration
+aigateway:
   ## AI Gateway configuration
   aigateway: {}
 
@@ -297,7 +330,7 @@ xnet:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
-    tag: "v1.15.1"
+    tag: "v1.16.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -368,6 +401,10 @@ runner:
   ## e.g. eth0
   networkInterface: ""
 
+  ## Kubernetes StorageClass name for persistent volume provisioning for space
+  # Example values: "local-path", "gp2"
+  storageClassName: ""
+
   ## Knative Serving configuration
   knative:
     serving:
@@ -384,7 +421,7 @@ runner:
     enabled: true
 
   ## Disable subCharts same with parent
-  ingress-nginx:
+  envoy:
     enabled: false
   reloader:
     enabled: false
@@ -394,16 +431,6 @@ runner:
 ## Dataflow service configuration
 dataflow:
   enabled: true                          # Enable or disable dataflow service
-
-  ## Disable subCharts same with parent
-  ingress-nginx:
-    enabled: false
-  reloader:
-    enabled: false
-  postgresql:
-    enabled: false
-  redis:
-    enabled: false
 
 # AgenticHub configuration
 agenticflow:
@@ -416,7 +443,7 @@ agenticflow:
 
   ## Service configuration
   service: {}
-    # port: 7860
+  # port: 7860
 
   ## Database configuration
   postgresql: {}
@@ -426,13 +453,13 @@ agenticflow:
     # user: "csghub"                       # Database username
     # password: ""                         # Database password
     # timezone: "Etc/UTC"                  # Database timezone
-    # sslmode: "prefer"                    # SSL mode
+  # sslmode: "prefer"                    # SSL mode
 
   ## Redis configuration
   redis: {}
     # host: "<redis_host>"                 # Redis server hostname or IP
     # port: 6379                           # Redis port number
-    # password: ""                         # Redis authentication password
+  # password: ""                         # Redis authentication password
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
@@ -450,7 +477,7 @@ csgbot:
 
   ## Service configuration
   service: {}
-    # port: 8070
+  # port: 8070
 
   ## Model configuration
   model:
@@ -557,7 +584,16 @@ csgbot:
     externalDocsApis:
       "CSGHUB": "%s://%s/api/v1/swagger/doc.json"
 
-# CSGShip configuration
+  ## Disable subCharts same with parent
+  envoy:
+    enabled: false
+  reloader:
+    enabled: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+
 csgship:
   enabled: false
 
@@ -565,7 +601,7 @@ csgship:
   # configmap: "csghub-csgship"
 
   ## Disable subCharts same with parent
-  ingress-nginx:
+  envoy:
     enabled: false
   reloader:
     enabled: false
@@ -663,14 +699,13 @@ minio:
     protocol: "TCP"                          # Network protocol
 
   console:
-    enabled: true                            # Enable console UI
+    enabled: false                           # Enable console UI
     service:
       port: 9001                             # Console service port
       protocol: "TCP"                        # Network protocol
 
-  ingress:
-    enabled: true                            # Enable or disable ingress
-    annotations: {}                          # Ingress-nginx annotations
+  gateway:
+    enabled: true                            # Enable or disable gateway
     tls: {}                                  # TLS settings
       # enabled: false                       # Enable or disable TLS
       # secretName: ""                       # TLS secret name
@@ -711,13 +746,6 @@ registry:
     type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
     port: 5000                               # Service port
     protocol: "TCP"                          # Network protocol
-
-  ingress:
-    enabled: true                            # Enable or disable ingress
-    annotations: {}                          # Ingress-nginx annotations
-    tls: {}                                  # TLS settings
-      # enabled: false                       # Enable or disable TLS
-      # secretName: ""                       # TLS secret name
 
   logging:
     level: "info"                            # Log level: error, warn, info, debug
@@ -777,7 +805,7 @@ gitlabShell:
     protocol: "TCP"                          # Network protocol
 
   rbac:
-    create: true                             # Enable RBAC for ingress TCP configuration
+    create: true                             # Enable RBAC for gateway TCP configuration
 
   securityContext:
     runAsUser: 0                             # Run as root user
@@ -819,9 +847,8 @@ casdoor:
     port: 8000                               # Service port
     protocol: "TCP"                          # Network protocol
 
-  ingress:
-    enabled: true                            # Enable or disable ingress
-    annotations: {}                          # Ingress-nginx annotations
+  gateway:
+    enabled: true                            # Enable or disable gateway
     tls: {}                                  # TLS settings
       # enabled: false                       # Enable or disable TLS
       # secretName: ""                       # TLS secret name
@@ -858,9 +885,8 @@ temporal:
       port: 8080                             # Console service port
       protocol: "TCP"                        # Network protocol
 
-  ingress:
-    enabled: true                            # Enable or disable ingress
-    annotations: {}                          # Ingress-nginx annotations
+  gateway:
+    enabled: true                            # Enable or disable gateway
     tls: {}                                  # TLS settings
       # enabled: false                       # Enable or disable TLS
       # secretName: ""                       # TLS secret name
@@ -880,71 +906,6 @@ temporal:
 #################################################################
 ## Do not modify it unless you know the purpose of the modification.
 
-## Ingress-nginx configuration
-ingress-nginx:
-  enabled: true                            # Enable NGINX Ingress Controller
-
-  ## TCP services configuration
-  tcp:
-    22: "csghub/csghub-gitlab-shell:22"   # Forward TCP traffic on port 22
-
-  controller:
-    progressDeadlineSeconds: 600           # Deployment progress deadline
-
-    ## Image configuration
-    image:
-      image: "opencsghq/ingress-nginx-controller"
-      digest: ""                           # Image digest (do not update)
-
-    ## Admission webhooks configuration
-    admissionWebhooks:
-      patch:
-        image:
-          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
-          digest: ""                        # Image digest (do not update)
-
-    ## Controller configuration
-    config:
-      annotations-risk-level: "Critical"    # Risk level for annotations
-      custom-http-errors: "404,500,502,503" # Custom HTTP error codes
-      enable-underscores-in-headers: "true" # Skip underscores headers
-      large-client-header-buffers: "8 32k"  # Allow temporal big header buffer
-      compute-full-forwarded-for: "true"   # Enable computation of full X-Forwarded-For header
-      use-forwarded-headers: "true"        # Trust and use X-Forwarded-* headers for client info
-
-    ## Annotations configuration
-    allowSnippetAnnotations: true           # Allow server snippets in annotations
-
-    ## Service configuration
-    service:
-      type: *type                           # Service type
-      nodePorts:
-        http: 30080                         # HTTP node port
-        https: 30443                        # HTTPS node port
-        tcp:
-          22: 30022                         # TCP node port for SSH
-
-  ## Custom error pages configuration
-  defaultBackend:
-    enabled: true                           # Enable custom error pages
-    image:
-      image: "opencsghq/ingress-nginx-custom-error-pages"
-      tag: "v1.2.0"
-    extraVolumes:
-      - name: "custom-error-pages"
-        configMap:
-          name: "ingress-nginx-custom-errors"
-    extraVolumeMounts:
-      - name: "custom-error-pages"
-        mountPath: "/www"
-
-## Fluentd log collection configuration
-fluentd:
-  enabled: false                           # Enable or disable Fluentd
-  image:
-    repository: "opencsghq/fluent-fluentd-kubernetes-daemonset" # Fluentd image
-  fileConfigs: {}                          # Fluentd file sources configuration
-
 ## Reloader configuration
 reloader:
   image:
@@ -952,8 +913,8 @@ reloader:
 
 ## Loki log aggregation configuration
 loki:
-  ingress:
-    enabled: false                         # Enable Loki ingress
+  gateway:
+    enabled: false                         # Enable Loki gateway
     basicAuth: {}                          # Basic authentication
       # username: "loki"
       # password: "loki"
@@ -982,9 +943,6 @@ loki:
 
   lokiCanary:
     enabled: false                         # Disable Loki canary monitoring
-
-  gateway:
-    enabled: false                         # Disable Loki gateway
 
   ## Core Loki configuration
   loki:
@@ -1042,8 +1000,8 @@ tempo:
 prometheus:
   enabled: true                            # Enable Prometheus
 
-  ingress:
-    enabled: false                         # Enable Prometheus ingress
+  gateway:
+    enabled: false                         # Enable Prometheus gateway
     basicAuth: {}                          # Basic authentication
       # username: "prometheus"
       # password: ""
@@ -1062,3 +1020,6 @@ memmachine:
       baseUrl: ""                         # OpenAI-compatible chat endpoint (e.g. https://api.example.com/v1)
       apiKey: ""                          # API key for chat endpoint
       model: ""                           # Chat model name
+
+envoy:
+  enabled: true

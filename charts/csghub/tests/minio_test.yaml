@@ -1,7 +1,7 @@
 suite: Test Minio Resources
 templates:
   - minio/configmap.yaml
-  - minio/ingress.yaml
+  - minio/httproutes.yaml
   - minio/job.yaml
   - minio/secret.yaml
   - minio/service.yaml
@@ -11,9 +11,9 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      enabled: true
-      domain: example.cn
+    gateway:
+      external:
+        domain: "csghub.example.cn"
       tls:
         enabled: true
         secretName: "example-cn-tls"
@@ -41,7 +41,7 @@ set:
       type: "ClusterIP"
       port: 9002
       protocol: TCP
-    ingress:
+    gateway:
       enabled: true
     console:
       enabled: false
@@ -53,7 +53,7 @@ tests:
   - it: Should render all resources correctly
     templates:
       - minio/configmap.yaml
-      - minio/ingress.yaml
+      - minio/httproutes.yaml
       - minio/job.yaml
       - minio/secret.yaml
       - minio/service.yaml
@@ -66,58 +66,92 @@ tests:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "minio"
 
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
     template: minio/configmap.yaml
     asserts:
       - matchRegex:
           path: data["create_minio_buckets.sh"]
           pattern: '.*'
 
-  - it: Should render ingress correctly
-    template: minio/ingress.yaml
+  - it: Should render httpRoutes correctly
+    template: minio/httproutes.yaml
     asserts:
       - contains:
-          path: spec.tls[0].hosts
+          path: spec.hostnames
           content: "minio.example.cn"
       - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls"
-      - equal:
-          path: spec.rules[0].host
-          value: "minio.example.cn"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
-          value: "csghub-minio"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.port.number
-          value: 9002
+          path: spec.rules[0].filters[0].type
+          value: "CORS"
+      - contains:
+          path: spec.rules[0].filters[0].cors.allowOrigins
+          content: "https://csghub.example.cn"
+      - contains:
+          path: spec.rules[0].backendRefs
+          content:
+            name: csghub-minio
+            port: 9002
 
-  - it: Should render ingress correctly with console enabled
-    template: minio/ingress.yaml
+  - it: Should render httpRoutes correctly with console enabled
+    template: minio/httproutes.yaml
     set:
       minio:
         console:
           enabled: true
-        ingress:
-          tls:
-            secretName: "example-cn-tls-local"
     asserts:
       - equal:
-          path: metadata.annotations["nginx.ingress.kubernetes.io/configuration-snippet"]
-          value: |
-            rewrite ^/console/(.*) /$1 break;
+          path: spec.rules[0]
+          value:
+            backendRefs:
+              - name: csghub-minio
+                port: 9002
+            filters:
+              - cors:
+                  allowCredentials: true
+                  allowOrigins:
+                    - https://csghub.example.cn
+                type: CORS
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+
+  - it: Should render httpRoutes correctly with console enabled
+    template: minio/httproutes.yaml
+    set:
+      minio:
+        console:
+          enabled: true
+    asserts:
       - equal:
-          path: spec.tls[0].secretName
-          value: "example-cn-tls-local"
+          path: spec.rules[1]
+          value:
+            filters:
+              - requestRedirect:
+                  path:
+                    replaceFullPath: /console/
+                    type: ReplaceFullPath
+                  statusCode: 301
+                type: RequestRedirect
+            matches:
+              - path:
+                  type: Exact
+                  value: /console
       - equal:
-          path: spec.rules[0].http.paths[0].path
-          value: "/console(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
-          value: "csghub-minio"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.port.number
-          value: 9003
+          path: spec.rules[2]
+          value:
+            backendRefs:
+              - name: csghub-minio
+                port: 9003
+            filters:
+              - type: URLRewrite
+                urlRewrite:
+                  path:
+                    replacePrefixMatch: /
+                    type: ReplacePrefixMatch
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /console/
 
   - it: Should render job correctly
     template: minio/job.yaml

@@ -11,154 +11,105 @@
           "type": "string",
           "description": "Deployment edition: \"ce\" (Community) or \"ee\" (Enterprise)"
         },
-        "ingress": {
+        "gateway": {
           "type": "object",
-          "description": "Ingress configuration",
+          "description": "Gateway configuration",
           "properties": {
-            "className": {
-              "type": "string",
-              "description": "Ingress controller class name"
-            },
-            "domain": {
-              "type": "string",
-              "description": "Base domain for accessing csghub"
-            },
-            "useTop": {
-              "type": "boolean",
-              "description": "Use top-level domain directly (true) or subdomain (false)"
-            },
-            "host": {
-              "type": "string",
-              "description": "Custom default access domain"
-            },
-            "tls": {
-              "type": "object",
-              "description": "TLS/SSL configuration",
-              "properties": {
-                "enabled": {"type": "boolean", "description": "Enable or disable TLS"},
-                "secretName": {"type": "string", "description": "TLS secret name (if enabled)"}
-              }
-            },
+            "controllerName": {"type": "string"},
             "service": {
               "type": "object",
               "properties": {
-                "type": {"type": "string", "description": "Service type: LoadBalancer or NodePort"}
+                "type": {"type": "string"},
+                "nodePorts": {"type": "object", "additionalProperties": {"type": "integer"}}
+              }
+            },
+            "external": {
+              "type": "object",
+              "properties": {
+                "domain": {"type": "string"},
+                "public": {"type": "string"}
+              }
+            },
+            "tls": {
+              "type": "object",
+              "properties": {
+                "enabled": {"type": "boolean"},
+                "secretName": {"type": "string"}
               }
             }
           }
         },
         "image": {
           "type": "object",
-          "description": "Image management",
           "properties": {
-            "registry": {"type": "string", "description": "Custom image registry (overrides local registry)"},
-            "tag": {"type": "string", "description": "Image tag format: {{version}}-{{edition}}"},
-            "pullPolicy": {"type": "string", "description": "Image pull policy: Always, IfNotPresent, Never"},
-            "pullSecrets": {"type": "array", "items": {"type": "string"}, "description": "Private registry authentication secrets"}
+            "registry": {"type": "string"},
+            "registryPolicy": {"type": "string"},
+            "tag": {"type": "string"},
+            "pullPolicy": {"type": "string"},
+            "pullSecrets": {"type": "array", "items": {"type": "string"}}
           }
         },
         "persistence": {
           "type": "object",
           "properties": {
-            "storageClass": {"type": "string", "description": "StorageClass name (empty for default)"},
-            "accessModes": {"type": "array", "items": {"type": "string"}, "description": "Volume access modes"},
-            "size": {"type": "string", "description": "Default storage capacity"}
+            "storageClass": {"type": "string"},
+            "accessModes": {"type": "array", "items": {"type": "string"}},
+            "size": {"type": "string"}
           }
         },
         "postgresql": {
           "type": "object",
           "properties": {
-            "enabled": {"type": "boolean", "description": "Use built-in (true) or external (false)"},
-            "external": {
-              "type": "object",
-              "properties": {
-                "host": {"type": "string"},
-                "port": {"type": "integer"},
-                "user": {"type": "string"},
-                "password": {"type": "string"},
-                "timezone": {"type": "string"},
-                "sslmode": {"type": "string"}
-              }
-            }
+            "enabled": {"type": "boolean"},
+            "external": {"type": "object", "additionalProperties": true}
           }
         },
         "redis": {
           "type": "object",
           "properties": {
-            "enabled": {"type": "boolean", "description": "Use built-in (true) or external (false)"},
-            "external": {
-              "type": "object",
-              "properties": {
-                "host": {"type": "string"},
-                "port": {"type": "integer"},
-                "password": {"type": "string"}
-              }
-            }
+            "enabled": {"type": "boolean"},
+            "external": {"type": "object", "additionalProperties": true}
           }
         },
         "mongo": {
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
-            "external": {
-              "type": "object",
-              "properties": {
-                "host": {"type": "string"},
-                "port": {"type": "integer"},
-                "user": {"type": "string"},
-                "password": {"type": "string"}
-              }
-            }
+            "external": {"type": "object", "additionalProperties": true}
           }
         },
         "objectStore": {
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
-            "external": {
-              "type": "object",
-              "properties": {
-                "endpoint": {"type": "string"},
-                "accessKey": {"type": "string"},
-                "secretKey": {"type": "string"},
-                "region": {"type": "string"},
-                "encrypt": {"type": "string"},
-                "secure": {"type": "string"},
-                "pathStyle": {"type": "string"}
-              }
-            }
+            "external": {"type": "object", "additionalProperties": true}
           }
         },
         "registry": {
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
-            "external": {
-              "type": "object",
-              "properties": {
-                "registry": {"type": "string"},
-                "repository": {"type": "string"},
-                "username": {"type": "string"},
-                "password": {"type": "string"},
-                "insecure": {"type": "string"}
-              }
-            }
+            "external": {"type": "object", "additionalProperties": true}
           }
         },
         "gitaly": {
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
-            "external": {
-              "type": "object",
-              "properties": {
-                "scheme": {"type": "string"},
-                "host": {"type": "string"},
-                "port": {"type": "integer"},
-                "token": {"type": "string"},
-                "storage": {"type": "string"}
-              }
-            }
+            "external": {"type": "object", "additionalProperties": true}
+          }
+        },
+        "dataflow": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "external": {"type": "object", "additionalProperties": true}
+          }
+        },
+        "chartContext": {
+          "type": "object",
+          "properties": {
+            "isBuiltIn": {"type": "boolean"}
           }
         }
       }
@@ -173,44 +124,83 @@
         "pullSecrets": {"type": "array", "items": {"type": "string"}}
       }
     },
+    "logging": {"type": "object", "additionalProperties": true},
+    "environments": {"type": "object", "additionalProperties": true},
     "portal": {
       "type": "object",
       "properties": {
-        "image": {
-          "type": "object",
-          "properties": {"repository": {"type": "string"}}
-        },
-        "ingress": {
-          "type": "object",
-          "properties": {
-            "enabled": {"type": "boolean"},
-            "annotations": {"type": "object", "additionalProperties": true},
-            "tls": {"type": "object", "additionalProperties": true}
-          }
-        },
+        "image": {"type": "object", "additionalProperties": true},
+        "gateway": {"type": "object", "additionalProperties": true},
         "docs": {"type": "object", "additionalProperties": true},
         "postgresql": {"type": "object", "additionalProperties": true},
         "objectStore": {"type": "object", "additionalProperties": true}
       }
     },
-    "server": {"type": "object", "additionalProperties": true},
+    "server": {
+      "type": "object",
+      "properties": {
+        "image": {"type": "object", "additionalProperties": true},
+        "gitlabShell": {"type": "object", "additionalProperties": true},
+        "multiSync": {"type": "object", "additionalProperties": true},
+        "swaggerAPI": {"type": "object", "additionalProperties": true},
+        "agent": {"type": "object", "additionalProperties": true},
+        "csgbot": {"type": "object", "additionalProperties": true},
+        "memory": {"type": "object", "additionalProperties": true},
+        "postgresql": {"type": "object", "additionalProperties": true},
+        "redis": {"type": "object", "additionalProperties": true},
+        "objectStore": {"type": "object", "additionalProperties": true},
+        "xnet": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "rproxy": {
+      "type": "object",
+      "properties": {
+        "coredns": {"type": "object", "additionalProperties": true},
+        "nginx": {"type": "object", "additionalProperties": true}
+      }
+    },
     "notifier": {"type": "object", "additionalProperties": true},
     "payment": {"type": "object", "additionalProperties": true},
-    "gateway": {"type": "object", "additionalProperties": true},
-    "accounting": {"type": "object", "additionalProperties": true},
-    "user": {"type": "object", "additionalProperties": true},
-    "dataviewer": {"type": "object", "additionalProperties": true},
-    "mirror": {"type": "object", "additionalProperties": true},
-    "temporalWorker": {"type": "object", "additionalProperties": true},
-    "postgresql": {"type": "object", "additionalProperties": true},
-    "redis": {"type": "object", "additionalProperties": true},
-    "minio": {"type": "object", "additionalProperties": true},
-    "registry": {"type": "object", "additionalProperties": true},
-    "gitaly": {"type": "object", "additionalProperties": true},
-    "gitlabShell": {"type": "object", "additionalProperties": true},
-    "nats": {"type": "object", "additionalProperties": true},
-    "casdoor": {"type": "object", "additionalProperties": true},
-    "temporal": {"type": "object", "additionalProperties": true}
+    "gateway": {
+      "type": "object",
+      "properties": {
+        "aigateway": {"type": "object", "additionalProperties": true},
+        "moderation": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "xnet": {
+      "type": "object",
+      "properties": {
+        "image": {"type": "object", "additionalProperties": true},
+        "service": {"type": "object", "additionalProperties": true},
+        "postgresql": {"type": "object", "additionalProperties": true},
+        "redis": {"type": "object", "additionalProperties": true},
+        "objectStore": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "runner": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "region": {"type": "string"},
+        "interval": {"type": "integer"},
+        "namespace": {"type": "string"},
+        "autoConfigure": {"type": "boolean"},
+        "mergingNamespace": {"type": "string"},
+        "usePublicDomain": {"type": "boolean"},
+        "pipIndexUrl": {"type": "string"},
+        "extraBuildArgs": {"type": "array", "items": {"type": "string"}},
+        "model": {"type": "object", "additionalProperties": true},
+        "gpuModelLabel": {"type": "object", "additionalProperties": true},
+        "applicationEndpoint": {"type": "string"},
+        "networkInterface": {"type": "string"},
+        "knative": {"type": "object", "additionalProperties": true},
+        "logcollector": {"type": "object", "additionalProperties": true},
+        "gateway": {"type": "object", "additionalProperties": true},
+        "reloader": {"type": "object", "additionalProperties": true},
+        "prometheus": {"type": "object", "additionalProperties": true}
+      }
+    }
   },
   "additionalProperties": true
 }

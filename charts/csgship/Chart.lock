@@ -1,12 +1,12 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.1.6
+  version: 0.2.0
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
-- name: ingress-nginx
-  repository: file://charts/ingress-nginx
-  version: 4.14.1
-digest: sha256:18a75c7b0a5a36b0a0a6a2e39f51472c930cf5884ca09c4741985c83d8ecf48f
-generated: "2026-01-19T17:42:48.94695+08:00"
+- name: gateway-helm
+  repository: file://charts/gateway-helm
+  version: v1.6.3
+digest: sha256:b5ef0575f54223df61aa7d465289c37615742f78669736a57021c35809c43fd1
+generated: "2026-02-05T16:59:53.399389+08:00"

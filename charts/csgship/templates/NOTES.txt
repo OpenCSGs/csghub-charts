@@ -7,7 +7,7 @@ APP VERSION: {{ .Chart.AppVersion }}
 ---
 
 🔗 CSGShip & 🔐 Casdoor Admin Console
-{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . (printf "%s-init" $service.name)) }}
 {{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
 {{- $defaultUser := $service.admin.name | default "root" }}

@@ -10,9 +10,9 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      enabled: true
-      domain: example.cn
+    gateway:
+      external:
+        domain: example.cn
       tls:
         enabled: true
         secretName: "example-cn-tls"

@@ -449,13 +449,8 @@ fi
 # Install K3S (always enabled)
 ################################################################################
 log INFO "Installing K3S..."
-if [[ "${DRY_RUN:-false}" == "true" ]]; then
-  interface="${INTERFACE:-eth0}"
-  ip_addr="127.0.0.1"
-else
-  interface="${INTERFACE:-$(ip route show default | awk '/default/ {print $5}')}"
-  ip_addr=$(ip addr show "$interface" | awk '/inet /{print $2}' | cut -d/ -f1)
-fi
+interface="${INTERFACE:-$(ip route show default | awk '/default/ {print $5}')}"
+ip_addr=$(ip addr show "$interface" | awk '/inet /{print $2}' | cut -d/ -f1)
 log INFO "Using network interface: $interface (IP: $ip_addr)"
 
 run_cmd "mkdir -p /etc/rancher/k3s"
@@ -556,7 +551,9 @@ if [[ "${DRY_RUN:-false}" == "true" ]]; then
   log CMD "Would run: kubectl wait --for=condition=Ready node --all --timeout=300s"
 else
   retry 5 "kubectl wait --for=condition=Ready node --all --timeout=300s"
-  wait_for_pods_ready kube-system
+  wait_for_pod_ready kube-system k8s-app=kube-dns 60
+  wait_for_pod_ready kube-system k8s-app=metrics-server 60
+  wait_for_pod_ready kube-system app=local-path-provisioner 60
 fi
 
 ################################################################################
@@ -710,6 +707,13 @@ fi
 # Install CSGHub Helm Chart
 ################################################################################
 if [[ -z "$K3S_SERVER" ]]; then
+  log INFO "Create CRDs for gateway API controller."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log "CMD" "Would run CRDs created by crds_install.sh."
+  else
+    retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_install.sh | bash
+  fi
+
   log INFO "Installing CSGHub Helm Chart..."
   run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/csghub/ --force-update"
 
@@ -722,15 +726,12 @@ if [[ -z "$K3S_SERVER" ]]; then
   fi
 
   HELM_EXTRA_ARGS+=(--set global.edition='ee')
-  HELM_EXTRA_ARGS+=(--set global.ingress.domain="${DOMAIN}")
-  HELM_EXTRA_ARGS+=(--set global.ingress.service.type=NodePort)
-  HELM_EXTRA_ARGS+=(--set ingress-nginx.controller.service.type=NodePort)
-  HELM_EXTRA_ARGS+=(--set csgship.enabled='false')
+  HELM_EXTRA_ARGS+=(--set global.gateway.external.domain="${DOMAIN}")
+  HELM_EXTRA_ARGS+=(--set-string server.gitlabShell.sshPort="2222")
 
   if [[ "$INSTALL_CN" == "true" ]]; then
     HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
-    HELM_EXTRA_ARGS+=(--set gitaly.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
-    HELM_EXTRA_ARGS+=(--set gitlabShell.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
+    HELM_EXTRA_ARGS+=(--set global.imageRegistry=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq)
   fi
 
   HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
@@ -762,7 +763,7 @@ if [[ -z "$K3S_SERVER" ]]; then
 
     if [[ "${DRY_RUN:-false}" == "true" ]]; then
       log INFO "GPU resource for CSGHub would be initialized (dry-run)."
-      log CMD "kubectl exec -i csghub-postgresql-0 -n csghub -- psql -U csghub -d csghub_server <<EOF
+      log CMD "kubectl exec -i csghub-postgresql-0 -n csghub -c postgresql -- psql -U csghub -d csghub_server <<EOF
 INSERT INTO space_resources(name, resources, cluster_id)
 SELECT REPLACE(name, '4090', '$GPU_NAME'),
        REPLACE(resources, '4090', '$GPU_NAME'),
@@ -774,7 +775,7 @@ DO NOTHING;
 EOF"
     else
       wait_for_pod_ready csghub app.kubernetes.io/service=server 60
-      run_cmd "kubectl exec -i csghub-postgresql-0 -n csghub -- psql -U csghub -d csghub_server <<EOF
+      run_cmd "kubectl exec -i csghub-postgresql-0 -n csghub -c postgresql -- psql -U csghub -d csghub_server <<EOF
 INSERT INTO space_resources(name, resources, cluster_id)
 SELECT REPLACE(name, '4090', '$GPU_NAME'),
        REPLACE(resources, '4090', '$GPU_NAME'),
@@ -793,93 +794,89 @@ EOF"
 ################################################################################
   if [[ "$HOSTS_ALIAS" == "true" ]]; then
     log INFO "Configuring local domain aliases..."
-    
-    NEW_DOMAIN="csghub.${DOMAIN}"
-    PUBLIC_DOMAIN="public.${DOMAIN}"
-    USE_TOP=false
-    HOST_SET=false
-    for arg in "${HELM_EXTRA_ARGS[@]}"; do
-      case "$arg" in
-        global.ingress.host=*)
-          value="${arg#*=}"
-          if [[ "$value" != *.* ]]; then
-            NEW_DOMAIN="${value}.${DOMAIN}"
-          else
-            NEW_DOMAIN="$value"
-          fi
-          HOST_SET=true
-          ;;
-        global.ingress.publicHost=*)
-          value="${arg#*=}"
-          if [[ "$value" != *.* ]]; then
-            PUBLIC_DOMAIN="${value}.${DOMAIN}"
-          else
-            PUBLIC_DOMAIN="$value"
-          fi
-          ;;
-        global.ingress.useTop=*)
-          value="${arg#*=}"
-          [[ "$value" == "true" ]] && USE_TOP=true
-          ;;
-      esac
-    done
 
-    if [[ "$USE_TOP" == "true" && "$HOST_SET" != "true" ]]; then
-      NEW_DOMAIN="${DOMAIN}"
+    add_hosts_entry() {
+      local ip="$1"
+      shift
+      local hostnames=("$@")
+      for h in "${hostnames[@]}"; do
+        # Skip wildcard hostnames for /etc/hosts
+        [[ "$h" == \*.* ]] && continue
+        if [[ "${DRY_RUN:-false}" == "true" ]]; then
+          log CMD "Would append to /etc/hosts: $ip $h"
+        elif ! grep -qF "$ip $h" /etc/hosts; then
+          echo "$ip $h" >> /etc/hosts
+        fi
+      done
+    }
+
+    # Fetch hostnames from HTTPRoutes
+    HOST_ENTRIES=()
+    WILDCARD_ENTRIES=()
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+      log CMD "Would fetch hostnames from HTTPRoutes in csghub namespace"
+      HOST_ENTRIES=("${DOMAIN}" "casdoor.${DOMAIN#*.}" "minio.${DOMAIN#*.}")
+      WILDCARD_ENTRIES=("*.csghub.${DOMAIN#*.}")
+    else
+      while IFS= read -r h; do
+        if [[ "$h" == \*.* ]]; then
+          WILDCARD_ENTRIES+=("$h")
+        else
+          HOST_ENTRIES+=("$h")
+        fi
+      done < <(kubectl get httproutes -n csghub -o json | jq -r '.items[].spec.hostnames[]')
     fi
 
-    if [[ "${DRY_RUN:-false}" == "true" ]]; then
-      log CMD "Would apply ConfigMap for coredns-custom with domain ${DOMAIN} and ip ${ip_addr}"
-    else
-      run_cmd "kubectl apply -f -" <<EOF
+    # Add normal hostnames to /etc/hosts
+    add_hosts_entry "$ip_addr" "${HOST_ENTRIES[@]}"
+
+    # Generate CoreDNS ConfigMap
+    generate_coredns_cm() {
+      local ip="$1"
+      cat <<EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: coredns-custom
   namespace: kube-system
 data:
-  ${DOMAIN}.server: |
-    ${DOMAIN} {
-      hosts {
-        ${ip_addr} ${NEW_DOMAIN} csghub
-        ${ip_addr} casdoor.${DOMAIN} casdoor
-        ${ip_addr} minio.${DOMAIN} minio
-        ${ip_addr} csgship.${DOMAIN} csgship
-        ${ip_addr} csgship-api.${DOMAIN} csgship-api
-        ${ip_addr} runner.${DOMAIN} runner
-        ${ip_addr} dataflow.${DOMAIN} dataflow
-        ${ip_addr} label-studio.${DOMAIN} label-studio
-      }
+EOF
+
+      # Normal domain entries
+      if [[ ${#HOST_ENTRIES[@]} -gt 0 ]]; then
+        echo "  ${DOMAIN#*.}.server: |"
+        echo "    ${DOMAIN#*.} {"
+        echo "      hosts {"
+        for h in "${HOST_ENTRIES[@]}"; do
+          echo "        $ip $h"
+        done
+        echo "      }"
+        echo "    }"
+      fi
+
+      # Wildcard entries
+      for w in "${WILDCARD_ENTRIES[@]}"; do
+        # remove leading *.
+        local clean_domain="${w#*.}"
+        echo "  ${clean_domain}.server: |"
+        echo "    ${clean_domain} {"
+        echo "      template IN A ${clean_domain} {"
+        echo "        answer \"{{ .Name }} 3600 IN A $ip\""
+        echo "      }"
+        echo "      log"
+        echo "      errors"
+        echo "    }"
+      done
     }
 
-  ${PUBLIC_DOMAIN}.server: |
-    ${PUBLIC_DOMAIN} {
-      template IN A ${PUBLIC_DOMAIN} {
-        answer "{{ .Name }} 3600 IN A ${ip_addr}"
-      }
-      log
-      errors
-    }
-EOF
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+      log CMD "Would apply CoreDNS ConfigMap for domain ${DOMAIN} and wildcard domains: ${WILDCARD_ENTRIES[*]}"
+      generate_coredns_cm "$ip_addr"
+    else
+      generate_coredns_cm "$ip_addr" | kubectl apply -f -
     fi
 
-    entries=(
-      "${ip_addr} ${NEW_DOMAIN} csghub"
-      "${ip_addr} casdoor.${DOMAIN} casdoor"
-      "${ip_addr} minio.${DOMAIN} minio"
-      "${ip_addr} csgship.${DOMAIN} csgship"
-      "${ip_addr} csgship-api.${DOMAIN} csgship-api"
-      "${ip_addr} runner.${DOMAIN} runner"
-      "${ip_addr} dataflow.${DOMAIN} dataflow"
-      "${ip_addr} label-studio.${DOMAIN} label-studio"
-    )
-    for entry in "${entries[@]}"; do
-      if [[ "${DRY_RUN:-false}" == "true" ]]; then
-        log CMD "Would append to /etc/hosts: $entry"
-      elif ! grep -qF "$entry" /etc/hosts; then
-        echo "$entry" >> /etc/hosts
-      fi
-    done
+    kubectl rollout restart deploy coredns -n kube-system
   fi
 fi
 

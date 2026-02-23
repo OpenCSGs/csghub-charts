@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "agenticflow" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "service" "agenticflow" "ctx" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -59,8 +59,8 @@ spec:
       {{- end }}
       {{- end }}
       initContainers:
-        {{- include "wait-for-redis" (dict "service" $service "global" .) | nindent 8 }}
-        {{- include "wait-for-postgresql" (dict "service" $service "global" .) | nindent 8 }}
+        {{- include "wait-for-redis" (dict "service" $service "ctx" .) | nindent 8 }}
+        {{- include "wait-for-postgresql" (dict "service" $service "ctx" .) | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}

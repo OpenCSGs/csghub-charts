@@ -9,14 +9,11 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      enabled: true
-      domain: example.cn
+    gateway:
+      external:
+        domain: "csghub.example.cn"
       tls:
         enabled: true
-        secretName: "example-cn-tls"
-      service:
-        type: LoadBalancer
     image:
       registry: "docker.io"
       registryPolicy: "default"
@@ -46,7 +43,7 @@ set:
         tag: "2.30.4"
       service:
         port: 8081
-    ingress:
+    gateway:
       enabled: true
     postgresql:
       database: "csghub_temporal"

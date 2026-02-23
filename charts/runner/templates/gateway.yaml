@@ -1,0 +1,50 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" . | fromYaml }}
+{{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $service) | fromYaml }}
+{{- if and $gatewayConfig.enabled (not .Values.global.chartContext.isBuiltIn) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: csghub-gateway
+spec:
+  controllerName: {{ $gatewayConfig.controllerName }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: listeners
+  namespace: {{ .Release.Namespace }}
+spec:
+  gatewayClassName: csghub-gateway
+  {{- if regexMatch "envoyproxy" .Values.global.gateway.controllerName }}
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: {{ include "common.names.custom" (list . "envoy-proxy-custom") }}
+  {{- end }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- if $gatewayConfig.tls.enabled }}
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ $gatewayConfig.tls.secretName }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
+{{- end }}

@@ -2,27 +2,45 @@
 ##  Global Configuration                                       ##
 #################################################################
 global:
-  ## Ingress configuration
-  ingress:
-    # className: "nginx"            # Ingress controller class name
-    domain: "example.com"           # Base domain for accessing csghub
-    useTop: false                   # Use top-level domain directly (true) or subdomain (false)
-    ## Custom default access domain instead of <release>.<domain>,
-    # host: ""                      # Prefix or full domain: "test" → test.example.com, "test.example.com" → test.example.com
-    # publicHost: ""                # Same with `host`, but for inference/finetune/space/mcp
-    ## TLS/SSL configuration
-    tls:
-      enabled: false                # Enable or disable TLS
-      # secretName: ""                # TLS secret name (if enabled)
-    ## Service configuration
+  ## Gateway configuration
+  gateway:
+    ## GatewayClass controller that will reconcile Gateway / HTTPRoute resources.
+    ## Choose the controller according to the Gateway implementation you use.
+    ## Examples:
+    ## - gateway.envoyproxy.io/gatewayclass-controller  (Envoy Gateway)
+    ## - istio.io/gateway-controller                    (Istio)
+    ## - io.cilium/gateway-controller                   (Cilium)
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+    ## Gateway service configuration
+    ## type: Service type (LoadBalancer or NodePort)
+    ## nodePorts: Optional NodePort mapping (if using NodePort)
     service:
-      type: &type "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      type: "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      nodePorts: {}
+        # http: 30080
+        # https: 30443
+        # gitssh: 30022
+
+    ## Base external domain used to expose CSGHub services
+    external:
+      domain: "csghub.example.com"  # e.g. csghub.example.com, example.com
+        # public: ""                  # Optional public access domain override.
+        # If empty, the domain will be derived automatically.
+        # NOTE: When base domain is a second-level domain (e.g. example.com),
+        # a subdomain (e.g. csghub.example.com) will be used internally
+        # to avoid overly broad wildcard routing such as *.example.com
+
+    ## TLS/SSL configuration for Gateway
+    tls:
+      enabled: false                # Enable TLS termination on the Gateway
+      # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
 
   ## Image management
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.15.1"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -48,15 +66,14 @@ externalUrl: "https://csghub.example.com"
 image:
   # registry: "docker.io"                    # Docker registry
   repository: "opencsghq/csghub-server"
-  tag: "v1.15.1"                           # Image version tag
+  tag: "v1.16.0"                           # Image version tag
   pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
   pullSecrets: []                          # Docker registry secrets
 
-## Ingress configuration
-ingress:
-  enabled: true                            # Enable or disable ingress
-  annotations: {}                          # Ingress-nginx annotations
-  tls: {}                                  # TLS settings for ingress
+## Gateway configuration
+gateway:
+  enabled: true                            # Enable or disable gateway
+  tls: {}                                  # TLS settings for gateway
     # enabled: false                       # Enable or disable TLS
     # secretName: ""                       # TLS secret name (if enabled)
 
@@ -238,34 +255,6 @@ affinity: {}
 #################################################################
 ## Do not modify it unless you know the purpose of the modification.
 
-## Ingress-nginx configuration
-ingress-nginx:
-  enabled: true                            # Enable NGINX Ingress Controller
-
-  controller:
-    progressDeadlineSeconds: 600           # Deployment progress deadline
-
-    ## Image configuration
-    image:
-      registry: "docker.io"
-      image: "opencsghq/ingress-nginx-controller"
-      digest: ""                           # Image digest (do not update)
-
-    ## Admission webhooks configuration
-    admissionWebhooks:
-      patch:
-        image:
-          registry: "docker.io"
-          image: "opencsghq/ingress-nginx-kube-webhook-certgen"
-          digest: ""                       # Image digest (do not update)
-
-    ## Service configuration
-    service:
-      type: *type                          # Service type
-      nodePorts:
-        http: 30080                        # HTTP node port
-        https: 30443                       # HTTPS node port
-
 ## Reloader configuration
 reloader:
   image:
@@ -275,8 +264,8 @@ reloader:
 prometheus:
   enabled: true                            # Enable Prometheus
 
-  ingress:
-    enabled: false                         # Enable Prometheus ingress
+  gateway:
+    enabled: false                         # Enable gateway for Prometheus
     basicAuth: {}                          # Basic authentication
       # username: "prometheus"
       # password: ""

@@ -3,11 +3,11 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "dataflow" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
-{{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
-{{- $mongoConfig := include "common.mongo.config" (dict "service" $service "global" .) | fromYaml }}
+{{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
+{{- $redisConfig := include "common.redis.config" (dict "ctx" . "service" $service) | fromYaml }}
+{{- $mongoConfig := include "common.mongo.config" (dict "ctx" . "service" $service) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

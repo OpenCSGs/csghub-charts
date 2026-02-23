@@ -7,7 +7,7 @@ APP VERSION: {{ .Chart.AppVersion }}
 ---
 
 🔗 CSGHub & 🔐 Casdoor & 🕓 Temporal Admin Console
-{{- $service := include "common.service" (dict "service" "casdoor" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . (printf "%s-init" $service.name)) }}
 {{- $existingSecret := lookup "v1" "Secret" .Release.Namespace $serviceName }}
 {{- $defaultUser := $service.admin.name | default "root" }}
@@ -34,7 +34,7 @@ Retrieve the root/admin password with:
     -o jsonpath='{.data.INIT_ADMIN_PASSWORD}' | base64 -d
 
 {{- if .Values.global.objectStore.enabled }}
-{{- $minioSvc := include "common.service" (dict "service" "minio" "global" .) | fromYaml }}
+{{- $minioSvc := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
 {{- $minioName := include "common.names.custom" (list . $minioSvc.name) }}
 ---
 
@@ -49,7 +49,7 @@ Credentials:
 {{- end }}
 
 {{- if .Values.global.registry.enabled }}
-{{- $registrySvc := include "common.service" (dict "service" "registry" "global" .) | fromYaml }}
+{{- $registrySvc := include "common.service" (dict "ctx" . "service" "registry") | fromYaml }}
 {{- $registryName := include "common.names.custom" (list . $registrySvc.name) }}
 {{- $endpointRegistry := include "common.endpoint.csghub" . | trimPrefix "http://" | trimPrefix "https://" }}
 ---

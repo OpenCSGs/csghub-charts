@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "billing" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "billing") | fromYaml }}
 {{- if ($service.enabled | default false) }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
-  {{- $webSvc:= include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+  {{- $webSvc:= include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
   {{- $webName := include "common.names.custom" (list . $webSvc.name) }}
   {{- $webPort := dig "service" "port" 8000 $webSvc }}
   config.sh: |

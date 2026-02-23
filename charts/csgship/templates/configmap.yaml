@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $servicePort := dig "service" "port" 8000 $service }}
 apiVersion: v1
@@ -31,7 +31,7 @@ data:
   CASDOOR_SECRET_KEY: {{ $casdoorClientSecret | quote }}
 
   ## Web Configuration for PostgreSQL
-  {{- $pgConfig := include "common.postgresql.config" (dict "service" $service "global" .) | fromYaml }}
+  {{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
   DATABASE_TYPE: "postgresql"
   DATABASE_HOST: {{ $pgConfig.host | quote }}
   DATABASE_PORT: {{ $pgConfig.port | quote }}
@@ -40,12 +40,12 @@ data:
   DATABASE_NAME: {{ $pgConfig.database | quote }}
 
   ## Web Configuration for Redis
-  {{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
+  {{- $redisConfig := include "common.redis.config" (dict "ctx" . "service" $service) | fromYaml }}
   REDIS_URL: {{ printf ":@%s" $redisConfig.host | quote }}
   REDIS_PORT: {{ $redisConfig.port | quote }}
 
   ## Web Configuration
-  {{- $webSvc:= include "common.service" (dict "service" "web" "global" .) | fromYaml }}
+  {{- $webSvc:= include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
   {{- $webName := include "common.names.custom" (list . $webSvc.name) }}
   {{- $webPort := dig "service" "port" 8000 $webSvc }}
   STARSHIP_WEB_URL: {{ include "common.endpoint.web" . | quote }}
@@ -58,7 +58,6 @@ data:
   ## Web Configuration for Accounting
   # ACCOUNTING_OP_MODE: "has_balance|consume"
   ACCOUNTING_OP_MODE: ""
-  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
   {{- $apiToken := dig "ACCOUNTING_API_KEY" (include "csghub.api.token" .) $data }}
   {{- if .Values.global.chartContext.isBuiltIn }}
   ACCOUNTING_API_BASE: {{ include "common.endpoint.csghub" . | quote }}
@@ -78,20 +77,20 @@ data:
   LANCEDB_URI: "/code/data/lancedb"
 
   ## Web Configuration for Billing
-  {{- $billingSvc := include "common.service" (dict "service" "billing" "global" .) | fromYaml }}
+  {{- $billingSvc := include "common.service" (dict "ctx" . "service" "billing") | fromYaml }}
   {{- $billingName := include "common.names.custom" (list . $billingSvc.name) }}
   {{- $billingPort := dig "service" "port" 8080 $billingSvc }}
   STARSHIP_BILLING_API_BASE: {{ printf "http://%s:%v" $billingName $billingPort | quote }}
   BILLING_SVC_API_BASE: {{ printf "http://%s:%v" $billingName $billingPort | quote }}
 
   ## Web Configuration for Agentic
-  {{- $agenticSvc := include "common.service" (dict "service" "agentic" "global" .) | fromYaml }}
+  {{- $agenticSvc := include "common.service" (dict "ctx" . "service" "agentic") | fromYaml }}
   {{- $agenticName := include "common.names.custom" (list . $agenticSvc.name) }}
   {{- $agenticPort := dig "service" "port" 8000 $agenticSvc }}
   AGENTIC_SVC_API_BASE: {{ printf "http://%s:%v" $agenticName $agenticPort | quote }}
 
   ## Web Configuration for Megalinter Server
-  {{- $megalinterSvc := include "common.service" (dict "service" "megalinter" "global" .) | fromYaml }}
+  {{- $megalinterSvc := include "common.service" (dict "ctx" . "service" "megalinter") | fromYaml }}
   {{- $megalinterName := include "common.names.custom" (list . $megalinterSvc.name) }}
   {{- $megalinterPort := dig "service" "port" 8000 $megalinterSvc }}
   MEGALINTER_SVC_API_BASE: {{ printf "http://%s:%v" $megalinterName $megalinterPort }}

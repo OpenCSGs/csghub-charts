@@ -6,10 +6,10 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      domain: "example.com"
-      host: ""
-      publicHost: ""
+    gateway:
+      external:
+        domain: "csghub.example.com"
+        public: ""
       tls:
         enabled: true
         secretName: "test-tls"
@@ -48,7 +48,7 @@ set:
   minio:
     name: "minio"
 tests:
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
     template: runner/configmap.yaml
     asserts:
       - equal:
@@ -95,7 +95,7 @@ tests:
           value: "csghub-docker-credential"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
-          value: "acr.io/opencsghq/git:2.36.2"
+          value: "acr.io/opencsghq/git:2.52.0"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
           value: "acr.io/opencsghq/kaniko-executor:v1.24.0"
@@ -139,7 +139,19 @@ tests:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "true"
 
-  - it: Should render configmap correctly
+  - it: Should render ConfigMap correctly
+    template: runner/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            public: "test.example.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "test.example.com"
+
+  - it: Should render ConfigMap correctly
     template: runner/configmap.yaml
     set:
       global:

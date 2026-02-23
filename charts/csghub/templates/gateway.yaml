@@ -1,0 +1,72 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $gateway := .Values.global.gateway }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: csghub-gateway
+spec:
+  controllerName: {{ $gateway.controllerName }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: listeners
+  namespace: {{ .Release.Namespace }}
+spec:
+  gatewayClassName: csghub-gateway
+  {{- if regexMatch "envoyproxy" .Values.global.gateway.controllerName }}
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: {{ include "common.names.custom" (list . "envoy-proxy-custom") }}
+  {{- end }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- if $gateway.tls.enabled }}
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ $gateway.tls.secretName }}
+          {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
+          {{- $casdoorGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $casdoorSvc) | fromYaml }}
+          {{- if ne $casdoorGatewayConfig.tls.secretName $gateway.tls.secretName }}
+          - kind: Secret
+            name: {{ $casdoorGatewayConfig.tls.secretName }}
+          {{- end }}
+          {{- $minioSvc := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
+          {{- $minioGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $minioSvc) | fromYaml }}
+          {{- if ne $minioGatewayConfig.tls.secretName $gateway.tls.secretName }}
+          - kind: Secret
+            name: {{ $minioGatewayConfig.tls.secretName }}
+          {{- end }}
+          {{- $portalSvc := include "common.service" (dict "ctx" . "service" "portal") | fromYaml }}
+          {{- $portalGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $portalSvc) | fromYaml }}
+          {{- if ne $portalGatewayConfig.tls.secretName $gateway.tls.secretName }}
+          - kind: Secret
+            name: {{ $portalGatewayConfig.tls.secretName }}
+          {{- end }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
+    {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
+    - name: gitssh
+      protocol: TCP
+      port: {{ dig "gitlabShell" "sshPort" 22 $serverSvc }}
+      allowedRoutes:
+        kinds:
+          - kind: TCPRoute

@@ -1,0 +1,113 @@
+suite: Test Dataflow Gateway
+templates:
+  - gateway.yaml
+  - envoy-proxy.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    gateway:
+      controllerName: "gateway.envoyproxy.io/gatewayclass-controller"
+      external:
+        domain: "csghub.example.cn"
+      tls:
+        enabled: true
+        secretName: "example-cn-tls"
+      service:
+        type: "NodePort"
+        nodePorts:
+          http: 30080
+          https: 30443
+          gitssh: 30022
+    image:
+      registry: "docker.io"
+  server:
+    gitlabShell:
+      sshPort: "22"
+tests:
+  - it: Should render gateway correctly
+    template: gateway.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.controllerName
+          value: "gateway.envoyproxy.io/gatewayclass-controller"
+
+  - it: Should render gateway correctly
+    template: gateway.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.listeners[1].protocol
+          value: "HTTPS"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "example-cn-tls"
+
+  - it: Should render gateway correctly
+    template: gateway.yaml
+    documentIndex: 1
+    set:
+      dataflow:
+        gateway:
+          tls:
+            secretName: "csghub-dataflow-tls"
+      labelStudio:
+        gateway:
+          tls:
+            secretName: "csghub-label-studio-tls"
+    asserts:
+      - equal:
+          path: spec.listeners[1].protocol
+          value: "HTTPS"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "example-cn-tls"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[1].name
+          value: "csghub-dataflow-tls"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[2].name
+          value: "csghub-label-studio-tls"
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    asserts:
+      - isKind:
+          of: "EnvoyProxy"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+
+  - it: Should render envoy-proxy correctly
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            nodePorts:
+              http: 30880
+              https: 30444
+              gitssh: 30222
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30880
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30444
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.36.4"

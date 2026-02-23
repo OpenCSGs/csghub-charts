@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "csgbot" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "service" "csgbot" "ctx" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -29,7 +29,7 @@ data:
     hub-base-url = {{ include "common.endpoint.csghub"  . | quote }}
     hub-admin-user-uuid = {{ $service.config.opencsg.hubAdminUserUuid | quote }}
     base-url = {{ include "common.endpoint.csghub" . | quote }}
-    starship-api-url = {{ printf "https://starship-api.%s:6443" .Values.global.ingress.domain | quote }}
+    starship-api-url = {{ printf "https://starship-api.%s:6443" .Values.global.gateway.domain | quote }}
     docs-dir = {{ $service.config.docsDir | quote }}
 
     [opencsg.mcp-urls]
@@ -45,14 +45,14 @@ data:
     requires-jwt = {{ $service.config.mcpProxyServersWebFetch.requiresJwt }}
 
     [aigateway]
-    base-url = {{ printf "https://aigateway.%s" .Values.global.ingress.domain | quote }}
+    base-url = {{ printf "https://aigateway.%s" .Values.global.gateway.domain | quote }}
     model-id = {{ $service.config.aigateway.modelId | quote }}
 
     [workflow]
-    base-url = {{ printf "https://workflow.%s" .Values.global.ingress.domain | quote }}
+    base-url = {{ printf "https://workflow.%s" .Values.global.gateway.domain | quote }}
 
     [langflow]
-    base-url = {{ printf "https://workflow.%s" .Values.global.ingress.domain | quote }}
+    base-url = {{ printf "https://workflow.%s" .Values.global.gateway.domain | quote }}
 
     [code-sandbox]
     image = {{ $service.config.codeSandbox.image | quote }}
@@ -105,10 +105,12 @@ data:
     executor = {{ $service.config.planner.executor | quote }}
     require-plan-confirmation = {{ $service.config.planner.requirePlanConfirmation }}
 
+
     [genius-sandbox]
     sandbox-image = {{ $service.config.geniusSandbox.sandboxImage | quote }}
     sandbox-service-url = {{ $service.config.geniusSandbox.sandboxServiceUrl | quote }}
     workspace-volume-prefix = {{ $service.config.geniusSandbox.workspaceVolumePrefix | quote }}
+
 
     [external-docs]
     enabled = {{ $service.config.externalDocs.enabled }}
@@ -117,7 +119,7 @@ data:
     "CSGHUB" = "{{ include "common.endpoint.csghub" . }}api/v1/swagger/doc.json"
 
 
-## AgenticHub Token Custom
+  ## AgenticHub Token Custom
   MODEL_API_KEY: {{ $service.environment.modelApiKey | quote }}
   OPENCSG_HUB_ACCESS_TOKEN: {{ $service.environment.hubAccessToken | quote }}
   WORKFLOW_ACCESS_TOKEN: {{ $service.environment.workflowAccessToken | quote }}

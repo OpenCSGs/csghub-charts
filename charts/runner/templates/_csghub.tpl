@@ -9,18 +9,14 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "common.domain.csghub" . }}
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
-{{- define "common.domain.csghub" -}}
-{{- $host := .Values.global.ingress.host }}
-{{- if $host }}
-  {{- if contains "." $host }}
-      {{- $host -}}
-  {{- else }}
-      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
+{{- define "common.domain.csghub" }}
+{{- $domain := "" }}
+{{- if hasKey .Values.global.gateway "external" }}
+  {{- if hasKey .Values.global.gateway.external "domain" }}
+    {{- $domain = .Values.global.gateway.external.domain }}
   {{- end }}
-{{- else }}
-  {{- $sub := ternary "" .Release.Name .Values.global.ingress.useTop }}
-  {{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
 {{- end }}
+{{- $domain -}}
 {{- end }}
 
 {{/*
@@ -29,25 +25,20 @@ SPDX-License-Identifier: APACHE-2.0
 # Usage: {{ include "common.domain.public" . }}
 # Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
-{{- define "common.domain.public" -}}
-{{- $publicHost := .Values.global.ingress.publicHost }}
-{{- $host := .Values.global.ingress.host }}
-{{- if $publicHost }}
-  {{- if contains "." $publicHost }}
-      {{- $publicHost -}}
-  {{- else }}
-      {{- include "common.domain" (dict "ctx" . "sub" $publicHost) -}}
-  {{- end }}
-{{- else if $host }}
-  {{- if contains "." $host }}
-      {{- $host -}}
-  {{- else }}
-      {{- include "common.domain" (dict "ctx" . "sub" $host) -}}
-  {{- end }}
-{{- else }}
-  {{- $sub := .Release.Name }}
-  {{- include "common.domain" (dict "ctx" . "sub" $sub) -}}
+{{- define "common.domain.public" }}
+{{- $publicDomainBase := include "common.domain.csghub" . }}
+{{- $publicDomain := $publicDomainBase }}
+{{- $publicDomainCustom := dig "external" "public" "" .Values.global.gateway }}
+
+{{- $parts := splitList "." $publicDomainBase }}
+{{- if le (len $parts) 2 }}
+  {{- $publicDomain = printf "csghub.%s" $publicDomainBase }}
 {{- end }}
+
+{{- if $publicDomainCustom }}
+  {{- $publicDomain = $publicDomainCustom }}
+{{- end }}
+{{- $publicDomain -}}
 {{- end }}
 
 {{/*
@@ -77,44 +68,44 @@ Usage:
 {{ include "csghub.api.token" . }}
 
 Parameters:
-- global: Global context (e.g., .)
+- ctx: Global context (e.g., .)
 
 Returns: Unique API token string that changes on every installation
 */}}
-{{- define "csghub.api.token" -}}
-  {{- $global := . -}}
+{{- define "csghub.api.token" }}
+  {{- $ctx := . }}
 
-  {{- /* Generate random seed for uniqueness across installations */ -}}
-  {{- $seed := now | date "200601021504" -}}
+  {{- /* Generate random seed for uniqueness across installations */}}
+  {{- $seed := now | date "200601021504" }}
 
-  {{- /* Create unique hashes combining release info with random seed */ -}}
-  {{- $namespaceHash := (printf "%s-%s" $global.Release.Namespace $seed | sha256sum) -}}
-  {{- $nameHash := (printf "%s-%s" $global.Release.Name $seed | sha256sum) -}}
+  {{- /* Create unique hashes combining release info with random seed */}}
+  {{- $namespaceHash := (printf "%s-%s" $ctx.Release.Namespace $seed | sha256sum) }}
+  {{- $nameHash := (printf "%s-%s" $ctx.Release.Name $seed | sha256sum) }}
 
-  {{- /* Combine hashes to form final token */ -}}
-  {{- printf "%s%s" $namespaceHash $nameHash -}}
-{{- end -}}
+  {{- /* Combine hashes to form final token */}}
+  {{- printf "%s%s" $namespaceHash $nameHash }}
+{{- end }}
 
 {{/*
 Resolve service image with proper tag
 Usage:
-  {{ include "csghub.service.image" (dict "service" .Values.rproxy "context" .) }}
+  {{ include "csghub.service.image" (dict "ctx" . "service" .Values.rproxy) }}
 */}}
-{{- define "csghub.service.image" -}}
-{{- $service := .service -}}
-{{- $context := .context -}}
+{{- define "csghub.service.image" }}
+{{- $service := .service }}
+{{- $ctx := .ctx }}
 
-{{- $baseImage := deepCopy (default (dict) $context.Values.image) -}}
-{{- $serviceImage := deepCopy (default (dict) $service.image) -}}
+{{- $baseImage := deepCopy (default (dict) $ctx.Values.image) }}
+{{- $serviceImage := deepCopy (default (dict) $service.image) }}
 
-{{- $tag := or (dig "image" "tag" "" $service) $baseImage.tag $context.Values.global.image.tag -}}
-{{- $finalTag := include "common.image.tag" (dict "tag" $tag "context" $context) -}}
+{{- $tag := or (dig "image" "tag" "" $service) $baseImage.tag $ctx.Values.global.image.tag }}
+{{- $finalTag := include "common.image.tag" (dict "ctx" $ctx "tag" $tag) }}
 
-{{- $mergedImage := mergeOverwrite $baseImage $serviceImage -}}
-{{- $_ := set $mergedImage "tag" $finalTag -}}
+{{- $mergedImage := mergeOverwrite $baseImage $serviceImage }}
+{{- $_ := set $mergedImage "tag" $finalTag }}
 
 {{- $mergedImage | toYaml -}}
-{{- end -}}
+{{- end }}
 
 {{- /*
 # CSGHub Server Readiness Check Template
@@ -128,9 +119,9 @@ Usage:
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-server" }}
-{{- $service := include "common.service" (dict "service" "server" "global" .) | fromYaml -}}
-{{- $serviceName := include "common.names.custom" (list . $service.name) -}}
-{{- $serverPort := dig "service" "port" 8080 $service | toString -}}
+{{- $service := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $serverPort := dig "service" "port" 8080 $service | toString }}
 - name: wait-for-server
   image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
   imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}

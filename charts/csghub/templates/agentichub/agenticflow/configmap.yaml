@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "agenticflow" "global" .) | fromYaml }}
+{{- $service := include "common.service" (dict "service" "agenticflow" "ctx" .) | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -31,7 +31,7 @@ data:
   CSGHUB_API_ACCESS_TOKEN: {{ $apiToken | quote }}
 
   ## AgenticHub Configuration for Redis
-  {{- $redisConfig := include "common.redis.config" (dict "service" $service "global" .) | fromYaml }}
+  {{- $redisConfig := include "common.redis.config" (dict "service" $service "ctx" .) | fromYaml }}
   {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $redisConfig.password) }}
   CSG_REDIS_URL: {{ printf "redis://%s:%s@%s:%v/%v" $redisConfig.user $redisConfig.password
   $redisConfig.host $redisConfig.port $redisConfig.database }}
@@ -48,8 +48,8 @@ data:
   OPENROUTER_API_KEY: "${OPENROUTER_API_KEY}"
 
   ## AgenticHub Configuration for Langflow
-  LANGFLOW_DATABASE_URL: {{ include "csghub.postgresql.dsn" (dict "service" $service "global" .) | quote }}
-  LANGFLOW_COOKIE_DOMAIN: {{ printf ".%s" .Values.global.ingress.domain }}
+  LANGFLOW_DATABASE_URL: {{ include "csghub.postgresql.dsn" (dict "service" $service "ctx" .) | quote }}
+  LANGFLOW_COOKIE_DOMAIN: {{ printf ".%s" .Values.global.gateway.domain }}
   LANGFLOW_ACCESS_HTTPONLY: "false"
   LANGFLOW_REFRESH_HTTPONLY: "false"
   LANGFLOW_WORKERS: "6"

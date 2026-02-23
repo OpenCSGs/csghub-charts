@@ -6,10 +6,9 @@ release:
   namespace: csghub
 set:
   global:
-    ingress:
-      domain: "example.com"
-      host: ""
-      publicHost: ""
+    gateway:
+      external:
+        domain: "csghub.example.com"
       tls:
         enabled: true
         secretName: "test-tls"
@@ -103,7 +102,7 @@ tests:
           value: "csghub-docker-credential"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
-          value: "acr.io/opencsghq/git:2.36.2"
+          value: "acr.io/opencsghq/git:2.52.0"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
           value: "acr.io/opencsghq/kaniko-executor:v1.24.0"
@@ -122,6 +121,9 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
           value: "model.io"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE
+          value: "acr.io"
       - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
           value: "minio"
@@ -175,8 +177,9 @@ tests:
     template: configmap.yaml
     set:
       global:
-        ingress:
-          host: "public"
+        gateway:
+          external:
+            domain: "public.example.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
@@ -186,8 +189,9 @@ tests:
     template: configmap.yaml
     set:
       global:
-        ingress:
-          host: "spaces.example.com"
+        gateway:
+          external:
+            domain: "spaces.example.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
@@ -197,9 +201,10 @@ tests:
     template: configmap.yaml
     set:
       global:
-        ingress:
-          host: "spaces.example.com"
-          publicHost: "public.space.com"
+        gateway:
+          external:
+            domain: "spaces.example.com"
+            public: "public.space.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN

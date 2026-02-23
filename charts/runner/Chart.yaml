@@ -20,23 +20,19 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.15.1
+version: 1.16.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: v1.15.1
+appVersion: v1.16.0
 
 # Defined dependencies for subChart
 dependencies:
   - name: common
-    version: 0.1.6
+    version: 0.2.0
     repository: https://charts.opencsg.com/csghub
-  - name: ingress-nginx
-    version: 4.14.1
-    repository: file://charts/ingress-nginx
-    condition: ingress-nginx.enabled
   - name: reloader
     version: 2.2.7
     repository: file://charts/reloader
@@ -45,3 +41,8 @@ dependencies:
     version: 28.6.0
     repository: file://charts/prometheus
     condition: prometheus.enabled
+  - name: gateway-helm
+    alias: envoy
+    version: 1.6.3
+    repository: file://charts/gateway-helm
+    condition: envoy.enabled
