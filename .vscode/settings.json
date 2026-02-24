@@ -1,6 +1,0 @@
-{
-    "yaml.schemas": {
-        "https://www.schemastore.org/chart.json": "file:///Users/luke/Desktop/Workspace/csghub-charts/charts/csghub/templates/agentichub/csgbot/configmap%20copy.yaml"
-    },
-      "yaml.validate": false
-}
