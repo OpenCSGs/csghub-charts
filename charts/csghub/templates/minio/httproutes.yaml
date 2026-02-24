@@ -41,6 +41,8 @@ spec:
       backendRefs:
         - name: {{ $serviceName }}
           port: {{ dig "service" "port" 9000 $service }}
+      timeouts:
+        request: 30m
     {{- if $service.console.enabled }}
     - matches:
         - path:
