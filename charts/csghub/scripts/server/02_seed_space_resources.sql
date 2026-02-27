@@ -78,3 +78,30 @@ CREATE TRIGGER trg_update_space_resources
 --
 SELECT pg_catalog.setval('public.space_resources_id_seq', (
     SELECT MAX(id) FROM public.space_resources), TRUE);
+
+--
+-- Refresh Database Collation Version
+--
+-- Purpose:
+--   Synchronize the database collation version with the underlying OS / libc version.
+--
+-- Background:
+--   When upgrading PostgreSQL major versions (e.g. 15 → 16) or when the OS glibc
+--   version changes, PostgreSQL may detect a collation version mismatch and emit:
+--     "database collation version mismatch"
+--
+--   This command updates the recorded collation version in pg_database to match
+--   the current system collation provider version.
+--
+-- Notes:
+--   1. Should be executed after confirming that indexes depending on collation
+--      are still valid.
+--   2. If PostgreSQL reports that indexes must be rebuilt, run REINDEX DATABASE
+--      before or after this command as required.
+--   3. Requires database owner or superuser privileges.
+--
+-- Applicable Scenario:
+--   Used after pg_upgrade or system library upgrades.
+--
+
+ALTER DATABASE csghub_server REFRESH COLLATION VERSION;
