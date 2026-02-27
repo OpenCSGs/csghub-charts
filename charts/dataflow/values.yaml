@@ -190,7 +190,7 @@ postgresql:
   image:
     registry: "docker.io"
     repository: "opencsghq/postgres"
-    tag: "15.10"                             # Image version tag
+    tag: "15.17"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
