@@ -310,6 +310,20 @@ wait_for_pod_ready() {
   run_cmd "kubectl wait --for=condition=Ready pod -n $ns -l '$label_selector,!job-name' --timeout=${timeout}s"
 }
 
+wait_for_job_completed() {
+  local ns=$1
+  local label_selector=$2
+  local timeout=${3:-$TIMEOUT}
+
+  if [[ -z "$label_selector" ]]; then
+    log ERRO "wait_for_job_completed requires a label selector (namespace: $ns)"
+    return 1
+  fi
+
+  log INFO "Waiting for job in namespace $ns with label [$label_selector] to be Completed..."
+  run_cmd "kubectl wait --for=condition=complete job -n $ns -l '$label_selector' --timeout=${timeout}s"
+}
+
 ################################################################################
 # Detect OS and install dependencies (dry-run aware)
 ################################################################################
@@ -774,7 +788,7 @@ ON CONFLICT(name)
 DO NOTHING;
 EOF"
     else
-      wait_for_pod_ready csghub app.kubernetes.io/service=server 60
+      wait_for_job_completed csghub app.kubernetes.io/service=server 60
       run_cmd "kubectl exec -i csghub-postgresql-0 -n csghub -c postgresql -- psql -U csghub -d csghub_server <<EOF
 INSERT INTO space_resources(name, resources, cluster_id)
 SELECT REPLACE(name, '4090', '$GPU_NAME'),
