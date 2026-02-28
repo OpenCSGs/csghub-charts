@@ -84,6 +84,7 @@ spec:
                   -v admin_client_secret="'$ADMIN_CLIENT_SECRET'" \
                   -v csgship_client_id="'$CSGSHIP_CLIENT_ID'" \
                   -v csgship_client_secret="'$CSGSHIP_CLIENT_SECRET'" \
+                  -v ON_ERROR_STOP=1 \
                   -f $$sql_file;
               done
           envFrom:
