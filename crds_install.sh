@@ -23,7 +23,7 @@ CRD_FILES=(
 apply_crd() {
   local file="$1"
   local url="${BASE_REPO_URL}${file}"
-  echo "⬇️  Applying CRD: ${file}"
+  echo "⬇️ Applying CRD: ${file}"
 
 
 

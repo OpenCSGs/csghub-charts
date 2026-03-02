@@ -797,7 +797,10 @@ SELECT REPLACE(name, '4090', '$GPU_NAME'),
 FROM space_resources
 WHERE name ~ '4090'
 ON CONFLICT(name)
-DO NOTHING;
+DO UPDATE SET
+  cluster_id = EXCLUDED.cluster_id,
+  updated_at = NOW()
+WHERE space_resources.cluster_id != EXCLUDED.cluster_id;
 EOF"
       log INFO "GPU resource for CSGHub initialized."
     fi
