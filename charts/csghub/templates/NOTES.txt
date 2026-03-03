@@ -39,7 +39,7 @@ Retrieve the root/admin password with:
 ---
 
 💾 Minio Console
-Address: {{ include "common.endpoint.minio" . }}/console/
+Address: {{ include "common.endpoint.minio" . }}/console
 Credentials:
   kubectl get secret -n {{ .Release.Namespace }} {{ $minioName }} \
     -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && \
@@ -78,6 +78,13 @@ Example:
 *Note: Not recommended for production use.*
 {{- end }}
 
+{{- $promeSvc := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}
+{{- if $promeSvc.gateway.enabled }}
+---
+
+🔥 Prometheus Graph
+Address: {{ include "common.endpoint.prometheus" . }}/graph
+{{- end }}
 ---
 
 📘 More info:
