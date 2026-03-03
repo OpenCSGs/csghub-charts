@@ -40,7 +40,7 @@ spec:
               - {{ include "common.endpoint.csghub" . | quote }}
             allowCredentials: true
       backendRefs:
-        - name: {{ $serviceName }}
+        - name: {{ printf "%s-server" $serviceName }}
           port: {{ dig "service" "port" 80 $service }}
       timeouts:
         request: 60s
