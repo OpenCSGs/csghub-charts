@@ -43,9 +43,15 @@ uploads:
   image: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsg_public/helmpack/chart-testing:v3.13.0
   script:
     - |
-      curl -f -u ${CHART_USER}:${CHART_PASSWORD} \
-        --upload-file quick_install.sh \
-        https://charts.opencsg.com/repository/scripts/
+      echo "📤 Uploading script files..."
+      for file in quick_install.sh crds_install.sh; do
+        if [ -f "$file" ]; then
+          echo "→ Uploading $file"
+          curl -f -u ${CHART_USER}:${CHART_PASSWORD} \
+            --upload-file "$file" \
+            https://charts.opencsg.com/repository/scripts/
+        fi
+      done
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
