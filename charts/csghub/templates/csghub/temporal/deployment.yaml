@@ -85,8 +85,10 @@ spec:
           resources:
             {{- toYaml $service.resources | nindent 12 }}
           {{- end }}
-          {{- if $service.volumeMounts }}
           volumeMounts:
+            - name: jwt-token-cert
+              mountPath: /starhub-bin/casdoor
+          {{- if $service.volumeMounts }}
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
           {{- if $service.livenessProbe }}
@@ -115,8 +117,13 @@ spec:
           {{- if $service.tty }}
           tty: {{ $service.tty }}
           {{- end }}
-      {{- if $service.volumes }}
       volumes:
+        {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
+        - name: jwt-token-cert
+          secret:
+            {{- $casdoorCert := printf "%s-certs" $casdoorSvc.name }}
+            secretName: {{ include "common.names.custom" (list . $casdoorCert) }}
+      {{- if $service.volumes }}
         {{- toYaml $service.volumes | nindent 8 }}
       {{- end }}
       {{- if $service.nodeSelector }}
