@@ -1,0 +1,22 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob "html/*.html" }}
+{{- $filename := base $path }}
+{{- $name := trimSuffix ".html" $filename }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.names.custom" (list $currentScope (printf "custom-error-%s" $name)) }}
+  namespace: {{ $currentScope.Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: "custom-error-pages"
+    {{- include "common.labels" $currentScope | nindent 4 }}
+data:
+  {{ $filename }}: |
+{{ $currentScope.Files.Get $path | indent 4 }}
+---
+{{- end }}
