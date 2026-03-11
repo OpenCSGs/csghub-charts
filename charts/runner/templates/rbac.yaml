@@ -15,6 +15,31 @@ metadata:
   name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
 ---
+##
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $serviceName }}-watch-config
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $serviceName }}-watch-config
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $serviceName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ $serviceName }}-watch-config
+  apiGroup: rbac.authorization.k8s.io
+---
 ## --- Resourcequota and namespace management permissions for spaces namespace ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -30,7 +55,7 @@ rules:
     resourceNames: [{{ $spaceNamespace | quote }}]
     verbs: ["get", "list", "watch", "update", "patch"]
   - apiGroups: ["", "apps", "serving.knative.dev", "argoproj.io"]
-    resources: ["pods", "pods/log", "services", "deployments", "configmaps", "workflows", "workflowtemplates"]
+    resources: ["pods", "pods/log", "services", "deployments", "configmaps", "workflows", "workflowtemplates", "revisions"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
