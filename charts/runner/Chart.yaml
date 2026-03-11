@@ -51,3 +51,8 @@ dependencies:
     version: 0.47.4
     repository: file://charts/argo-workflows
     condition: argo.enabled
+  - name: knative-operator
+    alias: knative
+    version: 1.21.1
+    repository: file://charts/knative-operator
+    condition: knative.enabled

@@ -14,5 +14,8 @@ dependencies:
 - name: argo-workflows
   repository: file://charts/argo-workflows
   version: 0.47.4
-digest: sha256:a5f31302bd4a945a8afa16df672c1259ee7a632c1b8a2147f05606871f5da0da
-generated: "2026-03-10T17:36:33.065364+08:00"
+- name: knative-operator
+  repository: file://charts/knative-operator
+  version: 1.21.1
+digest: sha256:2a878013b14f5f83d35c25f427bd0f1551ea79086769f495878b3409f9373194
+generated: "2026-03-11T11:12:54.893714+08:00"
