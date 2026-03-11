@@ -1,0 +1,71 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" . | fromYaml }}
+{{- if $service.rbac.create }}
+{{- $argoWorkflowSA := printf "%s-argo-workflow-executor" .Release.Name }}
+{{- $argoWorkflowRoleAddOn := printf "%s-addon" $argoWorkflowSA }}
+{{- $spaceNamespace := include "namespace.spaces" . }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $argoWorkflowSA }}
+  namespace: {{ $spaceNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "pods/exec"]
+    verbs: ["create", "delete", "get", "list", "patch", "watch"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows", "workflowtaskresults", "workflowtemplates", "cronworkflows"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "secrets"]
+    verbs: ["create", "delete", "get", "list", "patch", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $argoWorkflowSA }}
+  namespace: {{ $spaceNamespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $argoWorkflowSA }}
+  namespace: {{ $spaceNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $argoWorkflowSA }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $argoWorkflowSA }}
+    namespace: {{ $spaceNamespace }}
+---
+# Add additional RBAC permissions to the argo workflow controller
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $argoWorkflowRoleAddOn }}
+  namespace: {{ $spaceNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $argoWorkflowRoleAddOn }}
+  namespace: {{ $spaceNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $argoWorkflowRoleAddOn }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ printf "%s-argo-workflows-workflow-controller" .Release.Name }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

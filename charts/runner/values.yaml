@@ -105,7 +105,7 @@ interval: 60                           # Communication interval with server (sec
 
 ## Namespace management
 namespace: "spaces"                    # Namespace for user-deployed workloads
-autoConfigure: true                    # Automatically install knative/argo/lws
+autoConfigure: false                   # Automatically install knative/argo/lws
 kymlMode: create                       # Kubernetes resource: create, update, replace
 mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
@@ -151,7 +151,7 @@ knative:
 ## RBAC Configuration
 rbac:
   create: true                         # Create SA, Role, RoleBinding, ClusterRole, ClusterRoleBinding
-  serviceAccountName: "runner-admin"   # serviceAccountName created by rbac
+  serviceAccountName: "csghub-runner"   # serviceAccountName created by rbac
 
 ## Logcollector Configuration
 logcollector:

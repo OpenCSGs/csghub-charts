@@ -11,5 +11,8 @@ dependencies:
 - name: gateway-helm
   repository: file://charts/gateway-helm
   version: v1.6.3
-digest: sha256:c809063c8c21fa64a7cc460c42009893603e41412715718226fd41a8adcd6437
-generated: "2026-02-05T12:15:43.091101+08:00"
+- name: argo-workflows
+  repository: file://charts/argo-workflows
+  version: 0.47.4
+digest: sha256:a5f31302bd4a945a8afa16df672c1259ee7a632c1b8a2147f05606871f5da0da
+generated: "2026-03-10T17:36:33.065364+08:00"

@@ -1,0 +1,16 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if or .Values.resourceQuota.enabled (eq .Values.global.edition "saas") }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ include "common.names.custom" (list . "gpu-quota") }}
+  namespace: {{ include "namespace.spaces" . }}
+spec:
+  hard:
+    requests.nvidia.com/gpu: "2"
+    limits.nvidia.com/gpu: "2"
+{{- end }}

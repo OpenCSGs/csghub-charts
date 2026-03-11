@@ -46,3 +46,8 @@ dependencies:
     version: 1.6.3
     repository: file://charts/gateway-helm
     condition: envoy.enabled
+  - name: argo-workflows
+    alias: argo
+    version: 0.47.4
+    repository: file://charts/argo-workflows
+    condition: argo.enabled
