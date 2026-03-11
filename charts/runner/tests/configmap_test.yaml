@@ -37,6 +37,7 @@ set:
   knative:
     serving:
       domain: "example.com"
+  applicationEndpoint: "http://kourier.knative-serving.svc.cluster.local"
   logcollector:
     loki:
       address: "https://loki.example.cn"
@@ -150,7 +151,7 @@ tests:
           value: "false"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
-          value: "auto"
+          value: "http://kourier.knative-serving.svc.cluster.local"
 
   - it: Should render configmap correctly
     template: configmap.yaml
