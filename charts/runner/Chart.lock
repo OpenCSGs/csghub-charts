@@ -14,5 +14,11 @@ dependencies:
 - name: lws
   repository: file://charts/lws
   version: v0.6.1
-digest: sha256:2a9dc2f655509f3abc3dfb5fff07f2e97d7d3e7d774142bd27bd2ddf699a2b4d
-generated: "2026-03-12T16:39:01.462243+08:00"
+- name: argo-workflows
+  repository: file://charts/argo-workflows
+  version: 0.47.4
+- name: knative-operator
+  repository: file://charts/knative-operator
+  version: 1.21.1
+digest: sha256:2a878013b14f5f83d35c25f427bd0f1551ea79086769f495878b3409f9373194
+generated: "2026-03-11T11:12:54.893714+08:00"

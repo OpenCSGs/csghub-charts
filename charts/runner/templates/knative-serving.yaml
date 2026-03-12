@@ -1,0 +1,58 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" . | fromYaml }}
+{{- $spaceName := include "namespace.knative" . }}
+{{- $spaceExists := lookup "v1" "Namespace" "" $spaceName }}
+{{- if not $spaceExists }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $spaceName }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+---
+{{- end }}
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: {{ $spaceName }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  version: "1.21"
+  # https://knative.dev/docs/install/operator/configuring-serving-cr/#configuring-the-knative-serving-operator-custom-resource
+  {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
+  {{- $knativeRegistry := printf "%s/opencsghq/knative-releases/knative.dev" .Values.global.image.registry }}
+  registry:
+    override:
+      activator: {{ $knativeRegistry }}/serving/cmd/activator:v1.21.1
+      autoscaler: {{ $knativeRegistry }}/serving/cmd/autoscaler:v1.21.1
+      controller: {{ $knativeRegistry }}/serving/cmd/controller:v1.21.1
+      webhook: {{ $knativeRegistry }}/serving/cmd/webhook:v1.21.1
+      autoscaler-hpa: {{ $knativeRegistry }}/serving/cmd/autoscaler-hpa:v1.21.1
+      cleanup: {{ $knativeRegistry }}/serving/pkg/cleanup/cmd/cleanup:v1.21.1
+      migrate: {{ $knativeRegistry }}/pkg/apiextensions/storageversion/cmd/migrate:v1.21.1
+      net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:v1.21.0
+      3scale-kourier-gateway/kourier-gateway: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:v1.36-latest
+      queue-proxy: {{ $knativeRegistry }}/serving/cmd/queue:1.21.1
+  {{- end }}
+  ingress:
+    kourier:
+      enabled: true
+  config:
+    domain:
+      {{ $service.knative.serving.domain }}: ""
+    autoscaler:
+      enable-scale-to-zero: {{ $service.knative.serving.enableScaleToZero | quote }}
+      max-scale: "20"
+    network:
+      ingress-class: kourier.ingress.networking.knative.dev
+    deployment:
+      {{- $globalRegistry := .Values.global.image.registry | default "" }}
+      {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}
+      {{- $registryList := list (include "common.domain.csghub" .) $privateRegistry $globalRegistry }}
+      registries-skipping-tag-resolving: {{ join "," $registryList | trimSuffix "," | quote }}

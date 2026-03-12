@@ -13,7 +13,7 @@ tests:
       rbac.create: true
     asserts:
       - hasDocuments:
-          count: 14
+          count: 8
       - exists:
           path: metadata
           docSelector:
@@ -34,7 +34,7 @@ tests:
       rbac.create: true
     asserts:
       - hasDocuments:
-          count: 12
+          count: 6
 
   - it: should create multiple rbac with autoConfigure = true and global.namespace = Release.Namespace
     set:
@@ -43,7 +43,7 @@ tests:
       rbac.create: true
     asserts:
       - hasDocuments:
-          count: 14
+          count: 6
       - exists:
           path: metadata
           docSelector:

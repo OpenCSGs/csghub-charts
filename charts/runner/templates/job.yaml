@@ -6,6 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $runnerSvc := include "common.service" . | fromYaml }}
 {{- $service := mergeOverwrite (deepCopy $runnerSvc) (dict "name" "auto-configure") }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if $service.autoConfigure }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -145,3 +146,4 @@ spec:
       {{- if $service.subdomain }}
       subdomain: {{ $service.subdomain }}
       {{- end }}
+{{- end }}

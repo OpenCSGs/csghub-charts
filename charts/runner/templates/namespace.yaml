@@ -6,7 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" . | fromYaml }}
 {{- $spaceName := include "namespace.spaces" . }}
 {{- $spaceExists := lookup "v1" "Namespace" "" $spaceName }}
-{{- if and (not $spaceExists) $service.autoConfigure }}
+{{- if not $spaceExists }}
 apiVersion: v1
 kind: Namespace
 metadata:
