@@ -44,7 +44,7 @@ uploads:
   script:
     - |
       echo "📤 Uploading script files..."
-      for file in quick_install.sh crds_install.sh; do
+      for file in scripts/*.sh; do
         if [ -f "$file" ]; then
           echo "→ Uploading $file"
           curl -f -u ${CHART_USER}:${CHART_PASSWORD} \
