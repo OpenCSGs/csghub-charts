@@ -140,7 +140,9 @@ knative:
     domain: "example.com"              # Domain suffix for Knative services
 
     ## Enable ksvc scale pod to 0 (stop space/inference/finetune/... instance)
-    enableScaleToZero: true
+    autoscaler:
+      enableScaleToZero: true
+      scaleToZeroGracePeriod: "60m"
 
     ## Deprecated configuration (for backward compatibility)
     services: []
