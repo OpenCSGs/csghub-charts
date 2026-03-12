@@ -141,6 +141,9 @@ knative:
   serving:
     domain: "example.com"              # Domain suffix for Knative services
 
+    ## Enable ksvc scale pod to 0 (stop space/inference/finetune/... instance)
+    enableScaleToZero: true
+
     ## Deprecated configuration (for backward compatibility)
     services: []
       # - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
