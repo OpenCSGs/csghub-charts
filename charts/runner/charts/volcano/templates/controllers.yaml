@@ -1,0 +1,262 @@
+{{- if .Values.custom.controller_enable }}
+{{ $controller_affinity := or .Values.custom.controller_affinity .Values.custom.default_affinity }}
+{{ $controller_tolerations := or .Values.custom.controller_tolerations .Values.custom.default_tolerations }}
+{{ $controller_sc := or .Values.custom.controller_sc .Values.custom.default_sc }}
+{{ $controller_main_csc := or .Values.custom.controller_main_csc .Values.custom.default_csc }}
+{{ $controller_ns := or .Values.custom.controller_ns .Values.custom.default_ns }}
+{{ $scheduler_name := .Values.custom.scheduler_name }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-controllers
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.custom.common_labels }}
+  labels:
+    {{- toYaml .Values.custom.common_labels | nindent 4 }}
+  {{- end }}
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-controllers
+  {{- if .Values.custom.common_labels }}
+  labels:
+    {{- toYaml .Values.custom.common_labels | nindent 4 }}
+  {{- end }}
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  - apiGroups: ["batch.volcano.sh"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "update", "delete"]
+  - apiGroups: ["batch.volcano.sh"]
+    resources: ["jobs/status", "jobs/finalizers"]
+    verbs: ["update", "patch"]
+  - apiGroups: ["batch.volcano.sh"]
+    resources: ["cronjobs"]
+    verbs: ["create", "get", "list", "watch", "update", "delete"]
+  - apiGroups: ["batch.volcano.sh"]
+    resources: ["cronjobs/status", "cronjobs/finalizers"]
+    verbs: ["update", "patch"]
+  - apiGroups: ["bus.volcano.sh"]
+    resources: ["commands"]
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create", "get", "list", "watch", "delete", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["pods/finalizers"]
+    verbs: ["update", "patch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "delete", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "delete", "update"]
+  - apiGroups: ["scheduling.incubator.k8s.io", "scheduling.volcano.sh"]
+    resources: ["podgroups", "queues", "queues/status"]
+    verbs: ["get", "list", "watch", "create", "delete", "update", "patch"]
+  - apiGroups: ["flow.volcano.sh"]
+    resources: ["jobflows", "jobtemplates"]
+    verbs: ["get", "list", "watch", "create", "delete", "update"]
+  - apiGroups: [ "flow.volcano.sh" ]
+    resources: [ "jobflows/status", "jobs/finalizers","jobtemplates/status", "jobtemplates/finalizers" ]
+    verbs: [ "update", "patch" ]
+  - apiGroups: ["scheduling.k8s.io"]
+    resources: ["priorityclasses"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "create", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["daemonsets"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "create", "update", "watch"]
+  - apiGroups: ["topology.volcano.sh"]
+    resources: ["hypernodes", "hypernodes/status"]
+    verbs: ["list", "watch", "get", "create", "delete", "update", "patch"]
+  - apiGroups: [ "" ]
+    resources: [ "nodes" ]
+    verbs: [ "list", "watch" ]
+  - apiGroups: ["shard.volcano.sh"]
+    resources: ["nodeshards", "nodeshards/status"]
+    verbs: ["list", "watch", "get", "create", "delete", "update", "patch"]
+  - apiGroups: ["config.volcano.sh"]
+    resources: ["colocationconfigurations"]
+    verbs: ["get", "list", "watch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-controllers-role
+  {{- if .Values.custom.common_labels }}
+  labels:
+    {{- toYaml .Values.custom.common_labels | nindent 4 }}
+  {{- end }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-controllers
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Release.Name }}-controllers
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Release.Name }}-controllers
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: volcano-controller
+    {{- if or (.Values.custom.controller_labels) (.Values.custom.common_labels) }}
+    {{- mustMerge (.Values.custom.controller_labels | default (dict)) (.Values.custom.common_labels | default (dict)) | toYaml | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.custom.controller_replicas }}
+  selector:
+    matchLabels:
+      app: volcano-controller
+  template:
+    metadata:
+      labels:
+        app: volcano-controller
+        {{- if or (.Values.custom.controller_podLabels) (.Values.custom.common_labels) }}
+        {{- mustMerge (.Values.custom.controller_podLabels | default (dict)) (.Values.custom.common_labels | default (dict)) | toYaml | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if $controller_tolerations }}
+      tolerations: {{- toYaml $controller_tolerations | nindent 8 }}
+      {{- end }}
+      {{- if $controller_ns }}
+      nodeSelector: {{- toYaml $controller_ns | nindent 8 }}
+      {{- end }}
+      {{- if $controller_affinity }}
+      affinity:
+        {{- toYaml $controller_affinity | nindent 8 }}
+      {{- end }}
+      {{- if $controller_sc }}
+      securityContext:
+        {{- toYaml $controller_sc | nindent 8 }}
+      {{- end }}
+      serviceAccount: {{ .Release.Name }}-controllers
+      priorityClassName: system-cluster-critical
+      {{- if .Values.basic.image_pull_secret }}
+      imagePullSecrets:
+        - name: {{ .Values.basic.image_pull_secret }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-controllers
+            {{- if .Values.custom.controller_resources }}
+          resources:
+            {{- toYaml .Values.custom.controller_resources | nindent 14 }}
+            {{- end }}
+          image: {{ .Values.basic.image_registry }}/{{.Values.basic.controller_image_name}}:{{.Values.basic.image_tag_version}}
+          args:
+            - --logtostderr
+            - --enable-healthz=true
+              {{- if .Values.custom.controller_metrics_enable }}
+            - --enable-metrics=true
+              {{- end }}
+            - --leader-elect={{ .Values.custom.leader_elect_enable }}
+              {{- if $scheduler_name }}
+            - --scheduler-name={{- $scheduler_name }}
+              {{- end }}
+              {{- if .Values.custom.leader_elect_enable }}
+            - --leader-elect-resource-namespace={{ .Release.Namespace }}
+              {{- end }}
+              {{- if .Values.custom.controller_kube_api_qps }}
+            - --kube-api-qps={{.Values.custom.controller_kube_api_qps}}
+              {{- end }}
+              {{- if .Values.custom.controller_kube_api_burst }}
+            - --kube-api-burst={{.Values.custom.controller_kube_api_burst}}
+              {{- end }}
+              {{- if .Values.custom.controller_worker_threads }}
+            - --worker-threads={{.Values.custom.controller_worker_threads}}
+              {{- end }}
+              {{- if .Values.custom.controller_worker_threads_for_gc }}
+            - --worker-threads-for-gc={{.Values.custom.controller_worker_threads_for_gc}}
+              {{- end }}
+              {{- if .Values.custom.controller_worker_threads_for_podgroup }}
+            - --worker-threads-for-podgroup={{.Values.custom.controller_worker_threads_for_podgroup}}
+              {{- end }}
+            - -v={{.Values.custom.controller_log_level}}
+            - 2>&1
+          imagePullPolicy: {{ .Values.basic.image_pull_policy }}
+            {{- if $controller_main_csc }}
+          securityContext:
+              {{- toYaml $controller_main_csc | nindent 14 }}
+            {{- end }}
+          env:
+          - name: KUBE_POD_NAMESPACE
+            value: {{ .Release.Namespace }}
+          - name: HELM_RELEASE_NAME
+            value: {{ .Release.Name }}
+          {{- if .Values.custom.go_memlimit_enable }}
+          - name: GOMEMLIMIT
+            valueFrom:
+              resourceFieldRef:
+                resource: limits.memory
+                divisor: "1"
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: "8081"
+    prometheus.io/scrape: "true"
+  name: {{ .Release.Name }}-controllers-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: volcano-controller
+    {{- if .Values.custom.common_labels }}
+    {{- toYaml .Values.custom.common_labels | nindent 4 }}
+    {{- end }}
+spec:
+  ports:
+    - port: 8081
+      protocol: TCP
+      targetPort: 8081
+      name: "metrics"
+  selector:
+    app: volcano-controller
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-controller-configmap
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.custom.common_labels }}
+  labels:
+    {{- toYaml .Values.custom.common_labels | nindent 4 }}
+  {{- end }}
+data:
+  volcano-controller.conf: |
+  {{- if .Values.custom.controller_config_override }}
+  {{ toYaml .Values.custom.controller_config_override | nindent 4 }}
+  {{- end }}
+{{- end }}

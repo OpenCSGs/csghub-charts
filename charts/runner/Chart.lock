@@ -20,5 +20,8 @@ dependencies:
 - name: knative-operator
   repository: file://charts/knative-operator
   version: 1.21.1
-digest: sha256:2c28f0f080debad0b639e5b20aaa368d7cd885fbca9a56b66d10473af68cb56d
-generated: "2026-03-12T19:39:14.77932+08:00"
+- name: volcano
+  repository: file://charts/volcano
+  version: 1.14.1
+digest: sha256:901ebd043b7b91478c50079586022957037e24385c43a5937340982b8407a769
+generated: "2026-03-12T20:08:07.937409+08:00"

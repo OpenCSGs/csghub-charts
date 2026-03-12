@@ -60,3 +60,7 @@ dependencies:
     version: 1.21.1
     repository: file://charts/knative-operator
     condition: knative.enabled
+  - name: volcano
+    version: 1.14.1
+    repository: file://charts/volcano
+    condition: volcano.enabled
