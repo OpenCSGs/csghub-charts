@@ -46,3 +46,7 @@ dependencies:
     version: 1.6.3
     repository: file://charts/gateway-helm
     condition: envoy.enabled
+  - name: lws
+    version: v0.6.1
+    repository: file://charts/lws
+    condition: lws.enabled
