@@ -47,8 +47,8 @@ spec:
     domain:
       {{ $service.knative.serving.domain }}: ""
     autoscaler:
-      enable-scale-to-zero: {{ $service.knative.serving.enableScaleToZero | quote }}
-      max-scale: "20"
+      enable-scale-to-zero: {{ $service.knative.serving.autoscaler.enableScaleToZero | quote }}
+      scale-to-zero-grace-period: {{ $service.knative.serving.autoscaler.scaleToZeroGracePeriod | quote }}
     network:
       ingress-class: kourier.ingress.networking.knative.dev
     deployment:
