@@ -105,8 +105,6 @@ interval: 60                           # Communication interval with server (sec
 
 ## Namespace management
 namespace: "spaces"                    # Namespace for user-deployed workloads
-autoConfigure: false                   # Automatically install knative/argo/lws
-kymlMode: create                       # Kubernetes resource: create, update, replace
 mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
 ## Networking configuration

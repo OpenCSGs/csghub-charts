@@ -6,9 +6,8 @@ release:
   name: runner
   namespace: csghub
 tests:
-  - it: should create multiple rbac with autoConfigure = false and global.namespace <> Release.Namespace
+  - it: should create multiple RBAC with global.namespace <> Release.Namespace
     set:
-      autoConfigure: false
       namespace: "spaces"
       rbac.create: true
     asserts:
@@ -27,32 +26,10 @@ tests:
             name: runner-cluster-reader
         name: ClusterRoleBinding should be created
 
-  - it: should create multiple rbac with autoConfigure = false and global.namespace = Release.Namespace
+  - it: should create multiple RBAC with global.namespace = Release.Namespace
     set:
-      autoConfigure: false
       namespace: "csghub"
       rbac.create: true
     asserts:
       - hasDocuments:
           count: 6
-
-  - it: should create multiple rbac with autoConfigure = true and global.namespace = Release.Namespace
-    set:
-      autoConfigure: true
-      namespace: "csghub"
-      rbac.create: true
-    asserts:
-      - hasDocuments:
-          count: 6
-      - exists:
-          path: metadata
-          docSelector:
-            kind: ClusterRole
-            name: runner-cluster-admin
-        name: ClusterRole should be created
-      - exists:
-          path: metadata
-          docSelector:
-            kind: ClusterRoleBinding
-            name: runner-cluster-admin
-        name: ClusterRoleBinding should be created

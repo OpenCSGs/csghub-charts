@@ -109,8 +109,6 @@
     "region": { "type": "string" },
     "interval": { "type": "integer" },
     "namespace": { "type": "string" },
-    "autoConfigure": { "type": "boolean" },
-    "kymlMode": { "type": "string", "enum": ["create", "update", "replace"] },
     "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"] },
     "usePublicDomain": { "type": "boolean" },
     "pipIndexUrl": { "type": "string" },
