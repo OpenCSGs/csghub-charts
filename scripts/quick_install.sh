@@ -728,6 +728,13 @@ if [[ -z "$K3S_SERVER" ]]; then
     retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_install.sh | bash
   fi
 
+  log INFO "Patch CRDs for KnativeServing/Argo Workflow/LeaderWorkSet."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log "CMD" "Would run CRDs patched by crds_takeover.sh."
+  else
+    retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_takeover.sh | bash
+  fi
+
   log INFO "Installing CSGHub Helm Chart..."
   run_cmd "timeout 10s helm repo add csghub https://charts.opencsg.com/csghub/ --force-update"
 
@@ -769,7 +776,7 @@ if [[ -z "$K3S_SERVER" ]]; then
   else
     retry 10 "kubectl get svc kourier -n kourier-system"
     log INFO "Patching kourier to NodePort..."
-    run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n kourier-system"
+    run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n knative-serving"
   fi
 
   if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
@@ -804,6 +811,15 @@ WHERE space_resources.cluster_id != EXCLUDED.cluster_id;
 EOF"
       log INFO "GPU resource for CSGHub initialized."
     fi
+  fi
+
+  # Cleanup namespace argo/kourier-system/lws-system
+  log INFO "Waiting for namespace deleting..."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log CMD "Would wait for namespace deleting"
+  else
+    log INFO "Deleting namespace argo/kourier-system/lws-system..."
+    run_cmd "kubectl delete ns argo kourier-system lws-system --force"
   fi
 
 ################################################################################
