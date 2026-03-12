@@ -20,5 +20,5 @@ dependencies:
 - name: knative-operator
   repository: file://charts/knative-operator
   version: 1.21.1
-digest: sha256:2a878013b14f5f83d35c25f427bd0f1551ea79086769f495878b3409f9373194
-generated: "2026-03-11T11:12:54.893714+08:00"
+digest: sha256:2c28f0f080debad0b639e5b20aaa368d7cd885fbca9a56b66d10473af68cb56d
+generated: "2026-03-12T19:39:14.77932+08:00"
