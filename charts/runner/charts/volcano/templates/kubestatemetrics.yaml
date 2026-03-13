@@ -172,7 +172,12 @@ spec:
         {{- end }}
     spec:
       containers:
-        - image: docker.io/volcanosh/kube-state-metrics:v2.0.0-beta
+        {{- $image := dict
+          "registry" ""
+          "repository" "volcanosh/kube-state-metrics"
+          "tag" "v2.0.0-beta"
+        }}
+        - image: {{ include "common.image" (list . $image) }}
           imagePullPolicy: {{ .Values.basic.image_pull_policy }}
           name: kube-state-metrics
           ports:
