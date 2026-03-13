@@ -90,4 +90,11 @@ data:
 
   ## Runner Configuration for Spaces
   STARHUB_SERVER_RUNNER_STORAGE_CLASS: {{ $service.storageClassName | quote }}
+
+  ## Runner Configuration for Volcano
+  STARHUB_SERVER_RUNNER_KUBE_SCHEDULER: "volcano"
+  STARHUB_SERVER_RUNNER_VGPU_NODE_RESOURCE_NAME: "volcano.sh/node-vgpu-register"
+  STARHUB_SERVER_RUNNER_VGPU_POD_RESOURCE_NAME: "volcano.sh/vgpu-ids-new"
+  STARHUB_SERVER_RUNNER_VGPU_RESOURCE_REQ_KEY: "volcano.sh/vgpu-number"
+  STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY: "volcano.sh/vgpu-memory"
 {{- end }}

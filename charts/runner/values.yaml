@@ -275,3 +275,23 @@ prometheus:
 
   server:
     remoteWrite: []
+
+volcano:
+  custom:
+    scheduler_config_override: |
+      actions: "enqueue, allocate, backfill"
+      tiers:
+        - plugins:
+          - name: priority
+          - name: gang
+          - name: conformance
+        - plugins:
+          - name: drf
+          - name: deviceshare
+            arguments:
+              deviceshare.VGPUEnable: true
+              deviceshare.SchedulePolicy: binpack
+          - name: predicates
+          - name: proportion
+          - name: nodeorder
+          - name: binpack
