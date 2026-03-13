@@ -150,7 +150,12 @@ spec:
             - --port={{.Values.basic.admission_port}}
             - -v={{.Values.custom.admission_log_level}}
             - 2>&1
-          image: {{ .Values.basic.image_registry }}/{{.Values.basic.admission_image_name}}:{{.Values.basic.image_tag_version}}
+          {{- $image := dict
+            "registry" ""
+            "repository" .Values.basic.admission_image_name
+            "tag" .Values.basic.image_tag_version
+          }}
+          image: {{ include "common.image" (list . $image) }}
           imagePullPolicy: {{ .Values.basic.image_pull_policy }}
           name: admission
           {{- if .Values.custom.admission_resources }}

@@ -177,7 +177,12 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Release.Name }}-agent-scheduler
-          image: {{ .Values.basic.image_registry }}/{{.Values.basic.agent_scheduler_image_name}}:{{.Values.basic.image_tag_version}}
+          {{- $image := dict
+            "registry" ""
+            "repository" .Values.basic.agent_scheduler_image_name
+            "tag" .Values.basic.image_tag_version
+          }}
+          image: {{ include "common.image" (list . $image) }}
           {{- if .Values.custom.scheduler_resources }}
           resources:
           {{- toYaml .Values.custom.scheduler_resources | nindent 12 }}

@@ -171,7 +171,12 @@ spec:
           resources:
             {{- toYaml .Values.custom.controller_resources | nindent 14 }}
             {{- end }}
-          image: {{ .Values.basic.image_registry }}/{{.Values.basic.controller_image_name}}:{{.Values.basic.image_tag_version}}
+          {{- $image := dict
+            "registry" ""
+            "repository" .Values.basic.controller_image_name
+            "tag" .Values.basic.image_tag_version
+          }}
+          image: {{ include "common.image" (list . $image) }}
           args:
             - --logtostderr
             - --enable-healthz=true

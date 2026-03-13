@@ -93,7 +93,12 @@ spec:
     spec:
       containers:
       - name: grafana
-        image: grafana/grafana:latest
+        {{- $image := dict
+          "registry" ""
+          "repository" "grafana/grafana"
+          "tag" "latest"
+        }}
+        image: {{ include "common.image" (list . $image) }}
         readinessProbe:
           httpGet:
             path: /api/health

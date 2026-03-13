@@ -223,7 +223,12 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: prom/prometheus
+          {{- $image := dict
+            "registry" ""
+            "repository" "prometheus/prometheus"
+            "tag" "v3.9.1"
+          }}
+          image: {{ include "common.image" (list . $image) }}
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"
