@@ -185,7 +185,6 @@
         "region": {"type": "string"},
         "interval": {"type": "integer"},
         "namespace": {"type": "string"},
-        "autoConfigure": {"type": "boolean"},
         "mergingNamespace": {"type": "string"},
         "usePublicDomain": {"type": "boolean"},
         "pipIndexUrl": {"type": "string"},

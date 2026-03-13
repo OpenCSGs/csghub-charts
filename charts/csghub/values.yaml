@@ -43,7 +43,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.16.1"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.17.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -146,7 +146,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.16.1"
+  tag: "v1.17.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -330,7 +330,7 @@ xnet:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
-    tag: "v1.16.1"
+    tag: "v1.17.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -375,7 +375,6 @@ runner:
 
   ## Namespace management
   namespace: "spaces"                    # Namespace for user-deployed workloads
-  autoConfigure: true                    # Automatically install knative/argo/lws
   mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
   ## Networking configuration
@@ -410,12 +409,9 @@ runner:
     serving:
       domain: "example.com"              # Domain suffix for Knative services
 
-      ## Deprecated configuration (for backward compatibility)
-      services:
-        - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
-          domain: "example.com"          # Internal service domain
-          # host: "192.168.18.10"        # API server host address
-          # port: "30213"                # NodePort value when type=NodePort
+      autoscaler: {}
+        # enableScaleToZero: "true"
+        # scaleToZeroGracePeriod: "60m"
 
   logcollector:
     enabled: true
