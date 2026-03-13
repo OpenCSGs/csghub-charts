@@ -51,6 +51,9 @@ spec:
       scale-to-zero-grace-period: {{ $service.knative.serving.autoscaler.scaleToZeroGracePeriod | quote }}
     network:
       ingress-class: kourier.ingress.networking.knative.dev
+    features:
+      kubernetes.podspec-priorityclassname: "enabled"
+      kubernetes.podspec-schedulername: "enabled"
     deployment:
       {{- $globalRegistry := .Values.global.image.registry | default "" }}
       {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}
