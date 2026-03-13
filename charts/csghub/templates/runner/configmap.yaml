@@ -95,7 +95,7 @@ data:
   {{- if $service.applicationEndpoint }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
   {{- else }}
-  {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.kourier" .) (include "common.domain.cluster" .) }}
+  {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.knative" .) (include "common.domain.cluster" .) }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
   {{- end }}
 
