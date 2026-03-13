@@ -51,19 +51,19 @@ Returns: YAML configuration with merged gateway settings
       "controllerName" (.controllerName | default $gatewayConfig.controllerName)
       "tls" (dict
         "enabled" (dig "tls" "enabled" $gatewayConfig.tls.enabled .)
-        "secretName" (dig "tls" "secretName" $gatewayConfig.tls.secretName . )
+        "secretName" (dig "tls" "secretName" $gatewayConfig.tls.secretName .)
       )
       "service" (dict
         "type" (dig "service" "type" $gatewayConfig.service.type .)
         "nodePorts" (dict
-          "http" (dig "service" "nodePorts" "http" $gatewayConfig.service.nodePorts.http . )
-          "https" (dig "service" "nodePorts" "https" $gatewayConfig.service.nodePorts.https . )
+          "http" (dig "service" "nodePorts" "http" $gatewayConfig.service.nodePorts.http .)
+          "https" (dig "service" "nodePorts" "https" $gatewayConfig.service.nodePorts.https .)
           "gitssh" (dig "service" "nodePorts" "gitssh" $gatewayConfig.service.nodePorts.gitssh .)
         )
       )
       "basicAuth" (dict
         "username" (dig "basicAuth" "username" $gatewayConfig.basicAuth.username .)
-        "password" (dig "basicAuth" "password" "" $gatewayConfig.basicAuth.password .)
+        "password" (dig "basicAuth" "password" $gatewayConfig.basicAuth.password .)
       )
     ) $gatewayConfig }}
   {{- end }}
