@@ -88,7 +88,13 @@ spec:
       - name: operator-webhook
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: "{{ .Values.knative_operator.operator_webhook.image }}:{{ .Values.knative_operator.operator_webhook.tag }}"
+        {{- $globalRegistry := .Values.global.image.registry }}
+        {{- $image := dict
+          "registry" (ternary $globalRegistry "gcr.io" (hasPrefix "opencsg-registry" $globalRegistry))
+          "repository" (trimPrefix "gcr.io/" .Values.knative_operator.operator_webhook.image)
+          "tag" .Values.knative_operator.operator_webhook.tag
+        }}
+        image: {{ include "common.image" (list . $image) }}
 
         resources:
           requests:
@@ -6370,7 +6376,12 @@ spec:
 {{- end }}
       containers:
         - name: knative-operator
-          image: "{{ .Values.knative_operator.knative_operator.image }}:{{ .Values.knative_operator.knative_operator.tag }}"
+          {{- $imageOperator := dict
+            "registry" (ternary $globalRegistry "gcr.io" (hasPrefix "opencsg-registry" $globalRegistry))
+            "repository" (trimPrefix "gcr.io/" .Values.knative_operator.knative_operator.image)
+            "tag" .Values.knative_operator.knative_operator.tag
+          }}
+          image: {{ include "common.image" (list . $imageOperator) }}
           resources:
             requests:
               cpu: {{ .Values.knative_operator.knative_operator.resources.requests.cpu }}
