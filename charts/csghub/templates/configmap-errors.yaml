@@ -3,6 +3,8 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- $gateway := .Values.global.gateway }}
+{{- if regexMatch "envoyproxy" $gateway.controllerName }}
 {{- $currentScope := . }}
 {{- range $path, $_ := .Files.Glob "html/*.html" }}
 {{- $filename := base $path }}
@@ -20,3 +22,4 @@ data:
 {{ $currentScope.Files.Get $path | indent 4 }}
 ---
 {{- end }}
+{{end}}
