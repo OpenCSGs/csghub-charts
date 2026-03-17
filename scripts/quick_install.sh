@@ -770,11 +770,11 @@ if [[ -z "$K3S_SERVER" ]]; then
   fi
 
   # Patch kourier svc to NodePort, wait for it to be created first
-  log INFO "Waiting for kourier service to be created in kourier-system namespace..."
+  log INFO "Waiting for kourier service to be created in knative-serving namespace..."
   if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would wait for kourier svc in kourier-system and patch to NodePort"
+    log CMD "Would wait for kourier svc in knative-serving and patch to NodePort"
   else
-    retry 10 "kubectl get svc kourier -n kourier-system"
+    retry 10 "kubectl get svc kourier -n knative-serving"
     log INFO "Patching kourier to NodePort..."
     run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n knative-serving"
   fi
@@ -819,7 +819,7 @@ EOF"
     log CMD "Would wait for namespace deleting"
   else
     log INFO "Deleting namespace argo/kourier-system/lws-system..."
-    run_cmd "kubectl delete ns argo kourier-system lws-system --force"
+    run_cmd "kubectl delete ns argo kourier-system lws-system --force --ignore-not-found"
   fi
 
 ################################################################################
