@@ -8,6 +8,10 @@ kind: Service
 metadata:
   name: envoy-proxy-metrics
   namespace: {{ .Release.Namespace }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '19001'
+    prometheus.io/path: '/stats/prometheus'
 spec:
   type: ClusterIP
   selector:
