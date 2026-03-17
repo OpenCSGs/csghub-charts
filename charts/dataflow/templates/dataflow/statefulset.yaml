@@ -99,7 +99,7 @@ spec:
           livenessProbe:
             tcpSocket:
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 5
           {{- if $service.readinessProbe }}
           readinessProbe:
