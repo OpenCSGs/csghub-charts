@@ -3,6 +3,8 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- $gateway := .Values.global.gateway }}
+{{- if regexMatch "envoyproxy" $gateway.controllerName }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -25,3 +27,4 @@ spec:
       protocol: TCP
       port: 19001
       targetPort: 19001
+  {{end}}
