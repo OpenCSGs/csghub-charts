@@ -11,9 +11,8 @@ imagePullSecrets: []
 # Customize controlerManager
 image:
   manager:
-    repository: registry.k8s.io/lws/lws
+    repository: opencsghq/lws
     # tag, if defined will use the given image tag, else Chart.AppVersion will be used
-    tag: main
     pullPolicy: IfNotPresent
     tag: v0.6.1
 podAnnotations: {}

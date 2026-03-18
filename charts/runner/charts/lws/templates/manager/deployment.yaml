@@ -42,7 +42,12 @@ spec:
           name: manager
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.manager.repository }}:{{ .Values.image.manager.tag | default .Chart.AppVersion }}"
+          {{- $image := dict
+            "registry" ""
+            "repository" .Values.image.manager.repository
+            "tag" .Values.image.manager.tag
+          }}
+          image: {{ include "common.image" (list . $image) }}
           imagePullPolicy: {{ .Values.image.manager.pullPolicy }}
           ports:
             - name: webhook-server
