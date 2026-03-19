@@ -137,7 +137,7 @@ storageClassName: ""
 ## Knative Serving configuration
 knative:
   serving:
-    domain: "example.com"              # Domain suffix for Knative services
+    domain: "example.com"               # Domain suffix for Knative services
 
     ## Enable ksvc scale pod to 0 (stop space/inference/finetune/... instance)
     autoscaler:
@@ -148,13 +148,13 @@ knative:
     services: []
       # - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
       #   domain: "example.com"          # Internal service domain
-      #   host: "192.168.18.10"        # API server host address
-      #   port: "30213"                # NodePort value when type=NodePort
+      #   host: "192.168.18.10"          # API server host address
+      #   port: "30213"                  # NodePort value when type=NodePort
 
 ## RBAC Configuration
 rbac:
-  create: true                         # Create SA, Role, RoleBinding, ClusterRole, ClusterRoleBinding
-  serviceAccountName: "csghub-runner"   # serviceAccountName created by rbac
+  create: true                           # Create SA, Role, RoleBinding, ClusterRole, ClusterRoleBinding
+  # serviceAccountName: ""               # serviceAccountName created by RBAC
 
 ## Logcollector Configuration
 logcollector:
