@@ -38,7 +38,7 @@ spec:
       migrate: {{ $knativeRegistry }}/pkg/apiextensions/storageversion/cmd/migrate:v1.21.1
       net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:v1.21.0
       3scale-kourier-gateway/kourier-gateway: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:v1.36-latest
-      queue-proxy: {{ $knativeRegistry }}/serving/cmd/queue:1.21.1
+      queue-proxy: {{ $knativeRegistry }}/serving/cmd/queue:v1.21.1
   {{- end }}
   ingress:
     kourier:
@@ -59,3 +59,7 @@ spec:
       {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}
       {{- $registryList := list (include "common.domain.csghub" .) $privateRegistry $globalRegistry }}
       registries-skipping-tag-resolving: {{ join "," $registryList | trimSuffix "," | quote }}
+      {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
+      {{- $knativeRegistry := printf "%s/opencsghq/knative-releases/knative.dev" .Values.global.image.registry }}
+      queue-sidecar-image: {{ $knativeRegistry }}/serving/cmd/queue:v1.21.1
+      {{- end }}
