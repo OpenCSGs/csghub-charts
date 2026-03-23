@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $runnerSvc := include "common.service" . | fromYaml }}
 {{- if $runnerSvc.logcollector.enabled }}
+{{- $runnerSvcName := include "common.names.custom" (list . $runnerSvc.name) }}
 {{- $service := mergeOverwrite (deepCopy $runnerSvc) (dict "name" "logcollector") }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
@@ -50,10 +51,8 @@ spec:
       {{- end }}
     spec:
       terminationGracePeriodSeconds: {{ $service.terminationGracePeriodSeconds | default 20 }}
-      {{- if $service.rbac.serviceAccountName }}
-      serviceAccountName: {{ $service.rbac.serviceAccountName }}
+      serviceAccountName: {{ $service.rbac.serviceAccountName | default $runnerSvcName }}
       automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
-      {{- end }}
       {{- $serverImage := include "csghub.service.image" (dict "ctx" . "service" $service) | fromYaml }}
       {{- with (or $serverImage.pullSecrets .Values.global.image.pullSecrets) }}
       imagePullSecrets:
