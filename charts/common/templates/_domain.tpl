@@ -20,12 +20,22 @@ Get base domain from external.domain:
     {{ fail "external.domain must be set in values.yaml" }}
   {{- end }}
 
-  {{- $parts := splitList "." $domain }}
-  {{- if ge (len $parts) 3 }}
-    {{- regexReplaceAll "^[^.]+\\." $domain "" -}}
-  {{- else }}
-    {{- $domain -}}
-  {{- end }}
+  {{- $baseDomain := $domain }}
+
+  {{- if hasKey .Values.global.gateway "external" }}
+    {{- if hasKey .Values.global.gateway.external "useTop" }}
+      {{- if not .Values.global.gateway.external.useTop }}
+        {{- $parts := splitList "." $domain }}
+        {{- if ge (len $parts) 3 }}
+          {{- regexReplaceAll "^[^.]+\\." $baseDomain "" -}}
+        {{- else }}
+          {{- $baseDomain -}}
+        {{- end }}
+      {{- else }}
+        {{- $baseDomain -}}
+      {{- end }}
+    {{- end }}
+{{- end }}
 {{- end }}
 
 {{/*
