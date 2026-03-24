@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.1
+  version: 0.2.2
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
@@ -23,5 +23,5 @@ dependencies:
 - name: volcano
   repository: file://charts/volcano
   version: 1.14.1
-digest: sha256:b1dc62371590e71ab4c2f992d3e475384d72964462876ca6b0e8b17d324df925
-generated: "2026-03-13T16:07:28.444879+08:00"
+digest: sha256:24d4004a7437e1973af7a99813fbd117c91425fa7ec072a2d4b4e1463cf762af
+generated: "2026-03-24T10:58:09.720414+08:00"
