@@ -22,6 +22,16 @@ data:
   REGISTRY_LOG_LEVEL: {{ $service.logging.level | default "info" }}
   REGISTRY_LOG_FORMATTER: {{ $service.logging.formatter | default "json" }}
   REGISTRY_LOG_ACCESSLOG_DISABLED: {{ not $service.logging.accesslog | quote }}
+  {{- if regexMatch "aliyun" $s3Config.endpoint }}
+  REGISTRY_STORAGE: oss
+  REGISTRY_STORAGE_OSS_REGIONENDPOINT: {{ $s3Config.endpoint | quote }}
+  REGISTRY_STORAGE_OSS_ACCESSKEYID: {{ $s3Config.accessKey | quote }}
+  REGISTRY_STORAGE_OSS_ACCESSKEYSECRET: {{ $s3Config.secretKey | quote }}
+  REGISTRY_STORAGE_OSS_REGION: {{ $s3Config.region | quote }}
+  REGISTRY_STORAGE_OSS_BUCKET: {{ $s3Config.bucket | quote }}
+  REGISTRY_STORAGE_OSS_ENCRYPT: {{ $s3Config.encrypt | quote }}
+  REGISTRY_STORAGE_OSS_SECURE: {{ $s3Config.secure | quote }}
+  {{- else }}
   REGISTRY_STORAGE: s3
   REGISTRY_STORAGE_REDIRECT_DISABLE: "true"
   REGISTRY_STORAGE_S3_REGIONENDPOINT: {{ $s3Config.endpoint | quote }}
@@ -32,4 +42,5 @@ data:
   REGISTRY_STORAGE_S3_ENCRYPT: {{ $s3Config.encrypt | quote }}
   REGISTRY_STORAGE_S3_SECURE: {{ $s3Config.secure | quote }}
   REGISTRY_STORAGE_S3_FORCEPATHSTYLE: {{ $s3Config.pathStyle | quote }}
+  {{- end }}
 {{- end }}
