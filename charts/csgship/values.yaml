@@ -31,6 +31,14 @@ global:
         # a subdomain (e.g. csghub.example.com) will be used internally
         # to avoid overly broad wildcard routing such as *.example.com
 
+      ## Whether to use the top-level domain directly when generating derived domains.
+      ## If the domain is a multi-level domain (e.g. csghub.example.com):
+      ## - true:  use the full domain as-is (casdoor.csghub.example.com)
+      ## - false: strip the first label and use the base domain (casdoor.example.com)
+      ## If the domain is a second-level domain (e.g. example.com),
+      ## it will always be used directly without truncation regardless of this setting.
+      useTop: false
+
     ## TLS/SSL configuration for Gateway
     tls:
       enabled: false                # Enable TLS termination on the Gateway
