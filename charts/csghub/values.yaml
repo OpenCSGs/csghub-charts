@@ -783,7 +783,7 @@ loki:
         mountPath: "/loki"                 # Storage volume mount
     extraEnv:
       - name: "GOMEMLIMIT"
-        value: "3750MiB"                   # Memory limit for Go runtime
+        value: "2048MiB"                   # Memory limit for Go runtime
 
   ## Component replication (disabled for distributed mode)
   write:
@@ -800,7 +800,7 @@ loki:
   loki:
     auth_enabled: false                    # Disable authentication
     commonConfig:
-      replication_factor: 1                # Data replication factor
+      replication_factor: 2                # Data replication factor
       path_prefix: "/loki"                 # Storage path prefix
       ring:
         kvstore:
@@ -821,7 +821,7 @@ loki:
     tracing:
       enabled: false                       # Disable tracing
     querier:
-      max_concurrent: 2                    # Maximum concurrent queries
+      max_concurrent: 40                   # Maximum concurrent queries
 
   test:
     enabled: false                         # Disable test configuration
