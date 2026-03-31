@@ -438,6 +438,8 @@ dataflow:
 
 # AgenticHub configuration
 agenticflow:
+  enabled: false
+
   image:
     # registry: "docker.io"
     repository: "opencsghq/agenticflow"
@@ -470,8 +472,15 @@ agenticflow:
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "10Gi"                            # Disk space allocation
 
+  token:
+    csgAzureOpenToken: ""
+    infiniApiKey: ""
+    openRouterApiKey: ""
+
 # CSGBot configuration
 csgbot:
+  enabled: false
+
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgbot"
@@ -597,6 +606,7 @@ csgbot:
     enabled: false
   redis:
     enabled: false
+
 
 csgship:
   enabled: false

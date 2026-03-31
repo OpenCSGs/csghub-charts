@@ -93,7 +93,7 @@ The image to use
 {{- end }}
 
 {{/*
-Allow the release namespace to be overridden for multi-namespace deployments in combined charts
+Allow the release namespace to be overridden for multi-namespace deployments in combined templates
 */}}
 {{- define "prometheus-node-exporter.namespace" -}}
 {{- if .Values.namespaceOverride }}

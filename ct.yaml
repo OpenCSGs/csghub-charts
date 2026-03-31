@@ -8,9 +8,9 @@ remote: origin
 target-branch: main
 
 # Chart directories to be tested
-# List of directories containing charts to test
+# List of directories containing templates to test
 chart-dirs:
-  - charts
+  - templates
 
 # Helm chart repositories for dependency resolution
 skip-dependency-update: true
@@ -23,7 +23,7 @@ chart-repos: {}
 
 # Additional arguments for helm commands
 # Passed to helm install/upgrade commands
-helm-extra-args: --timeout 600s  # Increase timeout to 10 minutes for complex charts
+helm-extra-args: --timeout 600s  # Increase timeout to 10 minutes for complex templates
 
 # Version increment validation
 # Ensure chart versions are incremented when changes are made

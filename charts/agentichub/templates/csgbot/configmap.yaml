@@ -19,8 +19,8 @@ data:
     [llm]
     model-id = {{ dig "modelId" "" .Values.csgbot.config.llm | quote }}
     model-base-url = {{ dig "modelBaseUrl" "" .Values.csgbot.config.llm | quote }}
-    temperature = {{ dig "temperature" '' .Values.csgbot.config.llm }}
-    use-csghub-aigateway = {{ dig "useCsghubAIGateway" "" .Values.csgbot.config.llm }}
+    temperature = {{ dig "temperature" "" .Values.csgbot.config.llm }}
+    use-csghub-aigateway = {{ dig "useCsghubAigateway" "" .Values.csgbot.config.llm }}
 
     [database]
     file = {{ dig "file" "" .Values.csgbot.config.database | quote }}
@@ -39,7 +39,7 @@ data:
     [opencsg.mcp-proxy-servers.web-fetch]
     url = {{ dig "url" "" .Values.csgbot.config.mcpProxyServersWebFetch | quote }}
     transport = {{ dig "transport" "" .Values.csgbot.config.mcpProxyServersWebFetch | quote }}
-    requires-jwt = {{ dig "requiresJwt" true .Values.csgbot.config.mcpProxyServersWebFetch }}
+    requires-jwt = {{ dig "requiresJwt" "" .Values.csgbot.config.mcpProxyServersWebFetch }}
 
     [aigateway]
     model-id = {{ dig "modelId" "" .Values.csgbot.config.aigateway | quote }}

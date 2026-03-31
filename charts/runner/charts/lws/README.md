@@ -26,7 +26,7 @@ Quick start instructions for the setup and configuration of lws using Helm.
 
 ```bash
 $ git clone git@github.com:kubernetes-sigs/lws.git
-$ cd charts
+$ cd templates
 $ helm install lws lws --create-namespace --namespace lws-system
 ```
 

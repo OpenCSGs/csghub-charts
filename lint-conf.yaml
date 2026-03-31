@@ -62,14 +62,14 @@ rules:
 extends: default
 # Ignore paths
 ignore:
-  # General charts ignore rules
-  - charts/*/charts/*
+  # General templates ignore rules
+  - templates/*/templates/*
 
   # Casdoor related ignores
-  - charts/*/templates/casdoor/configmap.yaml
-  - charts/*/templates/casdoor/secret.yaml
-  - charts/*/tests/casdoor_test.yaml
+  - templates/*/templates/casdoor/configmap.yaml
+  - templates/*/templates/casdoor/secret.yaml
+  - templates/*/tests/casdoor_test.yaml
 
   # Runner related ignores
-  - charts/runner/templates/configmap-*.yaml
-  - charts/runner/templates/secret.yaml
+  - templates/runner/templates/configmap-*.yaml
+  - templates/runner/templates/secret.yaml

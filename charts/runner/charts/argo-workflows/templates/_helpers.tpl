@@ -204,7 +204,7 @@ Return the appropriate apiVersion for monitoring CRDs
 
 {{/*
 Expand the namespace of the release.
-Allows overriding it for multi-namespace deployments in combined charts.
+Allows overriding it for multi-namespace deployments in combined templates.
 */}}
 {{- define "argo-workflows.namespace" -}}
 {{- default .Release.Namespace .Values.namespaceOverride | trunc 63 | trimSuffix "-" -}}

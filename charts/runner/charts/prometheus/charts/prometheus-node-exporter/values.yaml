@@ -19,7 +19,7 @@ fullnameOverride: ""
 revisionHistoryLimit: 10
 
 global:
-  # To help compatibility with other charts which use global.imagePullSecrets.
+  # To help compatibility with other templates which use global.imagePullSecrets.
   # Allow either an array of {name: pullSecret} maps (k8s-style), or an array of strings (more common helm-style).
   # global:
   #   imagePullSecrets:
@@ -32,7 +32,7 @@ global:
   #   - pullSecret2
   imagePullSecrets: []
   #
-  # Allow parent charts to override registry hostname
+  # Allow parent templates to override registry hostname
   imageRegistry: ""
 
 # Configure kube-rbac-proxy. When enabled, creates a kube-rbac-proxy to protect the node-exporter http endpoint.
@@ -74,7 +74,7 @@ kubeRBACProxy:
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
+    # choice for the user. This also increases chances templates run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
     # limits:
@@ -331,7 +331,7 @@ updateStrategy:
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
+  # choice for the user. This also increases chances templates run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:

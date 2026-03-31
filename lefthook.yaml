@@ -5,7 +5,7 @@ pre-commit:
   parallel: false
   commands:
     build-dependency:
-      glob: "charts/{csghub,runner,dataflow}/**"
+      glob: "templates/{csghub,runner,dataflow}/**"
       run: |
         echo "📦 Building all Helm chart dependencies..."
         helm repo update
@@ -22,7 +22,7 @@ pre-commit:
 
     # Check Helm template rendering
     helm-template:
-      glob: "charts/{csghub,runner,dataflow}/**"
+      glob: "templates/{csghub,runner,dataflow}/**"
       run: |
         echo "🔍 Running Helm template dry-run..."
 
@@ -45,7 +45,7 @@ pre-commit:
 
     # Run Helm unittest
     helm-unittest:
-      glob: "charts/{csghub,runner,dataflow}/**"
+      glob: "templates/{csghub,runner,dataflow}/**"
       run: |
         echo "🔍 Running Helm unittest..."
 
@@ -73,9 +73,9 @@ pre-commit:
         fi
         echo "✅ All unit tests passed"
 
-    # Validate YAML syntax for all charts
+    # Validate YAML syntax for all templates
     yaml-validate:
-      glob: "charts/{csghub,runner,dataflow}/**"
+      glob: "templates/{csghub,runner,dataflow}/**"
       run: |
         echo "🔍 Validating YAML syntax for all charts..."
 
@@ -175,7 +175,7 @@ pre-push:
     # Check Helm chart syntax and structure
     ct-lint:
       stdin: true
-      glob: "charts/{csghub,runner,dataflow,csgship,common}/**"  # Only run when chart files change
+      glob: "templates/{csghub,runner,dataflow,csgship,common}/**"  # Only run when chart files change
       run: |
         echo "🔍 Running ct lint..."
 

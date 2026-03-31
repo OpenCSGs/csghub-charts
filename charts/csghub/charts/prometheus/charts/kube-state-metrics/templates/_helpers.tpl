@@ -36,7 +36,7 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
-Allow the release namespace to be overridden for multi-namespace deployments in combined charts
+Allow the release namespace to be overridden for multi-namespace deployments in combined templates
 */}}
 {{- define "kube-state-metrics.namespace" -}}
   {{- if .Values.namespaceOverride -}}
