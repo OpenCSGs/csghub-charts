@@ -34,6 +34,14 @@ global:
                                      # a subdomain (e.g. csghub.example.com) will be used internally
                                      # to avoid overly broad wildcard routing such as *.example.com
 
+      ## Whether to use the top-level domain directly when generating derived domains.
+      ## If the domain is a multi-level domain (e.g. csghub.example.com):
+      ## - true:  use the full domain as-is (casdoor.csghub.example.com)
+      ## - false: strip the first label and use the base domain (casdoor.example.com)
+      ## If the domain is a second-level domain (e.g. example.com),
+      ## it will always be used directly without truncation regardless of this setting.
+      useTop: false
+
     ## TLS/SSL configuration for Gateway
     tls:
       enabled: false                # Enable TLS termination on the Gateway
@@ -43,7 +51,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.17.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -146,7 +154,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.16.0"
+  tag: "v1.17.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -330,7 +338,7 @@ xnet:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
-    tag: "v1.16.0"
+    tag: "v1.17.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -375,7 +383,6 @@ runner:
 
   ## Namespace management
   namespace: "spaces"                    # Namespace for user-deployed workloads
-  autoConfigure: true                    # Automatically install knative/argo/lws
   mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
   ## Networking configuration
@@ -410,12 +417,9 @@ runner:
     serving:
       domain: "example.com"              # Domain suffix for Knative services
 
-      ## Deprecated configuration (for backward compatibility)
-      services:
-        - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
-          domain: "example.com"          # Internal service domain
-          # host: "192.168.18.10"        # API server host address
-          # port: "30213"                # NodePort value when type=NodePort
+      autoscaler: {}
+        # enableScaleToZero: "true"
+        # scaleToZeroGracePeriod: "60m"
 
   logcollector:
     enabled: true
@@ -635,7 +639,7 @@ postgresql:
   image:
     # registry: "docker.io"
     repository: "opencsghq/postgres"
-    tag: "15.10"                             # Image version tag
+    tag: "15.17"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -682,7 +686,7 @@ redis:
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
-    size: "10Gi"                             # Disk space allocation
+    # size: "10Gi"                             # Disk space allocation
 
 ## Embedded MinIO configuration
 minio:
@@ -827,7 +831,7 @@ nats:
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
-    size: "10Gi"                             # Disk space allocation
+    # size: "10Gi"                             # Disk space allocation
 
 ## Embedded Casdoor configuration
 casdoor:
@@ -931,7 +935,7 @@ loki:
         mountPath: "/loki"                 # Storage volume mount
     extraEnv:
       - name: "GOMEMLIMIT"
-        value: "3750MiB"                   # Memory limit for Go runtime
+        value: "2048MiB"                   # Memory limit for Go runtime
 
   ## Component replication (disabled for distributed mode)
   write:
@@ -948,7 +952,7 @@ loki:
   loki:
     auth_enabled: false                    # Disable authentication
     commonConfig:
-      replication_factor: 1                # Data replication factor
+      replication_factor: 2                # Data replication factor
       path_prefix: "/loki"                 # Storage path prefix
       ring:
         kvstore:
@@ -969,7 +973,7 @@ loki:
     tracing:
       enabled: false                       # Disable tracing
     querier:
-      max_concurrent: 2                    # Maximum concurrent queries
+      max_concurrent: 40                   # Maximum concurrent queries
 
   test:
     enabled: false                         # Disable test configuration

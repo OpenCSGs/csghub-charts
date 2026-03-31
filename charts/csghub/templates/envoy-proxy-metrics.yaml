@@ -1,0 +1,30 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $gateway := .Values.global.gateway }}
+{{- if regexMatch "envoyproxy" $gateway.controllerName }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-proxy-metrics
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '19001'
+    prometheus.io/path: '/stats/prometheus'
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: listeners
+    gateway.envoyproxy.io/owning-gateway-namespace: {{ .Release.Namespace }}
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 19001
+      targetPort: 19001
+  {{end}}

@@ -114,6 +114,8 @@ tests:
               - path:
                   type: PathPrefix
                   value: /
+            timeouts:
+              request: 30m
 
   - it: Should render httpRoutes correctly with console enabled
     template: minio/httproutes.yaml

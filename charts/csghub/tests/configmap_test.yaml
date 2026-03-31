@@ -10,6 +10,7 @@ set:
     gateway:
       external:
         domain: "csghub.example.com"
+        useTop: false
       tls:
         enabled: true
         secretName: "test-tls"
@@ -204,3 +205,36 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
           value: "auto"
+
+  - it: Should render ConfigMap correctly
+    template: csghub/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            useTop: true
+    asserts:
+      - equal:
+          path: data.CSGHUB_PORTAL_STARHUB_BASE_URL
+          value: "https://csghub.example.com"
+      - matchRegex:
+          path: data.CSGHUB_PORTAL_LOGIN_URL
+          pattern: "https://casdoor.csghub.example.com/.*\\?client_id=[0-9a-z]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ENDPOINT
+          value: "minio.csghub.example.com"
+      - equal:
+          path: data.OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL
+          value: "https://csghub.example.com/server/callback"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_SSH_DOMAIN
+          value: "git@csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_DOMAIN
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_ENDPOINT
+          value: "https://casdoor.csghub.example.com"

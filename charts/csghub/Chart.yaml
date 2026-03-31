@@ -22,18 +22,18 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.16.0
+version: 1.17.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: v1.16.0
+appVersion: v1.17.0
 
 # Defined dependencies for subChart
 dependencies:
   - name: common
-    version: 0.2.0
+    version: 0.2.2
     repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.7
@@ -52,11 +52,11 @@ dependencies:
     repository: file://charts/prometheus
     condition: prometheus.enabled
   - name: runner
-    version: 1.16.0
+    version: 1.17.0
     repository: https://charts.opencsg.com/csghub
     condition: runner.enabled
   - name: dataflow
-    version: 1.16.0
+    version: 1.17.0
     repository: https://charts.opencsg.com/csghub
     condition: dataflow.enabled
   - name: csgship

@@ -113,6 +113,7 @@ spec:
       timeouts:
         request: 10s
     {{- end }}
+    {{- if .Values.dataflow.enabled }}
     {{- $dataflowSvc := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
     {{- $labelStudioSvcName := include "common.names.custom" (list . "label-studio") }}
     - matches:
@@ -130,6 +131,7 @@ spec:
           port: {{ dig "service" "port" "8002" $dataflowSvc.labelStudio }}
       timeouts:
         request: 5m
+    {{- end }}
     {{- $temporalSvc := include "common.service" (dict "ctx" . "service" "temporal") | fromYaml }}
     {{- $temporalSvcName := include "common.names.custom" (list . $temporalSvc.name) }}
     {{- if $temporalSvc.console.enabled }}
@@ -173,4 +175,4 @@ spec:
         - name: {{ $aiGatewaySvcName }}
           port: {{ dig "service" "port" "8094" $aiGatewaySvc.aigateway }}
       timeouts:
-        request: 10s
+        request: 5m

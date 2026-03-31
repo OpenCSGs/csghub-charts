@@ -71,7 +71,7 @@ spec:
               for sql_file in /scripts/*.sql;
               do
                 echo Executing $$sql_file;
-                psql "$STARHUB_DATABASE_DSN" -f $$sql_file;
+                psql "$STARHUB_DATABASE_DSN" -v ON_ERROR_STOP=1 -f $$sql_file;
               done
           envFrom:
             - configMapRef:

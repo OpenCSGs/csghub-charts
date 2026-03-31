@@ -1,0 +1,282 @@
+basic:
+  controller_image_name: "volcanosh/vc-controller-manager"
+  scheduler_image_name: "volcanosh/vc-scheduler"
+  agent_scheduler_image_name: "volcanosh/vc-agent-scheduler"
+  admission_image_name: "volcanosh/vc-webhook-manager"
+  agent_image_name: "volcanosh/vc-agent"
+  admission_secret_name: "volcano-admission-secret"
+  admission_config_file: "config/volcano-admission.conf"
+  scheduler_config_file: "config/volcano-scheduler.conf"
+  agent_scheduler_config_file: "config/agent-scheduler.conf"
+  image_pull_secret: ""
+  image_pull_policy: "Always"
+  image_tag_version: "v1.14.1"
+  admission_port: 8443
+  image_registry: "docker.io"
+custom:
+  go_memlimit_enable: false
+  metrics_enable: false
+  admission_enable: true
+  admission_replicas: 1
+  controller_enable: true
+  controller_replicas: 1
+  controller_metrics_enable: true
+  scheduler_enable: true
+  agent_scheduler_enable: false
+  agent_scheduler_replicas: 1
+  agent_scheduler_name: "agent-scheduler"
+  scheduler_replicas: 1
+  scheduler_metrics_enable: true
+  scheduler_pprof_enable: false
+  scheduler_plugins_dir: ""
+  scheduler_name: ~
+  leader_elect_enable: false
+  # ValidatingAdmissionPolicy settings (auto-enabled for K8s >= 1.30)
+  vap_enable: false
+  # MutatingAdmissionPolicy settings (default disabled)
+  map_enable: false
+  controller_kube_api_qps: 50
+  controller_kube_api_burst: 100
+  controller_worker_threads: 3
+  controller_worker_threads_for_gc: 5
+  controller_worker_threads_for_podgroup: 5
+  scheduler_kube_api_qps: 2000
+  scheduler_kube_api_burst: 2000
+  scheduler_schedule_period: 1s
+  scheduler_node_worker_threads: 20
+  agent_scheduler_worker_count: 1
+  enabled_admissions: "/jobs/mutate,/jobs/validate,/podgroups/validate,/queues/mutate,/queues/validate,/hypernodes/validate,/cronjobs/validate"
+  colocation_enable: false
+  ignored_provisioners: ~
+# Override the configuration for agent.
+# For example:
+# agent_supported_features: "OverSubscription,Eviction,Resources"
+# agent_extend_resource_cpu_name: "example.com/cpu"
+# agent_extend_resource_memory_name: "example.com/memory"
+  agent_supported_features: ~
+  agent_extend_resource_cpu_name: ~
+  agent_extend_resource_memory_name: ~
+  agent_kube_cgroup_root: ~
+
+# Override the configuration for admission, controller or scheduler.
+# For example:
+#
+#  scheduler_config_override: |
+#    actions: "enqueue, allocate, backfill"
+#    tiers:
+#    - plugins:
+#      - name: priority
+#      - name: gang
+#        enablePreemptable: false
+#      - name: conformance
+#    - plugins:
+#      - name: overcommit
+#      - name: drf
+#        enablePreemptable: false
+#      - name: predicates
+#      - name: proportion
+#      - name: nodeorder
+#      - name: binpack
+
+#  controller_config_override: |
+#    networkTopologyDiscovery:
+#     - source: ufm
+#       enabled: true
+#       interval: 10m
+#       credentials:
+#         secretRef:
+#           name: ufm-credentials
+#           namespace: volcano-system
+#       config:
+#         endpoint: https://ufm-server:8080
+#         insecureSkipVerify: true
+#     - source: label
+#       enabled: true
+#       config:
+#         networkTopologyTypes:
+#           topologyA2:
+#             - nodeLabel: "volcano.sh/tor"
+#             - nodeLabel: "kubernetes.io/hostname"
+#           topologyA3:
+#             - nodeLabel: "volcano.sh/hypercluster"
+#             - nodeLabel: "volcano.sh/hypernode"
+#             - nodeLabel: "kubernetes.io/hostname"
+  admission_config_override: ~
+  scheduler_config_override: ~
+  controller_config_override: ~
+
+# Specify affinity for all main Volcano components or per component.
+# For example:
+#
+#  default_affinity:
+#    podAntiAffinity:
+#      preferredDuringSchedulingIgnoredDuringExecution:
+#        - podAffinityTerm:
+#            labelSelector:
+#              matchLabels:
+#                key: value
+#            topologyKey: kubernetes.io/hostname
+#          weight: 49
+  default_affinity: ~
+  admission_affinity: ~
+  controller_affinity: ~
+  scheduler_affinity: ~
+  agent_affinity: ~
+
+# Specify tolerations for all main Volcano components or per component
+# For example:
+#
+#  default_tolerations:
+#  - key: "example-key1"
+#    operator: "Exists"
+#    effect: "NoSchedule"
+  default_tolerations: ~
+  admission_tolerations: ~
+  controller_tolerations: ~
+  scheduler_tolerations: ~
+  agent_tolerations:
+  - key: "volcano.sh/offline-job-evicting"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+# Specify securityContext for all main Volcano components or per component
+# For example:
+#
+#  default_sc:
+#    runAsUser: 3000
+#    runAsGroup: 3000
+  default_sc:
+    seccompProfile:
+      type: RuntimeDefault
+    seLinuxOptions:
+      level: "s0:c123,c456"
+  scheduler_sc: ~
+  admission_sc: ~
+  controller_sc: ~
+  agent_sc: ~
+
+# Specify nodeSelector for all main Volcano components or per component
+# For example:
+#
+#  default_ns:
+#    nodetype: criticalservices
+  default_ns: ~
+  admission_ns: ~
+  scheduler_ns: ~
+  controller_ns: ~
+  kube_state_metrics_ns: ~
+  agent_ns: ~
+
+# Specify labels for Volcano main component deployments and pods
+# For example:
+#
+#  admission_podLabels:
+#    key1: value1
+  admission_podLabels: ~
+  scheduler_podLabels: ~
+  controller_podLabels: ~
+  admission_labels: ~
+  scheduler_labels: ~
+  controller_labels: ~
+
+# Specify labels for all Volcano helm chart objects except for CRDs
+  common_labels: ~
+
+# Specify labels for aggregationRule
+  aggregationRule_labels: ~
+
+# Specify resources for Volcano main component deployments and pods
+# For example:
+#
+#  admission_resources:
+#    limits:
+#      cpu: 300m
+#      memory: 300Mi
+  admission_resources: ~
+  scheduler_resources: ~
+  controller_resources: ~
+  agent_resources: ~
+
+
+# Specify additional namespace selector expressions for Volcano admission webhooks.
+# For example, if you want Volcano admission webhooks take effect in namespaces with
+# label key="workload-type" and value="batch", and don't take effect in namespaces with
+# label key="kubernetes.io/metadata.name" and values "excluded-ns-1" and "excluded-ns-2",
+# you should set the following value:
+#
+#  webhooks_namespace_selector_expressions:
+#    - key: workload-type
+#      operator: In
+#      values:
+#        - batch
+#    - key: kubernetes.io/metadata.name
+#      operator: NotIn
+#      values:
+#        - excluded-ns-1
+#        - excluded-ns-2
+#
+# Note that {{ .Release.Namespace }} and kube-system namespaces are always ignored.
+  webhooks_namespace_selector_expressions: ~
+
+
+# Specify log level for Volcano main component  
+  admission_log_level: 4
+  scheduler_log_level: 3
+  controller_log_level: 4
+
+# Specify container security context for admission
+# For example:
+#
+# default_csc:
+#   allowPrivilegeEscalation: false
+#   runAsUser: 2000
+  default_csc:
+    runAsNonRoot: true
+    runAsUser: 1000
+    # Disable all capabilities by default, components can add capabilities as needed
+    capabilities:
+      add: ["DAC_OVERRIDE"]
+      drop: [ "ALL" ]
+    allowPrivilegeEscalation: false
+  admission_main_csc: ~
+  admission_init_csc: ~
+  scheduler_main_csc: ~
+  controller_main_csc: ~
+  agent_main_csc:
+    runAsNonRoot: true
+    runAsUser: 1000
+    capabilities:
+      add: ["DAC_OVERRIDE", "SETUID", "SETGID", "SETFCAP", "BPF"]
+      drop: [ "ALL" ]
+  agent_init_csc:
+    runAsUser: 0
+    capabilities:
+      add: ["CHOWN", "DAC_OVERRIDE", "FOWNER"]
+      drop: [ "ALL" ]
+    allowPrivilegeEscalation: false
+
+  # Specify agent cni config path.
+  agent_cni_config_path: /etc/cni/net.d/cni.conflist
+
+  # Specify feature gates for components
+  scheduler_feature_gates: ~
+
+# Specify options for scheduler sharding
+  agent_scheduler_sharding_mode: ~
+  agent_scheduler_sharding_name: ~
+  scheduler_sharding_mode: ~
+  scheduler_sharding_name: ~
+
+service:
+  # @param service.ipFamilyPolicy [string], support SingleStack, PreferDualStack and RequireDualStack
+  #
+  ipFamilyPolicy: ""
+  # @param service.ipFamilies [array] List of IP families (e.g. IPv4, IPv6) assigned to the service.
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+  # E.g.
+  # ipFamilies:
+  #   - IPv6
+  #   - IPv4
+  ipFamilies: []
+
+

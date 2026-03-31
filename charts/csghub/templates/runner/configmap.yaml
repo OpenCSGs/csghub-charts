@@ -63,7 +63,7 @@ data:
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: {{ include "runner.kaniko.args" (dict "ctx" . "service" $service) | quote }}
 
   ## Runner Configuration for Argo
-  STARHUB_SERVER_ARGO_SERVICE_ACCOUNT: "executor"
+  STARHUB_SERVER_ARGO_SERVICE_ACCOUNT: {{ printf "%s-argo-workflow-executor" .Release.Name | quote }}
   {{- $typeLabel := $service.gpuModelLabel.typeLabel }}
   {{- $capacityLabel := $service.gpuModelLabel.capacityLabel }}
   STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
@@ -95,7 +95,7 @@ data:
   {{- if $service.applicationEndpoint }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
   {{- else }}
-  {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.kourier" .) (include "common.domain.cluster" .) }}
+  {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.knative" .) (include "common.domain.cluster" .) }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
   {{- end }}
 

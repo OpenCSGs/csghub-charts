@@ -1,12 +1,12 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.0
+  version: 0.2.2
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
 - name: gateway-helm
   repository: file://charts/gateway-helm
   version: v1.6.3
-digest: sha256:b5ef0575f54223df61aa7d465289c37615742f78669736a57021c35809c43fd1
-generated: "2026-02-05T16:59:53.399389+08:00"
+digest: sha256:c060db62e3d0417ae7bb35caf9aca07e5d724228ce2da752eef2d5cabcdbf2db
+generated: "2026-03-24T10:57:43.480655+08:00"

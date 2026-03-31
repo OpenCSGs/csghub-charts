@@ -313,6 +313,8 @@ data:
   ## Server Configuration for S3 Proxy
   STARHUB_SERVER_STORAGE_GATEWAY_ENABLE_PRESIGNED_URL_PROXY: {{ $serverSvc.enablePresignedUrlProxy | quote }}
 
+  ## Define default error redirect URL
+  STARHUB_SERVER_FAIL_REDIRECT_URL: {{ printf "%s/errors/server-error" (include "common.endpoint.csghub" .) }}
   ## Additional environments for all csghub deployments
   {{- range $key, $value := .Values.environments }}
   {{ $key }}: {{ $value | quote }}

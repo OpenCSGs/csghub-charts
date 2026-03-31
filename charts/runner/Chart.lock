@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.0
+  version: 0.2.2
 - name: reloader
   repository: file://charts/reloader
   version: 2.2.7
@@ -11,5 +11,17 @@ dependencies:
 - name: gateway-helm
   repository: file://charts/gateway-helm
   version: v1.6.3
-digest: sha256:c809063c8c21fa64a7cc460c42009893603e41412715718226fd41a8adcd6437
-generated: "2026-02-05T12:15:43.091101+08:00"
+- name: lws
+  repository: file://charts/lws
+  version: v0.6.1
+- name: argo-workflows
+  repository: file://charts/argo-workflows
+  version: 0.47.4
+- name: knative-operator
+  repository: file://charts/knative-operator
+  version: 1.21.1
+- name: volcano
+  repository: file://charts/volcano
+  version: 1.14.1
+digest: sha256:24d4004a7437e1973af7a99813fbd117c91425fa7ec072a2d4b4e1463cf762af
+generated: "2026-03-24T10:58:09.720414+08:00"

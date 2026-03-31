@@ -9,23 +9,26 @@ Get base domain from external.domain:
 - If domain has 2 segments, return as is
 */}}
 {{- define "domain.base" }}
-  {{- $domain := "" }}
-  {{- if hasKey .Values.global.gateway "external" }}
-    {{- if hasKey .Values.global.gateway.external "domain" }}
-      {{- $domain = .Values.global.gateway.external.domain }}
-    {{- end }}
-  {{- end }}
+  {{- $gateway := .Values.global.gateway | default dict }}
+  {{- $external := $gateway.external | default dict }}
+
+  {{- $domain := $external.domain | default "" }}
+  {{- $useTop := $external.useTop | default false }}
 
   {{- if not $domain }}
     {{ fail "external.domain must be set in values.yaml" }}
   {{- end }}
 
-  {{- $parts := splitList "." $domain }}
-  {{- if ge (len $parts) 3 }}
-    {{- regexReplaceAll "^[^.]+\\." $domain "" -}}
-  {{- else }}
-    {{- $domain -}}
+  {{- $baseDomain := $domain }}
+
+  {{- if not $useTop }}
+    {{- $parts := splitList "." $domain }}
+    {{- if ge (len $parts) 3 }}
+      {{- $baseDomain = regexReplaceAll "^[^.]+\\." $domain "" }}
+    {{- end }}
   {{- end }}
+
+  {{- $baseDomain -}}
 {{- end }}
 
 {{/*

@@ -31,6 +31,14 @@ global:
         # a subdomain (e.g. csghub.example.com) will be used internally
         # to avoid overly broad wildcard routing such as *.example.com
 
+      ## Whether to use the top-level domain directly when generating derived domains.
+      ## If the domain is a multi-level domain (e.g. csghub.example.com):
+      ## - true:  use the full domain as-is (casdoor.csghub.example.com)
+      ## - false: strip the first label and use the base domain (casdoor.example.com)
+      ## If the domain is a second-level domain (e.g. example.com),
+      ## it will always be used directly without truncation regardless of this setting.
+      useTop: false
+
     ## TLS/SSL configuration for Gateway
     tls:
       enabled: false                # Enable TLS termination on the Gateway
@@ -40,7 +48,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.17.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -66,7 +74,7 @@ externalUrl: "https://csghub.example.com"
 image:
   # registry: "docker.io"                    # Docker registry
   repository: "opencsghq/csghub-server"
-  tag: "v1.16.0"                           # Image version tag
+  tag: "v1.17.0"                           # Image version tag
   pullPolicy: "IfNotPresent"               # Image pull policy: Always, IfNotPresent, Never
   pullSecrets: []                          # Docker registry secrets
 
@@ -105,8 +113,6 @@ interval: 60                           # Communication interval with server (sec
 
 ## Namespace management
 namespace: "spaces"                    # Namespace for user-deployed workloads
-autoConfigure: true                    # Automatically install knative/argo/lws
-kymlMode: create                       # Kubernetes resource: create, update, replace
 mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
 ## Networking configuration
@@ -139,19 +145,24 @@ storageClassName: ""
 ## Knative Serving configuration
 knative:
   serving:
-    domain: "example.com"              # Domain suffix for Knative services
+    domain: "example.com"               # Domain suffix for Knative services
+
+    ## Enable ksvc scale pod to 0 (stop space/inference/finetune/... instance)
+    autoscaler:
+      enableScaleToZero: true
+      scaleToZeroGracePeriod: "60m"
 
     ## Deprecated configuration (for backward compatibility)
     services: []
       # - type: "LoadBalancer"           # Service type: LoadBalancer or NodePort
       #   domain: "example.com"          # Internal service domain
-      #   host: "192.168.18.10"        # API server host address
-      #   port: "30213"                # NodePort value when type=NodePort
+      #   host: "192.168.18.10"          # API server host address
+      #   port: "30213"                  # NodePort value when type=NodePort
 
 ## RBAC Configuration
 rbac:
-  create: true                         # Create SA, Role, RoleBinding, ClusterRole, ClusterRoleBinding
-  serviceAccountName: "runner-admin"   # serviceAccountName created by rbac
+  create: true                           # Create SA, Role, RoleBinding, ClusterRole, ClusterRoleBinding
+  # serviceAccountName: ""               # serviceAccountName created by RBAC
 
 ## Logcollector Configuration
 logcollector:
@@ -272,3 +283,23 @@ prometheus:
 
   server:
     remoteWrite: []
+
+volcano:
+  custom:
+    scheduler_config_override: |
+      actions: "enqueue, allocate, backfill"
+      tiers:
+        - plugins:
+          - name: priority
+          - name: gang
+          - name: conformance
+        - plugins:
+          - name: drf
+          - name: deviceshare
+            arguments:
+              deviceshare.VGPUEnable: true
+              deviceshare.SchedulePolicy: binpack
+          - name: predicates
+          - name: proportion
+          - name: nodeorder
+          - name: binpack

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>403 Forbidden | CSGHub</title>
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            background: linear-gradient(135deg, #eef2ff, #f9fafb);
+            font-family: "PingFang SC", system-ui, -apple-system, sans-serif;
+        }
+        .content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 32px;
+            width: 420px;
+            height: 480px;
+            box-sizing: border-box;
+            overflow: hidden;
+            padding: 48px 40px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(16, 24, 40, 0.08);
+            animation: fadeIn 0.6s ease-out;
+        }
+        .content img {
+            width: 242px;
+            height: auto;
+        }
+        .text-content {
+            text-align: center;
+        }
+        .text-content h1 {
+            color: #101828;
+            font-family: "PingFang SC", system-ui, -apple-system, sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            line-height: 40px;
+            letter-spacing: -0.3px;
+            margin: 0 0 16px 0;
+        }
+        .text-content p {
+            color: #475467;
+            font-family: "PingFang SC", system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 24px;
+            margin: 0 0 32px 0;
+        }
+        .error-code {
+            font-size: 56px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #1e50e2, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            line-height: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .content {
+                padding: 32px 20px;
+            }
+            .text-content h1 {
+                font-size: 30px;
+                line-height: 44px;
+            }
+            .error-code {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <img src="https://opencsg-public-resource.oss-cn-beijing.aliyuncs.com/0916d174-15a8-44f3-90a0-35882a4554bc" alt="403 illustration">
+    <div class="text-content">
+        <h2 class="error-code">403</h2>
+        <h1>Access Forbidden</h1>
+        <p>You don't have access to this page.<br>Please contact the administrator.</p>
+        <p class="auto-refresh">Refreshing in <span id="countdown">10</span>s</p>
+    </div>
+</div>
+<script>
+    document.getElementById('request-id').textContent =
+        Math.random().toString(36).substring(2, 10).toUpperCase();
+</script>
+<script>
+    let seconds = 10;
+    const countdownElement = document.getElementById('countdown');
+
+    const countdown = setInterval(() => {
+        seconds--;
+        countdownElement.textContent = seconds;
+
+        if (seconds <= 0) {
+            clearInterval(countdown);
+            location.reload();
+        }
+    }, 1000);
+</script>
+</body>
+</html>

@@ -41,6 +41,10 @@ data:
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $s3Config.secure | quote }}
   STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $s3Config.pathStyle "true") | quote }}
 
+  {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
+  {{- $serverS3Config := include "common.s3.config" (dict "ctx" . "service" $serverSvc) | fromYaml }}
+  STARHUB_SERVER_S3_LFS_BUCKET: {{ $serverS3Config.bucket | quote }}
+
   ## XNet configuration for Redis
   {{- $redisConfig := include "common.redis.config" (dict "ctx" . "service" $service) | fromYaml }}
   STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $redisConfig.host $redisConfig.port | quote }}
