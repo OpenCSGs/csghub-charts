@@ -3,7 +3,8 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "agenticflow" "ctx" .) | fromYaml }}
+{{- $service := include "common.service" . | fromYaml }}
+{{- if not .Values.global.chartContext.isBuiltIn }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -32,7 +33,7 @@ data:
 
   ## AgenticHub Configuration for Redis
   {{- $redisConfig := include "common.redis.config" (dict "service" $service "ctx" .) | fromYaml }}
-  {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $redisConfig.password) }}
+  {{- if $redisConfig.password }}
   CSG_REDIS_URL: {{ printf "redis://%s:%s@%s:%v/%v" $redisConfig.user $redisConfig.password
   $redisConfig.host $redisConfig.port $redisConfig.database }}
   {{- else }}
@@ -43,13 +44,13 @@ data:
   {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
   {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $data }}
   FLOWS_ACCESS_TOKEN: {{ $agenticflowToken | quote }}
-  CSG_AZURE_OPENAI_KEY: "${CSG_AZURE_OPENAI_KEY}"
-  INFINI_API_KEY: "${INFINI_API_KEY}"
-  OPENROUTER_API_KEY: "${OPENROUTER_API_KEY}"
+  CSG_AZURE_OPENAI_KEY: {{ .Values.agenticflow.token.csgAzureOpenToken | quote}}
+  INFINI_API_KEY: {{ .Values.agenticflow.token.infiniApiKey | quote}}
+  OPENROUTER_API_KEY: {{ .Values.agenticflow.token.openRouterApiKey | quote}}
 
   ## AgenticHub Configuration for Langflow
   LANGFLOW_DATABASE_URL: {{ include "csghub.postgresql.dsn" (dict "service" $service "ctx" .) | quote }}
-  LANGFLOW_COOKIE_DOMAIN: {{ printf ".%s" .Values.global.gateway.domain }}
+  LANGFLOW_COOKIE_DOMAIN: {{ printf "%s" (include "common.domain.csghub" .) }}
   LANGFLOW_ACCESS_HTTPONLY: "false"
   LANGFLOW_REFRESH_HTTPONLY: "false"
   LANGFLOW_WORKERS: "6"
@@ -62,5 +63,6 @@ data:
   LANGFLOW_LOG_FILE: "/app/data/logs/langflow.log"
 
   ## AgenticHub Configuration for Others
-  BACKEND_URL: {{ printf "%s/-/agentichub" (include "common.domain.csghub" .) }}
-  FRONTEND_URL: {{ printf "%s/-/agentichub" (include "common.domain.csghub" .) }}
+  BACKEND_URL: {{ printf "%s/-/agentichub1" $csghubEndpoint }}
+  FRONTEND_URL: {{ printf "%s/-/agentichub1" $csghubEndpoint }}
+{{- end }}

@@ -1,0 +1,121 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" . | fromYaml }}
+{{- if not .Values.global.chartContext.isBuiltIn }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  csgbog.toml: |
+    [llm]
+    model-id = {{ dig "config" "llm" "modelId" "" .Values.csgbot.config | quote }}
+    model-base-url = {{ dig "config" "llm" "modelBaseUrl" "" .Values.csgbot.config | quote }}
+    temperature = {{ dig "config" "llm" "temperature" 0.1 .Values.csgbot.config }}
+    use-csghub-aigateway = {{ dig "config" "llm" "useCsghubAIGateway" false .Values.csgbot.config }}
+
+    [database]
+    file = {{ dig "file" "" .Values.csgbot.config.database | quote }}
+
+    [opencsg]
+    hub-admin-user-uuid = {{ dig "hubAdminUserUuid" "" .Values.csgbot.config.opencsg | quote }}
+    docs-dir = {{ dig "docsDir" "" .Values.csgbot.config.opencsg | quote }}
+
+    [opencsg.mcp-urls]
+    model = {{ dig "model" "" .Values.csgbot.config.mcpurls | quote }}
+    dataset = {{ dig "dataset" "" .Values.csgbot.config.mcpurls | quote }}
+    code = {{ dig "code" "" .Values.csgbot.config.mcpurls | quote }}
+    finetune = {{ dig "finetune" "" .Values.csgbot.config.mcpurls | quote }}
+    inference = {{ dig "inference" "" .Values.csgbot.config.mcpurls | quote }}
+
+    [opencsg.mcp-proxy-servers.web-fetch]
+    url = {{ dig "url" "" .Values.csgbot.config.mcpProxyServersWebFetch | quote }}
+    transport = {{ dig "transport" "" .Values.csgbot.config.mcpProxyServersWebFetch | quote }}
+    requires-jwt = {{ dig "requiresJwt" true .Values.csgbot.config.mcpProxyServersWebFetch }}
+
+    [aigateway]
+    model-id = {{ dig "modelId" "" .Values.csgbot.config.aigateway | quote }}
+
+    [code-sandbox]
+    image = {{ dig "image" "" .Values.csgbot.config.codeSandbox | quote }}
+    service-url = {{ dig "serviceUrl" "" .Values.csgbot.config.codeSandbox | quote }}
+
+    [claude-code]
+    cmd-template = {{ dig "cmdTemplate" "" .Values.csgbot.config.claudeCode | quote }}
+    default-model = {{ dig "defaultModel" "" .Values.csgbot.config.claudeCode | quote }}
+    stream-mode = {{ dig "streamMode" "" .Values.csgbot.config.claudeCode | quote }}
+
+    [codesouler]
+    cmd-template = {{ dig "cmdTemplate" "" .Values.csgbot.config.codesouler | quote }}
+    use-agent-template = {{ dig "useAgentTemplate" "" .Values.csgbot.config.codesouler | quote }}
+    use-mcp-template = {{ dig "useMcpTemplate" "" .Values.csgbot.config.codesouler | quote }}
+    data-dir = {{ dig "dataDir" "" .Values.csgbot.config.codesouler | quote }}
+    remote-repo-dir = {{ dig "remoteRepoDir" "" .Values.csgbot.config.codesouler | quote }}
+
+    [dataset]
+    user-name = {{ dig "userName" "" .Values.csgbot.config.dataset | quote }}
+
+    [search]
+    engine = {{ dig "engine" "" .Values.csgbot.config.search | quote }}
+    use-jd-gateway = {{ dig "useJdGateway" "" .Values.csgbot.config.search }}
+    count = {{ dig "count" "" .Values.csgbot.config.search }}
+    timeout = {{ dig "timeout" "" .Values.csgbot.config.search }}
+    thread-num = {{ dig "threadNum" "" .Values.csgbot.config.search }}
+
+    [deep-research]
+    query-decompose-max-size = {{ dig "queryDecomposeMaxSize" "" .Values.csgbot.config.deepResearch }}
+    report-length = {{ dig "reportLength" "" .Values.csgbot.config.deepResearch }}
+    answer-length = {{ dig "answerLength" "" .Values.csgbot.config.deepResearch }}
+    single-page-max-size = {{ dig "singlePageMaxSize" "" .Values.csgbot.config.deepResearch }}
+    report-model = {{ dig "reportModel" "" .Values.csgbot.config.deepResearch | quote }}
+
+    [integrations]
+    file-server-url = {{ dig "fileServerUrl" "" .Values.csgbot.config.integrations | quote }}
+    feishu-notification-enabled = {{ dig "feishuNotificationEnabled" "" .Values.csgbot.config.integrations }}
+    phoenix-endpoint = {{ dig "phoenixEndpoint" "" .Values.csgbot.config.integrations | quote }}
+    memmemmachine-url = {{ dig "memmemmachineUrl" "" .Values.csgbot.config.integrations | quote }}
+
+    [logging]
+    log-path = {{ dig "logPath" "" .Values.csgbot.config.logging | quote }}
+    disable-genius-chat = {{ dig "disableGeniusChat" "" .Values.csgbot.config.logging }}
+    disable-planner-chat = {{ dig "disablePlannerChat" "" .Values.csgbot.config.logging }}
+
+    [planner]
+    max-replan-count = {{ dig "maxReplanCount" "" .Values.csgbot.config.planner }}
+    max-clarification-rounds = {{ dig "maxClarificationRounds" "" .Values.csgbot.config.planner }}
+    executor = {{ dig "executor" "" .Values.csgbot.config.planner | quote }}
+    require-plan-confirmation = {{ dig "requirePlanConfirmation" "" .Values.csgbot.config.planner }}
+
+
+    [genius-sandbox]
+    sandbox-image = {{ dig "sandboxImage" "" .Values.csgbot.config.geniusSandbox | quote }}
+    sandbox-service-url = {{ dig "sandboxServiceUrl" "" .Values.csgbot.config.geniusSandbox | quote }}
+    workspace-volume-prefix = {{ dig "workspaceVolumePrefix" "" .Values.csgbot.config.geniusSandbox | quote }}
+
+
+    [external-docs]
+    enabled = {{ dig "enabled" "" .Values.csgbot.config.externalDocs }}
+
+    [external-docs.apis]
+    "CSGHUB" = "{{ include "common.endpoint" (dict "ctx" . "domain" .Values.global.gateway.external.domain) }}/api/v1/swagger/doc.json"
+
+
+  ## AgenticHub Token Custom
+  MODEL_API_KEY: {{ .Values.csgbot.environment.modelApiKey | default "" | quote }}
+  OPENCSG_HUB_ACCESS_TOKEN: {{ .Values.csgbot.environment.hubAccessToken | default "" | quote }}
+  WORKFLOW_ACCESS_TOKEN: {{ .Values.csgbot.environment.workflowAccessToken | default "" | quote }}
+  SERPER_SEARCH_API_KEY: {{ .Values.csgbot.environment.serperApiKey | default "" | quote }}
+  SERPAPI_API_KEY: {{ .Values.csgbot.environment.serpApiKey | default "" | quote }}
+  JINA_SEARCH_API_KEY: {{ .Values.csgbot.environment.jinaApiKey | default "" | quote }}
+  LANGFLOW_ACCESS_TOKEN: {{ .Values.csgbot.environment.langflowAccessToken | default "" | quote }}
+  DATASET_USER_TOKEN: {{ .Values.csgbot.environment.datasetUserToken | default "" | quote }}
+  USER_FEEDBACK_GITLAB_TOKEN: {{ .Values.csgbot.environment.gitlabToken | default "" | quote }}
+{{- end }}

@@ -3,8 +3,9 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "service" "csgbot" "ctx" .) | fromYaml }}
+{{- $service := include "common.service" . | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $values := .Values }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -15,18 +16,18 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
   annotations:
     helm.sh/resource-policy: keep
-    {{- $persistence := $service.persistence }}
+    {{- $persistence := $values.csgbot.persistence }}
     {{- if $persistence.annotations }}
       {{- toYaml $persistence.annotations | nindent 4 }}
     {{- end }}
 spec:
   accessModes:
-  {{- range $mode := (or $persistence.accessModes .Values.global.persistence.accessModes) }}
+  {{- range $mode := (or $persistence.accessModes $values.csgbot.persistence.accessModes) }}
     - {{ $mode | default "ReadWriteOnce" }}
   {{- end }}
-  {{- with (or $persistence.storageClass .Values.global.persistence.storageClass) }}
+  {{- with (or $persistence.storageClass $values.csgbot.persistence.storageClass) }}
   storageClassName: {{ . }}
   {{- end }}
   resources:
     requests:
-      storage: {{ or $persistence.size .Values.global.persistence.size }}
+      storage: {{ or $persistence.size $values.csgbot.persistence.size }}

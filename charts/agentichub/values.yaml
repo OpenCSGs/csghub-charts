@@ -1,0 +1,264 @@
+#################################################################
+##  Global Configuration                                       ##
+#################################################################
+global:
+  ## Gateway configuration
+  gateway:
+    ## GatewayClass controller that will reconcile Gateway / HTTPRoute resources.
+    ## Choose the controller according to the Gateway implementation you use.
+    ## Examples:
+    ## - gateway.envoyproxy.io/gatewayclass-controller  (Envoy Gateway)
+    ## - istio.io/gateway-controller                    (Istio)
+    ## - io.cilium/gateway-controller                   (Cilium)
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+    ## Gateway service configuration
+    ## type: Service type (LoadBalancer or NodePort)
+    ## nodePorts: Optional NodePort mapping (if using NodePort)
+    service:
+      type: "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      nodePorts: {}
+        # http: 30080
+        # https: 30443
+        # gitssh: 30022
+
+    ## Base external domain used to expose CSGHub services
+    external:
+      domain: "csghub.example.com"  # e.g. csghub.example.com, example.com
+        # public: ""                  # Optional public access domain override.
+        # If empty, the domain will be derived automatically.
+        # NOTE: When base domain is a second-level domain (e.g. example.com),
+        # a subdomain (e.g. csghub.example.com) will be used internally
+        # to avoid overly broad wildcard routing such as *.example.com
+
+      ## Whether to use the top-level domain directly when generating derived domains.
+      ## If the domain is a multi-level domain (e.g. csghub.example.com):
+      ## - true:  use the full domain as-is (casdoor.csghub.example.com)
+      ## - false: strip the first label and use the base domain (casdoor.example.com)
+      ## If the domain is a second-level domain (e.g. example.com),
+      ## it will always be used directly without truncation regardless of this setting.
+      useTop: false
+
+    ## TLS/SSL configuration for Gateway
+    tls:
+      enabled: false                # Enable TLS termination on the Gateway
+      # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
+
+  ## Image management
+  image:
+    registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
+    registryPolicy: "default"       # default or force, force will overwrite all others registries
+    tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
+    pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
+    pullSecrets: []                 # Private registry authentication secrets
+
+  ## Persistent volume configuration
+  persistence:
+    # storageClass: ""              # StorageClass name (empty for default)
+    accessModes: ["ReadWriteOnce"]  # Volume access modes
+    size: "10Gi"                    # Default storage capacity
+
+  ## Database configuration
+  postgresql:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External PostgreSQL connection
+    external: {}
+      # host: "<pg_host>"           # PostgreSQL host address
+      # port: 6432                  # PostgreSQL port
+      # user: "csghub"              # Database username
+      # password: ""                # Database password
+      # timezone: "Etc/UTC"         # Database timezone
+      # sslmode: "prefer"           # SSL mode
+
+  ## Redis configuration
+  redis:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Redis configuration
+    external: {}
+      # host: "<redis_host>"        # Redis server hostname or IP
+      # port: 6379                  # Redis port number
+      # password: ""                # Redis authentication password
+
+  ## subChart deployment context
+  chartContext:
+    isBuiltIn: false                # deployed bundled with csghub
+
+#################################################################
+##  AgenticHub Configuration                                   ##
+#################################################################
+
+agenticflow:
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/agenticflow"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service configuration
+  service: {}
+  # port: 7860
+
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_agentichub"              # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+  # sslmode: "prefer"                    # SSL mode
+
+  ## Redis configuration
+  redis: {}
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+  # password: ""                         # Redis authentication password
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "10Gi"                            # Disk space allocation
+
+  token:
+    csgAzureOpenToken: ""
+    infiniApiKey: ""
+    openRouterApiKey: ""
+
+
+
+
+# CSGBot configuration
+csgbot:
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "10Gi"                            # Disk space allocation
+
+
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/csgbot"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service configuration
+  service: {}
+  # port: 8070
+
+  ## Model configuration
+  model:
+    chat:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+    codesouler:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+    superAgent:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+    aigateway:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+
+  ##Credentials config
+  environment:
+    modelApiKey: ""
+    hubAccessToken: ""
+    workflowAccessToken: ""
+    langflowAccessToken: ""
+    serperApiKey: ""
+    serpApiKey: ""
+    jinaApiKey: ""
+    datasetUserToken: ""
+    gitlabToken: ""
+
+  ##Configmap configuration
+  config:
+    llm:
+      modelId: ""
+      modelBaseUrl: ""
+      temperature: 0.1
+      useCsghubAigateway: false
+    database:
+      file: "agno.db"
+    opencsg:
+      hubAdminUserUuid: ""
+      docsDir: "opencsg-docs/docs"
+    mcpurls:
+      model: ""
+      dataset: ""
+      code: ""
+      finetune: ""
+      inference: ""
+    mcpProxyServersWebFetch:
+      url: ""
+      transport: "http"
+      requiresJwt: true
+    aigateway:
+      modelId: ""
+    codeSandbox:
+      image: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-sandbox-python-runner:0.0.11"
+      serviceUrl: ""
+    claudeCode:
+      cmdTemplate: "ccr code --model {model} -p '{query}'{stream_mode}"
+      defaultModel: "claude-sonnet-4"
+      streamMode: " --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions"
+    codesouler:
+      cmdTemplate: "codesouler chat '{query}'{api_key}{api_base}{model}{mcp_headers_part}{history_part} -o stream-json"
+      useAgentTemplate: "codesouler agent use {agent_file_path}"
+      useMcpTemplate: 'codesouler mcp add ''{"get_available_tools":{"url":"{domain}/api/v1/csgbot/mcp/get_available_tools/mcp"}}'''
+      dataDir: "codesouler_data"
+      remoteRepoDir: "codesouler_data/repos"
+    dataset:
+      userName: ""
+    search:
+      engine: ""
+      useJdGateway: true
+      count: 10
+      timeout: 10
+      threadNum: 4
+    deepResearch:
+      queryDecomposeMaxSize: 8
+      reportLength: 20000
+      answerLength: 15000
+      singlePageMaxSize: 10000
+      reportModel: ""
+    integrations:
+      fileServerUrl: ""
+      feishuNotificationEnabled: true
+      phoenixEndpoint: ""
+      memmemmachineUrl: ""
+    logging:
+      logPath: "logs/server.log"
+      disableGeniusChat: false
+      disablePlannerChat: false
+    planner:
+      maxReplanCount: 3
+      maxClarificationRounds: 3
+      executor: "simple"
+      requirePlanConfirmation: true
+    geniusSandbox:
+      sandboxImage: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-genius-sandbox-python-runner:latest"
+      sandboxServiceUrl: ""
+      workspaceVolumePrefix: "/data/csgsandbox_volumes"
+    externalDocs:
+      enabled: false
+
+  ## Disable subCharts same with parent
+  envoy:
+    enabled: false
+  reloader:
+    enabled: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
