@@ -17,10 +17,10 @@ metadata:
 data:
   csgbog.toml: |
     [llm]
-    model-id = {{ dig "config" "llm" "modelId" "" .Values.csgbot.config | quote }}
-    model-base-url = {{ dig "config" "llm" "modelBaseUrl" "" .Values.csgbot.config | quote }}
-    temperature = {{ dig "config" "llm" "temperature" 0.1 .Values.csgbot.config }}
-    use-csghub-aigateway = {{ dig "config" "llm" "useCsghubAIGateway" false .Values.csgbot.config }}
+    model-id = {{ dig "modelId" "" .Values.csgbot.config.llm | quote }}
+    model-base-url = {{ dig "modelBaseUrl" "" .Values.csgbot.config.llm | quote }}
+    temperature = {{ dig "temperature" '' .Values.csgbot.config.llm }}
+    use-csghub-aigateway = {{ dig "useCsghubAIGateway" "" .Values.csgbot.config.llm }}
 
     [database]
     file = {{ dig "file" "" .Values.csgbot.config.database | quote }}

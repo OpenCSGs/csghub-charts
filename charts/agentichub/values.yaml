@@ -186,7 +186,7 @@ csgbot:
     llm:
       modelId: ""
       modelBaseUrl: ""
-      temperature: 0.1
+      temperature: 0.2
       useCsghubAigateway: false
     database:
       file: "agno.db"
