@@ -22,7 +22,7 @@ metadata:
     {{- end }}
 spec:
   accessModes:
-  {{- range $mode := (or $persistence.accessModes $values.csgbot.persistence.accessModes) }}
+  {{- range $mode := (or $persistence.accessModes .Values.global.persistence.accessModes) }}
     - {{ $mode | default "ReadWriteOnce" }}
   {{- end }}
   {{- with (or $persistence.storageClass $values.csgbot.persistence.storageClass) }}
