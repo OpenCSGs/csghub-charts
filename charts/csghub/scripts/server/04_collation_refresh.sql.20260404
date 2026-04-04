@@ -55,7 +55,7 @@ BEGIN
     FOR db IN
         SELECT datname
         FROM pg_database
-        WHERE datallowconn = true
+        WHERE datallowconn = true AND datname ~
     LOOP
         EXECUTE format('ALTER DATABASE %I REFRESH COLLATION VERSION;', db.datname);
     END LOOP;
