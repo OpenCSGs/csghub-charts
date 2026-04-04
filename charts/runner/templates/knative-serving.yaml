@@ -54,6 +54,8 @@ spec:
     features:
       kubernetes.podspec-priorityclassname: "enabled"
       kubernetes.podspec-schedulername: "enabled"
+      kubernetes.podspec-affinity: "enabled"
+      kubernetes.podspec-nodeselector: "enabled"
     deployment:
       {{- $globalRegistry := .Values.global.image.registry | default "" }}
       {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}
