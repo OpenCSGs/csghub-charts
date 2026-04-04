@@ -4,24 +4,38 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" . | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $spaceName := include "namespace.knative" . }}
-{{- $spaceExists := lookup "v1" "Namespace" "" $spaceName }}
-{{- if not $spaceExists }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ $spaceName }}
-  annotations:
-    "helm.sh/hook": post-install, post-upgrade
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
 ---
-{{- end }}
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
   name: knative-serving
   namespace: {{ $spaceName }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    {{- if .Release.IsInstall }}
+    "helm.sh/hook": post-install
+    {{- end }}
 spec:
   version: "1.21"
   # https://knative.dev/docs/install/operator/configuring-serving-cr/#configuring-the-knative-serving-operator-custom-resource
