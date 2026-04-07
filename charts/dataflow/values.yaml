@@ -49,7 +49,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v1.17.1"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -160,7 +160,7 @@ labelStudio:
   image:
     # registry: "docker.io"
     repository: "opencsghq/label-studio"
-    tag: "v1.16.0"                            # Image version tag
+    tag: "v1.17.1"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
