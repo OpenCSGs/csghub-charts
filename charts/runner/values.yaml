@@ -285,6 +285,8 @@ prometheus:
     remoteWrite: []
 
 volcano:
+  basic:
+    image_pull_policy: "IfNotPresent"
   custom:
     scheduler_config_override: |
       actions: "enqueue, allocate, backfill"
