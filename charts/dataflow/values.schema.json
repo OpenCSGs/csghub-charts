@@ -106,24 +106,6 @@
             }
           }
         },
-        "mongo": {
-          "type": "object",
-          "description": "MongoDB configuration",
-          "properties": {
-            "enabled": { "type": "boolean", "description": "Use built-in (true) or external (false)" },
-            "external": {
-              "type": "object",
-              "description": "External Mongo configuration",
-              "properties": {
-                "host": { "type": "string", "description": "Mongo server hostname or IP" },
-                "port": { "type": "integer", "description": "Mongo port number" },
-                "user": { "type": "string", "description": "Mongo authentication user" },
-                "password": { "type": "string", "description": "Mongo authentication password" }
-              },
-              "additionalProperties": false
-            }
-          }
-        },
         "chartContext": {
           "type": "object",
           "description": "SubChart deployment context",
@@ -186,16 +168,6 @@
             "host": { "type": "string", "description": "Redis host" },
             "port": { "type": "integer", "description": "Redis port" },
             "password": { "type": "string", "description": "Redis password" }
-          }
-        },
-        "mongo": {
-          "type": "object",
-          "description": "Mongo configuration",
-          "properties": {
-            "host": { "type": "string", "description": "Mongo host" },
-            "port": { "type": "integer", "description": "Mongo port" },
-            "user": { "type": "string", "description": "Mongo user" },
-            "password": { "type": "string", "description": "Mongo password" }
           }
         },
         "persistence": {
