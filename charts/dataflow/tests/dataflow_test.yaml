@@ -49,10 +49,6 @@ set:
     name: "postgresql"
     service:
       port: 5432
-  mongo:
-    name: "mongo"
-    service:
-      port: 27017
 tests:
   - it: Should render ConfigMap correctly
     template: dataflow/configmap.yaml
@@ -87,19 +83,13 @@ tests:
       - equal:
           path: data["REDIS_HOST_URL"]
           value: "redis://csghub-redis:6379"
-      - matchRegex:
-          path: data["MONG_HOST_URL"]
-          pattern: "mongodb://root:.{32}@csghub-mongo:27017"
-
-  - it: Should render ConfigMap correctly with external postgresql, redis, mongo
+  - it: Should render ConfigMap correctly with external postgresql, redis
     template: dataflow/configmap.yaml
     set:
       global:
         postgresql:
           enabled: false
         redis:
-          enabled: false
-        mongo:
           enabled: false
         chartContext:
           isBuiltIn: true
@@ -113,11 +103,6 @@ tests:
         redis:
           host: "10.6.0.11"
           port: 6380
-        mongo:
-          host: "10.6.0.12"
-          port: 27018
-          user: "mongo"
-          password: "mongo"
     asserts:
       - equal:
           path: data["CSGHUB_ENDPOINT"]
@@ -140,9 +125,6 @@ tests:
       - equal:
           path: data["REDIS_HOST_URL"]
           value: "redis://10.6.0.11:6380"
-      - equal:
-          path: data["MONG_HOST_URL"]
-          value: "mongodb://mongo:mongo@10.6.0.12:27018"
 
   - it: Should render httpRoutes correctly
     template: dataflow/httproutes.yaml

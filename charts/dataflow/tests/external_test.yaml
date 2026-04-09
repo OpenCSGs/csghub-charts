@@ -20,13 +20,6 @@ set:
         host: "10.6.0.11"
         port: 6380
         password: "Redis2025"
-    mongo:
-      enabled: false
-      external:
-        host: "10.6.0.12"
-        port: 27018
-        user: "mongo"
-        password: "Mongo2025"
 tests:
   - it: Should render configmap for external correctly
     template: dataflow/configmap.yaml
@@ -49,6 +42,3 @@ tests:
       - equal:
           path: data["REDIS_HOST_URL"]
           value: "redis://10.6.0.11:6380"
-      - equal:
-          path: data["MONG_HOST_URL"]
-          value: "mongodb://mongo:Mongo2025@10.6.0.12:27018"
