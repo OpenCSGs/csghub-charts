@@ -491,6 +491,7 @@ postgresql:
     - "csghub_server"
     - "csghub_portal"
     - "csghub_dataflow"
+    - "csghub_dataflow_logs"
     - "csghub_label_studio"
     - "csghub_csgship"
     - "csghub_xnet"
