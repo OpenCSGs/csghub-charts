@@ -62,8 +62,9 @@ spec:
       initContainers:
         {{- include "wait-for-server" . | nindent 8 }}
       containers:
-        {{- if $service.moderation.enabled }}
-        - name: {{ printf "%s-moderation" $service.name }}
+        {{- $moderation := $service.moderation }}
+        {{- if $moderation.enabled }}
+        - name: {{ $moderation.name | default (printf "%s-moderation" $service.name) }}
           image: {{ include "common.image" (list . $serverImage) }}
           imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
           command:
@@ -74,25 +75,25 @@ spec:
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
             - containerPort: 8089
-              name: "moderation"
+              name: {{ $moderation.name | default "moderation" }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
-          {{- with $service.environments }}
+          {{- with $moderation.environments }}
           env:
           {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
           {{- end }}
           {{- end }}
-          {{- if $service.resources }}
+          {{- if $moderation.resources }}
           resources:
-            {{- toYaml $service.resources | nindent 12 }}
+            {{- toYaml $moderation.resources | nindent 12 }}
           {{- end }}
-          {{- if $service.volumeMounts }}
+          {{- if $moderation.volumeMounts }}
           volumeMounts:
-            {{- toYaml $service.volumeMounts | nindent 12 }}
+            {{- toYaml $moderation.volumeMounts | nindent 12 }}
           {{- end }}
           livenessProbe:
             tcpSocket:
@@ -106,26 +107,27 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
-          {{- if $service.startupProbe }}
+          {{- if $moderation.startupProbe }}
           startupProbe:
-            {{- toYaml $service.startupProbe | nindent 12 }}
+            {{- toYaml $moderation.startupProbe | nindent 12 }}
           {{- end }}
-          {{- if $service.securityContext }}
+          {{- if $moderation.securityContext }}
           securityContext:
-            {{- toYaml $service.securityContext | nindent 12 }}
+            {{- toYaml $moderation.securityContext | nindent 12 }}
           {{- end }}
-          {{- if $service.lifecycle }}
+          {{- if $moderation.lifecycle }}
           lifecycle:
-            {{- toYaml $service.lifecycle | nindent 12 }}
+            {{- toYaml $moderation.lifecycle | nindent 12 }}
           {{- end }}
-          {{- if $service.stdin }}
-          stdin: {{ $service.stdin }}
+          {{- if $moderation.stdin }}
+          stdin: {{ $moderation.stdin }}
           {{- end }}
-          {{- if $service.tty }}
-          tty: {{ $service.tty }}
+          {{- if $moderation.tty }}
+          tty: {{ $moderation.tty }}
           {{- end }}
         {{- end }}
-        - name: {{ printf "%s-aigateway" $service.name }}
+        {{- $aigateway := $service.aigateway }}
+        - name: {{ $aigateway.name | default (printf "%s-aigateway" $service.name) }}
           image: {{ include "common.image" (list . $serverImage) }}
           imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
           command:
@@ -136,52 +138,56 @@ spec:
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
             - containerPort: 8094
-              name: "aigateway"
+              name: {{ $aigateway.name | default "aigateway" }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
-          {{- with $service.environments }}
           env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          {{- with $aigateway.environments }}
           {{- range $key, $value := . }}
             - name: {{ $key }}
               value: {{ $value | quote }}
           {{- end }}
           {{- end }}
-          {{- if $service.resources }}
+          {{- if $aigateway.resources }}
           resources:
-            {{- toYaml $service.resources | nindent 12 }}
+            {{- toYaml $aigateway.resources | nindent 12 }}
           {{- end }}
-          {{- if $service.volumeMounts }}
+          {{- if $aigateway.volumeMounts }}
           volumeMounts:
-            {{- toYaml $service.volumeMounts | nindent 12 }}
+            {{- toYaml $aigateway.volumeMounts | nindent 12 }}
           {{- end }}
           livenessProbe:
             tcpSocket:
               port: 8094
             initialDelaySeconds: 10
             periodSeconds: 5
-          {{- if $service.readinessProbe }}
+          {{- if $aigateway.readinessProbe }}
           readinessProbe:
-            {{- toYaml $service.readinessProbe | nindent 12 }}
+            {{- toYaml $aigateway.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if $service.startupProbe }}
+          {{- if $aigateway.startupProbe }}
           startupProbe:
-            {{- toYaml $service.startupProbe | nindent 12 }}
+            {{- toYaml $aigateway.startupProbe | nindent 12 }}
           {{- end }}
-          {{- if $service.securityContext }}
+          {{- if $aigateway.securityContext }}
           securityContext:
-            {{- toYaml $service.securityContext | nindent 12 }}
+            {{- toYaml $aigateway.securityContext | nindent 12 }}
           {{- end }}
-          {{- if $service.lifecycle }}
+          {{- if $aigateway.lifecycle }}
           lifecycle:
-            {{- toYaml $service.lifecycle | nindent 12 }}
+            {{- toYaml $aigateway.lifecycle | nindent 12 }}
           {{- end }}
-          {{- if $service.stdin }}
-          stdin: {{ $service.stdin }}
+          {{- if $aigateway.stdin }}
+          stdin: {{ $aigateway.stdin }}
           {{- end }}
-          {{- if $service.tty }}
-          tty: {{ $service.tty }}
+          {{- if $aigateway.tty }}
+          tty: {{ $aigateway.tty }}
           {{- end }}
       {{- if $service.volumes }}
       volumes:
