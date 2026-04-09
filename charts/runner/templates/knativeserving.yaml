@@ -5,11 +5,11 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" . | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- $spaceName := include "namespace.knative" . }}
+{{- $knativeNamespace := include "namespace.knative" . }}
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ $spaceName }}
+  name: {{ $knativeNamespace }}
   labels:
     app.kubernetes.io/service: {{ $serviceName }}
     {{- if $service.labels }}
@@ -17,12 +17,14 @@ metadata:
     {{- else }}
       {{- include "common.labels" . | nindent 4 }}
     {{- end }}
+  annotations:
+    helm.sh/resource-policy: keep
 ---
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
   name: knative-serving
-  namespace: {{ $spaceName }}
+  namespace: {{ $knativeNamespace }}
   labels:
     app.kubernetes.io/service: {{ $serviceName }}
     {{- if $service.labels }}
