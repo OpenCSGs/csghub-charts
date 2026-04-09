@@ -23,5 +23,8 @@ dependencies:
 - name: volcano
   repository: file://charts/volcano
   version: 1.14.1
-digest: sha256:24d4004a7437e1973af7a99813fbd117c91425fa7ec072a2d4b4e1463cf762af
-generated: "2026-03-24T10:58:09.720414+08:00"
+- name: agent-sandbox
+  repository: https://charts.opencsg.com/csghub
+  version: 0.2.1
+digest: sha256:0ad62e0d885df1fc8e3d34a5de80714e0144a74402a1867f73ca8bc551bf2a42
+generated: "2026-04-07T18:05:47.850374+08:00"

@@ -57,6 +57,9 @@ rules:
   - apiGroups: ["", "apps", "serving.knative.dev", "argoproj.io"]
     resources: ["pods", "pods/log", "services", "deployments", "configmaps", "workflows", "workflowtemplates", "revisions"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["agents.x-k8s.io"]
+    resources: ["sandboxes"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
