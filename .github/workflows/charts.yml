@@ -1,0 +1,102 @@
+name: Helm Charts CI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+    paths:
+      - 'scripts/*.sh'
+      - 'charts/**'
+
+env:
+  # Order matters: base charts (common) must be processed before dependent charts (csghub)
+  CHARTS: "charts/common charts/runner charts/dataflow charts/csgship charts/csghub"
+  # List of charts that should sync their version with the Git Tag
+  VERSION_SYNC_CHARTS: "charts/runner charts/dataflow charts/csghub"
+
+jobs:
+  package:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    container:
+      image: quay.io/helmpack/chart-testing:v3.13.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set tag variables
+        run: |
+          echo "CI_COMMIT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "CI_COMMIT_TAG_NO_V=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Update Specific Chart versions
+        run: |
+          for CHART in $VERSION_SYNC_CHARTS; do
+            if [ -d "$CHART" ]; then
+              echo "📝 Updating version for $CHART to ${CI_COMMIT_TAG_NO_V}"
+              sed -i "s/^version:.*/version: ${CI_COMMIT_TAG_NO_V}/" "$CHART/Chart.yaml"
+              sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}\"/" "$CHART/Chart.yaml"
+            fi
+          done
+
+      - name: Package charts
+        run: |
+          for CHART_PATH in $CHARTS; do
+            echo "🚀 Processing $CHART_PATH"
+          
+            # Use build first to resolve local 'file://' dependencies efficiently
+            # Fallback to update if no lock file exists or remote charts are needed
+            helm dependency build "$CHART_PATH" || helm dependency update "$CHART_PATH"
+          
+            helm package "$CHART_PATH" -d ./
+          done
+
+      - name: Upload charts to repo
+        env:
+          CHART_USER: ${{ secrets.CHART_USER }}
+          CHART_PASSWORD: ${{ secrets.CHART_PASSWORD }}
+        run: |
+          echo "📤 Uploading all packages..."
+          for pkg in *.tgz; do
+            echo "→ Uploading $pkg"
+            curl -sSf -u "${CHART_USER}:${CHART_PASSWORD}" \
+              --upload-file "$pkg" \
+              https://charts.opencsg.com/repository/csghub/
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-packages
+          path: "*.tgz"
+          retention-days: 7
+
+  uploads:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    container:
+      image: quay.io/helmpack/chart-testing:v3.13.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload scripts
+        env:
+          CHART_USER: ${{ secrets.CHART_USER }}
+          CHART_PASSWORD: ${{ secrets.CHART_PASSWORD }}
+        run: |
+          echo "📤 Uploading script files..."
+          for file in scripts/*.sh; do
+            if [ -f "$file" ]; then
+              echo "→ Uploading $file"
+              curl -f -u ${CHART_USER}:${CHART_PASSWORD} \
+                --upload-file "$file" \
+                https://charts.opencsg.com/repository/scripts/
+            fi
+          done
