@@ -1,38 +1,49 @@
-
 stages:
   - package
   - uploads
 
 variables:
+  # Order matters: base charts (common) must be processed before dependent charts (csghub)
   CHARTS: "charts/common charts/runner charts/dataflow charts/csgship charts/csghub"
+  # List of charts that should sync their version with the Git Tag
+  VERSION_SYNC_CHARTS: "charts/runner charts/dataflow charts/csghub"
 
 package:
   stage: package
   image: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsg_public/helmpack/chart-testing:v3.13.0
   script:
     - |
-      sed -i "s/^version:.*/version: ${CI_COMMIT_TAG#v}/" charts/csghub/Chart.yaml
-      sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}\"/" charts/csghub/Chart.yaml
-      #sed -i "s/^    tag:.*/    tag: \"${CI_COMMIT_TAG}\"/" charts/csghub/values.yaml
-      
-      echo "Verify version updated:"
-      sed -n "/${CI_COMMIT_TAG#v}/p" charts/csghub/{values.yaml,Chart.yaml} | sed 's/^    //g'
-    - |
-      for CHART_PATH in $CHARTS; do
-        echo "🚀 Packaging $CHART_PATH"
-        helm dependency update "$CHART_PATH"
-        helm package "$CHART_PATH" -d ./
+      VERSION_NO_V="${CI_COMMIT_TAG#v}"
+      echo "Step 1: Updating specific chart versions..."
+      for CHART in $VERSION_SYNC_CHARTS; do
+        if [ -d "$CHART" ]; then
+          echo "📝 Updating version for $CHART to $VERSION_NO_V"
+          sed -i "s/^version:.*/version: $VERSION_NO_V/" "$CHART/Chart.yaml"
+          sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}\"/" "$CHART/Chart.yaml"
+        fi
       done
 
-      echo "📤 Uploading all charts..."
+    - |
+      echo "Step 2: Packaging charts in sequence..."
+      for CHART_PATH in $CHARTS; do
+        if [ -d "$CHART_PATH" ]; then
+          echo "🚀 Processing $CHART_PATH"
+          # Build local dependencies (file://) or update from remote
+          helm dependency build "$CHART_PATH" || helm dependency update "$CHART_PATH"
+          helm package "$CHART_PATH" -d ./
+        fi
+      done
+
+    - |
+      echo "Step 3: Uploading all charts..."
       for pkg in *.tgz; do
         echo "→ Uploading $pkg"
         curl -sSf -u "${CHART_USER}:${CHART_PASSWORD}" \
           --upload-file "$pkg" \
-          https://charts.opencsg.com/repository/csghub/ || echo $?
+          https://charts.opencsg.com/repository/csghub/
       done
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v\d+.\d+.\d+$/
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
   artifacts:
     paths:
       - "*.tgz"
@@ -47,7 +58,7 @@ uploads:
       for file in scripts/*.sh; do
         if [ -f "$file" ]; then
           echo "→ Uploading $file"
-          curl -f -u ${CHART_USER}:${CHART_PASSWORD} \
+          curl -f -u "${CHART_USER}:${CHART_PASSWORD}" \
             --upload-file "$file" \
             https://charts.opencsg.com/repository/scripts/
         fi
@@ -56,4 +67,3 @@ uploads:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - "scripts/*.sh"
-
