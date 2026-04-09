@@ -33,9 +33,14 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-    {{- if .Release.IsInstall }}
-    "helm.sh/hook": post-install
+    {{- $crd := lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "knativeservings.operator.knative.dev" }}
+    {{- if and .Release.IsUpgrade (not $crd) }}
+    helm.sh/hook: post-upgrade
     {{- end }}
+    {{- if .Release.IsInstall }}
+    helm.sh/hook: post-install
+    {{- end }}
+
 spec:
   version: "1.21"
   # https://knative.dev/docs/install/operator/configuring-serving-cr/#configuring-the-knative-serving-operator-custom-resource
