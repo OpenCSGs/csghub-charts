@@ -73,3 +73,6 @@ ignore:
   # Runner related ignores
   - charts/runner/templates/configmap-*.yaml
   - charts/runner/templates/secret.yaml
+
+  # Agent-sandbox related ignores
+  - charts/agent-sandbox
