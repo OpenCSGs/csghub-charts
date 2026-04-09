@@ -21,13 +21,6 @@ set:
         host: "10.6.0.11"
         port: 6380
         password: "Redis2025"
-    mongo:
-      enabled: false
-      external:
-        host: "10.6.0.12"
-        port: 27018
-        user: "mongo"
-        password: "Mongo2025"
     objectStore:
       enabled: false
       external:
