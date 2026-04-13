@@ -104,6 +104,14 @@ rules:
     resources: ["services"]
     resourceNames: ["kourier"]
     verbs: ["get", "list"]
+  ## --- Permissions for agents.x-k8s.io Sandboxes ---
+  - apiGroups: ["agents.x-k8s.io"]
+    resources: ["sandboxes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  # PVC
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["create", "get", "list", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
