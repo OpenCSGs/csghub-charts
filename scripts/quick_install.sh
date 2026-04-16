@@ -147,13 +147,19 @@ retry() {
   local ret=1
   set +e
   while (( count < max )); do
-    bash -c "$cmd"
-    ret=$?
+    if (( count < max - 1 )); then
+      # Non-final attempt: || conditional context suppresses ERR trap
+      bash -c "$cmd" && ret=0 || ret=$?
+    else
+      # Final attempt: bare command allows ERR trap to fire
+      bash -c "$cmd"
+      ret=$?
+    fi
     if (( ret == 0 )); then
       set -e
       return 0
     fi
-    ((count++))
+    ((++count))
     log WARN "Retry $count/$max: $cmd (exit code: $ret)"
     sleep $((5 * count))
   done
