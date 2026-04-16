@@ -38,8 +38,11 @@ Retrieve the root/admin password with:
 {{- $minioName := include "common.names.custom" (list . $minioSvc.name) }}
 ---
 
-💾 Minio Console
-Address: {{ include "common.endpoint.minio" . }}/console
+💾 Minio
+API: {{ include "common.endpoint.minio" . }}
+{{- if .Values.minio.console.enabled }}
+Console: {{ include "common.endpoint.minio" . }}/console
+{{- end }}
 Credentials:
   kubectl get secret -n {{ .Release.Namespace }} {{ $minioName }} \
     -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && \
