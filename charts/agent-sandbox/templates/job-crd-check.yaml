@@ -1,0 +1,50 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: agent-sandbox-crd-check
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    app: agent-sandbox-crd-check
+  annotations:
+    helm.sh/hook: pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  parallelism: 1
+  completions: 1
+  activeDeadlineSeconds: 300
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        {{- include "common.labels" . | nindent 8 }}
+        app: agent-sandbox-crd-check
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: agent-sandbox-crd-check
+      automountServiceAccountToken: true
+      {{- with .Values.global.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: crd-check
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "agentSandbox" "image" "opencsghq/kubectl:latest") | replace "registry.k8s.io" "docker.io" }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+          command: ["/bin/bash", "-c", "kubectl apply -f /crds/"]
+          volumeMounts:
+            - name: crds
+              mountPath: /crds
+      volumes:
+        - name: crds
+          configMap:
+            name: agent-sandbox-crd-check
