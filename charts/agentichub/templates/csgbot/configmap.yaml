@@ -16,18 +16,15 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   csgbog.toml: |
-    [llm]
-    model-id = {{ dig "modelId" "" .Values.csgbot.config.llm | quote }}
-    model-base-url = {{ dig "modelBaseUrl" "" .Values.csgbot.config.llm | quote }}
-    temperature = {{ dig "temperature" "" .Values.csgbot.config.llm }}
-    use-csghub-aigateway = {{ dig "useCsghubAigateway" "" .Values.csgbot.config.llm }}
-
     [database]
     file = {{ dig "file" "" .Values.csgbot.config.database | quote }}
 
     [opencsg]
-    hub-admin-user-uuid = {{ dig "hubAdminUserUuid" "" .Values.csgbot.config.opencsg | quote }}
+    hub-base-url = {{ include "common.endpoint.csghub" . | quote }}                   # api_base
+    base-url = {{ include "common.endpoint.csghub" . | quote }}                           # portal base
+    starship-api-url = {{ include "common.endpoint.csghub" . | quote }}
     docs-dir = {{ dig "docsDir" "" .Values.csgbot.config.opencsg | quote }}
+    mcp-gateway-url = {{ printf "%s/aigateway/v1/gateway/mcp" (include "common.endpoint.csghub" .) | quote }}
 
     [opencsg.mcp-urls]
     model = {{ dig "model" "" .Values.csgbot.config.mcpurls | quote }}
@@ -36,13 +33,13 @@ data:
     finetune = {{ dig "finetune" "" .Values.csgbot.config.mcpurls | quote }}
     inference = {{ dig "inference" "" .Values.csgbot.config.mcpurls | quote }}
 
-    [opencsg.mcp-proxy-servers.web-fetch]
-    url = {{ dig "url" "" .Values.csgbot.config.mcpProxyServersWebFetch | quote }}
-    transport = {{ dig "transport" "" .Values.csgbot.config.mcpProxyServersWebFetch | quote }}
-    requires-jwt = {{ dig "requiresJwt" "" .Values.csgbot.config.mcpProxyServersWebFetch }}
-
     [aigateway]
     model-id = {{ dig "modelId" "" .Values.csgbot.config.aigateway | quote }}
+    base-url = {{ printf "%s/aigateway" (include "common.endpoint.csghub" .) | quote }}
+    access-token-ref = {{ dig "accessTokenRef" "" .Values.csgbot.config.aigateway | quote }}
+
+    [langflow]
+    base-url = {{ include "common.endpoint.workflow" . | quote }}
 
     [code-sandbox]
     image = {{ dig "image" "" .Values.csgbot.config.codeSandbox | quote }}
@@ -79,9 +76,9 @@ data:
 
     [integrations]
     file-server-url = {{ dig "fileServerUrl" "" .Values.csgbot.config.integrations | quote }}
-    feishu-notification-enabled = {{ dig "feishuNotificationEnabled" "" .Values.csgbot.config.integrations }}
+    notification-url = {{ printf "%s/api/v1/notifications?current_user=csgbot" (include "common.endpoint.csghub" .) | quote }}
     phoenix-endpoint = {{ dig "phoenixEndpoint" "" .Values.csgbot.config.integrations | quote }}
-    memmemmachine-url = {{ dig "memmemmachineUrl" "" .Values.csgbot.config.integrations | quote }}
+    memmemmachine-url = {{ printf "%s/mcp/" (include "common.endpoint.memmachine" .) | quote }}
 
     [logging]
     log-path = {{ dig "logPath" "" .Values.csgbot.config.logging | quote }}
@@ -94,12 +91,10 @@ data:
     executor = {{ dig "executor" "" .Values.csgbot.config.planner | quote }}
     require-plan-confirmation = {{ dig "requirePlanConfirmation" "" .Values.csgbot.config.planner }}
 
-
     [genius-sandbox]
     sandbox-image = {{ dig "sandboxImage" "" .Values.csgbot.config.geniusSandbox | quote }}
     sandbox-service-url = {{ dig "sandboxServiceUrl" "" .Values.csgbot.config.geniusSandbox | quote }}
     workspace-volume-prefix = {{ dig "workspaceVolumePrefix" "" .Values.csgbot.config.geniusSandbox | quote }}
-
 
     [external-docs]
     enabled = {{ dig "enabled" "" .Values.csgbot.config.externalDocs }}
@@ -107,6 +102,12 @@ data:
     [external-docs.apis]
     "CSGHUB" = "{{ include "common.endpoint" (dict "ctx" . "domain" .Values.global.gateway.external.domain) }}/api/v1/swagger/doc.json"
 
+    [csghub-sandbox]
+    base-url = {{ include "common.endpoint.csghub" . | quote }}        # /api/v1/sandboxes/...
+    aigateway-url = {{ printf "%s/aigateway" (include "common.endpoint.csghub" .) | quote }}       # /v1/sandboxes/.../execute|upload|exists
+
+    [openclaw-sandbox]
+    image = {{ .Values.csgbot.config.openClawSandbox.image | quote}}
 
   ## AgenticHub Token Custom
   MODEL_API_KEY: {{ .Values.csgbot.environment.modelApiKey | default "" | quote }}

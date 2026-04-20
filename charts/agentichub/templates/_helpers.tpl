@@ -5,51 +5,42 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{/*
 Wait for Redis to be ready before starting the service
-Usage: {{ include "wait-for-redis" (dict "service" $service "ctx" .) }}
+Usage: {{ include "wait-for-redis" (dict "ctx" . "service" $service) }}
 */}}
 {{- define "wait-for-redis" -}}
-{{- $service := .service -}}
 {{- $ctx := .ctx -}}
-{{- $redisConfig := include "common.redis.config" (dict "service" $service "ctx" $ctx) | fromYaml -}}
-{{- if $redisConfig.password -}}
+{{- $service := .service -}}
+{{- $redisConfig := include "common.redis.config" (dict "ctx" $ctx "service" $service) | fromYaml -}}
 - name: wait-for-redis
-  image: {{ include "common.image" (list $ctx (dict "registry" "docker.io" "repository" "bitnami/redis-cli" "tag" "latest")) }}
+  image: {{ include "common.image.fixed" (dict "ctx" $ctx "service" "" "image" "opencsghq/redis-cli:latest") }}
+  imagePullPolicy: {{ or $ctx.Values.global.image.pullPolicy "IfNotPresent" | quote }}
   command:
     - /bin/sh
     - -c
     - |
       echo "Waiting for Redis to be ready..."
+      {{- if $redisConfig.password }}
       until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} -a {{ $redisConfig.password }} ping | grep -q 'PONG'; do
-        echo "Redis is unavailable - sleeping"
-        sleep 5
-      done
-      echo "Redis is ready!"
-{{- else -}}
-- name: wait-for-redis
-  image: {{ include "common.image" (list $ctx (dict "registry" "docker.io" "repository" "bitnami/redis-cli" "tag" "latest")) }}
-  command:
-    - /bin/sh
-    - -c
-    - |
-      echo "Waiting for Redis to be ready..."
+      {{- else }}
       until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} ping | grep -q 'PONG'; do
+      {{- end }}
         echo "Redis is unavailable - sleeping"
         sleep 5
       done
       echo "Redis is ready!"
-{{- end -}}
 {{- end -}}
 
 {{/*
 Wait for PostgreSQL to be ready before starting the service
-Usage: {{ include "wait-for-postgresql" (dict "service" $service "ctx" .) }}
+Usage: {{ include "wait-for-postgresql" (dict "ctx" . "service" $service) }}
 */}}
 {{- define "wait-for-postgresql" -}}
-{{- $service := .service -}}
 {{- $ctx := .ctx -}}
-{{- $pgConfig := include "common.postgresql.config" (dict "service" $service "ctx" $ctx) | fromYaml -}}
+{{- $service := .service -}}
+{{- $pgConfig := include "common.postgresql.config" (dict "ctx" $ctx "service" $service) | fromYaml -}}
 - name: wait-for-postgresql
-  image: {{ include "common.image" (list $ctx (dict "registry" "docker.io" "repository" "bitnami/postgresql" "tag" "latest")) }}
+  image: {{ include "common.image.fixed" (dict "ctx" $ctx "service" "" "image" "opencsghq/psql:latest") }}
+  imagePullPolicy: {{ or $ctx.Values.global.image.pullPolicy "IfNotPresent" | quote }}
   command:
     - /bin/sh
     - -c
@@ -61,3 +52,4 @@ Usage: {{ include "wait-for-postgresql" (dict "service" $service "ctx" .) }}
       done
       echo "PostgreSQL is ready!"
 {{- end -}}
+

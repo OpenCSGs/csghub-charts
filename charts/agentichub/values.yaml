@@ -120,7 +120,7 @@ agenticflow:
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
     accessModes: ["ReadWriteOnce"]         # Volume access permissions
-    size: "10Gi"                            # Disk space allocation
+    size: "20Gi"                            # Disk space allocation
 
   token:
     csgAzureOpenToken: ""
@@ -136,7 +136,7 @@ csgbot:
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
-    size: "10Gi"                            # Disk space allocation
+    size: "20Gi"                            # Disk space allocation
 
 
   image:
@@ -149,25 +149,6 @@ csgbot:
   ## Service configuration
   service: {}
   # port: 8070
-
-  ## Model configuration
-  model:
-    chat:
-      baseUrl: ""
-      apiKey: ""
-      model: ""
-    codesouler:
-      baseUrl: ""
-      apiKey: ""
-      model: ""
-    superAgent:
-      baseUrl: ""
-      apiKey: ""
-      model: ""
-    aigateway:
-      baseUrl: ""
-      apiKey: ""
-      model: ""
 
   ##Credentials config
   environment:
@@ -183,15 +164,9 @@ csgbot:
 
   ##Configmap configuration
   config:
-    llm:
-      modelId: ""
-      modelBaseUrl: ""
-      temperature: 0.2
-      useCsghubAigateway: false
     database:
       file: "agno.db"
     opencsg:
-      hubAdminUserUuid: ""
       docsDir: "opencsg-docs/docs"
     mcpurls:
       model: ""
@@ -205,6 +180,7 @@ csgbot:
       requiresJwt: true
     aigateway:
       modelId: ""
+      accessTokenRef: ""
     codeSandbox:
       image: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-sandbox-python-runner:0.0.11"
       serviceUrl: ""
@@ -236,7 +212,6 @@ csgbot:
       fileServerUrl: ""
       feishuNotificationEnabled: true
       phoenixEndpoint: ""
-      memmemmachineUrl: ""
     logging:
       logPath: "logs/server.log"
       disableGeniusChat: false
@@ -247,11 +222,13 @@ csgbot:
       executor: "simple"
       requirePlanConfirmation: true
     geniusSandbox:
-      sandboxImage: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csg-genius-sandbox-python-runner:latest"
+      sandboxImage: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsg_public/genius-sandbox:2026040201"
       sandboxServiceUrl: ""
       workspaceVolumePrefix: "/data/csgsandbox_volumes"
     externalDocs:
       enabled: false
+    openClawSandbox:
+      image: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsg_public/openclaw-sandbox:20260331.20260408.4"
 
   ## Disable subCharts same with parent
   envoy:
