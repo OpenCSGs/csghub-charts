@@ -104,3 +104,16 @@ tests:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment.container.image
           value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.36.4"
+
+  - it: Should render envoyDeployment as empty object when using non-opencsg registry
+    template: envoy-proxy.yaml
+    set:
+      global:
+        image:
+          registry: "docker.io"
+    asserts:
+      - isKind:
+          of: "EnvoyProxy"
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment
+          value: {}

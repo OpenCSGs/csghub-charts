@@ -1,0 +1,8 @@
+global:
+  image:
+    registry: "registry.k8s.io"
+
+image:
+  # registry: "registry.k8s.io"
+  repository: agent-sandbox/agent-sandbox-controller
+  tag: v0.2.1

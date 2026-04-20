@@ -58,6 +58,17 @@ else
 fi
 echo "Patching CRDs Done."
 
+# ---- Namespace Patch ----
+echo
+echo "Patching namespace knative-serving..."
+if kubectl get namespace knative-serving >/dev/null 2>&1; then
+  patch_resource "namespace/knative-serving"
+  echo "Patched namespace: knative-serving"
+else
+  echo "Namespace knative-serving not found"
+fi
+echo "Patching namespace knative-serving Done."
+
 # ---- MutatingWebhookConfiguration Patch ----
 echo
 echo "Deleting LWS MutatingWebhookConfiguration..."

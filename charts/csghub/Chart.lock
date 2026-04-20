@@ -16,10 +16,10 @@ dependencies:
   version: 28.6.0
 - name: runner
   repository: https://charts.opencsg.com/csghub
-  version: 1.17.0
+  version: 2.0.0
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
-  version: 1.17.0
+  version: 2.0.0
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.1
@@ -29,5 +29,5 @@ dependencies:
 - name: gateway-helm
   repository: file://charts/gateway-helm
   version: v1.6.3
-digest: sha256:f4f8fddb46c49405764dd2ba8afa1f0fd515b74d50c9dda9b141cfbc00b0f5d4
-generated: "2026-03-24T10:57:29.67734+08:00"
+digest: sha256:840f9765e0a91b81900d265b9be6caf8c79f6408cc46c79bdbb0cdb73925cd74
+generated: "2026-04-09T14:06:01.359725+08:00"

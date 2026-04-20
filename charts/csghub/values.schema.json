@@ -71,13 +71,6 @@
             "external": {"type": "object", "additionalProperties": true}
           }
         },
-        "mongo": {
-          "type": "object",
-          "properties": {
-            "enabled": {"type": "boolean"},
-            "external": {"type": "object", "additionalProperties": true}
-          }
-        },
         "objectStore": {
           "type": "object",
           "properties": {

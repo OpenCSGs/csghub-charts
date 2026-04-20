@@ -49,7 +49,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.16.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v2.0.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -82,17 +82,6 @@ global:
       # port: 6379                  # Redis port number
       # password: ""                # Redis authentication password
 
-  ## MongoDB configuration
-  mongo:
-    ## Use built-in (true) or external (false)
-    enabled: true
-    ## External Mongo configuration
-    external: {}
-      # host: "<mongo_host>"        # Mongo server hostname or IP
-      # port: 27017                 # Mongo  port number
-      # user: "root"                # Mongo authentication user
-      # password: ""                # Mongo authentication password
-
   ## SubChart deployment context
   chartContext:
     isBuiltIn: false                     # deployed bundled with csghub
@@ -109,7 +98,7 @@ dataflow:
   image:
     # registry: "docker.io"
     repository: "opencsghq/dataflow"
-    tag: "v1.16.1"                          # Image version tag
+    tag: "v2.0.0"                          # Image version tag
     pullPolicy: "IfNotPresent"              # Image pull policy
     pullSecrets: []                         # Docker registry secrets
 
@@ -136,13 +125,6 @@ dataflow:
     # port: 6379                           # Redis port number
     # password: ""                         # Redis authentication password
 
-  ## MongoDB Configuration
-  mongo: {}
-    # host: "<mongo_host>"        # Mongo server hostname or IP
-    # port: 27017                 # Mongo  port number
-    # user: "root"                # Mongo authentication user
-    # password: ""                # Mongo authentication password
-
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
     accessModes: ["ReadWriteMany"]            # Volume access permissions
@@ -160,7 +142,7 @@ labelStudio:
   image:
     # registry: "docker.io"
     repository: "opencsghq/label-studio"
-    tag: "v1.16.0"                            # Image version tag
+    tag: "v2.0.0"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -209,6 +191,7 @@ postgresql:
 
   databases:                                 # Databases to create on startup
     - "csghub_dataflow"
+    - "csghub_dataflow_logs"
     - "csghub_label_studio"
 
   parameters: {}                             # PostgreSQL runtime parameters
@@ -235,29 +218,6 @@ redis:
     protocol: "TCP"                          # Network protocol
 
   requirePass: false                         # Password requirement
-
-  persistence:
-    # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
-    size: "10Gi"                             # Disk space allocation
-
-## Built-in MongoDB configuration
-mongo:
-  image:
-    # registry: "docker.io"
-    repository: "opencsghq/mongo"
-    tag: "8.0.12"                            # Image version tag
-    pullPolicy: "IfNotPresent"               # Image pull policy
-    pullSecrets: []                          # Docker registry secrets
-
-  service:
-    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
-    port: 27017                              # Service port
-    protocol: "TCP"                          # Network protocol
-
-  auth: {}
-    # user: "root"                           # user for authentication
-    # password: ""                           # Password for authentication
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning

@@ -51,7 +51,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v1.17.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v2.0.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -83,17 +83,6 @@ global:
       # host: "<redis_host>"        # Redis server hostname or IP
       # port: 6379                  # Redis port number
       # password: ""                # Redis authentication password
-
-  ## MongoDB configuration
-  mongo:
-    ## Use built-in (true) or external (false)
-    enabled: true
-    ## External Mongo configuration
-    external: {}
-      # host: "<mongo_host>"        # Mongo server hostname or IP
-      # port: 27017                 # Mongo  port number
-      # user: "root"                # Mongo authentication user
-      # password: ""                # Mongo authentication password
 
   ## Object storage configuration
   objectStore:
@@ -154,7 +143,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v1.17.0"
+  tag: "v2.0.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -338,7 +327,7 @@ xnet:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
-    tag: "v1.17.0"
+    tag: "v2.0.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -664,6 +653,7 @@ postgresql:
     - "csghub_server"
     - "csghub_portal"
     - "csghub_dataflow"
+    - "csghub_dataflow_logs"
     - "csghub_label_studio"
     - "csghub_csgship"
     - "csghub_xnet"

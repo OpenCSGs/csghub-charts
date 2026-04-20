@@ -7,7 +7,6 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
 {{- $redisConfig := include "common.redis.config" (dict "ctx" . "service" $service) | fromYaml }}
-{{- $mongoConfig := include "common.mongo.config" (dict "ctx" . "service" $service) | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,5 +37,9 @@ data:
   DATABASE_DB: {{ $pgConfig.database | quote }}
   DATABASE_USERNAME: {{ $pgConfig.user | quote }}
   DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
+  LOG_DATABASE_HOSTNAME: {{ $pgConfig.host | quote }}
+  LOG_DATABASE_PORT: {{ $pgConfig.port | quote }}
+  LOG_DATABASE_DB: {{ printf "%s_logs" $pgConfig.database | quote }}
+  LOG_DATABASE_USERNAME: {{ $pgConfig.user | quote }}
+  LOG_DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
   REDIS_HOST_URL: {{ printf "redis://%s:%v" $redisConfig.host $redisConfig.port | quote }}
-  MONG_HOST_URL: {{ printf "mongodb://%s:%s@%s:%v" $mongoConfig.user $mongoConfig.password $mongoConfig.host $mongoConfig.port | quote }}

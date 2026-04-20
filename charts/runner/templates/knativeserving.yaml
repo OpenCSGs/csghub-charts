@@ -4,24 +4,45 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" . | fromYaml }}
-{{- $spaceName := include "namespace.knative" . }}
-{{- $spaceExists := lookup "v1" "Namespace" "" $spaceName }}
-{{- if not $spaceExists }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $knativeNamespace := include "namespace.knative" . }}
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ $spaceName }}
+  name: {{ $knativeNamespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
+    helm.sh/resource-policy: keep
 ---
-{{- end }}
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
   name: knative-serving
-  namespace: {{ $spaceName }}
+  namespace: {{ $knativeNamespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    {{- $crd := lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "knativeservings.operator.knative.dev" }}
+    {{- if and .Release.IsUpgrade (not $crd) }}
+    helm.sh/hook: post-upgrade
+    {{- end }}
+    {{- if .Release.IsInstall }}
+    helm.sh/hook: post-install
+    {{- end }}
+
 spec:
   version: "1.21"
   # https://knative.dev/docs/install/operator/configuring-serving-cr/#configuring-the-knative-serving-operator-custom-resource
@@ -54,6 +75,20 @@ spec:
     features:
       kubernetes.podspec-priorityclassname: "enabled"
       kubernetes.podspec-schedulername: "enabled"
+      kubernetes.podspec-affinity: "enabled"
+      kubernetes.podspec-nodeselector: "enabled"
+      kubernetes.podspec-dnsconfig: "enabled"
+      kubernetes.podspec-dnspolicy: "enabled"
+      kubernetes.podspec-dryrun: "enabled"
+      kubernetes.podspec-fieldref: "enabled"
+      kubernetes.podspec-init-containers: "enabled"
+      kubernetes.podspec-persistent-volume-claim: "enabled"
+      kubernetes.podspec-persistent-volume-write: "enabled"
+      kubernetes.podspec-tolerations: "enabled"
+      kubernetes.podspec-topologyspreadconstraints: "enabled"
+      kubernetes.podspec-volumes-emptydir: "enabled"
+      multi-container: "enabled"
+      tag-header-based-routing: "enabled"
     deployment:
       {{- $globalRegistry := .Values.global.image.registry | default "" }}
       {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}

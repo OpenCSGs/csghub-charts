@@ -20,6 +20,15 @@ spec:
       envoyDeployment:
         container:
           image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+    {{- else }}
+      # Helm v4 uses Server-Side Apply (SSA) by default, which treats null
+      # fields as explicit null values rather than unset. When the registry is
+      # not opencsg-registry and service type is LoadBalancer, the kubernetes
+      # field becomes null, failing CRD validation (type: object).
+
+      # Add an else branch to render envoyDeployment: {} for non-opencsg
+      # registries, letting Envoy Gateway use its default envoy image.
+      envoyDeployment: {}
     {{- end }}
       {{- if eq (dig "service" "type" "LoadBalancer" $gateway) "NodePort" }}
       envoyService:
