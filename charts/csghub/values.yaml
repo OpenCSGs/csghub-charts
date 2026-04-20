@@ -790,7 +790,7 @@ loki:
   loki:
     auth_enabled: false                    # Disable authentication
     commonConfig:
-      replication_factor: 2                # Data replication factor
+      replication_factor: 1                # Data replication factor
       path_prefix: "/loki"                 # Storage path prefix
       ring:
         kvstore:
