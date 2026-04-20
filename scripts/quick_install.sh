@@ -469,7 +469,7 @@ fi
 # Install K3S (always enabled)
 ################################################################################
 log INFO "Installing K3S..."
-interface="${INTERFACE:-$(ip route show default | awk '/default/ {print $5}')}"
+interface="${INTERFACE:-$(ip route show default | awk '/default/ {print $5}' | head -1)}"
 ip_addr=$(ip addr show "$interface" | awk '/inet /{print $2}' | cut -d/ -f1)
 log INFO "Using network interface: $interface (IP: $ip_addr)"
 
