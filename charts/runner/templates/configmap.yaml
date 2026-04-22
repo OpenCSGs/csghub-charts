@@ -4,8 +4,8 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" . | fromYaml }}
-{{- if not .Values.global.chartContext.isBuiltIn }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $isBuiltIn := .Values.global.chartContext.isBuiltIn }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,18 +16,45 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   ## Runner Configuration for Server
+  {{- if $isBuiltIn }}
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+  {{- $apiToken := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $data }}
+  STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
+  {{- else }}
   STARHUB_SERVER_API_TOKEN: {{ $service.hubAPIToken | quote }}
+  {{- end }}
 
-  ## Runner Configuration
+  {{- if $isBuiltIn }}
+  {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
+  {{- $serverSvcName := include "common.names.custom" (list . $serverSvc.name) }}
+  {{- $serverSvcPort := dig "service" "port" 8080 $serverSvc }}
+  STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ printf "http://%s:%v" $serverSvcName $serverSvcPort | quote }}
+  {{- else }}
   STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ $service.externalUrl | quote }}
-  STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN: {{ include "common.endpoint.runner" . | quote }}
-  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ $service.logcollector.loki.address | quote }}
+  {{- end }}
+
+  {{- $publicDomain := include "common.endpoint.runner" . }}
+  {{- if $isBuiltIn }}
+    {{- $runnerSvcPort := dig "service" "port" 8082 $service }}
+    {{- $publicDomain = printf "http://%s:%v" $serviceName $runnerSvcPort }}
+  {{- end  }}
+  STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN: {{ $publicDomain | quote }}
   STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME: {{ $serviceName | quote }}
+
+  {{- if $isBuiltIn }}
+  {{- $lokiSvc := include "common.service" (dict "ctx" . "service" "loki") | fromYaml }}
+  {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
+  {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
+  {{- $lokiAddress := $service.logcollector.loki.address | default (printf "http://%s:%v" $lokiSvcName $lokiSvcPort) }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ $lokiAddress | quote }}
+  {{- else }}
+  STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ $service.logcollector.loki.address | quote }}
+  {{- end }}
 
   ## Runner Configuration for Space
   STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ include "namespace.spaces" . | quote }}
   STARHUB_SERVER_CLUSTER_RUNNER_NAMESPACE: {{ .Release.Namespace | quote }}
-  STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_INTERVAL_IN_SEC: {{ $service.interval | default "60" | quote }}
+  STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_INTERVAL_IN_SEC: {{ $service.interval | default 60 | quote }}
   STARHUB_SERVER_CLUSTER_REGION: {{ $service.region | default "region-0" | quote }}
 
   ## Runner Configuration for Root Domain
@@ -37,7 +64,12 @@ data:
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal" (include "namespace.spaces" .) | quote }}
 
   ## Runner Configuration for Kaniko
-  STARHUB_SERVER_DOCKER_REG_BASE: {{ printf "%s/%s/" $service.registry.registry $service.registry.repository | quote }}
+  {{- $dockerRegBase := printf "%s/%s/" $service.registry.registry $service.registry.repository }}
+  {{- if $isBuiltIn }}
+    {{- $runnerRegistry := include "common.registry.config" (dict "ctx" . "service" $service) | fromYaml }}
+    {{- $dockerRegBase = printf "%s/%s/" $runnerRegistry.registry $runnerRegistry.repository }}
+  {{- end }}
+  STARHUB_SERVER_DOCKER_REG_BASE: {{ $dockerRegBase | quote }}
   STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET: {{ include "common.names.custom" (list . "docker-credential") | quote }}
   ## Runner Configuration for space-runtime
   STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE: {{ or .Values.global.image.registry "docker.io" | quote }}
@@ -48,7 +80,7 @@ data:
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/kaniko-executor:v1.24.0"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL: "300"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: "300"
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: {{ include "runner.kaniko.args" (dict "ctx" . "service" .Values) | quote }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: {{ include "runner.kaniko.args" (dict "ctx" . "service" $service) | quote }}
 
   ## Runner Configuration for Argo
   STARHUB_SERVER_ARGO_SERVICE_ACCOUNT: {{ printf "%s-argo-workflow-executor" .Release.Name | quote }}
@@ -56,33 +88,55 @@ data:
   {{- $capacityLabel := $service.gpuModelLabel.capacityLabel }}
   STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
   STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.model.deployTimeout | default 60 | quote }}
+  {{- if $isBuiltIn }}
+  STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
+  {{- else }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ $service.externalUrl | quote }}
+  {{- end }}
   {{- $registry := or $service.model.registry .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
-  STARHUB_SERVER_CLUSTER_ID: {{ $service.originClusterID }}
+  STARHUB_SERVER_CLUSTER_ID: {{ $service.originClusterID | quote }}
 
   ## Runner Configuration for S3
-  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $service.objectStore.accessKey | quote }}
-  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $service.objectStore.secretKey | quote }}
-  STARHUB_SERVER_S3_ENDPOINT: {{ $service.objectStore.endpoint | quote }}
-  STARHUB_SERVER_S3_BUCKET: {{ $service.objectStore.bucket | quote }}
-  STARHUB_SERVER_S3_REGION: {{ $service.objectStore.region | quote }}
-  STARHUB_SERVER_S3_ENABLE_SSL: {{ $service.objectStore.secure | quote }}
-  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $service.objectStore.pathStyle "true") | quote }}
+  {{- $s3Config := $service.objectStore }}
+  {{- if $isBuiltIn }}
+    {{- $s3Config = include "common.s3.config" (dict "ctx" . "service" $service) | fromYaml }}
+  {{- end }}
+  STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $s3Config.accessKey | quote }}
+  STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $s3Config.secretKey | quote }}
+  STARHUB_SERVER_S3_ENDPOINT: {{ coalesce $s3Config.externalEndpoint $s3Config.endpoint | quote }}
+  STARHUB_SERVER_S3_BUCKET: {{ $s3Config.bucket | quote }}
+  STARHUB_SERVER_S3_REGION: {{ $s3Config.region | quote }}
+  STARHUB_SERVER_S3_ENABLE_SSL: {{ $s3Config.secure | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $s3Config.pathStyle "true") | quote }}
 
   ## Runner Configuration for Tracing logging
+  {{- if $isBuiltIn }}
+  {{- $tempoSvc := include "common.service" (dict "ctx" . "service" "tempo") | fromYaml }}
+  {{- $tempoHost := include "common.names.custom" (list . "tempo") }}
+  {{- if $tempoSvc.enabled }}
+  OPENCSG_TRACING_OTLP_ENDPOINT: {{ ternary (printf "http://%s:4317" $tempoHost) "" $tempoSvc.enabled | quote }}
+  {{- end }}
+  OPENCSG_TRACING_OTLP_LOGGING: {{ coalesce $tempoSvc.enabled "false" | quote }}
+  {{- else }}
   {{- if $service.tempo.address }}
   OPENCSG_TRACING_OTLP_ENDPOINT: {{ $service.tempo.address | quote }}
   OPENCSG_TRACING_OTLP_LOGGING: "true"
   {{- else }}
   OPENCSG_TRACING_OTLP_LOGGING: "false"
   {{- end }}
+  {{- end }}
 
   ## Runner Configuration for kourier network
   {{- if $service.applicationEndpoint }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
   {{- else }}
+  {{- if $isBuiltIn }}
+  {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.knative" .) (include "common.domain.cluster" .) }}
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
+  {{- else }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: "auto"
+  {{- end }}
   {{- end }}
 
   ## Runner Configuration for LWS
@@ -91,10 +145,11 @@ data:
   ## Runner Configuration for Spaces
   STARHUB_SERVER_RUNNER_STORAGE_CLASS: {{ $service.storageClassName | quote }}
 
+  {{- if (.Values.volcano.enabled | default true) }}
   ## Runner Configuration for Volcano
   STARHUB_SERVER_RUNNER_KUBE_SCHEDULER: "volcano"
   STARHUB_SERVER_RUNNER_VGPU_NODE_RESOURCE_NAME: "volcano.sh/node-vgpu-register"
   STARHUB_SERVER_RUNNER_VGPU_POD_RESOURCE_NAME: "volcano.sh/vgpu-ids-new"
   STARHUB_SERVER_RUNNER_VGPU_RESOURCE_REQ_KEY: "volcano.sh/vgpu-number"
   STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY: "volcano.sh/vgpu-memory"
-{{- end }}
+  {{- end }}

@@ -66,7 +66,7 @@ Returns:
 
   {{- $insecure := $service.registry.insecure }}
   {{- if $isBuiltIn }}
-    {{- $insecure = or $ctx.Values.global.registry.enabled $ctx.Values.global.registry.external.insecure }}
+    {{- $insecure = or $ctx.Values.global.registry.enabled (dig "registry" "external" "insecure" "true" $ctx.Values.global) }}
   {{- end }}
 
   {{- if $insecure }}
