@@ -4,28 +4,34 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
-# Runner Domain Helper
-# Generates the full domain name for Runner service based on configuration
-# Usage: {{ include "common.domain.runner" . }}
-# Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
+Common domain helper for Runner.
+
+Usage:
+  {{ include "common.domain.runner" . }}
+
+Returns:
+  <subdomain>.<base-domain> or <base-domain> depending on useTop setting
 */}}
 {{- define "common.domain.runner" }}
-{{- $service := include "common.service" . | fromYaml }}
-{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
+  {{- $service := include "common.service" . | fromYaml }}
+  {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 
 {{/*
-# Runner External Endpoint Helper
-# Generates the complete external access endpoint for Runner service
-# Usage: {{ include "common.endpoint.runner" . }}
-# Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
+Common endpoint helper for Runner.
+
+Usage:
+  {{ include "common.endpoint.runner" . }}
+
+Returns:
+  Full URL (http://<domain> or https://<domain>) based on TLS configuration
 */}}
 {{- define "common.endpoint.runner" }}
-{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.runner" .)) -}}
+  {{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.runner" .)) -}}
 {{- end }}
 
 {{/*
-Generate Kaniko build arguments for runner.
+Kaniko build arguments for runner.
 
 Usage:
   {{ include "runner.kaniko.args" (dict "ctx" . "service" $servicename) }}
@@ -34,78 +40,80 @@ Returns:
   A single-line, comma-separated string of Kaniko build arguments.
 */}}
 {{- define "runner.kaniko.args" }}
-{{- $service := .service }}
-{{- $ctx := .ctx }}
+  {{- $ctx := .ctx }}
+  {{- $service := .service }}
+  {{- $isBuiltIn := $ctx.Values.global.chartContext.isBuiltIn }}
 
-{{- $kanikoCache := printf "--cache-repo=%s/%s" $service.registry.registry $service.registry.repository }}
-{{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" }}
-{{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" $kanikoCache) }}
+  {{- $registry := $service.registry }}
+  {{- if $isBuiltIn }}
+    {{- $registry = include "common.registry.config" (dict "ctx" $ctx "service" $service) | fromYaml }}
+  {{- end }}
 
-{{- if $service.pipIndexUrl }}
-  {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) }}
+  {{- $kanikoCache := printf "--cache-repo=%s/%s" $registry.registry $registry.repository }}
+  {{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" }}
+  {{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" $kanikoCache) }}
+
+  {{- if $service.pipIndexUrl }}
+    {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) }}
+  {{- end }}
+
+  {{- $csghubEndpoint := $service.externalUrl }}
+  {{- if $isBuiltIn }}
+    {{- $csghubEndpoint = include "common.endpoint.csghub" $ctx }}
+  {{- end }}
+  {{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint }}
+  {{- $args = concat $args (list $hfEndpoint) }}
+
+  {{- $insecure := $service.registry.insecure }}
+  {{- if $isBuiltIn }}
+    {{- $insecure = or $ctx.Values.global.registry.enabled $ctx.Values.global.registry.external.insecure }}
+  {{- end }}
+
+  {{- if $insecure }}
+    {{- $args = concat $args (list
+      "--skip-tls-verify"
+      "--skip-tls-verify-pull"
+      "--insecure"
+      "--insecure-pull"
+    ) }}
+  {{- end }}
+
+  {{- range $service.extraBuildArgs }}
+    {{- $args = concat $args (list .) }}
+  {{- end }}
+
+  {{- join "," $args | nospace -}}
 {{- end }}
 
-{{- $csghubEndpoint := include "common.endpoint.csghub" $ctx }}
-{{- if not $ctx.Values.global.chartContext.isBuiltIn }}
-{{- $csghubEndpoint = $service.externalUrl }}
-{{- end }}
-{{- $hfEndpoint := printf "--build-arg=HF_ENDPOINT=%s/hf" $csghubEndpoint }}
-{{- $args = concat $args (list $hfEndpoint) }}
+{{/*
+Loki readiness check.
 
-{{- $insecure := false }}
-{{- if $ctx.Values.global.chartContext.isBuiltIn }}
-  {{- $insecure = or $ctx.Values.global.registry.enabled $ctx.Values.global.registry.external.insecure }}
-{{- else }}
-  {{- $insecure = $service.registry.insecure }}
-{{- end }}
+Creates a Kubernetes init container that waits for Loki service to become ready
+before proceeding with pod startup.
 
-{{- if $insecure }}
-  {{- $args = concat $args (list
-    "--skip-tls-verify"
-    "--skip-tls-verify-pull"
-    "--insecure"
-    "--insecure-pull"
-  ) }}
-{{- end }}
-
-{{- range $service.extraBuildArgs }}
-  {{- $args = concat $args (list .) }}
-{{- end }}
-
-{{- join "," $args | nospace -}}
-{{- end }}
-
-{{- /*
-# Loki Readiness Check Template
-# Creates a Kubernetes init container that waits for Server service to become ready
-# Verifies health endpoint before proceeding with pod startup
-#
-# Usage: {{ include "wait-for-loki" . }}
-#
-# Dependencies:
-#   - common.names.custom template (naming)
-#   - common.image.fixed template (image reference helper)
+Usage:
+  {{ include "wait-for-loki" . }}
 */}}
 {{- define "wait-for-loki" }}
-{{- $service := include "common.service" . | fromYaml }}
-{{- $lokiAddress := $service.logcollector.loki.address }}
-{{- if .Values.global.chartContext.isBuiltIn }}
-{{- $lokiSvc := include "common.service" (dict "ctx" . "service" "loki") | fromYaml }}
-{{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
-{{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
-{{- $lokiAddress = printf "http://%s:%v" $lokiSvcName $lokiSvcPort }}
-{{- end }}
-- name: wait-for-loki
-  image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
-  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
-  command:
-    - /bin/sh
-    - -c
-    - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "%s/ready" (required "Loki address is required" $lokiAddress) }}";
-      do
-        echo 'Waiting for Loki to be ready...';
-        sleep 5;
-      done
-      echo 'Loki is ready!'
+  {{- $service := include "common.service" . | fromYaml }}
+  {{- $lokiAddress := $service.logcollector.loki.address }}
+  {{- if .Values.global.chartContext.isBuiltIn }}
+    {{- $lokiSvc := include "common.service" (dict "ctx" . "service" "loki") | fromYaml }}
+    {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
+    {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
+    {{- $lokiAddress = printf "http://%s:%v" $lokiSvcName $lokiSvcPort }}
+  {{- end }}
+  - name: wait-for-loki
+    image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
+    imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        until wget --spider --timeout=5 --tries=1 "{{ printf "%s/ready" (required "Loki address is required" $lokiAddress) }}";
+        do
+          echo 'Waiting for Loki to be ready...';
+          sleep 5;
+        done
+        echo 'Loki is ready!'
 {{- end }}
