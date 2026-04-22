@@ -5,78 +5,184 @@ release:
   name: csghub
   namespace: csghub
 set:
+  ## Global Definition
   global:
+    ## Gateway Definition
     gateway:
-      external:
-        domain: "csghub.example.com"
-      tls:
-        enabled: true
-        secretName: "test-tls"
+      ## Controller
+      controllerName: gateway.envoyproxy.io/gatewayclass-controller
       service:
-        type: "LoadBalancer"
+        type: LoadBalancer
+        nodePort: {}
+
+      ## Access Domain
+      external:
+        domain: csghub.unittest.io
+        public: ""
+        useTop: false
+
+      ## TLS Encryption
+      tls:
+        enabled: false
+        secretName: ""
+
+    ## Image Definition
     image:
-      registry: "acr.io"
-      tag: "v1.11.0"
-      pullPolicy: "Never"
-      pullSecrets: ["acr-pull-secret"]
+      registry: unittest.io
+      registryPolicy: default
+      tag: v2.0.0
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+
+    ## Registry Definition
     registry:
       enabled: false
+
+    ## objectStore Definition
     objectStore:
       enabled: false
+
+    ## chartContext Definition
     chartContext:
       isBuiltIn: false
-  externalUrl: "https://csghub.example.cn"
-  name: "runner-svc"
-  region: "es-west-1"
+
+  ## Csghub Definition
+  externalUrl: https://csghub.unittest.io
+  image:
+    repository: opencsghq/csghub-server
+    tag: v2.0.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  gateway:
+    enabled: true
+    tls: {}
+  hubAPIToken: unittest-api-token-standalone
+  originClusterID: unittest-cluster
+  region: es-west-1
+
+  ## Runner Definition
+  name: runner-unittest
+
+  service:
+    type: ClusterIP
+    port: 8082
+    protocol: TCP
+
   interval: 30
-  namespace: "spaces"
+
+  namespace: spaces
+  mergingNamespace: disable
+
   usePublicDomain: true
+
+  pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
+
+  extraBuildArgs: []
+
   model:
-    deployTimeout: "120"
-    registry: "model.io"
+    deployTimeout: 30
+    registry: model.unittest.io
+
+  gpuModelLabel:
+    typeLabel: nvidia.com/gpu.product
+    capacityLabel: nvidia.com/gpu
+
+  applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
+
+  networkInterface: eth0
+
+  storageClassName: local-path
+
   knative:
     serving:
-      domain: "example.com"
-  applicationEndpoint: "http://kourier.knative-serving.svc.cluster.local"
+      domain: unittest.io
+
+      autoscaler:
+        enableScaleToZero: true
+        scaleToZeroGracePeriod: 30m
+
+  rbac:
+    create: true
+    serviceAccountName: runner-unittest
+
   logcollector:
+    enabled: false
+
     loki:
-      address: "https://loki.example.cn"
+      address: ""
+
   tempo:
     address: ""
+
   registry:
-    registry: "registry.example.com"
-    repository: "csghub"
-    username: "registry"
-    password: "asK2ksdhfsdf"
+    registry: registry.unittest.io
+    repository: csghub
+    username: unittest
+    password: unittest
     insecure: "true"
+
   objectStore:
-    endpoint: "https://s4.example.cn"
-    accessKey: "minio"
-    secretKey: "sdfkasd"
-    bucket: "csghub-runner"
-    region: "cn-north-1"
+    endpoint: https://s3.unittest.io
+    accessKey: unittest
+    secretKey: unittest
+    bucket: runner-unittest
+    region: cn-north-1
     secure: "true"
     encrypt: "false"
     pathStyle: "true"
+
+  prometheus:
+    enabled: true
+    gateway:
+      enabled: false
+      basicAuth: {}
+    server:
+      remoteWrite: []
+
+  volcano:
+    enabled: true
+    basic:
+      image_pull_policy: IfNotPresent
+
 tests:
-  - it: Should render configmap correctly
-    template: configmap.yaml
+  - it: Should render ConfigMap metadata normally
     asserts:
       - equal:
           path: metadata.name
-          value: "csghub-runner-svc"
+          value: "csghub-runner-unittest"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: "runner-svc"
+          value: runner-unittest
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: csghub
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: runner
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: Helm
+
+  - it: Should render ConfigMap data with isBuiltIn=false normally
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_API_TOKEN
+          value: "unittest-api-token-standalone"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT
-          value: "https://csghub.example.cn"
+          value: "https://csghub.unittest.io"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
-          value: "https://runner-svc.example.com"
+          value: "http://runner-unittest.unittest.io"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME
+          value: "csghub-runner-unittest"
       - equal:
           path: data.STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL
-          value: "https://loki.example.cn"
+          value: ""
       - equal:
           path: data.STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE
           value: "spaces"
@@ -91,52 +197,70 @@ tests:
           value: "es-west-1"
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "csghub.example.com"
+          value: "csghub.unittest.io"
       - equal:
           path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
           value: "spaces.app.internal"
       - equal:
           path: data.STARHUB_SERVER_DOCKER_REG_BASE
-          value: "registry.example.com/csghub/"
+          value: "registry.unittest.io/csghub/"
       - equal:
           path: data.STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET
           value: "csghub-docker-credential"
       - equal:
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE
+          value: "unittest.io"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_PYPI_INDEX_URL
+          value: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+      - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
-          value: "acr.io/opencsghq/git:2.52.0"
+          value: "unittest.io/opencsghq/git:2.52.0"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
-          value: "acr.io/opencsghq/kaniko-executor:v1.24.0"
+          value: "unittest.io/opencsghq/kaniko-executor:v1.24.0"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL
+          value: "300"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
+          value: "300"
       - matchRegex:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
-          pattern: ".*csghub.example.cn.*--skip-tls-verify,--skip-tls-verify-pull,--insecure,--insecure-pull"
+          pattern: '--cache-repo=registry.unittest.io/csghub'
+      - equal:
+          path: data.STARHUB_SERVER_ARGO_SERVICE_ACCOUNT
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: data.STARHUB_SERVER_ARGO_SERVICE_ACCOUNT
+          value: "csghub-argo-workflow-executor"
       - equal:
           path: data.STARHUB_SERVER_GPU_MODEL_LABEL
           value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
       - equal:
-          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
-          value: "https://csghub.example.cn"
-      - equal:
           path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
-          value: "120"
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
+          value: "https://csghub.unittest.io"
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
-          value: "model.io"
+          value: "model.unittest.io"
       - equal:
-          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE
-          value: "acr.io"
+          path: data.STARHUB_SERVER_CLUSTER_ID
+          value: "unittest-cluster"
       - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
-          value: "minio"
+          value: "unittest"
       - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_SECRET
-          value: "sdfkasd"
+          value: "unittest"
       - equal:
           path: data.STARHUB_SERVER_S3_ENDPOINT
-          value: "https://s4.example.cn"
+          value: "https://s3.unittest.io"
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET
-          value: "csghub-runner"
+          value: "runner-unittest"
       - equal:
           path: data.STARHUB_SERVER_S3_REGION
           value: "cn-north-1"
@@ -149,64 +273,68 @@ tests:
       - equal:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "false"
+      - notExists:
+          path: data.OPENCSG_TRACING_OTLP_ENDPOINT
       - equal:
           path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
-          value: "http://kourier.knative-serving.svc.cluster.local"
+          value: "http://kourier-internal.knative-serving.svc.cluster.local"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_NETWORK_INTERFACE
+          value: "eth0"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_STORAGE_CLASS
+          value: "local-path"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_KUBE_SCHEDULER
+          value: "volcano"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_VGPU_NODE_RESOURCE_NAME
+          value: "volcano.sh/node-vgpu-register"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_VGPU_POD_RESOURCE_NAME
+          value: "volcano.sh/vgpu-ids-new"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_VGPU_RESOURCE_REQ_KEY
+          value: "volcano.sh/vgpu-number"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY
+          value: "volcano.sh/vgpu-memory"
 
-  - it: Should render configmap correctly
-    template: configmap.yaml
+  - it: Should render ConfigMap with gateway service type NodePort and TLS encryption normally
     set:
-      usePublicDomain: false
-      applicationEndpoint: "http://10.6.0.12:30345"
-      tempo:
-        address: "https://tempo.example.cn"
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+          tls:
+            enabled: true
+            secretName: unittest-tls
     asserts:
       - equal:
-          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: ""
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
+          value: "https://runner-unittest.unittest.io:30443"
+
+  - it: Should render ConfigMap with loki and tempo normally
+    set:
+      logcollector:
+        enabled: true
+
+        loki:
+          address: https://loki.unittest.io
+
+      tempo:
+        address: https://tempo.unittest.io
+    asserts:
       - equal:
-          path: data.OPENCSG_TRACING_OTLP_ENDPOINT
-          value: "https://tempo.example.cn"
+          path: data.STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL
+          value: "https://loki.unittest.io"
       - equal:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "true"
       - equal:
-          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
-          value: "http://10.6.0.12:30345"
-
-  - it: Should render configmap correctly
-    template: configmap.yaml
-    set:
-      global:
-        gateway:
-          external:
-            domain: "public.example.com"
-    asserts:
-      - equal:
-          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "public.example.com"
-
-  - it: Should render configmap correctly
-    template: configmap.yaml
-    set:
-      global:
-        gateway:
-          external:
-            domain: "spaces.example.com"
-    asserts:
-      - equal:
-          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "spaces.example.com"
-
-  - it: Should render configmap correctly
-    template: configmap.yaml
-    set:
-      global:
-        gateway:
-          external:
-            domain: "spaces.example.com"
-            public: "public.space.com"
-    asserts:
-      - equal:
-          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "public.space.com"
+          path: data.OPENCSG_TRACING_OTLP_ENDPOINT
+          value: "https://tempo.unittest.io"
