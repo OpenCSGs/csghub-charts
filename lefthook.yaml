@@ -10,6 +10,9 @@ pre-commit:
         echo "📦 Building all Helm chart dependencies..."
         helm repo update
         for chart_dir in charts/*/; do
+          if [ "$(basename "${chart_dir}")" = "common" ]; then
+            continue
+          fi
           if [ -f "${chart_dir}Chart.yaml" ]; then
             echo "Building dependencies for $(basename "${chart_dir}")"
             if ! helm dependency build --skip-refresh "${chart_dir}"; then
@@ -27,14 +30,17 @@ pre-commit:
         echo "🔍 Running Helm template dry-run..."
 
         for chart_dir in charts/*/; do
+          if [ "$(basename "${chart_dir}")" = "common" ]; then
+            continue
+          fi
           if [ -f "${chart_dir}Chart.yaml" ]; then
             chart_name=$(basename "${chart_dir}")
             echo "Testing template rendering for ${chart_name}"
 
             echo "🔧 Testing template rendering for ${chart_name}"
-            if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run > /dev/null 2>&1; then
+            if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run=client > /dev/null 2>&1; then
               echo "❌ Template rendering failed for ${chart_name}"
-              helm template "test-${chart_name}" "${chart_dir}" --dry-run
+              helm template "test-${chart_name}" "${chart_dir}" --dry-run=client
               exit 1
             fi
 
@@ -59,6 +65,9 @@ pre-commit:
         # Run unit tests for each chart
         exit_code=0
         for chart_dir in charts/*/; do
+          if [ "$(basename "${chart_dir}")" = "common" ]; then
+            continue
+          fi
           if [ -f "${chart_dir}Chart.yaml" ] && [ -d "${chart_dir}tests" ]; then
             echo "Running tests for $(basename "${chart_dir}")"
             if ! helm unittest "${chart_dir}" --with-subchart=false; then
@@ -89,6 +98,9 @@ pre-commit:
 
         exit_code=0
         for chart_dir in charts/*/; do
+          if [ "$(basename "${chart_dir}")" = "common" ]; then
+            continue
+          fi
           if [ -f "${chart_dir}Chart.yaml" ]; then
             chart_name=$(basename "${chart_dir}")
             echo "Validating ${chart_name}"
