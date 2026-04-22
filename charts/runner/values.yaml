@@ -25,11 +25,11 @@ global:
     ## Base external domain used to expose CSGHub services
     external:
       domain: "csghub.example.com"  # e.g. csghub.example.com, example.com
-        # public: ""                  # Optional public access domain override.
-        # If empty, the domain will be derived automatically.
-        # NOTE: When base domain is a second-level domain (e.g. example.com),
-        # a subdomain (e.g. csghub.example.com) will be used internally
-        # to avoid overly broad wildcard routing such as *.example.com
+      # public: ""                  # Optional public access domain override.
+                                    # If empty, the domain will be derived automatically.
+                                    # NOTE: When base domain is a second-level domain (e.g. example.com),
+                                    # a subdomain (e.g. csghub.example.com) will be used internally
+                                    # to avoid overly broad wildcard routing such as *.example.com
 
       ## Whether to use the top-level domain directly when generating derived domains.
       ## If the domain is a multi-level domain (e.g. csghub.example.com):
