@@ -1,0 +1,289 @@
+suite: Test Runner KnativeServing
+templates:
+  - knativeserving.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  ## Global Definition
+  global:
+    gateway:
+      controllerName: gateway.envoyproxy.io/gatewayclass-controller
+      service:
+        type: LoadBalancer
+        nodePort: {}
+      external:
+        domain: csghub.unittest.io
+        public: ""
+        useTop: false
+      tls:
+        enabled: false
+        secretName: ""
+    image:
+      registry: unittest.io
+      registryPolicy: default
+      tag: v2.0.0
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    registry:
+      enabled: false
+    objectStore:
+      enabled: false
+    chartContext:
+      isBuiltIn: false
+
+  externalUrl: https://csghub.unittest.io
+  image:
+    repository: opencsghq/csghub-server
+    tag: v2.0.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  gateway:
+    enabled: true
+    tls: {}
+  hubAPIToken: unittest-api-token-standalone
+  originClusterID: unittest-cluster
+  region: es-west-1
+
+  name: runner-unittest
+
+  service:
+    type: ClusterIP
+    port: 8082
+    protocol: TCP
+
+  interval: 30
+
+  namespace: spaces
+  mergingNamespace: disable
+
+  usePublicDomain: true
+
+  pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
+
+  extraBuildArgs: []
+
+  model:
+    deployTimeout: 30
+    registry: model.unittest.io
+
+  gpuModelLabel:
+    typeLabel: nvidia.com/gpu.product
+    capacityLabel: nvidia.com/gpu
+
+  applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
+
+  networkInterface: eth0
+
+  storageClassName: local-path
+
+  knative:
+    serving:
+      domain: unittest.io
+      autoscaler:
+        enableScaleToZero: true
+        scaleToZeroGracePeriod: 30m
+
+  rbac:
+    create: true
+    serviceAccountName: runner-unittest
+
+  logcollector:
+    enabled: false
+    loki:
+      address: ""
+
+  tempo:
+    address: ""
+
+  registry:
+    registry: registry.unittest.io
+    repository: csghub
+    username: unittest
+    password: unittest
+    insecure: "true"
+
+  objectStore:
+    endpoint: https://s3.unittest.io
+    accessKey: unittest
+    secretKey: unittest
+    bucket: runner-unittest
+    region: cn-north-1
+    secure: "true"
+    encrypt: "false"
+    pathStyle: "true"
+
+  prometheus:
+    enabled: true
+    gateway:
+      enabled: false
+      basicAuth: {}
+    server:
+      remoteWrite: []
+
+  volcano:
+    enabled: true
+    basic:
+      image_pull_policy: IfNotPresent
+
+tests:
+  - it: Should render Namespace metadata normally
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: knative-serving
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: csghub-runner-unittest
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: csghub
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: runner
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: Helm
+      - equal:
+          path: metadata.annotations["helm.sh/resource-policy"]
+          value: keep
+
+  - it: Should render KnativeServing CR metadata normally
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: metadata.name
+          value: knative-serving
+      - equal:
+          path: metadata.namespace
+          value: knative-serving
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: csghub-runner-unittest
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: csghub
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: runner
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: Helm
+      - equal:
+          path: metadata.annotations["meta.helm.sh/release-name"]
+          value: csghub
+      - equal:
+          path: metadata.annotations["meta.helm.sh/release-namespace"]
+          value: csghub
+
+  - it: Should render KnativeServing spec normally
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.version
+          value: "1.21"
+      - equal:
+          path: spec.ingress.kourier.enabled
+          value: true
+      - equal:
+          path: spec.config.domain["unittest.io"]
+          value: ""
+      - equal:
+          path: spec.config.autoscaler.enable-scale-to-zero
+          value: "true"
+      - equal:
+          path: spec.config.autoscaler.scale-to-zero-grace-period
+          value: 30m
+      - equal:
+          path: spec.config.network.ingress-class
+          value: kourier.ingress.networking.knative.dev
+      - equal:
+          path: spec.config.features["kubernetes.podspec-priorityclassname"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-schedulername"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-affinity"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-nodeselector"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-dnsconfig"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-dnspolicy"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-dryrun"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-fieldref"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-init-containers"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-persistent-volume-claim"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-persistent-volume-write"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-tolerations"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-topologyspreadconstraints"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["kubernetes.podspec-volumes-emptydir"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["multi-container"]
+          value: "enabled"
+      - equal:
+          path: spec.config.features["tag-header-based-routing"]
+          value: "enabled"
+      - equal:
+          path: spec.config.deployment.registries-skipping-tag-resolving
+          value: "csghub.unittest.io,csghub.unittest.io,unittest.io"
+
+  - it: Should render KnativeServing with scale-to-zero disabled
+    set:
+      knative:
+        serving:
+          autoscaler:
+            enableScaleToZero: false
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.config.autoscaler.enable-scale-to-zero
+          value: "false"
+
+  - it: Should render KnativeServing with custom domain
+    documentIndex: 1
+    set:
+      knative:
+        serving:
+          domain: custom.io
+    asserts:
+      - equal:
+          path: spec.config.domain["custom.io"]
+          value: ""
+      - notEqual:
+          path: spec.config.domain["unittest.io"]
+          value: ""
+
+  - it: Should render KnativeServing with custom grace period
+    set:
+      knative:
+        serving:
+          autoscaler:
+            scaleToZeroGracePeriod: 60s
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.config.autoscaler.scale-to-zero-grace-period
+          value: 60s
