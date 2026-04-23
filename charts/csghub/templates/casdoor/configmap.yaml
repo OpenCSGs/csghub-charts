@@ -689,7 +689,9 @@ data:
           "name": "CSGShip",
           "displayName": "CSGShip",
           "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
+          {{- if .Values.csgship.enabled }}
           "homepageUrl": {{ include "common.endpoint.web" . | quote }},
+          {{- end }}
           "organization": "OpenCSG",
           "cert": "csgship-cert",
           "enablePassword": true,
@@ -913,7 +915,9 @@ data:
             "id_token"
           ],
           "redirectUris": [
+            {{- if .Values.csgship.enabled }}
             "{{ include "common.endpoint.webAPI" . }}/api/v1/account/casdoor/login/callback"
+            {{- end }}
           ],
           "tokenFormat": "JWT",
           "tokenFields": [],
