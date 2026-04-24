@@ -28,8 +28,16 @@ dependencies:
   - name: common
     version: 0.2.2
     repository: https://charts.opencsg.com/csghub
+  - name: reloader
+    version: 2.2.7
+    repository: file://charts/reloader
+    condition: reloader.enabled
   - name: gateway-helm
     alias: envoy
     version: 1.6.3
     repository: file://charts/gateway-helm
     condition: envoy.enabled
+  - name: memmachine
+    version: 0.1.0
+    repository: file://charts/memmachine
+    condition: memmachine.enabled
