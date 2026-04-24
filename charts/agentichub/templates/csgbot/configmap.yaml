@@ -1,0 +1,85 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $isBuiltIn := .Values.global.chartContext.isBuiltIn }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  csgbot.toml: |
+    [database]
+    file = "agno.db"
+
+    [credentials]
+    aigateway-access-token = ""
+    {{- $apiToken := .Values.hubAPIToken }}
+    {{- if $isBuiltIn }}
+      {{- $csghubSvc := include "common.names.custom" (list . "core") }}
+      {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
+      {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
+    {{- end }}
+    hub-access-token = {{ $apiToken | quote }}
+    {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+    {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $data }}
+    langflow-access-token = {{ $agenticflowToken | quote }}
+    web-search-api-key = {{ dig "config" "webSearch" "apiKey" "" .Values.csgbot | quote }}
+
+    [opencsg]
+    {{- $csghubEndpoint := include "common.endpoint.csghub" . }}
+    hub-base-url = {{ $csghubEndpoint | quote }}
+    base-url = {{ $csghubEndpoint | quote }}
+    mcp-gateway-url = {{ printf "%s/aigateway/v1/gateway/mcp" $csghubEndpoint | quote }}
+
+    [aigateway]
+    base-url = {{ printf "%s/aigateway" $csghubEndpoint | quote }}
+    model-id = {{ dig "config" "aigateway" "model" "deepseek-v3" .Values.csgbot | quote }}
+
+    [langflow]
+    base-url = {{ include "common.endpoint.agenticflow" . | quote }}
+
+    [integrations]
+    feishu-notification-enabled = {{ dig "config" "integrations" "feishuEnabled" false .Values.csgbot | quote }}
+    notification-url = {{ printf "%s/api/v1/notifications?current_user=csgbot" $csghubEndpoint | quote }}
+    {{- $memSvc := include "common.service" (dict "ctx" . "service" "memmachine") | fromYaml }}
+    {{- $memsSvcName := include "common.names.custom" (list . $memSvc.name) }}
+    memmemmachine-url = {{ printf "http://%s:8080/mcp/" $memsSvcName | quote }}
+
+    [logging]
+    log-path = "logs/server.log"
+    disable-genius-chat = {{ dig "config" "logging" "disableGeniusChat" false .Values.csgbot }}
+
+    [genius-sandbox]
+    sandbox-backend = "csghub"
+    sandbox-image = {{ include "common.image" (list . (dig "config" "sandbox" "genius" "image" dict .Values.csgbot)) | quote }}
+    workspace-volume-prefix = "/genius"
+
+    [doc-sandbox]
+    # Docs are baked into the doc sandbox image; the doc sandbox reuses the same
+    # sandbox-service-url as genius-sandbox.
+    image = {{ include "common.image" (list . (dig "config" "sandbox" "doc" "image" dict .Values.csgbot)) | quote }}
+
+    [external-docs]
+    enabled = {{ dig "config" "externalDocs" "enabled" false .Values.csgbot }}
+
+    [external-docs.apis]
+    "CSGHUB" = "{{ $csghubEndpoint }}/api/v1/swagger/doc.json"
+
+    [web-search]
+    # Web search API configuration for web fetch tool
+    api-url = {{ dig "config" "webSearch" "apiUrl" "" .Values.csgbot | quote }}
+
+    [csghub-sandbox]
+    base-url = {{ $csghubEndpoint | quote }}
+    aigateway-url = {{ printf "%s/aigateway" $csghubEndpoint | quote }}
+
+    [openclaw-sandbox]
+    image = {{ include "common.image" (list . (dig "config" "sandbox" "openclaw" "image" dict .Values.csgbot)) | quote }}

@@ -1,0 +1,254 @@
+#################################################################
+##  Global Configuration                                       ##
+#################################################################
+global:
+  ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
+  edition: "ee"
+
+  ## Gateway configuration
+  gateway:
+    ## GatewayClass controller that will reconcile Gateway / HTTPRoute resources.
+    ## Choose the controller according to the Gateway implementation you use.
+    ## Examples:
+    ## - gateway.envoyproxy.io/gatewayclass-controller  (Envoy Gateway)
+    ## - istio.io/gateway-controller                    (Istio)
+    ## - io.cilium/gateway-controller                   (Cilium)
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+    ## Gateway service configuration
+    ## type: Service type (LoadBalancer or NodePort)
+    ## nodePorts: Optional NodePort mapping (if using NodePort)
+    service:
+      type: "LoadBalancer"          # Service type: LoadBalancer or NodePort
+      nodePorts: {}
+        # http: 30080
+        # https: 30443
+        # gitssh: 30022
+
+    ## Base external domain used to expose CSGHub services
+    external:
+      domain: "csghub.example.com"  # e.g. csghub.example.com, example.com
+      # public: ""                  # Optional public access domain override.
+                                    # If empty, the domain will be derived automatically.
+                                    # NOTE: When base domain is a second-level domain (e.g. example.com),
+                                    # a subdomain (e.g. csghub.example.com) will be used internally
+                                    # to avoid overly broad wildcard routing such as *.example.com
+
+      ## Whether to use the top-level domain directly when generating derived domains.
+      ## If the domain is a multi-level domain (e.g. csghub.example.com):
+      ## - true:  use the full domain as-is (casdoor.csghub.example.com)
+      ## - false: strip the first label and use the base domain (casdoor.example.com)
+      ## If the domain is a second-level domain (e.g. example.com),
+      ## it will always be used directly without truncation regardless of this setting.
+      useTop: false
+
+    ## TLS/SSL configuration for Gateway
+    tls:
+      enabled: false                # Enable TLS termination on the Gateway
+      # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
+
+  ## Image management
+  image:
+    registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
+    registryPolicy: "default"       # default or force, force will overwrite all others registries
+    tag: "latest"                   # Image tag format: {{version}}-{{edition}}
+    pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
+    pullSecrets: []                 # Private registry authentication secrets
+
+  ## Persistent volume configuration
+  persistence:
+    # storageClass: ""              # StorageClass name (empty for default)
+    accessModes: ["ReadWriteOnce"]  # Volume access modes
+    size: "10Gi"                    # Default storage capacity
+
+  ## Database configuration
+  postgresql:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External PostgreSQL connection
+    external: {}
+      # host: "<pg_host>"           # PostgreSQL host address
+      # port: 6432                  # PostgreSQL port
+      # user: "csghub"              # Database username
+      # password: ""                # Database password
+      # timezone: "Etc/UTC"         # Database timezone
+      # sslmode: "prefer"           # SSL mode
+
+  ## Redis configuration
+  redis:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Redis configuration
+    external: {}
+      # host: "<redis_host>"        # Redis server hostname or IP
+      # port: 6379                  # Redis port number
+      # password: ""                # Redis authentication password
+
+  ## subChart deployment context
+  chartContext:
+    isBuiltIn: false                # deployed bundled with csghub
+
+#################################################################
+##  AgenticHub Configuration                                   ##
+#################################################################
+## External CSGHub URL for accessing the hub interface
+externalUrl: "https://csghub.example.com"
+
+## API token for authenticating with CSGHub API
+hubAPIToken: ""
+
+agenticflow:
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/agenticflow"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service configuration
+  service: {}
+    # port: 7860
+
+  ## Database configuration
+  postgresql: {}
+    # host: "<pg_host>"                    # PostgreSQL host address
+    # port: 5432                           # PostgreSQL port
+    # database: "csghub_agenticflow"       # Database name
+    # user: "csghub"                       # Database username
+    # password: ""                         # Database password
+    # timezone: "Etc/UTC"                  # Database timezone
+    # sslmode: "prefer"                    # SSL mode
+
+  ## Redis configuration
+  redis: {}
+    # host: "<redis_host>"                 # Redis server hostname or IP
+    # port: 6379                           # Redis port number
+    # password: ""                         # Redis authentication password
+
+  persistence:
+    # storageClass: ""                     # StorageClass for dynamic provisioning
+    accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "20Gi"                           # Disk space allocation
+
+  token: {}
+    # csgAzureOpenToken: ""
+    # infiniApiKey: ""
+    # openRouterApiKey: ""
+
+# CSGBot configuration
+csgbot:
+  persistence:
+    # storageClass: ""                     # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]       # Volume access permissions
+    size: "20Gi"                           # Disk space allocation
+
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/csgbot"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service Configuration
+  service: {}
+    # port: 8070
+
+  ## Credentials Configuration
+  environment: {}
+
+  ## ConfigMap Configuration
+  config:
+    webSearch: {}
+      # apiUrl: "https://searchapi.xiaosuai.com/search/..."
+      # apiKey: ""
+    integrations: {}
+      # feishuEnabled: false
+    logging: {}
+      # disableGeniusChat: false
+    sandbox:
+      genius:
+        image:
+          # registry: "docker.io"
+          repository: "opencsghq/genius-sandbox"
+          tag: "2026040201"
+      doc:
+        image:
+          # registry: "docker.io"
+          repository: "opencsghq/doc-sandbox"
+          tag: "latest"
+      openclaw:
+        image:
+          # registry: "docker.io"
+          repository: "opencsghq/openclaw-sandbox"
+          tag: "20260331.20260408.4"
+    externalDocs: {}
+      # enabled: false    # APIS Need turn on csghub swaggerAPI docs
+
+#################################################################
+##  Built-in Third-party Components                            ##
+#################################################################
+## Embedded PostgreSQL configuration
+postgresql:
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/postgres"
+    tag: "15.17"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 5432                               # Service port
+    protocol: "TCP"                          # Network protocol
+
+  databases:                                 # Databases to create on startup
+    - "agentichub_agenticflow"
+
+  parameters: {}                             # PostgreSQL runtime parameters
+    # max_connections: 400                   # Dynamic parameters (triggers recreate)
+    # shared_buffers: "128MB"                # Shared memory buffers
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "50Gi"                             # Disk space allocation
+
+## Built-in Redis configuration
+redis:
+  image:
+    # registry: "docker.io"
+    repository: "redis"
+    tag: "7.2.5"                             # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  service:
+    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
+    port: 6379                               # Service port
+    protocol: "TCP"                          # Network protocol
+
+  requirePass: false                         # Password requirement
+
+  persistence:
+    # storageClass: ""                       # StorageClass for dynamic provisioning
+    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
+    size: "10Gi"                             # Disk space allocation
+
+#################################################################
+##  Dependent SubCharts                                        ##
+##  PLEASE DO NOT UPDATE!!!                                    ##
+#################################################################
+## Do not modify it unless you know the purpose of the modification.
+
+## Reloader configuration
+reloader:
+  image:
+    name: "opencsghq/stakater-reloader"    # Reloader image name
+
+## EnvoyGateway configuration
+envoy:
+  enabled: false
+
+## MemMachine configuration
+memmachine:
+  enabled: false

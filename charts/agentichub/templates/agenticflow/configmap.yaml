@@ -1,0 +1,73 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $isBuiltIn := .Values.global.chartContext.isBuiltIn }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $serviceName }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  CHORMA_DATA_PATH: "/data/chroma"
+
+  ## AgenticHub Configuration for Langflow
+  {{- $csghubEndpoint := .Values.externalUrl }}
+  {{- if $isBuiltIn }}
+    {{- $csghubEndpoint = include "common.endpoint.csghub" . }}
+  {{- end }}
+
+  {{- $redirectState := printf "%s/api/v1/opencsg/callback/csghub" (include "common.endpoint.agenticflow" .) }}
+  REDIRECT_STATE: {{ $redirectState | quote }}
+  LANGFLOW_LOGIN_URL: {{ printf "%s/sso/login?redirect_url=%s" $csghubEndpoint $redirectState | quote }}
+
+  ## AgenticHub Configuration for CSGHub
+  CSGHUB_BASE_URL: {{ $csghubEndpoint | quote }}
+  CSGHUB_API_BASE_URL: {{ $csghubEndpoint | quote }}
+  CSGHUB_AIGATEWAY_URL: {{ printf "%s/aigateway" $csghubEndpoint | quote }}
+
+  {{- $apiToken := .Values.hubAPIToken }}
+  {{- if $isBuiltIn }}
+    {{- $csghubSvc := include "common.names.custom" (list . "core") }}
+    {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
+    {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
+  {{- end }}
+  CSGHUB_API_ACCESS_TOKEN: {{ $apiToken | quote }}
+
+  ## AgenticHub Configuration for Redis
+  {{- $redisConf := include "common.redis.config" (dict "service" $service "ctx" .) | fromYaml }}
+  {{- if $redisConf.password }}
+  CSG_REDIS_URL: {{ printf "redis://%s:%s@%s:%v/%v" $redisConf.user $redisConf.password $redisConf.host $redisConf.port $redisConf.database }}
+  {{- else }}
+  CSG_REDIS_URL: {{ printf "redis://%s:%v/%v" $redisConf.host $redisConf.port $redisConf.database }}
+  {{- end }}
+
+  ## AgenticHub Token Custom
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+  {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $data }}
+  FLOWS_ACCESS_TOKEN: {{ $agenticflowToken | quote }}
+
+  ## AgenticHub Configuration for Langflow
+  LANGFLOW_DATABASE_URL: {{ include "csghub.postgresql.dsn" (dict "service" $service "ctx" .) | quote }}
+  LANGFLOW_COOKIE_DOMAIN: {{ printf ".%s" (include "common.domain.csghub" .) }}
+  LANGFLOW_ACCESS_HTTPONLY: "false"
+  LANGFLOW_REFRESH_HTTPONLY: "false"
+  LANGFLOW_WORKERS: "6"
+  LANGFLOW_PORT: {{ dig "service" "port" 7860 $service | quote }}
+  LANGFLOW_LOG_LEVEL: "info"
+  LANGFLOW_SECRET_KEY: {{ $agenticflowToken | quote }}
+  LANGFLOW_CACHE_TYPE: "async"
+  LANGFLOW_PRETTY_LOGS: "false"
+  LANGFLOW_CONFIG_DIR: "/app/data/config_data"
+  LANGFLOW_LOG_FILE: "/app/data/logs/langflow.log"
+  LANGFLOW_DO_NOT_TRACK: "true"
+
+  ## AgenticHub Configuration for Others
+  BACKEND_URL: {{ include "common.endpoint.agenticflow" . }}
+  FRONTEND_URL: {{ include "common.endpoint.agenticflow" . }}
