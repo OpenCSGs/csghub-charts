@@ -15,7 +15,6 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
-  clusterIP: None
   ports:
     - port: {{ dig "service" "port" 8070 $service }}
       targetPort: 8070
