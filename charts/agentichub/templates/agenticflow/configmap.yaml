@@ -42,7 +42,7 @@ data:
 
   ## AgenticHub Configuration for Redis
   {{- $redisConf := include "common.redis.config" (dict "service" $service "ctx" .) | fromYaml }}
-  {{- if $redisConf.password }}
+  {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $redisConf.password) }}
   CSG_REDIS_URL: {{ printf "redis://%s:%s@%s:%v/%v" $redisConf.user $redisConf.password $redisConf.host $redisConf.port $redisConf.database }}
   {{- else }}
   CSG_REDIS_URL: {{ printf "redis://%s:%v/%v" $redisConf.host $redisConf.port $redisConf.database }}
