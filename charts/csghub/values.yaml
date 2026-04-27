@@ -215,13 +215,10 @@ server:
   ## S3 Proxy
   enablePresignedUrlProxy: true            # Enable S3 proxy
 
-  ## Agent configuration
-  agent:
-    langflow: {}
-      # host: ""                           # AgentHub address
-      # token: ""                          # AgentHub Token
-      # instanceQuotaPerUser: 5
-      # codeInstanceQuotaPerUser: 5
+  ## Agentichub configuration
+  agenticflow: {}
+    # host: ""                           # AgentHub address
+    # token: ""                          # AgentHub Token
 
   ## CSGBot configuration
   csgbot: {}
@@ -495,6 +492,7 @@ postgresql:
     - "csghub_label_studio"
     - "csghub_csgship"
     - "csghub_xnet"
+    - "csghub_agenticflow"
 
   parameters: {}                             # PostgreSQL runtime parameters
     # max_connections: 400                   # Dynamic parameters (triggers recreate)
@@ -863,5 +861,6 @@ memmachine:
       apiKey: ""                          # API key for chat endpoint
       model: ""                           # Chat model name
 
+## EnvoyGateway configuration
 envoy:
   enabled: true
