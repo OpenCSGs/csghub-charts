@@ -1,6 +1,6 @@
 apiVersion: v2
 name: agentichub
-description: AgenticHub is a dedicated agent module on the CSGHub platform for developing, configuring, running, 
+description: AgenticHub is a dedicated agent module on the CSGHub platform for developing, configuring, running,
   and collaborating on AI agents.
 
 # A chart can be either an 'application' or a 'library' chart.
