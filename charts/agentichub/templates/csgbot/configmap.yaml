@@ -28,7 +28,9 @@ data:
       {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
     {{- end }}
     hub-access-token = {{ $apiToken | quote }}
-    {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
+    {{- $agenticSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
+    {{- $agenticSvcName := include "common.names.custom" (list . $agenticSvc.name) }}
+    {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $agenticSvcName).data | default dict }}
     {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $data }}
     langflow-access-token = {{ $agenticflowToken | quote }}
     web-search-api-key = {{ dig "config" "webSearch" "apiKey" "" .Values.csgbot | quote }}
