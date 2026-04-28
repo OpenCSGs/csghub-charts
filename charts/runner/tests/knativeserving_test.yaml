@@ -140,9 +140,6 @@ tests:
           path: metadata.labels["app.kubernetes.io/instance"]
           value: csghub
       - equal:
-          path: metadata.labels["app.kubernetes.io/name"]
-          value: runner
-      - equal:
           path: metadata.labels["app.kubernetes.io/managed-by"]
           value: Helm
       - equal:
@@ -164,9 +161,6 @@ tests:
       - equal:
           path: metadata.labels["app.kubernetes.io/instance"]
           value: csghub
-      - equal:
-          path: metadata.labels["app.kubernetes.io/name"]
-          value: runner
       - equal:
           path: metadata.labels["app.kubernetes.io/managed-by"]
           value: Helm
