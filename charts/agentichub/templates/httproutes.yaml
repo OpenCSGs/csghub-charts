@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- if .Values.global.chartContext.isBuiltIn }}
+{{- if not .Values.global.chartContext.isBuiltIn }}
 {{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: gateway.networking.k8s.io/v1
@@ -39,4 +39,15 @@ spec:
           port: {{ dig "service" "port" 7860 $service }}
       timeouts:
         request: 15s
-  {{- end }}
+    {{- $csgbotSvc := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
+    {{- $csgbotSvcName := include "common.names.custom" (list . $csgbotSvc.name) }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ $csgbotSvcName }}
+          port: {{ dig "service" "port" 8070 $csgbotSvc }}
+      timeouts:
+        request: 15s
+{{- end }}
