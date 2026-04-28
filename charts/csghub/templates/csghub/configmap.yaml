@@ -271,7 +271,10 @@ data:
 
   ## Server Configuration for Agent
   OPENCSG_AGENT_AUTOHUB_SERVICE_HOST: ""
-  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ or $serverSvc.agenticflow.host (include "common.domain.agenticflow" .) | quote }}
+  {{- $agenticflowSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
+  {{- $agenticflowSvcName := include "common.names.custom" (list . $agenticflowSvc.name) }}
+  {{- $agenticflowSvcPort := dig "service" "port" 7860 $agenticflowSvc }}
+  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ or $serverSvc.agenticflow.host (printf "%s:%v" $agenticflowSvcName $agenticflowSvcPort)  | quote }}
   {{- $agenticflowData := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
   {{- $agenticflowToken := dig "OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN" (include "agenticflow.api.token" .) $agenticflowData }}
   OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ or $serverSvc.agenticflow.token $agenticflowToken | quote }}
