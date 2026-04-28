@@ -5139,7 +5139,6 @@ aggregationRule:
 # automatically.
   - matchExpressions:
       - {key: serving.knative.dev/release, operator: Exists}
-rules: [] # Rules are automatically filled in by the controller manager.
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -5155,7 +5154,6 @@ aggregationRule:
     # automatically.
     - matchExpressions:
         - {key: app.kubernetes.io/name, operator: In, values: ["knative-serving"]}
-rules: [] # Rules are automatically filled in by the controller manager.
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -5171,7 +5169,6 @@ aggregationRule:
     # automatically.
     - matchExpressions:
         - {key: eventing.knative.dev/release, operator: Exists}
-rules: [] # Rules are automatically filled in by the controller manager.
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -5187,8 +5184,6 @@ aggregationRule:
     # automatically.
     - matchExpressions:
         - {key: app.kubernetes.io/name, operator: In, values: ["knative-eventing"]}
-rules: [] # Rules are automatically filled in by the controller manager.
-
 ---
 # Copyright 2020 The Knative Authors
 #
