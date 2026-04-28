@@ -11,11 +11,11 @@ kind: Namespace
 metadata:
   name: {{ $knativeNamespace }}
   labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/service: {{ $serviceName }}
     {{- if $service.labels }}
       {{- toYaml $service.labels | nindent 4 }}
-    {{- else }}
-      {{- include "common.labels" . | nindent 4 }}
     {{- end }}
   annotations:
     helm.sh/resource-policy: keep
@@ -26,11 +26,11 @@ metadata:
   name: knative-serving
   namespace: {{ $knativeNamespace }}
   labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/service: {{ $serviceName }}
     {{- if $service.labels }}
       {{- toYaml $service.labels | nindent 4 }}
-    {{- else }}
-      {{- include "common.labels" . | nindent 4 }}
     {{- end }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}

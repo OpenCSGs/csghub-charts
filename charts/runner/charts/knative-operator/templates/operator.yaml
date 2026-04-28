@@ -5125,6 +5125,7 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- if .Release.IsInstall }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -5188,7 +5189,7 @@ aggregationRule:
     - matchExpressions:
         - {key: app.kubernetes.io/name, operator: In, values: ["knative-eventing"]}
 rules: [] # Rules are automatically filled in by the controller manager.
-
+{{- end }}
 ---
 # Copyright 2020 The Knative Authors
 #
