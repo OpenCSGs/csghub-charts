@@ -19,6 +19,26 @@
 {{- end }}
 
 {{/*
+# csgbot Domain Helper
+# Generates the full domain name for csgbot service
+# Usage: {{ include "common.domain.csgbot" . }}
+# Returns: csgbot.<base-domain>
+*/}}
+{{- define "common.domain.csgbot" }}
+{{- include "common.domain" (dict "ctx" . "sub" "csgbot") -}}
+{{- end }}
+
+{{/*
+# csgbot External Endpoint Helper
+# Generates the complete external access endpoint for csgbot service
+# Usage: {{ include "common.endpoint.csgbot" . }}
+# Returns: Full URL (http://csgbot.<domain> or https://csgbot.<domain>) based on TLS configuration
+*/}}
+{{- define "common.endpoint.csgbot" }}
+{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.csgbot" .)) -}}
+{{- end }}
+
+{{/*
 Generate global unique FLOWS_ACCESS_TOKEN for AgenticFlow
 
 Usage:
