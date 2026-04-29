@@ -23,7 +23,8 @@ set:
     tag: "v1.11.0"
     pullPolicy: ""
   server:
-    image: {}
+    image:
+      tag: ""
   redis:
     image:
       repository: "redis"
