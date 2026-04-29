@@ -23,7 +23,34 @@ spec:
     - name: listeners
       sectionName: http
   hostnames:
-    - {{ include "common.domain.agenticflow" . | quote }}
+    - {{ include "common.domain.agenticflow" . }}
+  rules:
+      - filters:
+          - type: RequestRedirect
+            requestRedirect:
+              scheme: https
+              statusCode: 301
+---
+{{- $csgbotSvc := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
+{{- $csgbotSvcName := include "common.names.custom" (list . $csgbotSvc.name) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ printf "%s-redirect" $csgbotSvcName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $csgbotSvc.name }}
+    {{- if $csgbotSvc.labels }}
+      {{- toYaml $csgbotSvc.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+    - name: listeners
+      sectionName: http
+  hostnames:
+    - {{ include "common.domain.csgbot" . }}
   rules:
       - filters:
           - type: RequestRedirect
