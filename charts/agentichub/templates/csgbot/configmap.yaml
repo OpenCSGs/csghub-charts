@@ -53,7 +53,7 @@ data:
     notification-url = {{ printf "%s/api/v1/notifications?current_user=csgbot" $csghubEndpoint | quote }}
     {{- $memSvc := include "common.service" (dict "ctx" . "service" "memmachine") | fromYaml }}
     {{- $memsSvcName := include "common.names.custom" (list . $memSvc.name) }}
-    memmemmachine-url = {{ printf "http://%s:8080/mcp/" $memsSvcName | quote }}
+    memmachine-url = {{ printf "http://%s:8080/mcp/" $memsSvcName | quote }}
 
     [logging]
     log-path = "logs/server.log"
