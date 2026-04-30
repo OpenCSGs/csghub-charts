@@ -101,7 +101,7 @@ agenticflow:
   image:
     # registry: "docker.io"
     repository: "opencsghq/agenticflow"
-    tag: "latest"
+    tag: "v0.5.1-ee"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -130,10 +130,13 @@ agenticflow:
     accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "20Gi"                           # Disk space allocation
 
-  token: {}
-    # csgAzureOpenToken: ""
-    # infiniApiKey: ""
-    # openRouterApiKey: ""
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
 
 # CSGBot configuration
 csgbot:
@@ -145,7 +148,7 @@ csgbot:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgbot"
-    tag: "latest"
+    tag: "v0.5.1-ee"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -170,7 +173,7 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/genius-sandbox"
-          tag: "2026040201"
+          tag: "20260430v1"
       doc:
         image:
           # registry: "docker.io"
@@ -190,7 +193,7 @@ csgbot:
 ## Embedded PostgreSQL configuration
 postgresql:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/postgres"
     tag: "15.17"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
@@ -247,7 +250,7 @@ reloader:
 
 ## EnvoyGateway configuration
 envoy:
-  enabled: false
+  enabled: true
 
 ## MemMachine configuration
 memmachine:
