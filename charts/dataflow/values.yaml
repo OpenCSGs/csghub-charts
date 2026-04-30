@@ -178,7 +178,7 @@ labelStudio:
 ## Embedded PostgreSQL configuration
 postgresql:
   image:
-    registry: "docker.io"
+    # registry: "docker.io"
     repository: "opencsghq/postgres"
     tag: "15.17"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
