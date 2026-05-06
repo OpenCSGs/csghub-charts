@@ -153,6 +153,42 @@ tests:
                 port: 8080
             timeouts:
               request: 60s
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /aigateway/v1/gateway/mcp
+            filters:
+              - type: URLRewrite
+                urlRewrite:
+                  path:
+                    type: ReplacePrefixMatch
+                    replacePrefixMatch: /v1/gateway/mcp
+            backendRefs:
+              - name: csghub-aigateway
+                port: 8094
+            timeouts:
+              request: 0s
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /aigateway
+            filters:
+              - type: URLRewrite
+                urlRewrite:
+                  path:
+                    type: ReplacePrefixMatch
+                    replacePrefixMatch: /
+            backendRefs:
+              - name: csghub-aigateway
+                port: 8094
+            timeouts:
+              request: 5m
 
   - it: Should render httpRoutes resources correctly
     template: csghub/httproutes.yaml
