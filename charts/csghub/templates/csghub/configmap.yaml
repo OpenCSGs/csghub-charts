@@ -270,6 +270,7 @@ data:
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
 
   ## Server Configuration for Agent
+  {{- if (dig "enabled" true .Values.agentichub) }}
   OPENCSG_AGENT_AUTOHUB_SERVICE_HOST: ""
   {{- $agenticflowSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
   {{- $agenticflowSvcName := include "common.names.custom" (list . $agenticflowSvc.name) }}
@@ -287,6 +288,7 @@ data:
   {{- $csgbotSvcPort := dig "service" "port" 8070 $csgbotSvc }}
   OPENCSG_CSGBOT_SERVER_HOST: {{ or $serverSvc.csgbot.host (printf "http://%s" $csgbotSvcName) | quote }}
   OPENCSG_CSGBOT_SERVER_PORT: {{ or $serverSvc.csgbot.port $csgbotSvcPort | quote }}
+  {{- end }}
 
   ## Server Configuration for XNet
   {{- $xnetSvc := include "common.service" (dict "ctx" . "service" "xnet") | fromYaml }}

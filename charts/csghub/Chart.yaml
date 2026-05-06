@@ -72,3 +72,7 @@ dependencies:
     version: 1.6.3
     repository: file://charts/gateway-helm
     condition: envoy.enabled
+  - name: agentichub
+    version: 0.5.1
+    repository: https://charts.opencsg.com/csghub
+    condition: agentichub.enabled
