@@ -51,7 +51,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v2.0.0"                  # Image tag format: {{version}}-{{edition}}
+    tag: "v2.1.0-ee"                # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -143,7 +143,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v2.0.0"
+  tag: "v2.1.0-ee"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -217,13 +217,13 @@ server:
 
   ## Agentichub configuration
   agenticflow: {}
-    # host: ""                           # AgentHub address
-    # token: ""                          # AgentHub Token
+    # host: "http://agenticflow.example.io" # AgentHub address
+    # token: ""                             # AgentHub Token
 
   ## CSGBot configuration
   csgbot: {}
-    # host: ""                             # CSGBot address
-    # port: "8070"                         # CSGBot port
+    # host: "http://csgbot.example.io"     # CSGBot address
+    # port: "80"                           # CSGBot port
 
   ## Memory service client configuration
   memory:
@@ -324,7 +324,7 @@ xnet:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csghub-xnet"
-    tag: "v2.0.0"
+    tag: "v2.1.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -432,6 +432,15 @@ csgship:
   redis:
     enabled: false
   casdoor:
+    enabled: false
+
+agentichub:
+  enabled: true
+
+  ## Disable subCharts same with parent
+  postgresql:
+    enabled: false
+  redis:
     enabled: false
 
 ## Accounting service configuration
