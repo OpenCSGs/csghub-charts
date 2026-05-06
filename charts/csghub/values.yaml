@@ -410,23 +410,11 @@ runner:
   logcollector:
     enabled: true
 
-  ## Disable subCharts same with parent
-  envoy:
-    enabled: false
-  reloader:
-    enabled: false
-  prometheus:
-    enabled: false
-
 ## Dataflow service configuration
 dataflow:
   enabled: true                          # Enable or disable dataflow service
 
   ## Disable subCharts same with parent
-  envoy:
-    enabled: false
-  reloader:
-    enabled: false
   postgresql:
     enabled: false
   redis:
@@ -439,10 +427,6 @@ csgship:
   # configmap: "csghub-csgship"
 
   ## Disable subCharts same with parent
-  envoy:
-    enabled: false
-  reloader:
-    enabled: false
   postgresql:
     enabled: false
   redis:
@@ -465,6 +449,10 @@ mirror: {}
 ## temporalWorker configuration
 temporalWorker: {}
 
+## Helm tags to control sub-chart dependencies
+## Set dependencies: false to disable reloader, prometheus, gateway-helm subcharts
+tags:
+  dependencies: false
 #################################################################
 ##  Built-in Third-party Components                            ##
 #################################################################

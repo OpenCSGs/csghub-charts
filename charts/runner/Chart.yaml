@@ -37,15 +37,24 @@ dependencies:
     version: 2.2.7
     repository: file://charts/reloader
     condition: reloader.enabled
+    tags:
+      - dependencies
+      - reloader
   - name: prometheus
     version: 28.6.0
     repository: file://charts/prometheus
     condition: prometheus.enabled
+    tags:
+      - dependencies
+      - monitor
   - name: gateway-helm
     alias: envoy
     version: 1.6.3
     repository: file://charts/gateway-helm
     condition: envoy.enabled
+    tags:
+      - dependencies
+      - gateway
   - name: lws
     version: v0.6.1
     repository: file://charts/lws
