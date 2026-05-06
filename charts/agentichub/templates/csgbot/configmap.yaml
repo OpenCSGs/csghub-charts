@@ -36,7 +36,10 @@ data:
     web-search-api-key = {{ dig "config" "webSearch" "apiKey" "" .Values.csgbot | quote }}
 
     [opencsg]
-    {{- $csghubEndpoint := include "common.endpoint.csghub" . }}
+    {{- $csghubEndpoint := .Values.externalUrl }}
+    {{- if $isBuiltIn }}
+      {{- $csghubEndpoint = include "common.endpoint.csghub" . }}
+    {{- end }}
     hub-base-url = {{ $csghubEndpoint | quote }}
     base-url = {{ $csghubEndpoint | quote }}
     mcp-gateway-url = {{ printf "%s/aigateway/v1/gateway/mcp" $csghubEndpoint | quote }}
