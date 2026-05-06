@@ -11,5 +11,5 @@ dependencies:
 - name: memmachine
   repository: file://charts/memmachine
   version: 0.1.0
-digest: sha256:95e03442d1201cb54c2ffd823fcc0e72935916b898622607f62aa2120001145a
-generated: "2026-04-24T15:52:40.30297+08:00"
+digest: sha256:ff61f1168fc5d16a6add281b9a07e31fa9ad1bfef4954d4cf7666cda38a808ec
+generated: "2026-05-06T17:14:21.963195+08:00"
