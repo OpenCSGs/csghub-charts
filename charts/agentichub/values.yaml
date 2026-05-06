@@ -132,11 +132,11 @@ agenticflow:
 
   resources:
     requests:
-      cpu: "500m"
-      memory: "512Mi"
-    limits:
       cpu: "2"
-      memory: "2Gi"
+      memory: "2048Mi"
+    limits:
+      cpu: "4"
+      memory: "5Gi"
 
 # CSGBot configuration
 csgbot:
