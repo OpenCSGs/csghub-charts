@@ -58,7 +58,7 @@ data:
   LANGFLOW_COOKIE_DOMAIN: {{ include "domain.base" . }}
   LANGFLOW_ACCESS_HTTPONLY: "false"
   LANGFLOW_REFRESH_HTTPONLY: "false"
-  LANGFLOW_WORKERS: "6"
+  LANGFLOW_WORKERS: "2"
   LANGFLOW_PORT: {{ dig "service" "port" 7860 $service | quote }}
   LANGFLOW_LOG_LEVEL: "info"
   LANGFLOW_SECRET_KEY: {{ $agenticflowToken | quote }}
