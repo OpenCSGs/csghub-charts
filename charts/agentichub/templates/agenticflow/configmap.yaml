@@ -55,7 +55,7 @@ data:
 
   ## AgenticHub Configuration for Langflow
   LANGFLOW_DATABASE_URL: {{ include "csghub.postgresql.dsn" (dict "service" $service "ctx" .) | quote }}
-  LANGFLOW_COOKIE_DOMAIN: {{ printf ".%s" (rest (splitList "." (include "common.domain.csghub" .)) | join ".") }}
+  LANGFLOW_COOKIE_DOMAIN: {{ include "domain.base" . }}
   LANGFLOW_ACCESS_HTTPONLY: "false"
   LANGFLOW_REFRESH_HTTPONLY: "false"
   LANGFLOW_WORKERS: "6"
