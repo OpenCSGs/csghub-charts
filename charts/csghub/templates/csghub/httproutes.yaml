@@ -164,6 +164,21 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /aigateway/v1/gateway/mcp
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /v1/gateway/mcp
+      backendRefs:
+        - name: {{ $aiGatewaySvcName }}
+          port: {{ dig "service" "port" "8094" $aiGatewaySvc.aigateway }}
+      timeouts:
+        request: 0s
+    - matches:
+        - path:
+            type: PathPrefix
             value: /aigateway
       filters:
         - type: URLRewrite
