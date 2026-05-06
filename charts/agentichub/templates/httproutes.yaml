@@ -36,7 +36,7 @@ spec:
         - name: {{ $serviceName }}
           port: {{ dig "service" "port" 7860 $service }}
       timeouts:
-        request: 15s
+        request: 2m
 {{- if not .Values.global.chartContext.isBuiltIn }}
 ---
 {{- $csgbotSvc := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
@@ -72,5 +72,5 @@ spec:
         - name: {{ $csgbotSvcName }}
           port: {{ dig "service" "port" 8070 $csgbotSvc }}
       timeouts:
-        request: 15s
+        request: 5m
 {{- end }}

@@ -107,7 +107,7 @@ tests:
               - name: csghub-portal
                 port: 8090
             timeouts:
-              request: 15s
+              request: 2m
       - equal:
           path: spec.rules[1]
           value:
@@ -128,7 +128,7 @@ tests:
               - name: csghub-server
                 port: 8080
             timeouts:
-              request: 60s
+              request: 5m
       - equal:
           path: spec.rules[4]
           value:
