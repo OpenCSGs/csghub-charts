@@ -66,7 +66,7 @@ dependencies:
     condition: argo.enabled
   - name: knative-operator
     alias: knative
-    version: 1.21.1
+    version: 1.22.1
     repository: file://charts/knative-operator
     condition: knative.enabled
   - name: volcano

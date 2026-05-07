@@ -19,12 +19,12 @@ dependencies:
   version: 0.47.4
 - name: knative-operator
   repository: file://charts/knative-operator
-  version: 1.21.1
+  version: 1.22.1
 - name: volcano
   repository: file://charts/volcano
   version: 1.14.1
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
   version: 0.2.1
-digest: sha256:297162e86323de600d29ab82a5671954bb7a98f00546d8599643c12d64fcf51d
-generated: "2026-05-07T13:54:38.509357+08:00"
+digest: sha256:4052eacd3095a67067b91801a8f730062116e60d3d32bcaf80e15c53447557f3
+generated: "2026-05-07T14:32:50.4847+08:00"
