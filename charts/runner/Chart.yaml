@@ -49,8 +49,8 @@ dependencies:
       - monitor
   - name: gateway-helm
     alias: envoy
-    version: 1.6.3
-    repository: file://charts/gateway-helm
+    version: 1.6.7
+    repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
     tags:
       - dependencies
