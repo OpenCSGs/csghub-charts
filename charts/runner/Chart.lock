@@ -9,8 +9,8 @@ dependencies:
   repository: file://charts/prometheus
   version: 28.6.0
 - name: gateway-helm
-  repository: file://charts/gateway-helm
-  version: v1.6.3
+  repository: oci://docker.io/envoyproxy
+  version: 1.6.7
 - name: lws
   repository: file://charts/lws
   version: v0.6.1
@@ -26,5 +26,5 @@ dependencies:
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
   version: 0.2.1
-digest: sha256:4071cd3e68f7e3caae0248ac36fae6043fa337c3f27bb42211693e9a302ae828
-generated: "2026-05-06T17:16:37.4203+08:00"
+digest: sha256:297162e86323de600d29ab82a5671954bb7a98f00546d8599643c12d64fcf51d
+generated: "2026-05-07T13:54:38.509357+08:00"

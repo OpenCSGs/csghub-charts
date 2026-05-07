@@ -27,10 +27,10 @@ dependencies:
   repository: file://charts/memmachine
   version: 0.1.0
 - name: gateway-helm
-  repository: file://charts/gateway-helm
-  version: v1.6.3
+  repository: oci://docker.io/envoyproxy
+  version: 1.6.7
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
   version: 0.5.1
-digest: sha256:88cab63515fd15edf76a9514c321c99e5da9c61e0deb93ca6bbdca111a919684
-generated: "2026-05-06T16:15:15.543893+08:00"
+digest: sha256:80c1ff54bd835602020c2425fd656797243d14895f65f8b825e2523b0f3846fb
+generated: "2026-05-07T13:18:55.175249+08:00"

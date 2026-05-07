@@ -6,7 +6,7 @@ dependencies:
   repository: file://charts/reloader
   version: 2.2.7
 - name: gateway-helm
-  repository: file://charts/gateway-helm
-  version: v1.6.3
-digest: sha256:53074d22478cf62d3080c48cb93d98e186cd7cc2bad3413cd5888e392f6247dc
-generated: "2026-05-06T17:16:54.89669+08:00"
+  repository: oci://docker.io/envoyproxy
+  version: 1.6.7
+digest: sha256:f813c486b523aebacbdba65753ebe8f015f14eea6a8dee44a468063078e4ef81
+generated: "2026-05-07T13:52:49.552449+08:00"
