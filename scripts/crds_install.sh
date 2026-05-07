@@ -3,20 +3,11 @@ set -euo pipefail
 trap 'rm -rf "${TMP_DIR:-}"' EXIT
 
 # -----------------------------
-# 配置区
-# -----------------------------
 CHART_VERSION="${CHART_VERSION:-latest}"
 CHART_BASE_URL="${CHART_BASE_URL:-https://charts.opencsg.com/csghub}"
 TMP_DIR=$(mktemp -d)
 EXTRACT_DIR="${TMP_DIR}/extract"
-CRD_DIR="${EXTRACT_DIR}/csghub/charts/gateway-helm/crds"
 
-# -----------------------------
-# 函数区
-# -----------------------------
-
-# -----------------------------
-# 主流程
 # -----------------------------
 mkdir -p "${EXTRACT_DIR}"
 
@@ -44,7 +35,7 @@ if [[ "${CHART_VERSION}" == "latest" ]]; then
 
   curl -fsSL "${CHART_BASE_URL}/index.yaml" -o "${INDEX_FILE}"
 
-  CHART_VERSION=$(awk '/version:/ {print $2}' "${INDEX_FILE}" \
+  CHART_VERSION=$(awk '/^ *version:/ && $0 !~ /appVersion/ {print $2}' "${INDEX_FILE}" \
     | sort -Vr \
     | head -n1)
 
@@ -70,6 +61,15 @@ if ! tar -xzf "${CHART_FILE}" -C "${EXTRACT_DIR}"; then
   exit 1
 fi
 
+echo "🔍 Locating CRD directory..."
+
+CRD_DIR=$(find "${EXTRACT_DIR}" -type d -path "*/gateway-helm/crds" | head -n1)
+
+if [[ -z "${CRD_DIR}" ]]; then
+  echo "❌ CRD directory not found after extraction"
+  exit 1
+fi
+
 echo "📂 Using CRDs from: ${CRD_DIR}"
 
 if [[ ! -d "${CRD_DIR}" ]]; then
@@ -77,9 +77,19 @@ if [[ ! -d "${CRD_DIR}" ]]; then
   exit 1
 fi
 
+
 echo "🚀 Applying CRDs via server-side apply..."
 
-if kubectl apply --server-side -f "${CRD_DIR}"; then
+CRD_COUNT=$(find "${CRD_DIR}" -type f -name "*.yaml" -o -name "*.yml" | wc -l)
+
+if [[ "${CRD_COUNT}" -eq 0 ]]; then
+  echo "❌ No CRD files found in ${CRD_DIR}"
+  exit 1
+fi
+
+echo "📊 Found ${CRD_COUNT} CRD files"
+
+if kubectl apply --server-side --recursive -f "${CRD_DIR}"; then
   echo
   echo "🎉 All CRDs created successfully."
 else
