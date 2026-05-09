@@ -157,7 +157,7 @@ commit-msg:
         commit_msg=$(cat {1})
 
         # Check Conventional Commits format
-        if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|build)(\([a-zA-Z0-9_-]+\))?: .+"; then
+        if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|build|optimize)(\([a-zA-Z0-9_-]+\))?: .+"; then
           echo "❌ Commit message should follow Conventional Commits format:"
           echo "   feat: add new feature"
           echo "   fix: fix bug"
@@ -167,6 +167,7 @@ commit-msg:
           echo "   test: add tests"
           echo "   chore: maintenance tasks"
           echo "   build: build system changes"
+          echo "   optimize: performance or optimization improvements"
           echo ""
           echo "Your message: $commit_msg"
           exit 1
