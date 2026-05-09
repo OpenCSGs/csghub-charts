@@ -15,11 +15,10 @@ metadata:
     app.kubernetes.io/service: template-importer
     {{- include "common.labels" . | nindent 4 }}
   annotations:
-    helm.sh/hook: post-install, post-upgrade
-    helm.sh/hook-weight: "-1"
+    helm.sh/hook-weight: "10"
 spec:
-  activeDeadlineSeconds: 300
-  backoffLimit: 3
+  activeDeadlineSeconds: 3600
+  backoffLimit: 10
   ttlSecondsAfterFinished: 300
   template:
     metadata:
