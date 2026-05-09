@@ -35,7 +35,9 @@ if [[ "${CHART_VERSION}" == "latest" ]]; then
 
   curl -fsSL "${CHART_BASE_URL}/index.yaml" -o "${INDEX_FILE}"
 
-  CHART_VERSION=$(awk '/^ *version:/ && $0 !~ /appVersion/ {print $2}' "${INDEX_FILE}" \
+  CHART_VERSION=$(sed -n '/^  csghub:/,/^  [a-z]/p' "${INDEX_FILE}" \
+    | grep "^    version:" \
+    | awk '{print $2}' \
     | sort -Vr \
     | head -n1)
 
