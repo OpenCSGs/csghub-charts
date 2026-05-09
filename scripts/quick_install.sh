@@ -93,7 +93,7 @@ EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token:,k3s-version: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token:,k3s-version: -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
@@ -104,7 +104,10 @@ while true; do
     --install-cn) INSTALL_CN=true; shift ;;
     --hosts-alias) HOSTS_ALIAS=true; shift ;;
     --enable-nfs-pv) ENABLE_NFS_PV=true; shift ;;
-    --extra-args) EXTRA_ARGS+=($2); shift 2 ;;
+    --extra-args)
+      IFS=' ' read -ra TMP_ARGS <<< "$2"
+      EXTRA_ARGS+=("${TMP_ARGS[@]}")
+      shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --verbose) VERBOSE=true; shift ;;
     --ghproxy) GHPROXY="$2"; shift 2 ;;
@@ -455,14 +458,14 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
       log WARN "Unknown OS: $os. Skipping dependency installation."
       ;;
   esac
+fi
 
-  log INFO "Configuring kernel parameters for inotify..."
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would add fs.inotify.max_user_instances = 256 to /etc/sysctl.conf if missing and run sysctl -p"
-  else
-    grep -qF "fs.inotify.max_user_instances = 256" /etc/sysctl.conf || echo "fs.inotify.max_user_instances = 256" | tee -a /etc/sysctl.conf >/dev/null
-    retry 3 "sysctl -p | sort -u"
-  fi
+log INFO "Configuring kernel parameters for inotify..."
+if [[ "${DRY_RUN:-false}" == "true" ]]; then
+  log CMD "Would add fs.inotify.max_user_instances = 256 to /etc/sysctl.conf if missing and run sysctl -p"
+else
+  grep -qF "fs.inotify.max_user_instances = 256" /etc/sysctl.conf || echo "fs.inotify.max_user_instances = 256" | tee -a /etc/sysctl.conf >/dev/null
+  retry 3 "sysctl -p | sort -u"
 fi
 
 ################################################################################
@@ -602,7 +605,6 @@ if [[ "${ENABLE_NFS_PV:-true}" == "true" && -z "$K3S_SERVER" ]]; then
       ;;
   esac
 
-
   # ------------------------------------------------------------------------------
   # If server installation is enabled
   # ------------------------------------------------------------------------------
@@ -727,18 +729,64 @@ fi
 # Install CSGHub Helm Chart
 ################################################################################
 if [[ -z "$K3S_SERVER" ]]; then
-  log INFO "Create CRDs for gateway API controller."
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log "CMD" "Would run CRDs created by crds_install.sh."
-  else
-    retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_install.sh | bash
+  # Check if csghub is already installed
+  CSGHUB_INSTALLED=false
+  if helm list -n csghub -f csghub 2>/dev/null | grep -q csghub; then
+    CSGHUB_INSTALLED=true
   fi
 
-  log INFO "Patch CRDs for KnativeServing/Argo Workflow/LeaderWorkSet."
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log "CMD" "Would run CRDs patched by crds_takeover.sh."
+  # Parse csghub chart version from EXTRA_ARGS (e.g., --version 2.0.0)
+  CSGHUB_CHART_VERSION=""
+  for i in "${!EXTRA_ARGS[@]}"; do
+    if [[ "${EXTRA_ARGS[$i]}" == "--version" ]] && [[ -n "${EXTRA_ARGS[$i+1]:-}" ]]; then
+      CSGHUB_CHART_VERSION="${EXTRA_ARGS[$i+1]}"
+      break
+    fi
+  done
+
+  # Helper function to compare versions (returns 0 if $1 >= $2)
+  version_ge() {
+    printf '%s\n%s\n' "$2" "$1" | sort -V -C
+  }
+
+  # Only run CRD scripts if version is not specified (latest > 1.16) or >= 1.16
+  SHOULD_RUN_CRD=true
+  if [[ -n "$CSGHUB_CHART_VERSION" ]] && ! version_ge "$CSGHUB_CHART_VERSION" "1.16.0"; then
+    SHOULD_RUN_CRD=false
+  fi
+
+  # Only delete namespaces if version is not specified (latest > 1.17) or >= 1.17
+  SHOULD_DELETE_NS=true
+  if [[ -n "$CSGHUB_CHART_VERSION" ]] && ! version_ge "$CSGHUB_CHART_VERSION" "1.17.0"; then
+    SHOULD_DELETE_NS=false
+  fi
+
+  if [[ "$CSGHUB_INSTALLED" == "true" ]]; then
+
+    if [[ "$SHOULD_RUN_CRD" == "true" ]]; then
+      log INFO "Create CRDs for gateway API controller."
+      if [[ "${DRY_RUN:-false}" == "true" ]]; then
+        log "CMD" "Would run CRDs created by crds_install.sh."
+      else
+        if [[ -n "$CSGHUB_CHART_VERSION" ]]; then
+          retry 5 CHART_VERSION="$CSGHUB_CHART_VERSION" curl -sSL https://charts.opencsg.com/repository/scripts/crds_install.sh | bash
+        else
+          retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_install.sh | bash
+        fi
+      fi
+
+      log INFO "Patch CRDs for KnativeServing/Argo Workflow/LeaderWorkSet."
+      if [[ "${DRY_RUN:-false}" == "true" ]]; then
+        log "CMD" "Would run CRDs patched by crds_takeover.sh."
+      else
+        retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_takeover.sh | bash
+      fi
+    else
+      log INFO "Chart version $CSGHUB_CHART_VERSION < 1.16, skipping CRD creation and patching."
+    fi
   else
-    retry 5 curl -sSL https://charts.opencsg.com/repository/scripts/crds_takeover.sh | bash
+    log INFO "CSGHub not installed, skipping CRD creation and patching."
+    SHOULD_DELETE_NS=false
   fi
 
   log INFO "Installing CSGHub Helm Chart..."
@@ -753,8 +801,21 @@ if [[ -z "$K3S_SERVER" ]]; then
   fi
 
   HELM_EXTRA_ARGS+=(--set global.edition='ee')
-  HELM_EXTRA_ARGS+=(--set global.gateway.external.domain="${DOMAIN}")
+  # Set domain parameter based on version: gateway for >= 1.16, ingress for < 1.16
+  if [[ "$SHOULD_RUN_CRD" == "true" ]]; then
+    HELM_EXTRA_ARGS+=(--set global.gateway.external.domain="${DOMAIN}")
+  else
+    # For ingress, strip the prefix (e.g., csghub.example.com -> example.com)
+    HELM_EXTRA_ARGS+=(--set global.ingress.domain="${DOMAIN}")
+  fi
   HELM_EXTRA_ARGS+=(--set-string server.gitlabShell.sshPort="2222")
+
+  # Configure ingress-nginx tcp port for gitlab-shell when version < 1.16
+  # Note: Helm deep merge cannot override default tcp config, so we use kubectl patch after install
+  if [[ "$SHOULD_RUN_CRD" == "false" ]]; then
+    HELM_EXTRA_ARGS+=(--set "ingress-nginx.tcp.2222=csghub/csghub-gitlab-shell:22")
+    HELM_EXTRA_ARGS+=(--set "ingress-nginx.controller.service.nodePorts.tcp.2222=32222")
+  fi
 
   if [[ "$INSTALL_CN" == "true" ]]; then
     HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
@@ -765,24 +826,44 @@ if [[ -z "$K3S_SERVER" ]]; then
 
   # Helm install/upgrade with proper array handling
   if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
+    log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace --server-side false \
       ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
   else
     retry 2 kubectl delete jobs --all -n csghub
     retry 5 helm upgrade --install csghub csghub/csghub \
       --namespace csghub \
       --create-namespace \
+      --server-side false \
       "${HELM_EXTRA_ARGS[@]}" | tee ./login.txt
   fi
 
+  # Remove default port 22 from ingress-nginx controller service when version < 1.16
+  if [[ "$SHOULD_RUN_CRD" == "false" ]]; then
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+      log CMD "Would remove port 22 from ingress-nginx controller service"
+    else
+      # Find and remove the port 22 entry from the service
+      PORT_INDEX=$(kubectl get svc csghub-ingress-nginx-controller -n csghub -o json | jq -r '.spec.ports | to_entries[] | select(.value.port==22) | .key' 2>/dev/null || echo "")
+      if [[ -n "$PORT_INDEX" ]]; then
+        log INFO "Removing port 22 from ingress-nginx controller service..."
+        run_cmd "kubectl patch svc csghub-ingress-nginx-controller -n csghub --type='json' -p='[{\"op\": \"remove\", \"path\": \"/spec/ports/$PORT_INDEX\"}]'"
+      fi
+    fi
+  fi
+
   # Patch kourier svc to NodePort, wait for it to be created first
-  log INFO "Waiting for kourier service to be created in knative-serving namespace..."
   if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would wait for kourier svc in knative-serving and patch to NodePort"
+    log CMD "Would wait for kourier svc and temporary patch to NodePort"
   else
-    retry 10 "kubectl get svc kourier -n knative-serving"
-    log INFO "Patching kourier to NodePort..."
-    run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n knative-serving"
+    KOURIER_NS=$(kubectl get svc -A -o json | jq -r '.items[] | select(.metadata.name=="kourier") | .metadata.namespace' 2>/dev/null || echo "")
+    if [[ -z "$KOURIER_NS" ]]; then
+      log WARN "kourier service not found, skipping NodePort patch"
+    else
+      log INFO "Waiting for kourier service in $KOURIER_NS..."
+      retry 10 "kubectl get svc kourier -n ${KOURIER_NS}"
+      log INFO "Patching kourier to NodePort..."
+      run_cmd "kubectl patch svc kourier -p '{\"spec\":{\"type\":\"NodePort\"}}' -n ${KOURIER_NS}"
+    fi
   fi
 
   if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
@@ -819,13 +900,15 @@ EOF"
     fi
   fi
 
-  # Cleanup namespace argo/kourier-system/lws-system
-  log INFO "Waiting for namespace deleting..."
-  if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would wait for namespace deleting"
-  else
-    log INFO "Deleting namespace argo/kourier-system/lws-system..."
-    run_cmd "kubectl delete ns argo kourier-system lws-system --force --ignore-not-found"
+  # Cleanup namespace argo/kourier-system/lws-system (only for chart version >= 1.17)
+  if [[ "$SHOULD_DELETE_NS" == "true" ]]; then
+    log INFO "Waiting for namespace deleting..."
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+      log CMD "Would wait for namespace deleting"
+    else
+      log INFO "Deleting namespace argo/kourier-system/lws-system..."
+      run_cmd "kubectl delete ns argo kourier-system lws-system --force --ignore-not-found"
+    fi
   fi
 
 ################################################################################
@@ -849,21 +932,37 @@ EOF"
       done
     }
 
-    # Fetch hostnames from HTTPRoutes
+    # Fetch hostnames from HTTPRoutes (>= 1.16) or Ingress (< 1.16)
     HOST_ENTRIES=()
     WILDCARD_ENTRIES=()
     if [[ "${DRY_RUN:-false}" == "true" ]]; then
-      log CMD "Would fetch hostnames from HTTPRoutes in csghub namespace"
+      if [[ "$SHOULD_RUN_CRD" == "true" ]]; then
+        log CMD "Would fetch hostnames from HTTPRoutes in csghub namespace"
+      else
+        log CMD "Would fetch hostnames from Ingress in csghub namespace"
+      fi
       HOST_ENTRIES=("${DOMAIN}" "casdoor.${DOMAIN#*.}" "minio.${DOMAIN#*.}")
       WILDCARD_ENTRIES=("*.csghub.${DOMAIN#*.}")
     else
-      while IFS= read -r h; do
-        if [[ "$h" == \*.* ]]; then
-          WILDCARD_ENTRIES+=("$h")
-        else
-          HOST_ENTRIES+=("$h")
-        fi
-      done < <(kubectl get httproutes -n csghub -o json | jq -r '.items[].spec.hostnames[]')
+      if [[ "$SHOULD_RUN_CRD" == "true" ]]; then
+        while IFS= read -r h; do
+          [[ -z "$h" ]] && continue
+          if [[ "$h" == \*.* ]]; then
+            WILDCARD_ENTRIES+=("$h")
+          else
+            HOST_ENTRIES+=("$h")
+          fi
+        done < <(kubectl get httproutes -n csghub -o json 2>/dev/null | jq -r '.items[].spec.hostnames[]' 2>/dev/null)
+      else
+        while IFS= read -r h; do
+          [[ -z "$h" ]] && continue
+          if [[ "$h" == \*.* ]]; then
+            WILDCARD_ENTRIES+=("$h")
+          else
+            HOST_ENTRIES+=("$h")
+          fi
+        done < <(kubectl get ingress -n csghub -o json 2>/dev/null | jq -r '.items[].spec.rules[].host' 2>/dev/null)
+      fi
     fi
 
     # Add normal hostnames to /etc/hosts
