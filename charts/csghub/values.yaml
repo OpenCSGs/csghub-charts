@@ -407,6 +407,7 @@ runner:
         # enableScaleToZero: "true"
         # scaleToZeroGracePeriod: "60m"
 
+  ## Enable logcollector default
   logcollector:
     enabled: true
 

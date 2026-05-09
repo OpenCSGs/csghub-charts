@@ -16,10 +16,10 @@ dependencies:
   version: 28.6.0
 - name: runner
   repository: https://charts.opencsg.com/csghub
-  version: 2.0.0
+  version: 2.1.0
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
-  version: 2.0.0
+  version: 2.1.0
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.1
@@ -32,5 +32,5 @@ dependencies:
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
   version: 0.5.1
-digest: sha256:80c1ff54bd835602020c2425fd656797243d14895f65f8b825e2523b0f3846fb
-generated: "2026-05-07T13:18:55.175249+08:00"
+digest: sha256:94d63de05bd8a7d3da65c505d2563c92850f8e344dbd7592fa2b1b329f57f8f1
+generated: "2026-05-09T11:15:55.810981+08:00"
