@@ -6,6 +6,13 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" . | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $knativeNamespace := include "namespace.knative" . }}
+{{- $isOpencsgRegistry := regexMatch "^opencsg-registry" .Values.global.image.registry }}
+{{- $knativeRegistry := "" }}
+{{- $knativeVersion := "v1.22.0" }}
+{{- $kourierVersion := "v1.22.0" }}
+{{- if $isOpencsgRegistry }}
+{{- $knativeRegistry = printf "%s/opencsghq/knative-releases/knative.dev" .Values.global.image.registry }}
+{{- end }}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -42,28 +49,28 @@ metadata:
     {{- if .Release.IsInstall }}
     helm.sh/hook: post-install
     {{- end }}
-
 spec:
-  version: "1.21"
   # https://knative.dev/docs/install/operator/configuring-serving-cr/#configuring-the-knative-serving-operator-custom-resource
-  {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
-  {{- $knativeRegistry := printf "%s/opencsghq/knative-releases/knative.dev" .Values.global.image.registry }}
+  version: {{ regexReplaceAll "\\.[0-9]+$" (trimPrefix "v" $knativeVersion) "" | quote }}
+  {{- if $isOpencsgRegistry }}
   registry:
     override:
-      activator: {{ $knativeRegistry }}/serving/cmd/activator:v1.21.1
-      autoscaler: {{ $knativeRegistry }}/serving/cmd/autoscaler:v1.21.1
-      controller: {{ $knativeRegistry }}/serving/cmd/controller:v1.21.1
-      webhook: {{ $knativeRegistry }}/serving/cmd/webhook:v1.21.1
-      autoscaler-hpa: {{ $knativeRegistry }}/serving/cmd/autoscaler-hpa:v1.21.1
-      cleanup: {{ $knativeRegistry }}/serving/pkg/cleanup/cmd/cleanup:v1.21.1
-      migrate: {{ $knativeRegistry }}/pkg/apiextensions/storageversion/cmd/migrate:v1.21.1
-      net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:v1.21.0
-      3scale-kourier-gateway/kourier-gateway: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:v1.36-latest
-      queue-proxy: {{ $knativeRegistry }}/serving/cmd/queue:v1.21.1
+      activator: {{ $knativeRegistry }}/serving/cmd/activator:{{ $knativeVersion }}
+      autoscaler: {{ $knativeRegistry }}/serving/cmd/autoscaler:{{ $knativeVersion }}
+      controller: {{ $knativeRegistry }}/serving/cmd/controller:{{ $knativeVersion }}
+      webhook: {{ $knativeRegistry }}/serving/cmd/webhook:{{ $knativeVersion }}
+      autoscaler-hpa: {{ $knativeRegistry }}/serving/cmd/autoscaler-hpa:{{ $knativeVersion }}
+      cleanup: {{ $knativeRegistry }}/serving/pkg/cleanup/cmd/cleanup:{{ $knativeVersion }}
+      migrate: {{ $knativeRegistry }}/pkg/apiextensions/storageversion/cmd/migrate:{{ $knativeVersion }}
+      queue-proxy: {{ $knativeRegistry }}/serving/cmd/queue:{{ $knativeVersion }}
+      net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:{{ $kourierVersion }}
+      3scale-kourier-gateway/kourier-gateway: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:v1.37-latest
   {{- end }}
   ingress:
     kourier:
       enabled: true
+    istio:
+      enabled: false
   config:
     domain:
       {{ $service.knative.serving.domain }}: ""
@@ -94,7 +101,6 @@ spec:
       {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}
       {{- $registryList := list (include "common.domain.csghub" .) $privateRegistry $globalRegistry }}
       registries-skipping-tag-resolving: {{ join "," $registryList | trimSuffix "," | quote }}
-      {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
-      {{- $knativeRegistry := printf "%s/opencsghq/knative-releases/knative.dev" .Values.global.image.registry }}
-      queue-sidecar-image: {{ $knativeRegistry }}/serving/cmd/queue:v1.21.1
+      {{- if $isOpencsgRegistry }}
+      queue-sidecar-image: {{ $knativeRegistry }}/serving/cmd/queue:{{ $knativeVersion }}
       {{- end }}
