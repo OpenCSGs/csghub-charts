@@ -176,7 +176,7 @@ tests:
     asserts:
       - equal:
           path: spec.version
-          value: "1.21"
+          value: "1.22"
       - equal:
           path: spec.ingress.kourier.enabled
           value: true
