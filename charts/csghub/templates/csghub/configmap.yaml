@@ -274,10 +274,11 @@ data:
   OPENCSG_AGENT_AUTOHUB_SERVICE_HOST: ""
   {{- $agenticflowSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
   {{- $agenticflowSvcName := include "common.names.custom" (list . $agenticflowSvc.name) }}
-  {{- $agenticflowSvcPort := dig "service" "port" 7860 $agenticflowSvc }}
-  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ or $serverSvc.agenticflow.host (printf "%s:%v" $agenticflowSvcName $agenticflowSvcPort)  | quote }}
-  {{- $agenticflowData := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
-  {{- $agenticflowToken := dig "OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN" (include "agenticflow.api.token" .) $agenticflowData }}
+  {{- $agenticflowHost := or $serverSvc.agenticflow.host (include "common.endpoint.agenticflow" .) }}
+  CSGHUB_PORTAL_LANGFLOW_HOST: {{ $agenticflowHost | quote }}
+  OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ $agenticflowHost | quote }}
+  {{- $agenticflowData := (lookup "v1" "ConfigMap" .Release.Namespace $agenticflowSvcName).data | default dict }}
+  {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" "" $agenticflowData | default (include "agenticflow.api.token" .) }}
   OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ or $serverSvc.agenticflow.token $agenticflowToken | quote }}
   STARHUB_SERVER_AGENT_CODE_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agenticflow.codeInstanceQuotaPerUser | default 5 | quote }}
   STARHUB_SERVER_AGENT_LANGFLOW_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agenticflow.instanceQuotaPerUser | default 5 | quote }}
