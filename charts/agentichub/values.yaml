@@ -178,12 +178,12 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/doc-sandbox"
-          tag: "latest"
+          tag: "20260416.2"
       openclaw:
         image:
           # registry: "docker.io"
           repository: "opencsghq/openclaw-sandbox"
-          tag: "20260331.20260408.4"
+          tag: "20260408.4"
     externalDocs: {}
       # enabled: false    # APIS Need turn on csghub swaggerAPI docs
 
