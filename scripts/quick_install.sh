@@ -377,7 +377,7 @@ install_packages() {
   # Helm installation with idempotency checks (dry-run aware)
   ################################################################################
   log INFO "Installing Helm via official script..."
-  local helm_url="https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3"
+  local helm_url="https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4"
   if [[ -n "$GHPROXY" ]]; then
     helm_url="${GHPROXY%/}/$helm_url"
   fi
