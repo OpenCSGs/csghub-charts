@@ -208,6 +208,11 @@ server:
     enabled: true                          # Enable or disable multi-sync service
     proxy: ""                              # Proxy for model synchronization
 
+  ## Mirror sync configuration
+  mirrorSync:
+    maxModelRepoSize: "536870912000"       # Max model repo size for mirror sync in bytes (default 500GB)
+    maxDatasetRepoSize: "536870912000"     # Max dataset repo size for mirror sync in bytes (default 500GB)
+
   ## API documentation
   swaggerAPI:
     enabled: false                         # Enable Swagger API assistants
