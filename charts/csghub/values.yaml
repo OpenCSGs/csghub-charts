@@ -367,6 +367,8 @@ xnet:
 ## Runner configuration
 runner:
   enabled: true                          # Enable or disable internal runner
+  volcano:
+    enabled: false                       # Enable or disable volcano scheduler
 
   ## Runner operation and communication
   region: "region-0"                     # Region the runner belongs to
