@@ -234,6 +234,13 @@ data:
   {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
   STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.usePublicDomain | quote }}
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.pipIndexUrl | quote }}
+  {{- if $runnerSvc.volcano.enabled }}
+  STARHUB_SERVER_RUNNER_KUBE_SCHEDULER: "volcano"
+  STARHUB_SERVER_RUNNER_VGPU_NODE_RESOURCE_NAME: "volcano.sh/node-vgpu-register"
+  STARHUB_SERVER_RUNNER_VGPU_POD_RESOURCE_NAME: "volcano.sh/vgpu-ids-new"
+  STARHUB_SERVER_RUNNER_VGPU_RESOURCE_REQ_KEY: "volcano.sh/vgpu-number"
+  STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY: "volcano.sh/vgpu-memory"
+  {{- end }}
   {{- $sessionToken := dig "STARHUB_SERVER_SPACE_SESSION_SECRET_KEY" (randNumeric 8 | sha1sum) $data }}
   STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ $sessionToken | quote }}
 
