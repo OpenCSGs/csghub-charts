@@ -285,6 +285,7 @@ prometheus:
     remoteWrite: []
 
 volcano:
+  enabled: false                       # Enable or disable volcano scheduler
   basic:
     image_pull_policy: "IfNotPresent"
   custom:
