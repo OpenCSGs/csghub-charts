@@ -169,6 +169,10 @@ data:
   STARHUB_SERVER_ENABLE_HTTPS: {{ dig "tls" "enabled" "false" $IngressConfig | quote }}
   STARHUB_SERVER_MIRRORSERVER_ENABLE: "false"
   STARHUB_SERVER_MIRROR_REMOTE: "false"
+  {{- if $serverSvc.mirrorSync }}
+  STARHUB_SERVER_MIRROR_MAX_MODEL_REPO_SIZE: {{ $serverSvc.mirrorSync.maxModelRepoSize | quote }}
+  STARHUB_SERVER_MIRROR_MAX_DATASET_REPO_SIZE: {{ $serverSvc.mirrorSync.maxDatasetRepoSize | quote }}
+  {{- end }}
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
   {{- $jwtToken := dig "STARHUB_JWT_SIGNING_KEY" (randNumeric 8 | sha1sum) $data }}
   STARHUB_JWT_SIGNING_KEY: {{ $jwtToken | quote }}
