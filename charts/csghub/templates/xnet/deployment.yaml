@@ -66,6 +66,10 @@ spec:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
+          command:
+            - "/xnet-bin/xnet"
+            - "start"
+            - "server"
           ports:
             - containerPort: 8097
               name: {{ dig "service" "name" $service.name $service }}
