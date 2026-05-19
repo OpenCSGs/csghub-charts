@@ -123,6 +123,7 @@ pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repositor
 extraBuildArgs: []                     # Extra Kaniko build arguments
 model:                                 # Model image configuration
   deployTimeout: "60"                  # Timeout (in seconds) for model deployment operations
+  buildTimeout: 30                     # Timeout (in minutes) for space build operations
   registry: ""                         # Custom image registry for model-related images (empty uses global registry)
 
 ## GPU resource configuration

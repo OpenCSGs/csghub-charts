@@ -88,6 +88,7 @@ data:
   {{- $capacityLabel := $service.gpuModelLabel.capacityLabel }}
   STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
   STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.model.deployTimeout | default 60 | quote }}
+  STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES: {{ $service.model.buildTimeout | default 30 | quote }}
   {{- if $isBuiltIn }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   {{- else }}
