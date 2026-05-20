@@ -273,7 +273,7 @@ reloader:
 
 ## Prometheus monitoring configuration
 prometheus:
-  enabled: true                            # Enable Prometheus
+  enabled: false                          # Enable Prometheus
 
   gateway:
     enabled: false                         # Enable gateway for Prometheus
