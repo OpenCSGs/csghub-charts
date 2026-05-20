@@ -184,6 +184,7 @@ data:
   ## Server Configuration for Model
   {{- $registry := or $runnerSvc.model.registry .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
+  STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES: {{ $serverSvc.space.buildTimeout | default 30 | quote }}
 
   ## Server Configuration for Multiple-Sync
   STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ $serverSvc.multiSync.enabled | quote }}
