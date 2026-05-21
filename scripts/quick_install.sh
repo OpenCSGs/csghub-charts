@@ -715,7 +715,7 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" ]]; then
         done
 
         if [[ -n "$GPU_PRODUCT" ]]; then
-          NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/GeForce-//;s/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/-(Laptop-)?GPU.*$//')
+          NVIDIA_NAME=$(echo "$GPU_PRODUCT" | sed -E 's/GeForce-//;s/(RTX-|GTX-|GT-|Tesla-|Quadro-|TITAN-)//; s/[- ][0-9]+GB//; s/-(Laptop-)?GPU.*$//')
           [[ "$NVIDIA_NAME" != NVIDIA-* ]] && NVIDIA_NAME="NVIDIA-$NVIDIA_NAME"
           retry 3 "kubectl label node $NODE nvidia.com/nvidia_name=$NVIDIA_NAME --overwrite"
           export NVIDIA_NAME
@@ -899,6 +899,12 @@ DO UPDATE SET
 WHERE space_resources.cluster_id != EXCLUDED.cluster_id;
 EOF"
       log INFO "GPU resource for CSGHub initialized."
+      if [[ "$GPU_NAME" != "4090" ]]; then
+        run_cmd "kubectl exec -i csghub-postgresql-0 -n csghub -c postgresql -- psql -U csghub -d csghub_server <<EOF
+DELETE FROM space_resources
+WHERE name ~ '\y4090\y';
+EOF"
+      fi
     fi
   fi
 
