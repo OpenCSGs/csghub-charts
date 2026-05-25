@@ -51,7 +51,7 @@ data:
     logConfig = {"filename": "/dev/stdout", "maxdays":99999, "perm":"0770"}
     initDataFile = "/conf/init_data.json"
     initDataNewOnly = true
-    frontendBaseDir = "../casdoor"
+    frontendBaseDir = "../cc_0"
   init_data.json: |
     {
       "organizations": [
