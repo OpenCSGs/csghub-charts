@@ -1,0 +1,25 @@
+suite: Test AgenticHub Aigateway Endpoint (Standalone)
+templates:
+  - agenticflow/configmap.yaml
+release:
+  name: agentichub
+  namespace: agentichub
+set:
+  global:
+    chartContext:
+      isBuiltIn: false
+tests:
+  - it: Should use /aigateway sub-path by default (standalone, no url set)
+    asserts:
+      - equal:
+          path: data.CSGHUB_AIGATEWAY_URL
+          value: "http://csghub.example.com/aigateway"
+
+  - it: Should use explicit endpoint when aigateway.endpoint is set
+    set:
+      aigateway:
+        endpoint: "https://aigateway.example.com"
+    asserts:
+      - equal:
+          path: data.CSGHUB_AIGATEWAY_URL
+          value: "https://aigateway.example.com"
