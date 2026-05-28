@@ -161,6 +161,10 @@ spec:
     {{- end }}
     {{- $aiGatewaySvc := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
     {{- $aiGatewaySvcName := include "common.names.custom" (list . $aiGatewaySvc.name) }}
+    {{- $external := .Values.global.gateway.external | default dict }}
+    {{- $aigatewayConfig := $external.aigateway | default dict }}
+    {{- $aigatewayUseDomain := or ($aigatewayConfig.useDomain | default false) ($aigatewayConfig.domain | default "") }}
+    {{- if not $aigatewayUseDomain }}
     - matches:
         - path:
             type: PathPrefix
@@ -191,3 +195,4 @@ spec:
           port: {{ dig "service" "port" "8094" $aiGatewaySvc.aigateway }}
       timeouts:
         request: 5m
+    {{- end }}

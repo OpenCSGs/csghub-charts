@@ -5,6 +5,7 @@ templates:
   - csghub/httproutes.yaml
   - csghub/httproutes-wildcard.yaml
   - csghub/httproutes-redirect.yaml
+  - csghub/aigateway/httproutes.yaml
 release:
   name: csghub
   namespace: csghub
@@ -374,3 +375,45 @@ tests:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment
           value: {}
+
+  - it: Should NOT render aigateway HTTPRoute when useDomain=false (default)
+    template: csghub/aigateway/httproutes.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: Should render aigateway HTTPRoute when useDomain=true
+    template: csghub/aigateway/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              useDomain: true
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.hostnames[0]
+          value: "aigateway.example.cn"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "csghub-aigateway"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8094
+
+  - it: Should render aigateway HTTPRoute with custom domain
+    template: csghub/aigateway/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.custom.com"
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.hostnames[0]
+          value: "ai.custom.com"

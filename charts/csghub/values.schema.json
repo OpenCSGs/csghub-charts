@@ -27,7 +27,14 @@
               "type": "object",
               "properties": {
                 "domain": {"type": "string"},
-                "public": {"type": "string"}
+                "public": {"type": "string"},
+                "aigateway": {
+                  "type": "object",
+                  "properties": {
+                    "useDomain": {"type": "boolean"},
+                    "domain": {"type": "string"}
+                  }
+                }
               }
             },
             "tls": {
@@ -157,7 +164,6 @@
     "gateway": {
       "type": "object",
       "properties": {
-        "aigateway": {"type": "object", "additionalProperties": true},
         "moderation": {"type": "object", "additionalProperties": true}
       }
     },
