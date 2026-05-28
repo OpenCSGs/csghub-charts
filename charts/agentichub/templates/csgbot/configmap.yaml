@@ -42,10 +42,10 @@ data:
     {{- end }}
     hub-base-url = {{ $csghubEndpoint | quote }}
     base-url = {{ $csghubEndpoint | quote }}
-    mcp-gateway-url = {{ printf "%s/aigateway/v1/gateway/mcp" $csghubEndpoint | quote }}
+    mcp-gateway-url = {{ printf "%s/v1/gateway/mcp" (include "endpoint.aigateway" .) | quote }}
 
     [aigateway]
-    base-url = {{ printf "%s/aigateway" $csghubEndpoint | quote }}
+    base-url = {{ include "endpoint.aigateway" . | quote }}
     model-id = {{ dig "config" "aigateway" "model" "deepseek-v3" .Values.csgbot | quote }}
 
     [langflow]
@@ -84,7 +84,7 @@ data:
 
     [csghub-sandbox]
     base-url = {{ $csghubEndpoint | quote }}
-    aigateway-url = {{ printf "%s/aigateway" $csghubEndpoint | quote }}
+    aigateway-url = {{ include "endpoint.aigateway" . | quote }}
 
     [openclaw-sandbox]
     image = {{ include "common.image" (list . (dig "config" "sandbox" "openclaw" "image" dict .Values.csgbot)) | quote }}
