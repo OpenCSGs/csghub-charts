@@ -58,7 +58,7 @@ data:
   CSGHUB_PORTAL_REDIS_PASSWORD: {{ $portalRedisConfig.password | quote }}
   {{- end }}
   ## Portal Configuration for AIGateway
-  CSGHUB_PORTAL_AI_GATEWAY_HOST: {{ printf "%s/aigateway" (include "common.endpoint.csghub" .) | quote }}
+  CSGHUB_PORTAL_AI_GATEWAY_HOST: {{ include "common.endpoint.aigateway" . | quote }}
 
   ## Accounting Configuration
   {{- $accountingSvc := include "common.service" (dict "ctx" . "service" "accounting") | fromYaml }}

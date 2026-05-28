@@ -156,6 +156,49 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_PROMETHEUS_API_ADDRESS
           value: "http://csghub-prometheus-server:80/api/v1/query"
+      - equal:
+          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
+          value: "https://csghub.example.com/aigateway"
+
+  - it: Should render aigateway with independent domain when useDomain=true
+    template: csghub/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              useDomain: true
+    asserts:
+      - equal:
+          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
+          value: "https://aigateway.example.com"
+
+  - it: Should render aigateway with custom domain when domain is set
+    template: csghub/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.custom.com"
+    asserts:
+      - equal:
+          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
+          value: "https://ai.custom.com"
+
+  - it: Custom domain should take precedence over useDomain
+    template: csghub/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.custom.com"
+              useDomain: true
+    asserts:
+      - equal:
+          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
+          value: "https://ai.custom.com"
 
   - it: Should render ConfigMap correctly
     template: csghub/configmap.yaml
