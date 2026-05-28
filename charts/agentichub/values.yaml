@@ -34,6 +34,19 @@ global:
                                     # a subdomain (e.g. csghub.example.com) will be used internally
                                     # to avoid overly broad wildcard routing such as *.example.com
 
+      ## AIGateway domain configuration (only effective when bundled with csghub)
+      ## When deployed standalone, use aigateway.endpoint to specify the AIGateway URL directly.
+      ## Priority: domain > useDomain > default basePath
+      ## Examples:
+      ##   - domain: "" + useDomain: false → https://<domain>/aigateway (basePath)
+      ##   - domain: "" + useDomain: true  → https://aigateway.<base-domain> (auto domain)
+      ##   - domain: "ai.example.com"      → https://ai.example.com (custom domain, useDomain ignored)
+      aigateway:
+        useDomain: false            # Use dedicated domain for AIGateway (aigateway.<base-domain>)
+                                    # When false and domain is not set, AIGateway uses basePath mode.
+        # domain: ""                # Optional custom domain for AIGateway (e.g., "ai.example.com")
+                                    # If set, dedicated domain mode is always used regardless of useDomain.
+
       ## Whether to use the top-level domain directly when generating derived domains.
       ## If the domain is a multi-level domain (e.g. csghub.example.com):
       ## - true:  use the full domain as-is (casdoor.csghub.example.com)
@@ -96,6 +109,15 @@ externalUrl: "https://csghub.example.com"
 
 ## API token for authenticating with CSGHub API
 hubAPIToken: ""
+
+## AIGateway endpoint configuration
+## Priority: aigateway.endpoint > global.gateway.external.aigateway
+## - For standalone deployment: Set aigateway.endpoint directly
+## - For bundled deployment: Use global.gateway.external.aigateway (domain/useDomain)
+## - If aigateway.endpoint is set, it overrides all other configurations
+aigateway:
+  # endpoint: ""               # Full AIGateway URL (e.g., "https://ai.example.com")
+                               # When set, takes precedence over global.gateway.external.aigateway
 
 agenticflow:
   image:
