@@ -1,0 +1,45 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $external := .Values.global.gateway.external | default dict }}
+{{- $aigatewayConfig := $external.aigateway | default dict }}
+{{- $useDomain := $aigatewayConfig.useDomain | default false }}
+{{- $customDomain := $aigatewayConfig.domain | default "" }}
+{{- if or $useDomain $customDomain }}
+{{- $service := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: listeners
+      {{- if .Values.global.gateway.tls.enabled }}
+      sectionName: https
+      {{- else }}
+      sectionName: http
+      {{- end }}
+  hostnames:
+    {{- if $customDomain }}
+    - {{ $customDomain }}
+    {{- else }}
+    - {{ include "common.domain.aigateway" . }}
+    {{- end }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ $serviceName }}
+          port: {{ dig "service" "port" "8094" $service.aigateway }}
+      timeouts:
+        request: 5m
+{{- end }}
