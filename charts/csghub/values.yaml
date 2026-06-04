@@ -603,6 +603,10 @@ minio:
 
 ## Embedded Registry configuration
 registry:
+  ## Image deletion is enabled by default and is not exposed as a user-configurable
+  ## option. The Docker Registry DELETE API is required for repository/tag cleanup.
+  deleteEnabled: true
+
   image:
     # registry: "docker.io"
     repository: "registry"

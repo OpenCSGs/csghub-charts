@@ -22,6 +22,7 @@ data:
   REGISTRY_LOG_LEVEL: {{ $service.logging.level | default "info" }}
   REGISTRY_LOG_FORMATTER: {{ $service.logging.formatter | default "json" }}
   REGISTRY_LOG_ACCESSLOG_DISABLED: {{ not $service.logging.accesslog | quote }}
+  REGISTRY_STORAGE_DELETE_ENABLED: {{ dig "deleteEnabled" true $service | quote }}
   {{- if regexMatch "aliyun" $s3Config.endpoint }}
   REGISTRY_STORAGE: oss
   REGISTRY_STORAGE_OSS_REGIONENDPOINT: {{ $s3Config.endpoint | quote }}
