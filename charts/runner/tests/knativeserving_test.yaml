@@ -82,7 +82,7 @@ set:
       domain: unittest.io
       autoscaler:
         enableScaleToZero: true
-        scaleToZeroGracePeriod: 30m
+        scaleToZeroPodRetentionPeriod: 30m
 
   rbac:
     create: true
@@ -187,7 +187,7 @@ tests:
           path: spec.config.autoscaler.enable-scale-to-zero
           value: "true"
       - equal:
-          path: spec.config.autoscaler.scale-to-zero-grace-period
+          path: spec.config.autoscaler.scale-to-zero-pod-retention-period
           value: 30m
       - equal:
           path: spec.config.network.ingress-class
@@ -275,9 +275,9 @@ tests:
       knative:
         serving:
           autoscaler:
-            scaleToZeroGracePeriod: 60s
+            scaleToZeroPodRetentionPeriod: 60s
     documentIndex: 1
     asserts:
       - equal:
-          path: spec.config.autoscaler.scale-to-zero-grace-period
+          path: spec.config.autoscaler.scale-to-zero-pod-retention-period
           value: 60s

@@ -76,7 +76,7 @@ spec:
       {{ $service.knative.serving.domain }}: ""
     autoscaler:
       enable-scale-to-zero: {{ $service.knative.serving.autoscaler.enableScaleToZero | quote }}
-      scale-to-zero-grace-period: {{ $service.knative.serving.autoscaler.scaleToZeroGracePeriod | quote }}
+      scale-to-zero-pod-retention-period: {{ $service.knative.serving.autoscaler.scaleToZeroPodRetentionPeriod | quote }}
     network:
       ingress-class: kourier.ingress.networking.knative.dev
     features:
