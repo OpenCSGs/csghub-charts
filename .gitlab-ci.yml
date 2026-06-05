@@ -19,7 +19,7 @@ package:
         if [ -d "$CHART" ]; then
           echo "📝 Updating version for $CHART to $VERSION_NO_V"
           sed -i "s/^version:.*/version: $VERSION_NO_V/" "$CHART/Chart.yaml"
-          sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}\"/" "$CHART/Chart.yaml"
+          # sed -i "s/^appVersion:.*/appVersion: \"${CI_COMMIT_TAG}\"/" "$CHART/Chart.yaml"
         fi
       done
 
