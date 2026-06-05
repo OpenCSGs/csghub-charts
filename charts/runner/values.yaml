@@ -150,7 +150,7 @@ knative:
     ## Enable ksvc scale pod to 0 (stop space/inference/finetune/... instance)
     autoscaler:
       enableScaleToZero: true
-      scaleToZeroGracePeriod: "60m"
+      scaleToZeroPodRetentionPeriod: "60m"
 
     ## Deprecated configuration (for backward compatibility)
     services: []

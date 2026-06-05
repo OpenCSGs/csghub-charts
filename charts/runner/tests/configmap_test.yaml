@@ -99,7 +99,7 @@ set:
 
       autoscaler:
         enableScaleToZero: true
-        scaleToZeroGracePeriod: 30m
+        scaleToZeroPodRetentionPeriod: 30m
 
   rbac:
     create: true
