@@ -8,18 +8,9 @@
 SELECT now() as "Execute Timestamp";
 
 --
--- PostgreSQL database configuration
+-- Set Default Schema
 --
-SET exit_on_error = on;
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+SELECT pg_catalog.set_config('search_path', 'public', false);
 
 --
 -- Import psql variables into session settings
@@ -31,6 +22,8 @@ SET session.oauth_client_secret = :'oauth_client_secret';
 SET session.oauth_issuer = :'oauth_issuer';
 SET session.csghub_client_id = :'csghub_client_id';
 SET session.csghub_client_secret = :'csghub_client_secret';
+SET session.admin_client_id = :'admin_client_id';
+SET session.admin_client_secret = :'admin_client_secret';
 SET session.csgship_client_id = :'csgship_client_id';
 SET session.csgship_client_secret = :'csgship_client_secret';
 
@@ -55,10 +48,25 @@ END $$;
 UPDATE application
 SET
     redirect_uris =
-        json_build_array(rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor')::text,
+        json_build_array(
+            rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/api/v1/callback/casdoor'
+        )::text,
     client_id = replace(current_setting('session.csghub_client_id', true), '''', ''),
     client_secret = replace(current_setting('session.csghub_client_secret', true), '''', '')
 WHERE name = 'CSGHub';
+
+--
+-- Update RedirectURLs for Admin application
+--
+UPDATE application
+SET
+    redirect_uris =
+        json_build_array(
+            rtrim( replace(current_setting('session.external_endpoint', true), '''', ''), '/') || '/-/temporal/auth/sso/callback'
+        )::text,
+    client_id = replace(current_setting('session.admin_client_id', true), '''', ''),
+    client_secret = replace(current_setting('session.admin_client_secret', true), '''', '')
+WHERE name = 'Admin';
 
 --
 -- Update RedirectURLs for CSGShip application
@@ -81,6 +89,18 @@ SET
     org_choice_mode = 'Select'
 WHERE
     name = 'app-built-in';
+
+--
+DO $$
+BEGIN
+    UPDATE "user"
+    SET
+        tag = 'is_admin'
+    WHERE
+        name = 'root';
+
+    RAISE NOTICE 'User tag updated successfully';
+END $$;
 
 --
 DO $$

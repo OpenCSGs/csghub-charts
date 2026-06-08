@@ -70,7 +70,7 @@ tests:
     template: minio/configmap.yaml
     asserts:
       - matchRegex:
-          path: data["create_minio_buckets.sh"]
+          path: data["1768547229_minio_create_buckets.sh"]
           pattern: '.*'
 
   - it: Should render httpRoutes correctly

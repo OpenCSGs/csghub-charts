@@ -64,7 +64,7 @@ spec:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
-          command: [ "/scripts/create_minio_buckets.sh" ]
+          command: [ "/scripts/1768547229_minio_create_buckets.sh" ]
           envFrom:
             - secretRef:
                 name: {{ $serviceName }}

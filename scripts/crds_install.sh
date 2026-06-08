@@ -38,6 +38,7 @@ if [[ "${CHART_VERSION}" == "latest" ]]; then
   CHART_VERSION=$(sed -n '/^  csghub:/,/^  [a-z]/p' "${INDEX_FILE}" \
     | grep "^    version:" \
     | awk '{print $2}' \
+    | grep -v '-' \
     | sort -Vr \
     | head -n1)
 

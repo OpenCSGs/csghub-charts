@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
-  {{- range $path, $_ := .Files.Glob "scripts/minio/*.sh" }}
+  {{- range $path, $_ := .Files.Glob "scripts/*_minio_*.sh" }}
   {{ base $path }}: |
   {{- $.Files.Get $path | nindent 4 }}
   {{- end }}
