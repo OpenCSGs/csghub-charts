@@ -61,7 +61,6 @@ spec:
       {{- end }}
       initContainers:
         {{- include "wait-for-postgresql" (dict "ctx" . "service" $service) | nindent 8 }}
-        {{- include "wait-for-redis" (dict "ctx" . "service" $service) | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}

@@ -89,23 +89,6 @@
             }
           }
         },
-        "redis": {
-          "type": "object",
-          "description": "Redis configuration",
-          "properties": {
-            "enabled": { "type": "boolean", "description": "Use built-in (true) or external (false)" },
-            "external": {
-              "type": "object",
-              "description": "External Redis configuration",
-              "properties": {
-                "host": { "type": "string", "description": "Redis server hostname or IP" },
-                "port": { "type": "integer", "description": "Redis port number" },
-                "password": { "type": "string", "description": "Redis authentication password" }
-              },
-              "additionalProperties": false
-            }
-          }
-        },
         "chartContext": {
           "type": "object",
           "description": "SubChart deployment context",
@@ -159,15 +142,6 @@
             "password": { "type": "string", "description": "Database password" },
             "timezone": { "type": "string", "description": "Database timezone" },
             "sslmode": { "type": "string", "description": "SSL mode" }
-          }
-        },
-        "redis": {
-          "type": "object",
-          "description": "Redis configuration",
-          "properties": {
-            "host": { "type": "string", "description": "Redis host" },
-            "port": { "type": "integer", "description": "Redis port" },
-            "password": { "type": "string", "description": "Redis password" }
           }
         },
         "persistence": {

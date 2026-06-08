@@ -14,12 +14,6 @@ set:
         user: "postgres"
         password: "Postgres2025"
         sslmode: "prefer"
-    redis:
-      enabled: false
-      external:
-        host: "10.6.0.11"
-        port: 6380
-        password: "Redis2025"
 tests:
   - it: Should render configmap for external correctly
     template: dataflow/configmap.yaml
@@ -39,6 +33,3 @@ tests:
       - equal:
           path: data["DATABASE_PASSWORD"]
           value: "Postgres2025"
-      - equal:
-          path: data["REDIS_HOST_URL"]
-          value: "redis://10.6.0.11:6380"
