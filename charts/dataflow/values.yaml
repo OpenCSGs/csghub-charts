@@ -71,16 +71,6 @@ global:
       # timezone: "Etc/UTC"         # Database timezone
       # sslmode: "prefer"           # SSL mode
 
-  ## Redis configuration
-  redis:
-    ## Use built-in (true) or external (false)
-    enabled: true
-    ## External Redis configuration
-    external: {}
-      # host: "<redis_host>"        # Redis server hostname or IP
-      # port: 6379                  # Redis port number
-      # password: ""                # Redis authentication password
-
   ## SubChart deployment context
   chartContext:
     isBuiltIn: false                     # deployed bundled with csghub
@@ -118,22 +108,10 @@ dataflow:
     # timezone: "Etc/UTC"                  # Database timezone
     # sslmode: "prefer"                    # SSL mode
 
-  ## Redis configuration
-  redis: {}
-    # host: "<redis_host>"                 # Redis server hostname or IP
-    # port: 6379                           # Redis port number
-    # password: ""                         # Redis authentication password
-
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning
-    accessModes: ["ReadWriteMany"]            # Volume access permissions
+    accessModes: ["ReadWriteMany"]           # Volume access permissions
     size: "100Gi"                            # Disk space allocation
-
-## Celery Worker Configuration
-worker:
-  ## Logging configuration
-  logging:
-    level: "info"
 
 ## Label Studio Configuration
 labelStudio:
@@ -190,7 +168,6 @@ postgresql:
 
   databases:                                 # Databases to create on startup
     - "csghub_dataflow"
-    - "csghub_dataflow_logs"
     - "csghub_label_studio"
 
   parameters: {}                             # PostgreSQL runtime parameters
@@ -201,27 +178,6 @@ postgresql:
     # storageClass: ""                       # StorageClass for dynamic provisioning
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "50Gi"                             # Disk space allocation
-
-## Built-in Redis configuration
-redis:
-  image:
-    # registry: "docker.io"
-    repository: "redis"
-    tag: "7.2.5"                             # Image version tag
-    pullPolicy: "IfNotPresent"               # Image pull policy
-    pullSecrets: []                          # Docker registry secrets
-
-  service:
-    type: "ClusterIP"                        # Service type: ClusterIP, NodePort, LoadBalancer
-    port: 6379                               # Service port
-    protocol: "TCP"                          # Network protocol
-
-  requirePass: false                         # Password requirement
-
-  persistence:
-    # storageClass: ""                       # StorageClass for dynamic provisioning
-    # accessModes: ["ReadWriteOnce"]         # Volume access permissions
-    size: "10Gi"                             # Disk space allocation
 
 #################################################################
 ##  Dependent SubCharts                                        ##

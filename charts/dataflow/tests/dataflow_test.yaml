@@ -3,7 +3,6 @@ templates:
   - dataflow/configmap.yaml
   - dataflow/httproutes.yaml
   - dataflow/service.yaml
-  - dataflow/deployment.yaml
   - dataflow/statefulset.yaml
 release:
   name: csghub
@@ -80,16 +79,11 @@ tests:
       - equal:
           path: data["STUDIO_JUMP_URL"]
           value: "https://label-studio.example.cn"
-      - equal:
-          path: data["REDIS_HOST_URL"]
-          value: "redis://csghub-redis:6379"
-  - it: Should render ConfigMap correctly with external postgresql, redis
+  - it: Should render ConfigMap correctly with external postgresql
     template: dataflow/configmap.yaml
     set:
       global:
         postgresql:
-          enabled: false
-        redis:
           enabled: false
         chartContext:
           isBuiltIn: true
@@ -100,9 +94,6 @@ tests:
           database: "postgres"
           user: "postgres"
           password: "postgres"
-        redis:
-          host: "10.6.0.11"
-          port: 6380
     asserts:
       - equal:
           path: data["CSGHUB_ENDPOINT"]
@@ -122,9 +113,6 @@ tests:
       - matchRegex:
           path: data["DATABASE_PASSWORD"]
           pattern: "postgres"
-      - equal:
-          path: data["REDIS_HOST_URL"]
-          value: "redis://10.6.0.11:6380"
 
   - it: Should render httpRoutes correctly
     template: dataflow/httproutes.yaml
@@ -243,25 +231,3 @@ tests:
       - equal:
           path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
           value: "20Gi"
-
-  - it: Should render deployment with local correctly
-    template: dataflow/deployment.yaml
-    set:
-      global:
-        image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-          registryPolicy: "force"
-      dataflow:
-        image:
-          pullPolicy: "IfNotPresent"
-          pullSecrets: ["docker-pull-secret"]
-    asserts:
-      - equal:
-          path: spec.template.spec.imagePullSecrets[0].name
-          value: "docker-pull-secret"
-      - equal:
-          path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/dataflow:20250930"
-      - equal:
-          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
-          value: "data-csghub-dataflow-0"
