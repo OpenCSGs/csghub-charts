@@ -15,7 +15,7 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
 {{- $currentScope := . }}
-{{- range $path, $_ := .Files.Glob "scripts/server/*.sql" }}
+{{- range $path, $_ := .Files.Glob "scripts/*_server_*.sql" }}
 {{- with $currentScope }}
 {{- base $path | nindent 2 }}: |
 {{- .Files.Get $path | nindent 4 }}

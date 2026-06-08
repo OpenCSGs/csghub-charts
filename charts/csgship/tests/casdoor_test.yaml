@@ -98,7 +98,7 @@ tests:
           pattern: |-
             "email":\s*"root.example.cn"
       - isNotNullOrEmpty:
-          path: data["update_casdoor_conf.sql"]
+          path: data["1768547229_casdoor_update_conf.sql"]
 
   - it: Should render httpRoutes correctly
     template: casdoor/httproutes.yaml
