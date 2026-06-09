@@ -1,0 +1,30 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- if .Values.dataflow.migrations.enabled }}
+{{- $service := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-migrations" $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-upgrade
+    helm.sh/hook-weight: "-1"
+    helm.sh/hook-delete-policy: before-hook-creation
+data:
+  ## Migration scripts
+  {{- $currentScope := . }}
+  {{- range $path, $_ := .Files.Glob "scripts/*_dataflow_*.sql" }}
+  {{- with $currentScope }}
+  {{- base $path | nindent 2 }}: |
+  {{- .Files.Get $path | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}

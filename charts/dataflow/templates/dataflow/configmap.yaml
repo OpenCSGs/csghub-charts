@@ -36,3 +36,4 @@ data:
   DATABASE_DB: {{ $pgConfig.database | quote }}
   DATABASE_USERNAME: {{ $pgConfig.user | quote }}
   DATABASE_PASSWORD: {{ $pgConfig.password | quote }}
+  CSGHUB_DATAFLOW_TEMPLATE_IMAGE: opencsghq/dataflow:{{ .Values.global.image.tag }}-argo

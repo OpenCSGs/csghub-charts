@@ -1,0 +1,32 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $persistence := $service.persistence }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+    {{- if $persistence.annotations }}
+      {{- toYaml $persistence.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+  {{- range $mode := (or $persistence.accessModes .Values.global.persistence.accessModes) }}
+    - {{ $mode | default "ReadWriteOnce" }}
+  {{- end }}
+  {{- with (or $persistence.storageClass .Values.global.persistence.storageClass) }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ or $persistence.size .Values.global.persistence.size }}

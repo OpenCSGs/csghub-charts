@@ -152,6 +152,13 @@
             "accessModes": { "type": "array", "description": "Volume access permissions", "items": { "type": "string" } },
             "size": { "type": "string", "description": "Disk space allocation" }
           }
+        },
+        "migrations": {
+          "type": "object",
+          "description": "Table rename migration job",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Enable or disable rename-tables migration Job" }
+          }
         }
       }
     }

@@ -1,0 +1,134 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
+{{- if $service.migrations.enabled }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-migrations" $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    helm.sh/hook: pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation
+    {{- if $service.annotations }}
+      {{- toYaml $service.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  activeDeadlineSeconds: 300
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/service: {{ $service.name }}
+        {{- if $service.podLabels }}
+          {{- toYaml $service.podLabels | nindent 8 }}
+        {{- else }}
+          {{- include "common.labels" . | nindent 8 }}
+        {{- end }}
+      annotations:
+      {{- if $service.podAnnotations }}
+        {{- toYaml $service.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: "OnFailure"
+      terminationGracePeriodSeconds: {{ $service.terminationGracePeriodSeconds | default 30 }}
+      {{- if $service.serviceAccountName }}
+      serviceAccountName: {{ $service.serviceAccountName }}
+      automountServiceAccountToken: {{ $service.automountServiceAccountToken | default true }}
+      {{- end }}
+      {{- with (or $service.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      initContainers:
+        {{- include "wait-for-postgresql" (dict "ctx" . "service" $service) | nindent 8 }}
+      containers:
+        - name: migrations
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "opencsghq/psql:latest") }}
+          imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy | quote }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              for sql_file in /scripts/*.sql; do
+                SCRIPT_NAME=$(basename "$sql_file")
+
+                if psql -tAc "SELECT 1 FROM _migrations WHERE name='$SCRIPT_NAME'" | grep -q 1; then
+                  echo "Skipping $SCRIPT_NAME (already applied)"
+                  continue
+                fi
+
+                psql -v ON_ERROR_STOP=1 -f "$sql_file" || exit 1
+                psql -tAc "INSERT INTO _migrations (name) VALUES ('$SCRIPT_NAME')" || exit 1
+                echo "Applied $SCRIPT_NAME"
+              done
+          env:
+            - name: PGHOST
+              value: {{ $pgConfig.host | quote }}
+            - name: PGPORT
+              value: {{ $pgConfig.port | quote }}
+            - name: PGDATABASE
+              value: {{ $pgConfig.database | quote }}
+            - name: PGUSER
+              value: {{ $pgConfig.user | quote }}
+            - name: PGPASSWORD
+              value: {{ $pgConfig.password | quote }}
+            - name: PGSSLMODE
+              value: {{ $pgConfig.sslmode | quote }}
+          {{- with $service.environments }}
+            {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if $service.resources }}
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+          {{- end }}
+          {{- if $service.securityContext }}
+          securityContext:
+            {{- toYaml $service.securityContext | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: init-scripts
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: {{ printf "%s-migrations" $serviceName }}
+            defaultMode: 0744
+      {{- if $service.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $service.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $service.tolerations }}
+      tolerations:
+        {{- toYaml $service.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if $service.affinity }}
+      affinity:
+        {{- toYaml $service.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $service.podSecurityContext }}
+      securityContext:
+        {{- toYaml $service.podSecurityContext | nindent 8 }}
+      {{- end }}
+{{- end }}
