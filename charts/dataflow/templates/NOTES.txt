@@ -7,5 +7,13 @@ You have successfully installed CSGHub-Dataflow!
 Visit CSGHub-Dataflow using following endpoint:
     endpoint: {{ include "common.endpoint.dataflow" . }}
 
+⚠️  BREAKING CHANGES (v2.2.0)
+  - Dataflow migrated from StatefulSet to Deployment with standalone PVC
+  - Redis / Celery Worker dependencies removed
+  - Built-in PostgreSQL database csghub_dataflow_logs dependency removed
+
+  If upgrading from v2.1.x, remove the old StatefulSet PVC manually:
+    kubectl delete pvc data-{{ .Release.Name }}-dataflow-0 -n {{ .Release.Namespace }}
+
 For more details, visit:
     https://github.com/OpenCSGs/csghub-charts

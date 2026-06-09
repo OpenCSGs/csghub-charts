@@ -5,8 +5,8 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
-kind: StatefulSet
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
 metadata:
   name: {{ $serviceName }}
   namespace: {{ .Release.Namespace }}
@@ -24,7 +24,6 @@ metadata:
     {{- end }}
 spec:
   replicas: {{ $service.replicas | default 1 }}
-  serviceName: {{ $serviceName }}
   minReadySeconds: {{ $service.minReadySeconds | default 30 }}
   selector:
     matchLabels:
@@ -121,8 +120,11 @@ spec:
           {{- if $service.tty }}
           tty: {{ $service.tty }}
           {{- end }}
-      {{- if $service.volumes }}
       volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ $serviceName }}
+      {{- if $service.volumes }}
         {{- toYaml $service.volumes | nindent 8 }}
       {{- end }}
       {{- if $service.nodeSelector }}
@@ -151,39 +153,11 @@ spec:
       {{- if $service.subdomain }}
       subdomain: {{ $service.subdomain }}
       {{- end }}
-  {{- $persistence := $service.persistence }}
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: data
-        namespace: {{ .Release.Namespace }}
-        labels:
-          app.kubernetes.io/service: {{ $service.name }}
-          {{- include "common.labels" . | nindent 10 }}
-        annotations:
-          helm.sh/resource-policy: keep
-          {{- if $persistence.annotations }}
-            {{- toYaml $persistence.annotations | nindent 10 }}
-          {{- end }}
-      spec:
-        accessModes:
-        {{- range $mode := (or $persistence.accessModes .Values.global.persistence.accessModes) }}
-          - {{ $mode | default "ReadWriteOnce" }}
-        {{- end }}
-        {{- with (or $persistence.storageClass .Values.global.persistence.storageClass) }}
-        storageClassName: {{ . }}
-        {{- end }}
-        resources:
-          requests:
-            storage: {{ or $persistence.size .Values.global.persistence.size }}
-  {{- if $service.updateStrategy }}
-  updateStrategy:
-    {{- toYaml $service.updateStrategy | nindent 4 }}
-  {{- end }}
-  {{- if $service.podManagementPolicy }}
-  podManagementPolicy: {{ $service.podManagementPolicy }}
+  {{- if $service.strategy }}
+  strategy:
+    {{- toYaml $service.strategy | nindent 4 }}
   {{- end }}
   {{- if $service.revisionHistoryLimit }}
   revisionHistoryLimit: {{ $service.revisionHistoryLimit }}
   {{- end }}
+  progressDeadlineSeconds: {{ $service.progressDeadlineSeconds | default 600 }}

@@ -3,7 +3,10 @@ templates:
   - dataflow/configmap.yaml
   - dataflow/httproutes.yaml
   - dataflow/service.yaml
-  - dataflow/statefulset.yaml
+  - dataflow/deployment.yaml
+  - dataflow/pvc.yaml
+  - dataflow/job.yaml
+  - dataflow/configmap-migrations.yaml
 release:
   name: csghub
   namespace: csghub
@@ -44,6 +47,8 @@ set:
       protocol: TCP
     persistence:
       size: ""
+    migrations:
+      enabled: true
   postgresql:
     name: "postgresql"
     service:
@@ -152,8 +157,8 @@ tests:
           path: spec.ports[0].name
           value: "dataflow"
 
-  - it: Should render statefulset with global correctly
-    template: dataflow/statefulset.yaml
+  - it: Should render deployment with global correctly
+    template: dataflow/deployment.yaml
     asserts:
       - equal:
           path: metadata.name
@@ -171,9 +176,6 @@ tests:
           path: metadata.annotations["reloader.stakater.com/auto"]
           value: "true"
       - equal:
-          path: spec.serviceName
-          value: "csghub-dataflow"
-      - equal:
           path: spec.template.spec.imagePullSecrets[0].name
           value: "acr-pull-secret"
       - equal:
@@ -182,18 +184,18 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "Never"
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: "uvicorn data_server.main:app --host 0.0.0.0 --port 8000"
       - equal:
-          path: spec.volumeClaimTemplates[0].spec.accessModes
-          value: ["ReadWriteMany"]
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8088
       - equal:
-          path: spec.volumeClaimTemplates[0].spec.storageClassName
-          value: "nfs-provisioner"
-      - equal:
-          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
-          value: "25Gi"
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: "csghub-dataflow"
 
-  - it: Should render statefulset with local correctly
-    template: dataflow/statefulset.yaml
+  - it: Should render deployment with local correctly
+    template: dataflow/deployment.yaml
     set:
       global:
         image:
@@ -204,7 +206,6 @@ tests:
           pullPolicy: "IfNotPresent"
           pullSecrets: ["docker-pull-secret"]
         persistence:
-          accessModes: ["ReadWriteMany"]
           storageClass: "hostPath"
           size: "20Gi"
         nodeSelector:
@@ -220,14 +221,120 @@ tests:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
       - equal:
-          path: spec.volumeClaimTemplates[0].spec.accessModes
-          value: ["ReadWriteMany"]
-      - equal:
-          path: spec.volumeClaimTemplates[0].spec.storageClassName
-          value: "hostPath"
-      - equal:
           path: spec.template.spec.nodeSelector.diskType
           value: "ssd"
+
+  - it: Should render PVC correctly
+    template: dataflow/pvc.yaml
+    asserts:
       - equal:
-          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          path: metadata.name
+          value: "csghub-dataflow"
+      - equal:
+          path: metadata.annotations["helm.sh/resource-policy"]
+          value: "keep"
+      - equal:
+          path: spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.resources.requests.storage
+          value: "25Gi"
+      - equal:
+          path: spec.storageClassName
+          value: "nfs-provisioner"
+
+  - it: Should render PVC with local persistence correctly
+    template: dataflow/pvc.yaml
+    set:
+      dataflow:
+        persistence:
+          storageClass: "hostPath"
+          size: "20Gi"
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
           value: "20Gi"
+      - equal:
+          path: spec.storageClassName
+          value: "hostPath"
+      - equal:
+          path: spec.accessModes[0]
+          value: "ReadWriteOnce"
+
+  - it: Should render migrations Job correctly
+    template: dataflow/job.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-dataflow-migrations"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "dataflow"
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-upgrade"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "0"
+      - equal:
+          path: spec.activeDeadlineSeconds
+          value: 300
+      - equal:
+          path: spec.backoffLimit
+          value: 3
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 300
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: "OnFailure"
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "migrations"
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: "for sql_file in /scripts/\\*\\.sql"
+      - equal:
+          path: spec.template.spec.containers[0].env[5].name
+          value: "PGSSLMODE"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-dataflow-migrations"
+
+  - it: Should not render migrations Job when disabled
+    template: dataflow/job.yaml
+    set:
+      dataflow:
+        migrations:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: Should render migrations ConfigMap correctly
+    template: dataflow/configmap-migrations.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-dataflow-migrations"
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-upgrade"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "-1"
+      - isNotEmpty:
+          path: data
+
+  - it: Should not render migrations ConfigMap when disabled
+    template: dataflow/configmap-migrations.yaml
+    set:
+      dataflow:
+        migrations:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
