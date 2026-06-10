@@ -159,6 +159,15 @@ tests:
       - equal:
           path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
           value: "https://csghub.example.com/aigateway"
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_PORT
+          value: "8094"
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
+          value: "true"
+      - equal:
+          path: data.OPENCSG_LLMLOG_BUCKET
+          value: "csghub-llmlog"
 
   - it: Should render aigateway with independent domain when useDomain=true
     template: csghub/configmap.yaml
@@ -172,6 +181,53 @@ tests:
       - equal:
           path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
           value: "https://aigateway.example.com"
+
+  - it: Should render llmlog config when aigateway llmlogEnabled is set
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        aigateway:
+          llmlogEnabled: true
+    asserts:
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
+          value: "true"
+      - equal:
+          path: data.OPENCSG_LLMLOG_BUCKET
+          value: "csghub-llmlog"
+      - equal:
+          path: data.OPENCSG_LLMLOG_PREFIX
+          value: "llmlog"
+      - equal:
+          path: data.OPENCSG_LLMLOG_WORKER_NUM
+          value: "10"
+      - equal:
+          path: data.OPENCSG_LLMLOG_BATCH_SIZE
+          value: "1000"
+      - equal:
+          path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
+          value: "300"
+
+  - it: Should not render llmlog config when aigateway llmlogEnabled is false
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        aigateway:
+          llmlogEnabled: false
+    asserts:
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
+          value: "false"
+      - notExists:
+          path: data.OPENCSG_LLMLOG_BUCKET
+      - notExists:
+          path: data.OPENCSG_LLMLOG_PREFIX
+      - notExists:
+          path: data.OPENCSG_LLMLOG_WORKER_NUM
+      - notExists:
+          path: data.OPENCSG_LLMLOG_BATCH_SIZE
+      - notExists:
+          path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
 
   - it: Should render aigateway with custom domain when domain is set
     template: csghub/configmap.yaml

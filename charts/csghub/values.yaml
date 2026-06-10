@@ -330,6 +330,7 @@ payment:
 aigateway:
   ## AI Gateway configuration
   aigateway: {}
+    # llmlogEnabled: true
 
   ## Content moderation configuration
   moderation:
@@ -474,6 +475,14 @@ agentichub:
   redis:
     enabled: false
 
+## LLM log configuration
+llmlog: {}
+  # prefix: "llmlog"
+  # workerNum: 10
+  # batchSize: 1000
+  # flushIntervalSeconds: 300
+  # bucket: "csghub-llmlog"
+
 ## Accounting service configuration
 accounting: {}
 
@@ -594,6 +603,8 @@ minio:
     - name: "csghub-runner"
       policy: "none"
     - name: "csghub-xnet"
+      policy: "none"
+    - name: "csghub-llmlog"
       policy: "none"
 
   persistence:
