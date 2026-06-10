@@ -2,8 +2,8 @@
 ##  Global Configuration                                       ##
 #################################################################
 global:
-  ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
-  edition: "ce"
+  ## Deployment edition: "ce" (Community), "ee" (Enterprise) or "saas" (SaaS)
+  edition: "ee"
 
   ## Gateway configuration
   gateway:

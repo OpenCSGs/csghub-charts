@@ -5,7 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $aiGatewaySvc := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
 {{- $aigatewaySvc := $aiGatewaySvc.aigateway }}
-{{- if and (eq .Values.global.edition "ee") (dig "llmlogEnabled" true $aigatewaySvc) }}
+{{- if and (ne .Values.global.edition "ce") (dig "llmlogEnabled" true $aigatewaySvc) }}
 {{- $service := include "common.service" (dict "ctx" . "service" "llmlog") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}

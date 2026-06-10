@@ -393,7 +393,7 @@ tests:
       - notExists:
           path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
 
-  - it: Should not render llmlog config when edition is not ee
+  - it: Should not render llmlog config when edition is ce
     template: csghub/configmap.yaml
     set:
       global:
@@ -401,7 +401,7 @@ tests:
     asserts:
       - equal:
           path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
-          value: "true"
+          value: "false"
       - notExists:
           path: data.OPENCSG_LLMLOG_BUCKET
 
