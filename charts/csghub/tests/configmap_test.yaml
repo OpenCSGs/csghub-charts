@@ -169,6 +169,117 @@ tests:
           path: data.OPENCSG_LLMLOG_BUCKET
           value: "csghub-llmlog"
 
+  - it: Should render sensitive check defaults when moderation is enabled
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ENABLE
+          value: "true"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_CHECK_CHAIN
+          value: "ac_automaton,mutable_ac_automaton,aliyun_green"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_STREAM_CHECK_MODE
+          value: "async"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ASYNC_BUFFER_MAX_CHARS
+          value: "50"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_MAX_CONTENT_LENGTH
+          value: "2000"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE
+          value: "false"
+      - matchRegex:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT
+          pattern: "https://.*/aigateway"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY
+          value: ""
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL
+          value: "Qwen/Qwen3Guard-Gen-0.6B"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL
+          value: "Qwen/Qwen3Guard-Gen-Stream-0.6B"
+
+  - it: Should render sensitive check with custom moderation config
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+          endpoint: "https://moderation.custom.com"
+          accessKeyId: "custom-key"
+          accessKeySecret: "custom-secret"
+          region: "us-east-1"
+          enableSSL: false
+          checkChain: "custom_chain"
+          streamCheckMode: "sync"
+          asyncBufferMaxChars: 100
+          maxContentLength: 5000
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ENDPOINT
+          value: "https://moderation.custom.com"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_ID
+          value: "custom-key"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ACCESS_KEY_SECRET
+          value: "custom-secret"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_REGION
+          value: "us-east-1"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL
+          value: "false"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_CHECK_CHAIN
+          value: "custom_chain"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_STREAM_CHECK_MODE
+          value: "sync"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_ASYNC_BUFFER_MAX_CHARS
+          value: "100"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_MAX_CONTENT_LENGTH
+          value: "5000"
+
+  - it: Should render sensitive check with LLM moderation enabled
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+          llm:
+            enabled: true
+            endpoint: "https://llm.custom.com"
+            apiKey: "llm-api-key-12345"
+            guardModel: "custom/guard-model"
+            guardStreamModel: "custom/guard-stream-model"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE
+          value: "true"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT
+          value: "https://llm.custom.com"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY
+          value: "llm-api-key-12345"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL
+          value: "custom/guard-model"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL
+          value: "custom/guard-stream-model"
+
   - it: Should render aigateway with independent domain when useDomain=true
     template: csghub/configmap.yaml
     set:
