@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -73,4 +74,5 @@ spec:
           port: {{ dig "service" "port" 8070 $csgbotSvc }}
       timeouts:
         request: 5m
+{{- end }}
 {{- end }}

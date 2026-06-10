@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -30,3 +31,4 @@ spec:
   resources:
     requests:
       storage: {{ or $persistence.size .Values.global.persistence.size }}
+{{- end }}

@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- if and (not .Values.global.chartContext.isBuiltIn) .Values.global.gateway.tls.enabled }}
+{{- if and (ne .Values.global.edition "ce") (not .Values.global.chartContext.isBuiltIn) .Values.global.gateway.tls.enabled }}
 {{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: gateway.networking.k8s.io/v1

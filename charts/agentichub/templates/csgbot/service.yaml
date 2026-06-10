@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -23,3 +24,4 @@ spec:
   selector:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}
