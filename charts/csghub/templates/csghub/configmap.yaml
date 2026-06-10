@@ -155,9 +155,20 @@ data:
   OPENCSG_PAYMENT_SERVER_PORT: {{ $paymentSvc | dig "service" "port" 8090 | quote }}
   {{- end }}
 
-  ## Server Configuration for Payment
+  ## Server Configuration for AIGateway
   {{- $aigatewaySvc := $aiGatewaySvc.aigateway }}
   OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" 8094 | quote }}
+  OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "llmlogEnabled" true $aigatewaySvc | quote }}
+
+  {{- if (dig "llmlogEnabled" true $aigatewaySvc) }}
+  ## Server Configuration for LLMLog
+  {{- $llmlogSvc := include "common.service" (dict "ctx" . "service" "llmlog") | fromYaml }}
+  OPENCSG_LLMLOG_BUCKET: {{ $llmlogSvc.bucket | default "csghub-llmlog" | quote }}
+  OPENCSG_LLMLOG_PREFIX: {{ $llmlogSvc.prefix | default "llmlog" | quote }}
+  OPENCSG_LLMLOG_WORKER_NUM: {{ $llmlogSvc.workerNum | default 10 | quote }}
+  OPENCSG_LLMLOG_BATCH_SIZE: {{ $llmlogSvc.batchSize | default 1000 | quote }}
+  OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS: {{ $llmlogSvc.flushIntervalSeconds | default 300 | quote }}
+  {{- end }}
 
   ## Server Configuration
   {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
