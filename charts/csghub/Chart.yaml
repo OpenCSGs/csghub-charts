@@ -52,11 +52,11 @@ dependencies:
     repository: file://charts/prometheus
     condition: prometheus.enabled
   - name: runner
-    version: 2.1.2
+    version: 2.2.0
     repository: https://charts.opencsg.com/csghub
     condition: runner.enabled
   - name: dataflow
-    version: 2.1.0
+    version: 2.2.0
     repository: https://charts.opencsg.com/csghub
     condition: dataflow.enabled
   - name: csgship
