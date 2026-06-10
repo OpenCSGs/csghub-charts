@@ -3,7 +3,7 @@
 #################################################################
 global:
   ## Deployment edition: "ce" (Community) or "ee" (Enterprise)
-  edition: "ee"
+  edition: "ce"
 
   ## Gateway configuration
   gateway:
@@ -502,6 +502,12 @@ user: {}
 
 ## Data viewer configuration
 dataviewer: {}
+
+## FedAP service configuration
+fedap: {}
+
+## TrustRegistry service configuration
+trustregistry: {}
 
 ## Mirror service configuration
 mirror: {}

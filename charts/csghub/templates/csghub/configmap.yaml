@@ -121,6 +121,24 @@ data:
   OPENCSG_DATAVIEWER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataviewerSvc.name)) | quote }}
   OPENCSG_DATAVIEWER_SERVER_PORT: {{ $dataviewerSvc | dig "service" "port" 8093 | quote }}
 
+  {{- if eq .Values.global.edition "saas" }}
+  {{- if dig "enabled" true .Values.fedap }}
+  ## Server Configuration for Federation Adapter
+  {{- $fedapSvc := include "common.service" (dict "ctx" . "service" "fedap") | fromYaml }}
+  {{- $fedapSvcName := include "common.names.custom" (list . $fedapSvc.name) }}
+  STARHUB_SERVER_FEDERATION_ADAPTER_ENDPOINT: {{ printf "http://%s" $fedapSvcName | quote }}
+  STARHUB_SERVER_FEDERATION_ADAPTER_PORT: {{ $fedapSvc | dig "service" "port" 8099 | quote }}
+  {{- end }}
+
+  {{- if dig "enabled" true .Values.trustregistry }}
+  ## Server Configuration for Federation Registry
+  {{- $trustregistrySvc := include "common.service" (dict "ctx" . "service" "trustregistry") | fromYaml }}
+  {{- $trustregistrySvcName := include "common.names.custom" (list . $trustregistrySvc.name) }}
+  STARHUB_SERVER_FEDERATION_REGISTRY_HOST: {{ printf "http://%s" $trustregistrySvcName | quote }}
+  STARHUB_SERVER_FEDERATION_REGISTRY_PORT: {{ $trustregistrySvc | dig "service" "port" 8098 | quote }}
+  {{- end }}
+  {{- end }}
+
   ## Server Configuration for Notification
   {{- $notifierSvc := include "common.service" (dict "ctx" . "service" "notifier") | fromYaml }}
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $notifierSvc.name)) | quote }}
