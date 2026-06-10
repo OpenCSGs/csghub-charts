@@ -96,3 +96,12 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: Should not render deployment when edition is not ee
+    template: csghub/llmlog/deployment.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -187,7 +187,7 @@ data:
   OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" 8094 | quote }}
   OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "llmlogEnabled" true $aigatewaySvc | quote }}
 
-  {{- if (dig "llmlogEnabled" true $aigatewaySvc) }}
+  {{- if and (eq .Values.global.edition "ee") (dig "llmlogEnabled" true $aigatewaySvc) }}
   ## Server Configuration for LLMLog
   {{- $llmlogSvc := include "common.service" (dict "ctx" . "service" "llmlog") | fromYaml }}
   OPENCSG_LLMLOG_BUCKET: {{ $llmlogSvc.bucket | default "csghub-llmlog" | quote }}

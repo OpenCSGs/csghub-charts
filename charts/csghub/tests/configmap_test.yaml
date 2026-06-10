@@ -393,6 +393,18 @@ tests:
       - notExists:
           path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
 
+  - it: Should not render llmlog config when edition is not ee
+    template: csghub/configmap.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
+          value: "true"
+      - notExists:
+          path: data.OPENCSG_LLMLOG_BUCKET
+
   - it: Should render aigateway with custom domain when domain is set
     template: csghub/configmap.yaml
     set:
