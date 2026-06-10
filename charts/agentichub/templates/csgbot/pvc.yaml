@@ -6,6 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $values := .Values }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -31,3 +32,4 @@ spec:
   resources:
     requests:
       storage: {{ or $persistence.size $values.csgbot.persistence.size }}
+{{- end }}

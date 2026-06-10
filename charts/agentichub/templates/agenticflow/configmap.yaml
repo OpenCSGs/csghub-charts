@@ -6,6 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $isBuiltIn := .Values.global.chartContext.isBuiltIn }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -79,3 +80,4 @@ data:
   ## AgenticHub Configuration for Others
   BACKEND_URL: {{ include "common.endpoint.agenticflow" . }}
   FRONTEND_URL: {{ include "common.endpoint.agenticflow" . }}
+{{- end }}

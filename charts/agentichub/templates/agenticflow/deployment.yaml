@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -157,3 +158,4 @@ spec:
   revisionHistoryLimit: {{ $service.revisionHistoryLimit }}
   {{- end }}
   progressDeadlineSeconds: {{ $service.progressDeadlineSeconds | default 600 }}
+{{- end }}

@@ -6,6 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $isBuiltIn := .Values.global.chartContext.isBuiltIn }}
+{{- if ne .Values.global.edition "ce" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -88,3 +89,4 @@ data:
 
     [openclaw-sandbox]
     image = {{ include "common.image" (list . (dig "config" "sandbox" "openclaw" "image" dict .Values.csgbot)) | quote }}
+{{- end }}
