@@ -341,6 +341,17 @@ aigateway:
     # accessKeySecret: ""                  # Secret key for authentication
     # region: ""                           # Service region
     # enableSSL: true                      # Enable SSL/TLS for secure communication
+    # checkChain: "ac_automaton,mutable_ac_automaton,aliyun_green"  # Sensitive check chain
+    # streamCheckMode: "async"             # Stream check mode (async/sync)
+    # asyncBufferMaxChars: 50              # Max characters for async buffer
+    # maxContentLength: 2000               # Max content length for sensitive check
+    ## LLM-based sensitive check configuration
+    # llm:
+    #   enabled: false                     # Enable LLM-based sensitive check
+    #   endpoint: ""                       # LLM endpoint URL (defaults to aigateway endpoint)
+    #   apiKey: ""                         # API key for LLM service
+    #   guardModel: "Qwen/Qwen3Guard-Gen-0.6B"  # Guard model for non-stream
+    #   guardStreamModel: "Qwen/Qwen3Guard-Gen-Stream-0.6B"  # Guard model for stream
 
 ## XNet service configuration
 xnet:

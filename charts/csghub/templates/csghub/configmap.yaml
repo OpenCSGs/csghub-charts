@@ -89,6 +89,15 @@ data:
   OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $aiGatewaySvc.name)) | quote }}
   OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" 8089 | quote }}
   OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "true"
+  STARHUB_SERVER_SENSITIVE_CHECK_CHECK_CHAIN: {{ $moderationSvc.checkChain | default "ac_automaton,mutable_ac_automaton,aliyun_green" | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_STREAM_CHECK_MODE: {{ $moderationSvc.streamCheckMode | default "async" | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_ASYNC_BUFFER_MAX_CHARS: {{ $moderationSvc.asyncBufferMaxChars | default "50" | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_MAX_CONTENT_LENGTH: {{ $moderationSvc.maxContentLength | default "2000" | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE: {{ dig "llm" "enabled" "false" $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT: {{ dig "llm" "endpoint" (include "common.endpoint.aigateway" .) $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY: {{ dig "llm" "apiKey" "" $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL: {{ dig "llm" "guardModel" "Qwen/Qwen3Guard-Gen-0.6B" $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL: {{ dig "llm" "guardStreamModel" "Qwen/Qwen3Guard-Gen-Stream-0.6B" $moderationSvc | quote }}
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
   OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "false"
