@@ -1,0 +1,98 @@
+suite: Test TrustRegistry Resources
+templates:
+  - csghub/trustregistry/deployment.yaml
+  - csghub/trustregistry/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    edition: "saas"
+    gateway:
+      external:
+        domain: "csghub.example.com"
+    image:
+      registry: "docker.io"
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/csghub-server"
+    tag: "v2.2.0"
+    pullPolicy: "Never"
+  logging:
+    level: "info"
+tests:
+  - it: Should render deployment correctly
+    template: csghub/trustregistry/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-trustregistry"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "trustregistry"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "trustregistry"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.2.0"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "trustregistry", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8098
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8098
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+
+  - it: Should render service correctly
+    template: csghub/trustregistry/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-trustregistry"
+      - equal:
+          path: spec.ports[0].port
+          value: 8098
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8098
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "trustregistry"
+
+  - it: Should render with custom resources
+    template: csghub/trustregistry/deployment.yaml
+    set:
+      trustregistry:
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "500m"
+
+  - it: Should not render when disabled
+    template: csghub/trustregistry/deployment.yaml
+    set:
+      trustregistry:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

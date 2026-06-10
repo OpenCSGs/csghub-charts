@@ -168,6 +168,14 @@ tests:
       - equal:
           path: data.OPENCSG_LLMLOG_BUCKET
           value: "csghub-llmlog"
+      - notExists:
+          path: data.OPENCSG_FEDAP_SERVER_HOST
+      - notExists:
+          path: data.OPENCSG_TRUSTREGISTRY_SERVER_HOST
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_ADAPTER_ENDPOINT
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_HOST
 
   - it: Should render sensitive check defaults when moderation is enabled
     template: csghub/configmap.yaml
@@ -339,6 +347,51 @@ tests:
           path: data.OPENCSG_LLMLOG_BATCH_SIZE
       - notExists:
           path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
+
+  - it: Should render federation adapter config in saas mode
+    template: csghub/configmap.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_FEDERATION_ADAPTER_ENDPOINT
+          value: "http://csghub-fedap"
+      - equal:
+          path: data.STARHUB_SERVER_FEDERATION_ADAPTER_PORT
+          value: "8099"
+      - equal:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_HOST
+          value: "http://csghub-trustregistry"
+      - equal:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
+          value: "8098"
+
+  - it: Should not render federation adapter when disabled in saas mode
+    template: csghub/configmap.yaml
+    set:
+      global:
+        edition: "saas"
+      fedap:
+        enabled: false
+    asserts:
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_ADAPTER_ENDPOINT
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_ADAPTER_PORT
+
+  - it: Should not render federation registry when disabled in saas mode
+    template: csghub/configmap.yaml
+    set:
+      global:
+        edition: "saas"
+      trustregistry:
+        enabled: false
+    asserts:
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_HOST
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
 
   - it: Should render aigateway with custom domain when domain is set
     template: csghub/configmap.yaml

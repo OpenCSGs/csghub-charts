@@ -1,0 +1,106 @@
+suite: Test FedAP Resources
+templates:
+  - csghub/fedap/deployment.yaml
+  - csghub/fedap/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+set:
+  global:
+    edition: "saas"
+    gateway:
+      external:
+        domain: "csghub.example.com"
+    image:
+      registry: "docker.io"
+      pullPolicy: "Never"
+      pullSecrets: ["acr-pull-secret"]
+  image:
+    registry: "docker.io"
+    repository: "opencsghq/csghub-server"
+    tag: "v2.2.0"
+    pullPolicy: "Never"
+  logging:
+    level: "info"
+tests:
+  - it: Should render deployment correctly
+    template: csghub/fedap/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-fedap"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "fedap"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "fedap"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.2.0"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "fedap", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8099
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8099
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+
+  - it: Should render service correctly
+    template: csghub/fedap/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-fedap"
+      - equal:
+          path: spec.ports[0].port
+          value: 8099
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8099
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "fedap"
+
+  - it: Should render with custom image and resources
+    template: csghub/fedap/deployment.yaml
+    set:
+      fedap:
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        nodeSelector:
+          diskType: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "250m"
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+
+  - it: Should not render when disabled
+    template: csghub/fedap/deployment.yaml
+    set:
+      fedap:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
