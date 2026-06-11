@@ -182,9 +182,15 @@ portal:
 
   ## Documentation center links
   docs: {}
-    # domain: ""                           # External docs domain (creates ExternalName service)
-    # host: "192.168.18.10"                # Docs service host
-    # port: "8003"                         # Docs service port
+    ## Route /docs to an existing K8s Service by name.
+    ## No additional Service or EndpointSlice created.
+    ## Works with Envoy Gateway.
+    ## Example:
+    ##   service: "docs-service"
+    ##   port: 80
+    #
+    # service: "docs-svc"                  # Existing K8s service name, eg docs-svc
+    # port: 8080                           # Target service port
 
   ## Database configuration
   postgresql: {}
