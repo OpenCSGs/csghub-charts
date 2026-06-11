@@ -269,8 +269,10 @@ tests:
             enabled: true
             endpoint: "https://llm.custom.com"
             apiKey: "llm-api-key-12345"
-            guardModel: "custom/guard-model"
-            guardStreamModel: "custom/guard-stream-model"
+            guard:
+              model: "custom/guard-model"
+            guardStream:
+              model: "custom/guard-stream-model"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE
@@ -306,7 +308,9 @@ tests:
     set:
       aigateway:
         aigateway:
-          llmlogEnabled: true
+          llm:
+            log:
+              enabled: true
     asserts:
       - equal:
           path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
@@ -332,7 +336,9 @@ tests:
     set:
       aigateway:
         aigateway:
-          llmlogEnabled: false
+          llm:
+            log:
+              enabled: false
     asserts:
       - equal:
           path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE

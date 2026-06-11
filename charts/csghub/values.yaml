@@ -329,8 +329,24 @@ payment:
 ## AIGateway service configuration
 aigateway:
   ## AI Gateway configuration
-  aigateway: {}
-    # llmlogEnabled: true
+  aigateway:
+    llm:
+      ## LLM logging configuration
+      log: {}
+        # enabled: true                         # Enable LLM logging
+        # sync:
+          # enabled: false                      # Enable sync to dataset
+          # username: ""                        # Dataset owner username
+          # dataset:
+            # namespace: ""                     # Dataset namespace
+            # name: ""                          # Dataset name
+          # maxShardSizeBytes: 67108864         # Max shard size (64MB)
+      ## LLM trace configuration
+      trace: {}
+        # enabled: true                         # Enable LLM trace
+        # contentCapture: "metadata_only"       # Capture mode: metadata_only, full
+        # contentLength: 256                    # Max content length
+        # maxInputUserMessages: 1               # Max input user messages
 
   ## Content moderation configuration
   moderation:
@@ -346,12 +362,18 @@ aigateway:
     # asyncBufferMaxChars: 50              # Max characters for async buffer
     # maxContentLength: 2000               # Max content length for sensitive check
     ## LLM-based sensitive check configuration
-    # llm:
-    #   enabled: false                     # Enable LLM-based sensitive check
-    #   endpoint: ""                       # LLM endpoint URL (defaults to aigateway endpoint)
-    #   apiKey: ""                         # API key for LLM service
-    #   guardModel: "Qwen/Qwen3Guard-Gen-0.6B"  # Guard model for non-stream
-    #   guardStreamModel: "Qwen/Qwen3Guard-Gen-Stream-0.6B"  # Guard model for stream
+    llm:
+      # enabled: false                              # Enable LLM-based sensitive check
+      # endpoint: ""                                # LLM endpoint URL (defaults to aigateway endpoint)
+      # apiKey: ""                                  # API key for LLM service
+      guard: {}
+        # model: "Qwen/Qwen3Guard-Gen-0.6B"         # Guard model for non-stream
+        # endpoint: ""                              # Guard endpoint URL (defaults to aigateway endpoint)
+        # headers: ""                               # Additional headers for guard request
+      guardStream: {}
+        # model: "Qwen/Qwen3Guard-Gen-Stream-0.6B"  # Guard model for stream
+        # endpoint: ""                              # Guard stream endpoint URL (defaults to aigateway endpoint)
+        # headers: ""                               # Additional headers for guard stream request
 
 ## XNet service configuration
 xnet:
