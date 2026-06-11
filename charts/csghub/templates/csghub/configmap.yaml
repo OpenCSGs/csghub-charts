@@ -78,6 +78,9 @@ data:
   ## Moderation Configuration
   {{- $aiGatewaySvc := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
   {{- $moderationSvc := $aiGatewaySvc.moderation }}
+  {{- $aiGatewayEndpoint := include "common.endpoint.aigateway" . }}
+  {{- $guardModel := "Qwen/Qwen3Guard-Gen-0.6B" }}
+  {{- $guardStreamModel := "Qwen/Qwen3Guard-Gen-Stream-0.6B" }}
   {{- if $moderationSvc.enabled }}
   CSGHUB_PORTAL_SENSITIVE_CHECK: "true"
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "true"
@@ -94,10 +97,14 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_ASYNC_BUFFER_MAX_CHARS: {{ $moderationSvc.asyncBufferMaxChars | default "50" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_MAX_CONTENT_LENGTH: {{ $moderationSvc.maxContentLength | default "2000" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE: {{ dig "llm" "enabled" "false" $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT: {{ dig "llm" "endpoint" (include "common.endpoint.aigateway" .) $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT: {{ dig "llm" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY: {{ dig "llm" "apiKey" "" $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL: {{ dig "llm" "guardModel" "Qwen/Qwen3Guard-Gen-0.6B" $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL: {{ dig "llm" "guardStreamModel" "Qwen/Qwen3Guard-Gen-Stream-0.6B" $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL: {{ dig "llm" "guard" "model" $guardModel $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_ENDPOINT: {{ dig "llm" "guard" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_HEADERS: {{ dig "llm" "guard" "headers" "" $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL: {{ dig "llm" "guardStream" "model" $guardStreamModel $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_ENDPOINT: {{ dig "llm" "guardStream" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_HEADERS: {{ dig "llm" "guardStream" "headers" "" $moderationSvc | quote }}
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
   OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "false"
@@ -186,12 +193,23 @@ data:
   {{- $aigatewaySvc := $aiGatewaySvc.aigateway }}
   OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" 8094 | quote }}
   {{- if ne .Values.global.edition "ce" }}
-  OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "llmlogEnabled" true $aigatewaySvc | quote }}
+  OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "llm" "log" "enabled" true $aigatewaySvc | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_ENABLE: {{ dig "llm" "trace" "enabled" true $aigatewaySvc | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_CONTENT_CAPTURE: {{ dig "llm" "trace" "contentCapture" "metadata_only" $aigatewaySvc | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_MAX_CONTENT_LENGTH: {{ dig "llm" "trace" "contentLength" "256" $aigatewaySvc | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_MAX_INPUT_USER_MESSAGES: {{ dig "llm" "trace" "maxInputUserMessages" "1" $aigatewaySvc | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_ENABLE: {{ dig "llm" "log" "sync" "enabled" false $aigatewaySvc | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_USERNAME: {{ dig "llm" "log" "sync" "username" "" $aigatewaySvc | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_DATASET_NAMESPACE: {{ dig "llm" "log" "sync" "dataset" "namespace" "" $aigatewaySvc | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_DATASET_NAME: {{ dig "llm" "log" "sync" "dataset" "name" "" $aigatewaySvc | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_MAX_SHARD_SIZE_BYTES: {{ dig "llm" "log" "sync" "maxShardSizeBytes" "67108864" $aigatewaySvc | quote }}
   {{- else }}
   OPENCSG_AIGATEWAY_LLMLOG_ENABLE: "false"
+  OPENCSG_AIGATEWAY_LLM_TRACE_ENABLE: "false"
+  STARHUB_SERVER_LLMLOG_SYNC_ENABLE: "false"
   {{- end }}
 
-  {{- if and (ne .Values.global.edition "ce") (dig "llmlogEnabled" true $aigatewaySvc) }}
+  {{- if and (ne .Values.global.edition "ce") (dig "llm" "log" "enabled" true $aigatewaySvc) }}
   ## Server Configuration for LLMLog
   {{- $llmlogSvc := include "common.service" (dict "ctx" . "service" "llmlog") | fromYaml }}
   OPENCSG_LLMLOG_BUCKET: {{ $llmlogSvc.bucket | default "csghub-llmlog" | quote }}

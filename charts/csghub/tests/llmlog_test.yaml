@@ -21,7 +21,9 @@ set:
     pullPolicy: "Never"
   aigateway:
     aigateway:
-      llmlogEnabled: true
+      llm:
+        log:
+          enabled: true
   logging:
     level: "info"
 tests:
@@ -68,7 +70,9 @@ tests:
     set:
       aigateway:
         aigateway:
-          llmlogEnabled: true
+          llm:
+            log:
+              enabled: true
       llmlog:
         resources:
           requests:
@@ -92,7 +96,9 @@ tests:
     set:
       aigateway:
         aigateway:
-          llmlogEnabled: false
+          llm:
+            log:
+              enabled: false
     asserts:
       - hasDocuments:
           count: 0
