@@ -96,7 +96,7 @@ spec:
       timeouts:
         backendRequest: 30m
     {{- end }}
-    {{- if or (and $service.docs.host $service.docs.port) $service.docs.domain }}
+    {{- if and $service.docs.service $service.docs.port }}
     - matches:
         - path:
             type: PathPrefix
@@ -108,7 +108,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: {{ include "common.names.custom" (list . "docs") }}
+        - name: {{ $service.docs.service }}
           port: {{ $service.docs.port }}
       timeouts:
         request: 10s
