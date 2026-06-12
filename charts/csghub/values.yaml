@@ -897,6 +897,8 @@ loki:
       enabled: false                       # Disable tracing
     querier:
       max_concurrent: 40                   # Maximum concurrent queries
+    limits_config:
+      max_concurrent_tail_requests: 40     # Maximum concurrent tail requests
 
   test:
     enabled: false                         # Disable test configuration
