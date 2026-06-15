@@ -38,7 +38,7 @@ spec:
 {{- end }}
       containers:
         - name: importer
-          image: {{ include "common.image.fixed" (dict "ctx" . "service" "agenticflow" "image" "opencsghq/agenticflow-importer:latest") }}
+          image: {{ include "common.image.fixed" (dict "ctx" . "service" "agenticflow" "image" "opencsghq/agenticflow-importer:v1.0.4") }}
           imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
           envFrom:
             - configMapRef:

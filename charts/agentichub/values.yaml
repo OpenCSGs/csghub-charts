@@ -123,7 +123,7 @@ agenticflow:
   image:
     # registry: "docker.io"
     repository: "opencsghq/agenticflow"
-    tag: "v0.5.1-ee"
+    tag: "ee-v0.6-4"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -170,7 +170,7 @@ csgbot:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgbot"
-    tag: "v0.5.1-ee"
+    tag: "v0.6.2-ee"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -183,31 +183,72 @@ csgbot:
 
   ## ConfigMap Configuration
   config:
-    webSearch: {}
-      # apiUrl: "https://searchapi.xiaosuai.com/search/..."
-      # apiKey: ""
+    aigateway: {}
+      # model: "qwen3.6-plus"       # AI model ID for csgbot
+      # temperature: 0.1            # Model temperature
+
+    starship: {}
+      # endpoint: ""                # Starship endpoint URL
+
+    speechToText: {}
+      # modelId: "qwen3-asr-flash"
+      # apiMode: "chat-completions"
+      # prompt: ""
+      # responseFormat: "json"
+      # maxFileBytes: "26214400"
+      # forwardTimeoutSeconds: 120.0
+
     integrations: {}
-      # feishuEnabled: false
-    logging: {}
-      # disableGeniusChat: false
+      # notification:
+        # enabled: false
+
+    fileServer: {}
+      # endpoint: ""                # File server endpoint URL
+
     sandbox:
+      # timeoutSeconds: 600
+      # maxUploadFileBytes: 52428800
       genius:
         image:
           # registry: "docker.io"
           repository: "opencsghq/genius-sandbox"
-          tag: "20260430v1"
+          tag: "58acc91d"
       doc:
         image:
           # registry: "docker.io"
           repository: "opencsghq/doc-sandbox"
-          tag: "20260416.2"
+          tag: "03c2897c"
       openclaw:
         image:
           # registry: "docker.io"
           repository: "opencsghq/openclaw-sandbox"
-          tag: "20260408.4"
-    externalDocs: {}
-      # enabled: false    # APIS Need turn on csghub swaggerAPI docs
+          tag: "03c2897c"
+      csgclawServer:
+        image:
+          # registry: "docker.io"
+          repository: "opencsghq/csgclaw-server-sandbox"
+          tag: "2026060701"
+      csgclawAgent:
+        image:
+          # registry: "docker.io"
+          repository: "opencsghq/csgclaw-agent-sandbox"
+          tag: "2026060301"
+
+    logging: {}
+      # logPath: "logs/server.log"
+      # logLevel: "INFO"
+      # disableGeniusChat: false
+      # disablePlannerChat: false
+
+    observability: {}
+      # serviceName: "csgbot-ee"
+      # phoenixEndpoint: ""
+      # otlpTracesEndpoint: ""
+      # otlpInsecure: true
+      # otlpProtocol: "grpc"
+
+    userFacingErrors: {}
+      # platformQuotaMaintenanceContact: ""   # Contact info shown on 403 quota errors
 
 #################################################################
 ##  Built-in Third-party Components                            ##
