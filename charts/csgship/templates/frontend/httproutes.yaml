@@ -5,7 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "frontend") | fromYaml }}
 {{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $service) | fromYaml }}
-{{- if and $gatewayConfig.enabled (not .Values.global.chartContext.isBuiltIn) }}
+{{- if $gatewayConfig.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
