@@ -243,6 +243,10 @@ server:
   ## S3 Proxy
   enablePresignedUrlProxy: true            # Enable S3 proxy
 
+  ## Cluster Scheduling Configuration
+  ## Allow CPU resource requests to be scheduled on GPU nodes
+  allowCpuOnGpuNodes: false
+
   ## Agentichub configuration
   agenticflow: {}
     # host: "http://agenticflow.example.io" # AgentHub address
