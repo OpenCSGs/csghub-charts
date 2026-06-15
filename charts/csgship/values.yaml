@@ -172,6 +172,10 @@ frontend:
     repository: "opencsghq/csgship-portal"
     tag: "v1.2.1"
 
+  ## Gateway configuration
+  gateway:
+    enabled: true                            # Enable or disable gateway
+
 ## MegaLinter Server Configuration
 megalinterServer:
   image:
