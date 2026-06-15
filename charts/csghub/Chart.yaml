@@ -73,6 +73,6 @@ dependencies:
     repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
   - name: agentichub
-    version: 0.5.1
+    version: 0.6.1
     repository: https://charts.opencsg.com/csghub
     condition: agentichub.enabled
