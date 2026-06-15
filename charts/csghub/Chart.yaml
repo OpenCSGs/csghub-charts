@@ -60,7 +60,7 @@ dependencies:
     repository: https://charts.opencsg.com/csghub
     condition: dataflow.enabled
   - name: csgship
-    version: 0.4.1
+    version: 0.4.2
     repository: https://charts.opencsg.com/csghub
     condition: csgship.enabled
   - name: memmachine
