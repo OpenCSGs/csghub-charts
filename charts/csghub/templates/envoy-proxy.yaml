@@ -5,7 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $gateway := .Values.global.gateway }}
 {{- if regexMatch "envoyproxy" $gateway.controllerName }}
-{{- $serviceName := include "common.names.custom" (list . "envoy-proxy-custom") }}
+{{- $serviceName := include "common.names.custom" (list . "envoy-proxy") }}
 {{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" dict) | fromYaml }}
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
