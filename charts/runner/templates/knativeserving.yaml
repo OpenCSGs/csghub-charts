@@ -28,33 +28,6 @@ metadata:
     {{- end }}
   annotations:
     helm.sh/resource-policy: keep
-{{- if $gatewayAPI }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-gateway
-  namespace: {{ $knativeNamespace }}
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/service: {{ $serviceName }}
-    app.kubernetes.io/component: net-gateway-api
-    app.kubernetes.io/name: knative-serving
-    app.kubernetes.io/version: "{{ regexReplaceAll "\\.[0-9]+$" (trimPrefix "v" $knativeVersion) "" }}"
-    networking.knative.dev/ingress-provider: gateway-api
-data:
-  external-gateways: |
-    - class: eg-external
-      gateway: {{ .Release.Namespace }}/knative
-      supported-features:
-      - HTTPRouteRequestTimeout
-  local-gateways: |
-    - class: eg-internal
-      gateway: {{ .Release.Namespace }}/knative
-      supported-features:
-      - HTTPRouteRequestTimeout
-{{- end }}
 ---
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
