@@ -7,6 +7,11 @@ icon: https://raw.githubusercontent.com/OpenCSGs/csghub-charts/main/icons/icon.p
 sources:
   - https://github.com/OpenCSGs/csghub-charts
 
+maintainers:
+  - name: OpenCSG Team
+    email: support@opencsg.com
+    url: https://opencsg.com
+
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -35,14 +40,14 @@ dependencies:
     repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.7
-    repository: file://charts/reloader
+    repository: https://charts.opencsg.com/infra
     condition: reloader.enabled
     tags:
       - dependencies
       - reloader
   - name: prometheus
     version: 28.6.0
-    repository: file://charts/prometheus
+    repository: https://charts.opencsg.com/infra
     condition: prometheus.enabled
     tags:
       - dependencies
@@ -57,21 +62,21 @@ dependencies:
       - gateway
   - name: lws
     version: v0.6.1
-    repository: file://charts/lws
+    repository: https://charts.opencsg.com/infra
     condition: lws.enabled
   - name: argo-workflows
     alias: argo
     version: 0.47.4
-    repository: file://charts/argo-workflows
+    repository: https://charts.opencsg.com/infra
     condition: argo.enabled
   - name: knative-operator
     alias: knative
     version: 1.22.1
-    repository: file://charts/knative-operator
+    repository: https://charts.opencsg.com/infra
     condition: knative.enabled
   - name: volcano
     version: 1.14.1
-    repository: file://charts/volcano
+    repository: https://charts.opencsg.com/infra
     condition: volcano.enabled
   - name: agent-sandbox
     version: 0.2.1
