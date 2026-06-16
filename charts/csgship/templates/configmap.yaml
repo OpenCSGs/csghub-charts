@@ -58,7 +58,9 @@ data:
   ## Web Configuration for Accounting
   # ACCOUNTING_OP_MODE: "has_balance|consume"
   ACCOUNTING_OP_MODE: ""
-  {{- $apiToken := dig "ACCOUNTING_API_KEY" (include "csghub.api.token" .) $data }}
+  {{- $csghubSvc := include "common.names.custom" (list . "core") }}
+  {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
+  {{- $apiToken := dig "STARHUB_SERVER_API_TOKEN" (dig "ACCOUNTING_API_KEY" (include "csghub.api.token" .) $data) $csghubData }}
   {{- if .Values.global.chartContext.isBuiltIn }}
   ACCOUNTING_API_BASE: {{ include "common.endpoint.csghub" . | quote }}
   ACCOUNTING_API_KEY: {{ $apiToken | quote }}
