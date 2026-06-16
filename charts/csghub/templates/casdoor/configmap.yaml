@@ -51,6 +51,7 @@ data:
     initDataFile = "/conf/init_data.json"
     initDataNewOnly = true
     frontendBaseDir = "../cc_0"
+    enableErrorMask = true
   init_data.json: |
     {
       "organizations": [
