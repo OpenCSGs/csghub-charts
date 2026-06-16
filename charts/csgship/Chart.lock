@@ -3,10 +3,10 @@ dependencies:
   repository: https://charts.opencsg.com/csghub
   version: 0.2.2
 - name: reloader
-  repository: file://charts/reloader
+  repository: https://charts.opencsg.com/infra
   version: 2.2.7
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
   version: 1.6.7
-digest: sha256:f813c486b523aebacbdba65753ebe8f015f14eea6a8dee44a468063078e4ef81
-generated: "2026-05-07T13:52:49.552449+08:00"
+digest: sha256:6fbdcfdea8555cd049a1c2ce197f43b3a802ab1dd27b6f732a1cad04d4ee91d0
+generated: "2026-06-16T17:29:48.241719+08:00"
