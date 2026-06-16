@@ -4,8 +4,11 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $gateway := .Values.global.gateway }}
-{{- if and (regexMatch "envoyproxy" $gateway.controllerName) (not .Values.global.chartContext.isBuiltIn) }}
-{{- $serviceName := include "common.names.custom" (list . "envoy-proxy-custom") }}
+{{- $isEnvoyProxy := regexMatch "envoyproxy" $gateway.controllerName }}
+{{- $isOpencsg := regexMatch "^opencsg-registry" .Values.global.image.registry }}
+
+{{- if and $isEnvoyProxy (not .Values.global.chartContext.isBuiltIn) }}
+{{- $serviceName := include "common.names.custom" (list . "envoy-proxy") }}
 {{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" dict) | fromYaml }}
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
@@ -16,18 +19,11 @@ spec:
   provider:
     type: Kubernetes
     kubernetes:
-    {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
+    {{- if $isOpencsg }}
       envoyDeployment:
         container:
           image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
     {{- else }}
-      # Helm v4 uses Server-Side Apply (SSA) by default, which treats null
-      # fields as explicit null values rather than unset. When the registry is
-      # not opencsg-registry and service type is LoadBalancer, the kubernetes
-      # field becomes null, failing CRD validation (type: object).
-
-      # Add an else branch to render envoyDeployment: {} for non-opencsg
-      # registries, letting Envoy Gateway use its default envoy image.
       envoyDeployment: {}
     {{- end }}
       {{- if eq (dig "service" "type" "LoadBalancer" $gateway) "NodePort" }}
@@ -55,4 +51,35 @@ spec:
                   targetPort: {{ if le (len (printf "%v" $sshPort)) 3 }}{{ printf "10%03d" (int $sshPort) }}{{ else }}{{ $sshPort }}{{ end }}
                   nodePort: {{ $gatewayConfig.service.nodePorts.gitssh }}
       {{- end }}
+{{- end }}
+
+{{- /* EnvoyProxy for knative gateways (always created; ClusterIP in builtIn, follows global gateway type in standalone) */}}
+{{- if $isEnvoyProxy }}
+{{- $knativeName := include "common.names.custom" (list . "envoy-proxy-knative") }}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: {{ $knativeName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+    {{- if $isOpencsg }}
+      envoyDeployment:
+        container:
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+    {{- else }}
+      envoyDeployment: {}
+    {{- end }}
+    {{- if .Values.global.chartContext.isBuiltIn }}
+      envoyService:
+        name: {{ include "common.names.custom" (list . "envoy-knative") }}
+        type: ClusterIP
+    {{- else }}
+      envoyService:
+        name: {{ include "common.names.custom" (list . "envoy-knative") }}
+        type: {{ $gateway.service.type }}
+    {{- end }}
 {{- end }}

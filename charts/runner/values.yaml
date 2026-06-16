@@ -132,20 +132,23 @@ gpuModelLabel:
 
 ## Knative networking configuration
 ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
-applicationEndpoint: ""
+# applicationEndpoint: ""
 
 ## Host network interface name used for intern communication during distributed (LWS) inference
 ## e.g. eth0
-networkInterface: ""
+# networkInterface: ""
 
 ## Kubernetes StorageClass name for persistent volume provisioning for space
 # Example values: "local-path", "gp2"
-storageClassName: ""
+# storageClassName: ""
 
 ## Knative Serving configuration
 knative:
   serving:
     domain: "example.com"               # Domain suffix for Knative services
+
+    ## Ingress provider: "kourier" or "gateway-api"
+    # ingress: "gateway-api"
 
     ## Enable ksvc scale pod to 0 (stop space/inference/finetune/... instance)
     autoscaler:
