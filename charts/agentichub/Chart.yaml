@@ -31,7 +31,7 @@ dependencies:
     repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.7
-    repository: file://charts/reloader
+    repository: https://charts.opencsg.com/infra
     condition: reloader.enabled
     tags:
       - dependencies
@@ -46,5 +46,5 @@ dependencies:
       - gateway
   - name: memmachine
     version: 0.1.0
-    repository: file://charts/memmachine
+    repository: https://charts.opencsg.com/infra
     condition: memmachine.enabled
