@@ -311,10 +311,6 @@ reloader:
   image:
     name: "opencsghq/stakater-reloader"    # Reloader image name
 
-## EnvoyGateway configuration
-envoy:
-  enabled: true
-
 ## MemMachine configuration
 memmachine:
   enabled: false
