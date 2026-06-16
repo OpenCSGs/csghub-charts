@@ -3,16 +3,16 @@ dependencies:
   repository: https://charts.opencsg.com/csghub
   version: 0.2.2
 - name: reloader
-  repository: file://charts/reloader
+  repository: https://charts.opencsg.com/infra
   version: 2.2.7
 - name: loki
-  repository: file://charts/loki
+  repository: https://charts.opencsg.com/infra
   version: 6.29.0
 - name: tempo
-  repository: file://charts/tempo
+  repository: https://charts.opencsg.com/infra
   version: 1.23.3
 - name: prometheus
-  repository: file://charts/prometheus
+  repository: https://charts.opencsg.com/infra
   version: 28.6.0
 - name: runner
   repository: https://charts.opencsg.com/csghub
@@ -24,7 +24,7 @@ dependencies:
   repository: https://charts.opencsg.com/csghub
   version: 0.4.2
 - name: memmachine
-  repository: file://charts/memmachine
+  repository: https://charts.opencsg.com/infra
   version: 0.1.0
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
@@ -32,5 +32,5 @@ dependencies:
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
   version: 0.6.1
-digest: sha256:db27b3dcd5202143e0fabf68a708b9d0325251b590c55faf14f17ffd4f721ccb
-generated: "2026-06-15T22:28:45.519805+08:00"
+digest: sha256:8ad35c5ed10a383affc1a2b3038eecc9291e0f610c6e583be65f15c619425c29
+generated: "2026-06-16T16:46:55.511686+08:00"

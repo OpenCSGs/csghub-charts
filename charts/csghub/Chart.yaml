@@ -37,19 +37,19 @@ dependencies:
     repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.7
-    repository: file://charts/reloader
+    repository: https://charts.opencsg.com/infra
     condition: reloader.enabled
   - name: loki
     version: 6.29.0
-    repository: file://charts/loki
+    repository: https://charts.opencsg.com/infra
     condition: loki.enabled
   - name: tempo
     version: 1.23.3
-    repository: file://charts/tempo
+    repository: https://charts.opencsg.com/infra
     condition: tempo.enabled
   - name: prometheus
     version: 28.6.0
-    repository: file://charts/prometheus
+    repository: https://charts.opencsg.com/infra
     condition: prometheus.enabled
   - name: runner
     version: 2.2.0
@@ -65,7 +65,7 @@ dependencies:
     condition: csgship.enabled
   - name: memmachine
     version: 0.1.0
-    repository: file://charts/memmachine
+    repository: https://charts.opencsg.com/infra
     condition: memmachine.enabled
   - name: gateway-helm
     alias: envoy
