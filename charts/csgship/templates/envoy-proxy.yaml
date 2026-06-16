@@ -5,7 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $gateway := .Values.global.gateway }}
 {{- if and (regexMatch "envoyproxy" $gateway.controllerName) (not .Values.global.chartContext.isBuiltIn) }}
-{{- $serviceName := include "common.names.custom" (list . "envoy-proxy-custom") }}
+{{- $serviceName := include "common.names.custom" (list . "envoy-proxy") }}
 {{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" dict) | fromYaml }}
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
@@ -48,11 +48,5 @@ spec:
                   targetPort: 10443
                   nodePort: {{ $gatewayConfig.service.nodePorts.https }}
                 {{- end }}
-                {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
-                {{- $sshPort := dig "gitlabShell" "sshPort" 22 $serverSvc }}
-                - name: {{ printf "tcp-%v" $sshPort }}
-                  port: {{ $sshPort }}
-                  targetPort: {{ if le (len (printf "%v" $sshPort)) 3 }}{{ printf "10%03d" (int $sshPort) }}{{ else }}{{ $sshPort }}{{ end }}
-                  nodePort: {{ $gatewayConfig.service.nodePorts.gitssh }}
       {{- end }}
 {{- end }}
