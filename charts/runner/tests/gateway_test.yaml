@@ -75,6 +75,7 @@ tests:
 
   - it: Should render envoy-proxy correctly
     template: envoy-proxy.yaml
+    documentIndex: 0
     asserts:
       - equal:
           path: spec.provider.kubernetes.envoyService.type
@@ -88,6 +89,7 @@ tests:
 
   - it: Should render envoy-proxy correctly
     template: envoy-proxy.yaml
+    documentIndex: 0
     set:
       global:
         gateway:
@@ -114,6 +116,7 @@ tests:
 
   - it: Should render envoyDeployment as empty object when using non-opencsg registry
     template: envoy-proxy.yaml
+    documentIndex: 0
     set:
       global:
         image:
@@ -124,3 +127,85 @@ tests:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment
           value: {}
+
+  - it: Should render knative envoy-proxy with ClusterIP in builtIn mode
+    template: envoy-proxy.yaml
+    documentIndex: 0
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - isKind:
+          of: "EnvoyProxy"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "ClusterIP"
+
+  - it: Should render knative envoy-proxy with global service type in standalone mode
+    template: envoy-proxy.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: "EnvoyProxy"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+
+  - it: Should NOT render knative gateways in kourier mode (default)
+    template: gateway.yaml
+    set:
+      knative:
+        serving:
+          ingress: kourier
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: Should render knative-gateway in gateway-api mode
+    template: gateway.yaml
+    documentIndex: 2
+    set:
+      knative:
+        serving:
+          ingress: gateway-api
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: knative
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: Selector
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].key
+          value: kubernetes.io/metadata.name
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].operator
+          value: In
+      - contains:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
+          content: csghub
+      - contains:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
+          content: spaces
+      - contains:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
+          content: knative-serving
+
+  - it: Should render knative-gateway in gateway-api + builtIn mode
+    template: gateway.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+      knative:
+        serving:
+          ingress: gateway-api
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: knative

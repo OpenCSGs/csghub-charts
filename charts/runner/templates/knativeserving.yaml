@@ -10,6 +10,8 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $knativeRegistry := "" }}
 {{- $knativeVersion := "v1.22.0" }}
 {{- $kourierVersion := "v1.22.0" }}
+{{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
+{{- $gatewayAPI := eq $ingressType "gateway-api" }}
 {{- if $isOpencsgRegistry }}
 {{- $knativeRegistry = printf "%s/opencsghq/knative-releases/knative.dev" .Values.global.image.registry }}
 {{- end }}
@@ -26,6 +28,33 @@ metadata:
     {{- end }}
   annotations:
     helm.sh/resource-policy: keep
+{{- if $gatewayAPI }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-gateway
+  namespace: {{ $knativeNamespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/service: {{ $serviceName }}
+    app.kubernetes.io/component: net-gateway-api
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: "{{ regexReplaceAll "\\.[0-9]+$" (trimPrefix "v" $knativeVersion) "" }}"
+    networking.knative.dev/ingress-provider: gateway-api
+data:
+  external-gateways: |
+    - class: eg-external
+      gateway: {{ .Release.Namespace }}/knative
+      supported-features:
+      - HTTPRouteRequestTimeout
+  local-gateways: |
+    - class: eg-internal
+      gateway: {{ .Release.Namespace }}/knative
+      supported-features:
+      - HTTPRouteRequestTimeout
+{{- end }}
 ---
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
@@ -63,12 +92,24 @@ spec:
       cleanup: {{ $knativeRegistry }}/serving/pkg/cleanup/cmd/cleanup:{{ $knativeVersion }}
       migrate: {{ $knativeRegistry }}/pkg/apiextensions/storageversion/cmd/migrate:{{ $knativeVersion }}
       queue-proxy: {{ $knativeRegistry }}/serving/cmd/queue:{{ $knativeVersion }}
+      {{- if $gatewayAPI }}
+      net-gateway-api-controller/controller: {{ $knativeRegistry }}/net-gateway-api/cmd/controller:{{ $knativeVersion }}
+      net-gateway-api-webhook/webhook: {{ $knativeRegistry }}/net-gateway-api/cmd/webhook:{{ $knativeVersion }}
+      {{- else }}
       net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:{{ $kourierVersion }}
       3scale-kourier-gateway/kourier-gateway: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:v1.37-latest
+      {{- end }}
   {{- end }}
   ingress:
+    {{- if $gatewayAPI }}
+    kourier:
+      enabled: false
+    gateway-api:
+      enabled: true
+    {{- else }}
     kourier:
       enabled: true
+    {{- end }}
     istio:
       enabled: false
   config:
@@ -78,7 +119,24 @@ spec:
       enable-scale-to-zero: {{ $service.knative.serving.autoscaler.enableScaleToZero | quote }}
       scale-to-zero-pod-retention-period: {{ $service.knative.serving.autoscaler.scaleToZeroPodRetentionPeriod | quote }}
     network:
+      {{- if $gatewayAPI }}
+      ingress-class: gateway-api.ingress.networking.knative.dev
+      {{- else }}
       ingress-class: kourier.ingress.networking.knative.dev
+      {{- end }}
+    {{- if $gatewayAPI }}
+    gateway:
+      external-gateways: |
+        - class: eg-external
+          gateway: {{ .Release.Namespace }}/knative
+          supported-features:
+          - HTTPRouteRequestTimeout
+      local-gateways: |
+        - class: eg-internal
+          gateway: {{ .Release.Namespace }}/knative
+          supported-features:
+          - HTTPRouteRequestTimeout
+    {{- end }}
     features:
       kubernetes.podspec-priorityclassname: "enabled"
       kubernetes.podspec-schedulername: "enabled"

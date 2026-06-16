@@ -127,15 +127,23 @@ data:
   {{- end }}
   {{- end }}
 
-  ## Runner Configuration for kourier network
+  ## Runner Configuration for network
   {{- if $service.applicationEndpoint }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
   {{- else }}
-  {{- if $isBuiltIn }}
+  {{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
+  {{- if eq $ingressType "kourier" }}
   {{- $defaultApplicationEndpoint := printf "http://kourier-internal.%s.svc.%s" (include "namespace.knative" .) (include "common.domain.cluster" .) }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
   {{- else }}
+  {{- $isEnvoyProxy := regexMatch "envoyproxy" .Values.global.gateway.controllerName }}
+  {{- if and (eq $ingressType "gateway-api") $isEnvoyProxy }}
+  {{- $envoyKnativeSvc := include "common.names.custom" (list . "envoy-knative") }}
+  {{- $defaultApplicationEndpoint := printf "http://%s.%s.svc.%s" $envoyKnativeSvc .Release.Namespace (include "common.domain.cluster" .) }}
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $defaultApplicationEndpoint | quote }}
+  {{- else }}
   STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: "auto"
+  {{- end }}
   {{- end }}
   {{- end }}
 

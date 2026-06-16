@@ -5,6 +5,8 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" . | fromYaml }}
 {{- $gatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $service) | fromYaml }}
+{{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
+{{- $gatewayAPI := eq $ingressType "gateway-api" }}
 {{- if and $gatewayConfig.enabled (not .Values.global.chartContext.isBuiltIn) }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
@@ -25,7 +27,7 @@ spec:
     parametersRef:
       group: gateway.envoyproxy.io
       kind: EnvoyProxy
-      name: {{ include "common.names.custom" (list . "envoy-proxy-custom") }}
+      name: {{ include "common.names.custom" (list . "envoy-proxy") }}
   {{- end }}
   listeners:
     - name: http
@@ -47,4 +49,36 @@ spec:
         namespaces:
           from: Same
     {{- end }}
+{{- end }}
+{{- if and $gatewayAPI $gatewayConfig.enabled }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: knative
+  namespace: {{ .Release.Namespace }}
+spec:
+  gatewayClassName: csghub-gateway
+  {{- if regexMatch "envoyproxy" .Values.global.gateway.controllerName }}
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: {{ include "common.names.custom" (list . "envoy-proxy-knative") }}
+  {{- end }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - {{ .Release.Namespace }}
+                  - {{ .Values.namespace | default "spaces" }}
+                  - {{ include "namespace.knative" . }}
 {{- end }}
