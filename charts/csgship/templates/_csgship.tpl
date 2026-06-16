@@ -84,10 +84,10 @@ Usage:
     - /bin/sh
     - -c
     - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName $serverPort }}";
+      until nc -z {{ $serviceName }} {{ $serverPort }};
       do
-        echo 'Waiting for CSGShip Web to be ready...';
+        echo 'Waiting for CSGShip Web port to be open...';
         sleep 5;
       done
-      echo 'CSGShip Web is ready!'
+      echo 'CSGShip Web port is open!'
 {{- end }}
