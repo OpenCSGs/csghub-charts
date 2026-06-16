@@ -22,6 +22,14 @@
                 "domain": {
                   "type": "string",
                   "description": "Base external domain for Gateway routes"
+                },
+                "public": {
+                  "type": "string",
+                  "description": "Optional public access domain override"
+                },
+                "useTop": {
+                  "type": "boolean",
+                  "description": "Use the top-level domain directly"
                 }
               }
             },
@@ -33,6 +41,15 @@
                   "type": "string",
                   "enum": ["LoadBalancer", "NodePort"],
                   "description": "Service type for Gateway"
+                },
+                "nodePorts": {
+                  "type": "object",
+                  "description": "NodePort mapping (required when type is NodePort)",
+                  "properties": {
+                    "http": { "type": "integer", "description": "NodePort for HTTP" },
+                    "https": { "type": "integer", "description": "NodePort for HTTPS" },
+                    "gitssh": { "type": "integer", "description": "NodePort for Git SSH" }
+                  }
                 }
               }
             },
@@ -51,6 +68,7 @@
           "description": "Global image configuration",
           "properties": {
             "registry": { "type": "string" },
+            "registryPolicy": { "type": "string", "description": "Registry policy: default or force" },
             "tag": { "type": "string" },
             "pullPolicy": { "type": "string" },
             "pullSecrets": { "type": "array", "items": { "type": "string" } }
@@ -89,6 +107,20 @@
         "pullSecrets": { "type": "array", "items": { "type": "string" } }
       }
     },
+    "gateway": {
+      "type": "object",
+      "description": "Gateway API enablement",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Enable or disable Gateway API" },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "secretName": { "type": "string" }
+          }
+        }
+      }
+    },
     "hubAPIToken": { "type": "string", "description": "API token for authenticating with CSGHub API" },
     "originClusterID": { "type": "string", "description": "Unique identifier for the origin cluster" },
     "logging": {
@@ -106,13 +138,21 @@
         "protocol": { "type": "string" }
       }
     },
-    "region": { "type": "string" },
-    "interval": { "type": "integer" },
-    "namespace": { "type": "string" },
-    "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"] },
-    "usePublicDomain": { "type": "boolean" },
-    "pipIndexUrl": { "type": "string" },
-    "extraBuildArgs": { "type": "array", "items": { "type": "string" } },
+    "region": { "type": "string", "description": "Region the runner belongs to" },
+    "interval": { "type": "integer", "description": "Communication interval with server (seconds)" },
+    "namespace": { "type": "string", "description": "Namespace for user-deployed workloads" },
+    "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"], "description": "Namespace merging strategy" },
+    "usePublicDomain": { "type": "boolean", "description": "Use public domain for application access" },
+    "pipIndexUrl": { "type": "string", "description": "Custom pip repository URL" },
+    "extraBuildArgs": { "type": "array", "items": { "type": "string" }, "description": "Extra Kaniko build arguments" },
+    "model": {
+      "type": "object",
+      "description": "Model image configuration",
+      "properties": {
+        "deployTimeout": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Timeout for model deployment operations (seconds)" },
+        "registry": { "type": "string", "description": "Custom image registry for model images" }
+      }
+    },
     "gpuModelLabel": {
       "type": "object",
       "properties": {
@@ -120,16 +160,31 @@
         "capacityLabel": { "type": "string" }
       }
     },
-    "applicationEndpoint": { "type": "string" },
+    "applicationEndpoint": { "type": "string", "description": "Knative endpoint override (auto-detected if empty)" },
+    "networkInterface": { "type": "string", "description": "Host network interface for distributed inference" },
+    "storageClassName": { "type": "string", "description": "StorageClass for space persistent volumes" },
     "knative": {
       "type": "object",
       "properties": {
         "serving": {
           "type": "object",
           "properties": {
-            "domain": { "type": "string" },
+            "domain": { "type": "string", "description": "Domain suffix for Knative services" },
+            "ingress": {
+              "type": "string",
+              "enum": ["kourier", "gateway-api"],
+              "description": "Knative ingress provider"
+            },
+            "autoscaler": {
+              "type": "object",
+              "properties": {
+                "enableScaleToZero": { "type": "boolean", "description": "Enable scaling to zero" },
+                "scaleToZeroPodRetentionPeriod": { "type": "string", "description": "Pod retention period after scale to zero" }
+              }
+            },
             "services": {
               "type": "array",
+              "description": "Deprecated: for backward compatibility",
               "items": {
                 "type": "object",
                 "properties": {
@@ -168,8 +223,7 @@
         "username": { "type": "string", "description": "Registry username" },
         "password": { "type": "string", "description": "Registry password" },
         "insecure": { "type": "string", "description": "Disable TLS/SSL encryption" }
-      },
-      "additionalProperties": false
+      }
     },
     "objectStore": {
       "type": "object",
@@ -183,36 +237,18 @@
         "secure": { "type": "string", "description": "Use secure TLS certificates" },
         "encrypt": { "type": "string", "description": "Enable TLS encryption" },
         "pathStyle": { "type": "string", "description": "Use path-style addressing" }
-      },
-      "additionalProperties": false
+      }
     },
     "podAnnotations": { "type": "object", "additionalProperties": { "type": "string" } },
     "podLabels": { "type": "object", "additionalProperties": { "type": "string" } },
     "podSecurityContext": { "type": "object" },
     "securityContext": { "type": "object" },
-    "environments": { "type": "object" },
-    "annotations": { "type": "object" },
+    "environments": { "type": "object", "additionalProperties": { "type": "string" } },
+    "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
     "resourceQuota": { "type": "object", "properties": { "enabled": { "type": "boolean" } } },
     "resources": { "type": "object" },
-    "nodeSelector": { "type": "object" },
+    "nodeSelector": { "type": "object", "additionalProperties": { "type": "string" } },
     "tolerations": { "type": "array", "items": { "type": "object" } },
-    "affinity": { "type": "object" },
-    "gateway": {
-      "type": "object",
-      "description": "Gateway API enablement",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable or disable Gateway API"
-        },
-        "tls": {
-          "type": "object",
-          "properties": {
-            "enabled": { "type": "boolean" },
-            "secretName": { "type": "string" }
-          }
-        }
-      }
-    }
+    "affinity": { "type": "object" }
   }
 }
