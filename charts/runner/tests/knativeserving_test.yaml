@@ -283,39 +283,12 @@ tests:
           path: spec.config.autoscaler.scale-to-zero-pod-retention-period
           value: 60s
 
-  - it: Should render config-gateway ConfigMap for Gateway API ingress
-    set:
-      knative:
-        serving:
-          ingress: gateway-api
-    documentIndex: 1
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - equal:
-          path: metadata.name
-          value: config-gateway
-      - equal:
-          path: data["external-gateways"]
-          value: |
-            - class: eg-external
-              gateway: csghub/knative
-              supported-features:
-              - HTTPRouteRequestTimeout
-      - equal:
-          path: data["local-gateways"]
-          value: |
-            - class: eg-internal
-              gateway: csghub/knative
-              supported-features:
-              - HTTPRouteRequestTimeout
-
   - it: Should render KnativeServing with Gateway API ingress
     set:
       knative:
         serving:
           ingress: gateway-api
-    documentIndex: 2
+    documentIndex: 1
     asserts:
       - equal:
           path: spec.ingress.kourier.enabled

@@ -6,6 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $gateway := .Values.global.gateway }}
 {{- $isEnvoyProxy := regexMatch "envoyproxy" $gateway.controllerName }}
 {{- $isOpencsg := regexMatch "^opencsg-registry" .Values.global.image.registry }}
+{{- $service := include "common.service" . | fromYaml }}
 
 {{- if and $isEnvoyProxy (not .Values.global.chartContext.isBuiltIn) }}
 {{- $serviceName := include "common.names.custom" (list . "envoy-proxy") }}
@@ -53,8 +54,9 @@ spec:
       {{- end }}
 {{- end }}
 
-{{- /* EnvoyProxy for knative gateways (always created; ClusterIP in builtIn, follows global gateway type in standalone) */}}
-{{- if $isEnvoyProxy }}
+{{- /* EnvoyProxy for knative gateways (only in gateway-api mode; ClusterIP in builtIn, follows global gateway type in standalone) */}}
+{{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
+{{- if and $isEnvoyProxy (eq $ingressType "gateway-api") }}
 {{- $knativeName := include "common.names.custom" (list . "envoy-proxy-knative") }}
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
