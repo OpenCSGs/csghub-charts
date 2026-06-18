@@ -99,7 +99,7 @@ metadata:
 rules:
   - apiGroups: ["", "metrics.k8s.io"]
     resources: ["nodes", "pods"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "update", "patch"]
   - apiGroups: [""]
     resources: ["services"]
     resourceNames: ["kourier"]
