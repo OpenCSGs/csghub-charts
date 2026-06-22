@@ -115,20 +115,38 @@ interval: 60                           # Communication interval with server (sec
 namespace: "spaces"                    # Namespace for user-deployed workloads
 mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
-## Networking configuration
-usePublicDomain: true                  # Use public domain for application access
-
-## Package and image management
-pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
-extraBuildArgs: []                     # Extra Kaniko build arguments
 model:                                 # Model image configuration
   deployTimeout: "60"                  # Timeout (in seconds) for model deployment operations
   registry: ""                         # Custom image registry for model-related images (empty uses global registry)
 
-## GPU resource configuration
-gpuModelLabel:
-  typeLabel: "nvidia.com/gpu.product"  # GPU type label
-  capacityLabel: "nvidia.com/gpu"      # GPU capacity label
+space:
+  ## Networking configuration
+  usePublicDomain: true                  # Use public domain for application access
+
+  ## Custom PyPI index URL for space builds (e.g., internal mirror for faster pip installs)
+  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+
+  ## Timeout (in minutes) for space deployment operations
+  deployTimeoutInMin: "30"
+
+  ## Timeout (in minutes) for space image build operations
+  buildTimeoutInMin: "30"
+
+  ## GPU resource configuration
+  gpuModelLabel:
+    typeLabel: "nvidia.com/gpu.product"  # Kubernetes node label for GPU product type
+    capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
+
+  ## Package and image management
+  extraBuildArgs: []                     # Extra Kaniko build arguments
+
+  ## Kubernetes readiness probe configuration for space pods (in seconds)
+  readinessDelaySeconds: "120"         # Initial delay before readiness probe starts
+  readinessPeriodSeconds: "10"         # Interval between readiness probe checks
+  readinessFailureThreshold: "3"       # Consecutive failures before pod is marked unready
+
+  ## Interval (in seconds) for checking space deployment status
+  statusCheckInterval: "10"
 
 ## Knative networking configuration
 ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
