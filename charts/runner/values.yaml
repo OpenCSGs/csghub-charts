@@ -107,13 +107,33 @@ service:
   port: 8082                               # Service port
   protocol: "TCP"                          # Network protocol
 
-## Runner operation and communication
-region: "region-0"                     # Region the runner belongs to
-interval: 60                           # Communication interval with server (seconds)
+runner:
+  ## Runner operation and communication
+  region: "region-0"                     # Region the runner belongs to
+  interval: 60                           # Communication interval with server (seconds)
 
-## Namespace management
-namespace: "spaces"                    # Namespace for user-deployed workloads
-mergingNamespace: "disable"            # Namespace merging: multi, single, disable
+  ## Namespace management
+  namespace: "spaces"                    # Namespace for user-deployed workloads
+  mergingNamespace: "disable"            # Namespace merging: multi, single, disable
+
+  imageBuilderGitImage: ""
+  imageBuilderKanikoImage: ""
+  imageBuilderStatusTTL: "300"
+  imageBuilderKanikoArgs: []  # extraBuildArgs: []
+
+  hearBeatIntervalInSec: "120"
+
+  ## Knative networking configuration
+  ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
+  # applicationEndpoint: ""
+
+  ## Host network interface name used for intern communication during distributed (LWS) inference
+  ## e.g. eth0
+  # networkInterface: ""
+
+  ## Kubernetes StorageClass name for persistent volume provisioning for space
+  # Example values: "local-path", "gp2"
+  # storageClassName: ""
 
 model:                                 # Model image configuration
   deployTimeoutInMin: "60"                  # Timeout (in seconds) for model deployment operations
@@ -139,9 +159,6 @@ space:
     typeLabel: "nvidia.com/gpu.product"  # Kubernetes node label for GPU product type
     capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
 
-  ## Package and image management
-  extraBuildArgs: []                     # Extra Kaniko build arguments
-
   ## Kubernetes readiness probe configuration for space pods (in seconds)
   readinessDelaySeconds: "120"         # Initial delay before readiness probe starts
   readinessPeriodSeconds: "10"         # Interval between readiness probe checks
@@ -149,18 +166,6 @@ space:
 
   ## Interval (in seconds) for checking space deployment status
   statusCheckInterval: "10"
-
-## Knative networking configuration
-## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
-# applicationEndpoint: ""
-
-## Host network interface name used for intern communication during distributed (LWS) inference
-## e.g. eth0
-# networkInterface: ""
-
-## Kubernetes StorageClass name for persistent volume provisioning for space
-# Example values: "local-path", "gp2"
-# storageClassName: ""
 
 ## Knative Serving configuration
 knative:

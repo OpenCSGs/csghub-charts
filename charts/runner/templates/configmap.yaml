@@ -54,8 +54,8 @@ data:
   ## Runner Configuration for Space
   STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE: {{ include "namespace.spaces" . | quote }}
   STARHUB_SERVER_CLUSTER_RUNNER_NAMESPACE: {{ .Release.Namespace | quote }}
-  STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_INTERVAL_IN_SEC: {{ $service.interval | default 60 | quote }}
-  STARHUB_SERVER_CLUSTER_REGION: {{ $service.region | default "region-0" | quote }}
+  STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_INTERVAL_IN_SEC: {{ $service.runner.interval | default 60 | quote }}
+  STARHUB_SERVER_CLUSTER_REGION: {{ $service.runner.region | default "region-0" | quote }}
 
   ## Runner Configuration for Root Domain
   {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
@@ -76,10 +76,14 @@ data:
   ## Runner Configuration for PyPI Source
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $service.space.pipIndexUrl | quote }}
   ## Runner Configuration for ImageBuilder
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/git:2.52.0"
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/kaniko-executor:v1.24.0"
+  {{- $defaultReg := or .Values.global.image.registry "docker.io" }}
+  {{- $gitImage := $service.runner.imageBuilderGitImage | default (printf "%s/opencsghq/git:2.52.0" $defaultReg) }}
+  {{- $kanikoImage := $service.runner.imageBuilderKanikoImage | default (printf "%s/opencsghq/kaniko-executor:v1.24.0" $defaultReg) }}
+  {{- $statusTTL := $service.runner.imageBuilderStatusTTL | default "300" }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: {{ $gitImage | quote }}
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: {{ $kanikoImage | quote }}
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL: "300"
-  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: "300"
+  STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: {{ $statusTTL | quote }}
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: {{ include "runner.kaniko.args" (dict "ctx" . "service" $service) | quote }}
 
   ## Runner Configuration for Argo
@@ -105,6 +109,8 @@ data:
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
   STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL: {{ $service.model.deployStatusCheckInterval | default 10 | quote }}
   STARHUB_SERVER_CLUSTER_ID: {{ $service.originClusterID | quote }}
+  ## Runner Configuration for HeartBeat
+  STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC: {{ $service.runner.hearBeatIntervalInSec | default 120 | quote }}
 
   ## Runner Configuration for S3
   {{- $s3Config := $service.objectStore }}
@@ -137,8 +143,8 @@ data:
   {{- end }}
 
   ## Runner Configuration for network
-  {{- if $service.applicationEndpoint }}
-  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.applicationEndpoint | quote }}
+  {{- if $service.runner.applicationEndpoint }}
+  STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT: {{ $service.runner.applicationEndpoint | quote }}
   {{- else }}
   {{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
   {{- if eq $ingressType "kourier" }}
@@ -157,10 +163,10 @@ data:
   {{- end }}
 
   ## Runner Configuration for LWS
-  STARHUB_SERVER_RUNNER_NETWORK_INTERFACE: {{ $service.networkInterface | quote }}
+  STARHUB_SERVER_RUNNER_NETWORK_INTERFACE: {{ $service.runner.networkInterface | quote }}
 
   ## Runner Configuration for Spaces
-  STARHUB_SERVER_RUNNER_STORAGE_CLASS: {{ $service.storageClassName | quote }}
+  STARHUB_SERVER_RUNNER_STORAGE_CLASS: {{ $service.runner.storageClassName | quote }}
 
   {{- if .Values.volcano.enabled }}
   ## Runner Configuration for Volcano
