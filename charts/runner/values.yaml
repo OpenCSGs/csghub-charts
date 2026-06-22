@@ -116,8 +116,10 @@ namespace: "spaces"                    # Namespace for user-deployed workloads
 mergingNamespace: "disable"            # Namespace merging: multi, single, disable
 
 model:                                 # Model image configuration
-  deployTimeout: "60"                  # Timeout (in seconds) for model deployment operations
-  registry: ""                         # Custom image registry for model-related images (empty uses global registry)
+  deployTimeoutInMin: "60"                  # Timeout (in seconds) for model deployment operations
+  downloadEndpoint: "https://hub.opencsg.com"
+  dockerRegBase: ""                         # Custom image registry for model-related images (empty uses global registry)
+  deployStatusCheckInterval: "10"
 
 space:
   ## Networking configuration
