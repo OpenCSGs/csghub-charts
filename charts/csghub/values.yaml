@@ -432,44 +432,47 @@ runner:
     enabled: false                       # Enable or disable volcano scheduler
 
   ## Runner operation and communication
-  region: "region-0"                     # Region the runner belongs to
-  interval: 60                           # Communication interval with server (seconds)
+  runner:
+    region: "region-0"                   # Region the runner belongs to
+    interval: 60                         # Communication interval with server (seconds)
 
-  ## Namespace management
-  namespace: "spaces"                    # Namespace for user-deployed workloads
-  mergingNamespace: "disable"            # Namespace merging: multi, single, disable
+    ## Namespace management
+    namespace: "spaces"                  # Namespace for user-deployed workloads
+    mergingNamespace: "disable"          # Namespace merging: multi, single, disable
 
-  ## Networking configuration
-  usePublicDomain: true                  # Use public domain for application access
+    # applicationEndpoint: ""            # Knative endpoint override (auto-detected if empty)
+    # networkInterface: ""               # Host network interface for distributed inference
+    # storageClassName: ""               # StorageClass for space persistent volumes
 
-  ## Package and image management
-  pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
-  extraBuildArgs: []                     # Extra Kaniko build arguments
-  model:                                 # Model image configuration
-    deployTimeout: "60"                  # Timeout (in seconds) for model deployment operations
-    registry: ""                         # Custom image registry for model-related images (empty uses global registry)
+  ## Model deploy configuration
+  model:
+    deployTimeoutInMin: "60"             # Timeout (in minutes) for model deployment operations
+    # downloadEndpoint: ""               # Model download endpoint URL
+    # dockerRegBase: ""                  # Custom image registry for model images
+    # deployStatusCheckInterval: "10"    # Interval for checking model deploy status (seconds)
 
-  ## GPU resource configuration
-  gpuModelLabel:
-    typeLabel: "nvidia.com/gpu.product"  # GPU type label
-    capacityLabel: "nvidia.com/gpu"      # GPU capacity label
+  ## Space deploy configuration
+  space:
+    usePublicDomain: true                # Use public domain for application access
+    pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
 
-  ## Knative networking configuration
-  ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
-  # applicationEndpoint: ""
+    # deployTimeoutInMin: "30"           # Timeout (in minutes) for space deployment operations
+    # buildTimeoutInMin: "30"            # Timeout (in minutes) for space build operations
 
-  ## Host network interface name used for inter-node communication during distributed (LWS) inference
-  ## e.g. eth0
-  # networkInterface: ""
+    ## GPU resource configuration
+    gpuModelLabel:
+      typeLabel: "nvidia.com/gpu.product"  # GPU type label
+      capacityLabel: "nvidia.com/gpu"      # GPU capacity label
 
-  ## Kubernetes StorageClass name for persistent volume provisioning for space
-  # Example values: "local-path", "gp2"
-  # storageClassName: ""
+    # readinessDelaySeconds: "120"       # Initial delay before readiness probe starts
+    # readinessPeriodSeconds: "10"       # Interval between readiness probe checks
+    # readinessFailureThreshold: "3"     # Consecutive failures before pod is marked unready
+    # statusCheckInterval: "10"          # Interval for checking space deployment status (seconds)
 
   ## Knative Serving configuration
   knative:
     serving:
-      domain: "example.com"               # Domain suffix for Knative services
+      domain: "example.com"              # Domain suffix for Knative services
 
       ## Ingress provider: "kourier" or "gateway-api"
       # ingress: "gateway-api"

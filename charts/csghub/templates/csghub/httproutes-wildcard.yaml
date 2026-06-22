@@ -6,7 +6,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" (dict "ctx" . "service" "rproxy") | fromYaml }}
 {{- $runnerSvc := include "common.service" (dict "ctx" . "service" "runner") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- if $runnerSvc.usePublicDomain }}
+{{- if $runnerSvc.space.usePublicDomain }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
