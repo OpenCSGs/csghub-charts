@@ -181,17 +181,45 @@
       "type": "object",
       "properties": {
         "enabled": {"type": "boolean"},
-        "region": {"type": "string"},
-        "interval": {"type": "integer"},
-        "namespace": {"type": "string"},
-        "mergingNamespace": {"type": "string"},
-        "usePublicDomain": {"type": "boolean"},
-        "pipIndexUrl": {"type": "string"},
-        "extraBuildArgs": {"type": "array", "items": {"type": "string"}},
-        "model": {"type": "object", "additionalProperties": true},
-        "gpuModelLabel": {"type": "object", "additionalProperties": true},
-        "applicationEndpoint": {"type": "string"},
-        "networkInterface": {"type": "string"},
+        "volcano": {"type": "object", "additionalProperties": true},
+        "runner": {
+          "type": "object",
+          "properties": {
+            "region": {"type": "string"},
+            "interval": {"type": "integer"},
+            "namespace": {"type": "string"},
+            "mergingNamespace": {"type": "string"},
+            "applicationEndpoint": {"type": "string"},
+            "networkInterface": {"type": "string"},
+            "storageClassName": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "deployTimeoutInMin": {"type": "string"},
+            "downloadEndpoint": {"type": "string"},
+            "dockerRegBase": {"type": "string"},
+            "deployStatusCheckInterval": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
+        "space": {
+          "type": "object",
+          "properties": {
+            "usePublicDomain": {"type": "boolean"},
+            "pipIndexUrl": {"type": "string"},
+            "deployTimeoutInMin": {"type": "string"},
+            "buildTimeoutInMin": {"type": "string"},
+            "gpuModelLabel": {"type": "object", "additionalProperties": true},
+            "readinessDelaySeconds": {"type": "string"},
+            "readinessPeriodSeconds": {"type": "string"},
+            "readinessFailureThreshold": {"type": "string"},
+            "statusCheckInterval": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
         "knative": {"type": "object", "additionalProperties": true},
         "logcollector": {"type": "object", "additionalProperties": true},
         "gateway": {"type": "object", "additionalProperties": true},

@@ -239,11 +239,12 @@ data:
 
   ## Server Configuration for Model
   {{- $runnerSvc := include "common.service" (dict "ctx" . "service" "runner") | fromYaml }}
-  STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.model.deployTimeout | default 60 | quote }}
+  STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.model.deployTimeoutInMin | default 60 | quote }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   ## Server Configuration for Model
-  {{- $registry := or $runnerSvc.model.registry .Values.global.image.registry "docker.io" }}
+  {{- $registry := or $runnerSvc.model.dockerRegBase .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
+  STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL: {{ $runnerSvc.model.deployStatusCheckInterval | default 10 | quote }}
   STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES: {{ $serverSvc.space.buildTimeout | default 30 | quote }}
 
   ## Server Configuration for Multiple-Sync
@@ -293,15 +294,13 @@ data:
   {{- $rproxyPort := dig "service" "port" 8083 $rproxySvc }}
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%v" (include "namespace.spaces" .) $rproxyPort | quote }}
   {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
-  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.usePublicDomain | quote }}
-  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.pipIndexUrl | quote }}
-  {{- if $runnerSvc.volcano.enabled }}
-  STARHUB_SERVER_RUNNER_KUBE_SCHEDULER: "volcano"
-  STARHUB_SERVER_RUNNER_VGPU_NODE_RESOURCE_NAME: "volcano.sh/node-vgpu-register"
-  STARHUB_SERVER_RUNNER_VGPU_POD_RESOURCE_NAME: "volcano.sh/vgpu-ids-new"
-  STARHUB_SERVER_RUNNER_VGPU_RESOURCE_REQ_KEY: "volcano.sh/vgpu-number"
-  STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY: "volcano.sh/vgpu-memory"
-  {{- end }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.space.usePublicDomain | quote }}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.space.pipIndexUrl | quote }}
+  STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.space.deployTimeoutInMin | default 30 | quote }}
+  STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL: {{ $runnerSvc.space.statusCheckInterval | default 10 | quote }}
+  {{- $typeLabel := $runnerSvc.space.gpuModelLabel.typeLabel }}
+  {{- $capacityLabel := $runnerSvc.space.gpuModelLabel.capacityLabel }}
+  STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
   {{- $sessionToken := dig "STARHUB_SERVER_SPACE_SESSION_SECRET_KEY" (randNumeric 8 | sha1sum) $data }}
   STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ $sessionToken | quote }}
 

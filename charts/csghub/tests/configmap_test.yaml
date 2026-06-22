@@ -32,18 +32,24 @@ set:
       port: "8070"
   runner:
     name: "runner-svc"
-    namespace: "spaces"
-    interval: 30
-    region: "cn-north-1"
-    usePublicDomain: true
+    runner:
+      namespace: "spaces"
+      interval: 30
+      region: "cn-north-1"
     model:
-      deployTimeout: "120"
-      registry: "model.io"
+      deployTimeoutInMin: "120"
+      dockerRegBase: "model.io"
+      deployStatusCheckInterval: "10"
+    space:
+      usePublicDomain: true
+      pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+      deployTimeoutInMin: "30"
+      statusCheckInterval: "10"
+      gpuModelLabel:
+        typeLabel: "nvidia.com/gpu.product"
+        capacityLabel: "nvidia.com/gpu"
     service:
       port: 8072
-    gpuModelLabel:
-      typeLabel: "nvidia.com/gpu.product"
-      capacityLabel: "nvidia.com/gpu"
   accounting:
     name: "accounting-svc"
   user:
@@ -123,6 +129,21 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
           value: "model.io"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_PYPI_INDEX_URL
+          value: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_GPU_MODEL_LABEL
+          value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
       - matchRegex:
           path: data.STARHUB_DATABASE_DSN
           pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_server_svc\\?sslmode=disable"
@@ -460,7 +481,8 @@ tests:
             secure: "false"
             pathStyle: "false"
       runner:
-        usePublicDomain: false
+        space:
+          usePublicDomain: false
     asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN

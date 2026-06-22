@@ -148,7 +148,7 @@ spec:
     {{- $runnerSvc := include "common.service" (dict "ctx" . "service" "runner") | fromYaml }}
     {{- $rproxySvc := include "common.service" (dict "ctx" . "service" "rproxy") | fromYaml }}
     {{- $rproxySvcName := include "common.names.custom" (list . $rproxySvc.name) }}
-    {{- if not $runnerSvc.usePublicDomain }}
+    {{- if not $runnerSvc.space.usePublicDomain }}
     - matches:
         - path:
             type: PathPrefix
