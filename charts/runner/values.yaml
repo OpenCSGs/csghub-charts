@@ -107,21 +107,22 @@ service:
   port: 8082                               # Service port
   protocol: "TCP"                          # Network protocol
 
+## Runner configuration
 runner:
   ## Runner operation and communication
-  region: "region-0"                     # Region the runner belongs to
-  interval: 60                           # Communication interval with server (seconds)
+  region: "region-0"                       # Region the runner belongs to
 
   ## Namespace management
-  namespace: "spaces"                    # Namespace for user-deployed workloads
-  mergingNamespace: "disable"            # Namespace merging: multi, single, disable
+  # namespace: "spaces"                      # Namespace for user-deployed workloads
+  mergingNamespace: "disable"              # Namespace merging: multi, single, disable
 
-  imageBuilderGitImage: ""
-  imageBuilderKanikoImage: ""
-  imageBuilderStatusTTL: "300"
-  imageBuilderKanikoArgs: []  # extraBuildArgs: []
+  # Image builder management
+  # imageBuilderGitImage: ""               # Override image builder Git image
+  # imageBuilderKanikoImage: ""            # Override image builder Kaniko image
+  # imageBuilderStatusTTL: "300"           # TTL for kaniko build pod status
+  # imageBuilderKanikoArgs: []             # Extra Kaniko build arguments
 
-  hearBeatIntervalInSec: "120"
+  # hearBeatIntervalInSec: "120"           # Runner heartbeat interval (seconds)
 
   ## Knative networking configuration
   ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
@@ -132,27 +133,29 @@ runner:
   # networkInterface: ""
 
   ## Kubernetes StorageClass name for persistent volume provisioning for space
-  # Example values: "local-path", "gp2"
+  ## Example values: "local-path", "gp2"
   # storageClassName: ""
 
-model:                                 # Model image configuration
-  deployTimeoutInMin: "60"                  # Timeout (in seconds) for model deployment operations
-  downloadEndpoint: "https://hub.opencsg.com"
-  dockerRegBase: ""                         # Custom image registry for model-related images (empty uses global registry)
-  deployStatusCheckInterval: "10"
+## Model deploy configuration
+model:
+  deployTimeoutInMin: "60"                  # Timeout (in minutes) for model deployment operations
+  # downloadEndpoint: "https://hub.opencsg.com"
+  # dockerRegBase: ""                       # Custom image registry for model-related images (empty uses global registry)
+  # deployStatusCheckInterval: "10"
 
+## Space deploy configuration
 space:
   ## Networking configuration
-  usePublicDomain: true                  # Use public domain for application access
+  usePublicDomain: true                        # Use public domain for application access
 
   ## Custom PyPI index URL for space builds (e.g., internal mirror for faster pip installs)
   pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
 
   ## Timeout (in minutes) for space deployment operations
-  deployTimeoutInMin: "30"
+  # deployTimeoutInMin: "30"
 
   ## Timeout (in minutes) for space image build operations
-  buildTimeoutInMin: "30"
+  # buildTimeoutInMin: "30"
 
   ## GPU resource configuration
   gpuModelLabel:
@@ -160,12 +163,12 @@ space:
     capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
 
   ## Kubernetes readiness probe configuration for space pods (in seconds)
-  readinessDelaySeconds: "120"         # Initial delay before readiness probe starts
-  readinessPeriodSeconds: "10"         # Interval between readiness probe checks
-  readinessFailureThreshold: "3"       # Consecutive failures before pod is marked unready
+  # readinessDelaySeconds: "120"              # Initial delay before readiness probe starts
+  # readinessPeriodSeconds: "10"              # Interval between readiness probe checks
+  # readinessFailureThreshold: "3"            # Consecutive failures before pod is marked unready
 
   ## Interval (in seconds) for checking space deployment status
-  statusCheckInterval: "10"
+  # statusCheckInterval: "10"
 
 ## Knative Serving configuration
 knative:
