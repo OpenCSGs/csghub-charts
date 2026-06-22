@@ -73,19 +73,23 @@ set:
   namespace: spaces
   mergingNamespace: disable
 
-  usePublicDomain: true
-
-  pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
-
-  extraBuildArgs: []
-
   model:
     deployTimeout: 30
     registry: model.unittest.io
 
-  gpuModelLabel:
-    typeLabel: nvidia.com/gpu.product
-    capacityLabel: nvidia.com/gpu
+  space:
+    usePublicDomain: true
+    pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
+    deployTimeoutInMin: "30"
+    buildTimeoutInMin: "30"
+    gpuModelLabel:
+      typeLabel: nvidia.com/gpu.product
+      capacityLabel: nvidia.com/gpu
+    extraBuildArgs: []
+    readinessDelaySeconds: "120"
+    readinessPeriodSeconds: "10"
+    readinessFailureThreshold: "3"
+    statusCheckInterval: "10"
 
   applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
 

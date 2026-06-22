@@ -53,8 +53,8 @@ Returns:
   {{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" }}
   {{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" $kanikoCache) }}
 
-  {{- if $service.pipIndexUrl }}
-    {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.pipIndexUrl)) }}
+  {{- if $service.space.pipIndexUrl }}
+    {{- $args = concat $args (list (printf "--build-arg=PyPI=%s" $service.space.pipIndexUrl)) }}
   {{- end }}
 
   {{- $csghubEndpoint := $service.externalUrl }}
@@ -78,7 +78,7 @@ Returns:
     ) }}
   {{- end }}
 
-  {{- range $service.extraBuildArgs }}
+  {{- range $service.space.extraBuildArgs }}
     {{- $args = concat $args (list .) }}
   {{- end }}
 

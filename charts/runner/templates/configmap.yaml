@@ -59,7 +59,7 @@ data:
 
   ## Runner Configuration for Root Domain
   {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
-  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $service.usePublicDomain | quote }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $service.space.usePublicDomain | quote }}
   #### Maybe not used, Domain app.internal is only a Placeholder
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal" (include "namespace.spaces" .) | quote }}
 
@@ -74,7 +74,7 @@ data:
   ## Runner Configuration for space-runtime
   STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE: {{ or .Values.global.image.registry "docker.io" | quote }}
   ## Runner Configuration for PyPI Source
-  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $service.pipIndexUrl | quote }}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $service.space.pipIndexUrl | quote }}
   ## Runner Configuration for ImageBuilder
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/git:2.52.0"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE: "{{ or .Values.global.image.registry "docker.io" }}/opencsghq/kaniko-executor:v1.24.0"
@@ -84,10 +84,18 @@ data:
 
   ## Runner Configuration for Argo
   STARHUB_SERVER_ARGO_SERVICE_ACCOUNT: {{ printf "%s-argo-workflow-executor" .Release.Name | quote }}
-  {{- $typeLabel := $service.gpuModelLabel.typeLabel }}
-  {{- $capacityLabel := $service.gpuModelLabel.capacityLabel }}
+  {{- $typeLabel := $service.space.gpuModelLabel.typeLabel }}
+  {{- $capacityLabel := $service.space.gpuModelLabel.capacityLabel }}
   STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
   STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.model.deployTimeout | default 60 | quote }}
+  ## Runner Configuration for Space Timeouts
+  STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.space.deployTimeoutInMin | default 30 | quote }}
+  STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES: {{ $service.space.buildTimeoutInMin | default 30 | quote }}
+  STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL: {{ $service.space.statusCheckInterval | default 10 | quote }}
+  ## Runner Configuration for Space Readiness Probe
+  STARHUB_SERVER_READINESS_DELAY_SECONDS: {{ $service.space.readinessDelaySeconds | default 120 | quote }}
+  STARHUB_SERVER_READINESS_PERIOD_SECONDS: {{ $service.space.readinessPeriodSeconds | default 10 | quote }}
+  STARHUB_SERVER_READINESS_FAILURE_THRESHOLD: {{ $service.space.readinessFailureThreshold | default 3 | quote }}
   {{- if $isBuiltIn }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   {{- else }}
