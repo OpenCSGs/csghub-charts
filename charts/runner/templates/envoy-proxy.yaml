@@ -30,6 +30,7 @@ spec:
       {{- if eq (dig "service" "type" "LoadBalancer" $gateway) "NodePort" }}
       envoyService:
         type: NodePort
+        externalTrafficPolicy: Cluster
         patch:
           type: StrategicMerge
           value:
