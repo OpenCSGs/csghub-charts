@@ -79,6 +79,6 @@ spec:
                 operator: In
                 values:
                   - {{ .Release.Namespace }}
-                  - {{ .Values.runner.namespace | default "spaces" }}
+                  - {{ (.Values.runner | default dict).namespace | default "spaces" }}
                   - {{ include "namespace.knative" . }}
 {{- end }}

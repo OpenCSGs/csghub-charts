@@ -138,31 +138,70 @@
         "protocol": { "type": "string" }
       }
     },
-    "region": { "type": "string", "description": "Region the runner belongs to" },
-    "interval": { "type": "integer", "description": "Communication interval with server (seconds)" },
-    "namespace": { "type": "string", "description": "Namespace for user-deployed workloads" },
-    "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"], "description": "Namespace merging strategy" },
-    "usePublicDomain": { "type": "boolean", "description": "Use public domain for application access" },
-    "pipIndexUrl": { "type": "string", "description": "Custom pip repository URL" },
-    "extraBuildArgs": { "type": "array", "items": { "type": "string" }, "description": "Extra Kaniko build arguments" },
+    "runner": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "description": "Runner operation configuration",
+          "properties": {
+            "region": { "type": "string", "description": "Region the runner belongs to" },
+            "interval": { "type": "integer", "description": "Communication interval with server (seconds)" },
+            "namespace": { "type": "string", "description": "Namespace for user-deployed workloads" },
+            "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"], "description": "Namespace merging strategy" },
+            "imageBuilderGitImage": { "type": "string", "description": "Override image builder Git image" },
+            "imageBuilderKanikoImage": { "type": "string", "description": "Override image builder Kaniko image" },
+            "imageBuilderStatusTTL": { "type": "string", "description": "TTL for kaniko build pod status" },
+            "imageBuilderKanikoArgs": { "type": "array", "items": { "type": "string" }, "description": "Extra Kaniko build arguments" },
+            "hearBeatIntervalInSec": { "type": "string", "description": "Runner heartbeat interval (seconds)" },
+            "applicationEndpoint": { "type": "string", "description": "Knative endpoint override (auto-detected if empty)" },
+            "networkInterface": { "type": "string", "description": "Host network interface for distributed inference" },
+            "storageClassName": { "type": "string", "description": "StorageClass for space persistent volumes" }
+          }
+        }
+      ]
+    },
     "model": {
-      "type": "object",
-      "description": "Model image configuration",
-      "properties": {
-        "deployTimeout": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Timeout for model deployment operations (seconds)" },
-        "registry": { "type": "string", "description": "Custom image registry for model images" }
-      }
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "description": "Model image configuration",
+          "properties": {
+            "deployTimeoutInMin": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Timeout for model deployment operations (minutes)" },
+            "downloadEndpoint": { "type": "string", "description": "Model download endpoint URL" },
+            "dockerRegBase": { "type": "string", "description": "Custom image registry for model images" },
+            "deployStatusCheckInterval": { "type": "string", "description": "Interval for checking model deploy status (seconds)" }
+          }
+        }
+      ]
     },
-    "gpuModelLabel": {
-      "type": "object",
-      "properties": {
-        "typeLabel": { "type": "string" },
-        "capacityLabel": { "type": "string" }
-      }
+    "space": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "description": "Space configuration",
+          "properties": {
+            "usePublicDomain": { "type": "boolean", "description": "Use public domain for application access" },
+            "pipIndexUrl": { "type": "string", "description": "Custom pip repository URL" },
+            "deployTimeoutInMin": { "type": "string", "description": "Timeout for space deployment operations (minutes)" },
+            "buildTimeoutInMin": { "type": "string", "description": "Timeout for space build operations (minutes)" },
+            "gpuModelLabel": {
+              "type": "object",
+              "properties": {
+                "typeLabel": { "type": "string" },
+                "capacityLabel": { "type": "string" }
+              }
+            },
+            "readinessDelaySeconds": { "type": "string", "description": "Initial delay before readiness probe starts" },
+            "readinessPeriodSeconds": { "type": "string", "description": "Interval between readiness probe checks" },
+            "readinessFailureThreshold": { "type": "string", "description": "Consecutive failures before pod is marked unready" },
+            "statusCheckInterval": { "type": "string", "description": "Interval for checking space deployment status (seconds)" }
+          }
+        }
+      ]
     },
-    "applicationEndpoint": { "type": "string", "description": "Knative endpoint override (auto-detected if empty)" },
-    "networkInterface": { "type": "string", "description": "Host network interface for distributed inference" },
-    "storageClassName": { "type": "string", "description": "StorageClass for space persistent volumes" },
     "knative": {
       "type": "object",
       "properties": {
