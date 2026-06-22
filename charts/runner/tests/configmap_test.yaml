@@ -58,7 +58,6 @@ set:
     tls: {}
   hubAPIToken: unittest-api-token-standalone
   originClusterID: unittest-cluster
-  region: es-west-1
 
   ## Runner Definition
   name: runner-unittest
@@ -68,10 +67,19 @@ set:
     port: 8082
     protocol: TCP
 
-  interval: 30
-
-  namespace: spaces
-  mergingNamespace: disable
+  runner:
+    region: es-west-1
+    interval: 30
+    namespace: spaces
+    mergingNamespace: disable
+    imageBuilderGitImage: ""
+    imageBuilderKanikoImage: ""
+    imageBuilderStatusTTL: "300"
+    imageBuilderKanikoArgs: []
+    hearBeatIntervalInSec: "120"
+    applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
+    networkInterface: eth0
+    storageClassName: local-path
 
   model:
     deployTimeoutInMin: "60"
@@ -87,17 +95,10 @@ set:
     gpuModelLabel:
       typeLabel: nvidia.com/gpu.product
       capacityLabel: nvidia.com/gpu
-    extraBuildArgs: []
     readinessDelaySeconds: "120"
     readinessPeriodSeconds: "10"
     readinessFailureThreshold: "3"
     statusCheckInterval: "10"
-
-  applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
-
-  networkInterface: eth0
-
-  storageClassName: local-path
 
   knative:
     serving:
@@ -258,6 +259,18 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_CLUSTER_ID
           value: "unittest-cluster"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC
+          value: "120"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
+          value: "unittest.io/opencsghq/git:2.52.0"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
+          value: "unittest.io/opencsghq/kaniko-executor:v1.24.0"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
+          value: "300"
       - equal:
           path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
           value: "30"

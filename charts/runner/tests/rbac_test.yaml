@@ -8,7 +8,8 @@ release:
 tests:
   - it: should create multiple RBAC with global.namespace <> Release.Namespace
     set:
-      namespace: "spaces"
+      runner:
+        namespace: "spaces"
       rbac.create: true
     asserts:
       - hasDocuments:
@@ -28,7 +29,8 @@ tests:
 
   - it: should create multiple RBAC with global.namespace = Release.Namespace
     set:
-      namespace: "csghub"
+      runner:
+        namespace: "csghub"
       rbac.create: true
     asserts:
       - hasDocuments:

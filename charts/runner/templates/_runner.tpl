@@ -78,7 +78,7 @@ Returns:
     ) }}
   {{- end }}
 
-  {{- range $service.space.extraBuildArgs }}
+  {{- range $service.runner.imageBuilderKanikoArgs }}
     {{- $args = concat $args (list .) }}
   {{- end }}
 
