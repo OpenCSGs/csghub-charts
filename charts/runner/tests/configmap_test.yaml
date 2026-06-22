@@ -74,8 +74,10 @@ set:
   mergingNamespace: disable
 
   model:
-    deployTimeout: 30
-    registry: model.unittest.io
+    deployTimeoutInMin: "60"
+    downloadEndpoint: "https://hub.opencsg.com"
+    dockerRegBase: model.unittest.io
+    deployStatusCheckInterval: "10"
 
   space:
     usePublicDomain: true
@@ -243,13 +245,37 @@ tests:
           value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
       - equal:
           path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
-          value: "30"
+          value: "60"
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
           value: "https://csghub.unittest.io"
       - equal:
           path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
           value: "model.unittest.io"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_CLUSTER_ID
+          value: "unittest-cluster"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_READINESS_DELAY_SECONDS
+          value: "120"
+      - equal:
+          path: data.STARHUB_SERVER_READINESS_PERIOD_SECONDS
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_READINESS_FAILURE_THRESHOLD
+          value: "3"
       - equal:
           path: data.STARHUB_SERVER_CLUSTER_ID
           value: "unittest-cluster"
