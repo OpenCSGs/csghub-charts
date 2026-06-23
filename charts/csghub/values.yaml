@@ -446,28 +446,28 @@ runner:
 
   ## Model deploy configuration
   model:
-    deployTimeoutInMin: "60"             # Timeout (in minutes) for model deployment operations
+    deployTimeoutInMin: 60             # Timeout (in minutes) for model deployment operations
     # downloadEndpoint: ""               # Model download endpoint URL
     # dockerRegBase: ""                  # Custom image registry for model images
-    # deployStatusCheckInterval: "10"    # Interval for checking model deploy status (seconds)
+    # deployStatusCheckInterval: 10    # Interval for checking model deploy status (seconds)
 
   ## Space deploy configuration
   space:
     usePublicDomain: true                # Use public domain for application access
     pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"  # Custom pip repository
 
-    # deployTimeoutInMin: "30"           # Timeout (in minutes) for space deployment operations
-    # buildTimeoutInMin: "30"            # Timeout (in minutes) for space build operations
+    # deployTimeoutInMin: 30           # Timeout (in minutes) for space deployment operations
+    # buildTimeoutInMin: 30            # Timeout (in minutes) for space build operations
 
     ## GPU resource configuration
     gpuModelLabel:
       typeLabel: "nvidia.com/gpu.product"  # GPU type label
       capacityLabel: "nvidia.com/gpu"      # GPU capacity label
 
-    # readinessDelaySeconds: "120"       # Initial delay before readiness probe starts
-    # readinessPeriodSeconds: "10"       # Interval between readiness probe checks
-    # readinessFailureThreshold: "3"     # Consecutive failures before pod is marked unready
-    # statusCheckInterval: "10"          # Interval for checking space deployment status (seconds)
+    # readinessDelaySeconds: 120       # Initial delay before readiness probe starts
+    # readinessPeriodSeconds: 10       # Interval between readiness probe checks
+    # readinessFailureThreshold: 3     # Consecutive failures before pod is marked unready
+    # statusCheckInterval: 10          # Interval for checking space deployment status (seconds)
 
   ## Knative Serving configuration
   knative:

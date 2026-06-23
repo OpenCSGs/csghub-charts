@@ -74,31 +74,31 @@ set:
     mergingNamespace: disable
     imageBuilderGitImage: ""
     imageBuilderKanikoImage: ""
-    imageBuilderStatusTTL: "300"
+    imageBuilderStatusTTL: 300
     imageBuilderKanikoArgs: []
-    hearBeatIntervalInSec: "120"
+    hearBeatIntervalInSec: 120
     applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
     networkInterface: eth0
     storageClassName: local-path
 
   model:
-    deployTimeoutInMin: "60"
+    deployTimeoutInMin: 60
     downloadEndpoint: "https://hub.opencsg.com"
     dockerRegBase: model.unittest.io
-    deployStatusCheckInterval: "10"
+    deployStatusCheckInterval: 10
 
   space:
     usePublicDomain: true
     pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
-    deployTimeoutInMin: "30"
-    buildTimeoutInMin: "30"
+    deployTimeoutInMin: 30
+    buildTimeoutInMin: 30
     gpuModelLabel:
       typeLabel: nvidia.com/gpu.product
       capacityLabel: nvidia.com/gpu
-    readinessDelaySeconds: "120"
-    readinessPeriodSeconds: "10"
-    readinessFailureThreshold: "3"
-    statusCheckInterval: "10"
+    readinessDelaySeconds: 120
+    readinessPeriodSeconds: 10
+    readinessFailureThreshold: 3
+    statusCheckInterval: 10
 
   knative:
     serving:
