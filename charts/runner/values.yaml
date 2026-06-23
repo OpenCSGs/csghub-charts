@@ -119,10 +119,10 @@ runner:
   # Image builder management
   # imageBuilderGitImage: ""               # Override image builder Git image
   # imageBuilderKanikoImage: ""            # Override image builder Kaniko image
-  # imageBuilderStatusTTL: "300"           # TTL for kaniko build pod status
+  # imageBuilderStatusTTL: 300           # TTL for kaniko build pod status
   # imageBuilderKanikoArgs: []             # Extra Kaniko build arguments
 
-  # hearBeatIntervalInSec: "120"           # Runner heartbeat interval (seconds)
+  # hearBeatIntervalInSec: 120           # Runner heartbeat interval (seconds)
 
   ## Knative networking configuration
   ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
@@ -138,10 +138,10 @@ runner:
 
 ## Model deploy configuration
 model:
-  deployTimeoutInMin: "60"                  # Timeout (in minutes) for model deployment operations
+  deployTimeoutInMin: 60                  # Timeout (in minutes) for model deployment operations
   # downloadEndpoint: "https://hub.opencsg.com"
   # dockerRegBase: ""                       # Custom image registry for model-related images (empty uses global registry)
-  # deployStatusCheckInterval: "10"
+  # deployStatusCheckInterval: 10
 
 ## Space deploy configuration
 space:
@@ -152,10 +152,10 @@ space:
   pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
 
   ## Timeout (in minutes) for space deployment operations
-  # deployTimeoutInMin: "30"
+  # deployTimeoutInMin: 30
 
   ## Timeout (in minutes) for space image build operations
-  # buildTimeoutInMin: "30"
+  # buildTimeoutInMin: 30
 
   ## GPU resource configuration
   gpuModelLabel:
@@ -163,12 +163,12 @@ space:
     capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
 
   ## Kubernetes readiness probe configuration for space pods (in seconds)
-  # readinessDelaySeconds: "120"              # Initial delay before readiness probe starts
-  # readinessPeriodSeconds: "10"              # Interval between readiness probe checks
-  # readinessFailureThreshold: "3"            # Consecutive failures before pod is marked unready
+  # readinessDelaySeconds: 120              # Initial delay before readiness probe starts
+  # readinessPeriodSeconds: 10              # Interval between readiness probe checks
+  # readinessFailureThreshold: 3            # Consecutive failures before pod is marked unready
 
   ## Interval (in seconds) for checking space deployment status
-  # statusCheckInterval: "10"
+  # statusCheckInterval: 10
 
 ## Knative Serving configuration
 knative:

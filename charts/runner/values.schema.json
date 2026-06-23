@@ -151,9 +151,9 @@
             "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"], "description": "Namespace merging strategy" },
             "imageBuilderGitImage": { "type": "string", "description": "Override image builder Git image" },
             "imageBuilderKanikoImage": { "type": "string", "description": "Override image builder Kaniko image" },
-            "imageBuilderStatusTTL": { "type": "string", "description": "TTL for kaniko build pod status" },
+            "imageBuilderStatusTTL": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "TTL for kaniko build pod status" },
             "imageBuilderKanikoArgs": { "type": "array", "items": { "type": "string" }, "description": "Extra Kaniko build arguments" },
-            "hearBeatIntervalInSec": { "type": "string", "description": "Runner heartbeat interval (seconds)" },
+            "hearBeatIntervalInSec": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Runner heartbeat interval (seconds)" },
             "applicationEndpoint": { "type": "string", "description": "Knative endpoint override (auto-detected if empty)" },
             "networkInterface": { "type": "string", "description": "Host network interface for distributed inference" },
             "storageClassName": { "type": "string", "description": "StorageClass for space persistent volumes" }
@@ -171,7 +171,7 @@
             "deployTimeoutInMin": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Timeout for model deployment operations (minutes)" },
             "downloadEndpoint": { "type": "string", "description": "Model download endpoint URL" },
             "dockerRegBase": { "type": "string", "description": "Custom image registry for model images" },
-            "deployStatusCheckInterval": { "type": "string", "description": "Interval for checking model deploy status (seconds)" }
+            "deployStatusCheckInterval": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Interval for checking model deploy status (seconds)" }
           }
         }
       ]
@@ -185,8 +185,8 @@
           "properties": {
             "usePublicDomain": { "type": "boolean", "description": "Use public domain for application access" },
             "pipIndexUrl": { "type": "string", "description": "Custom pip repository URL" },
-            "deployTimeoutInMin": { "type": "string", "description": "Timeout for space deployment operations (minutes)" },
-            "buildTimeoutInMin": { "type": "string", "description": "Timeout for space build operations (minutes)" },
+            "deployTimeoutInMin": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Timeout for space deployment operations (minutes)" },
+            "buildTimeoutInMin": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Timeout for space build operations (minutes)" },
             "gpuModelLabel": {
               "type": "object",
               "properties": {
@@ -194,10 +194,10 @@
                 "capacityLabel": { "type": "string" }
               }
             },
-            "readinessDelaySeconds": { "type": "string", "description": "Initial delay before readiness probe starts" },
-            "readinessPeriodSeconds": { "type": "string", "description": "Interval between readiness probe checks" },
-            "readinessFailureThreshold": { "type": "string", "description": "Consecutive failures before pod is marked unready" },
-            "statusCheckInterval": { "type": "string", "description": "Interval for checking space deployment status (seconds)" }
+            "readinessDelaySeconds": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Initial delay before readiness probe starts" },
+            "readinessPeriodSeconds": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Interval between readiness probe checks" },
+            "readinessFailureThreshold": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Consecutive failures before pod is marked unready" },
+            "statusCheckInterval": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Interval for checking space deployment status (seconds)" }
           }
         }
       ]
