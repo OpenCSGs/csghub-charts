@@ -113,7 +113,7 @@ runner:
   region: "region-0"                       # Region the runner belongs to
 
   ## Namespace management
-  # namespace: "spaces"                      # Namespace for user-deployed workloads
+  namespace: "spaces"                      # Namespace for user-deployed workloads
   mergingNamespace: "disable"              # Namespace merging: multi, single, disable
 
   # Image builder management
