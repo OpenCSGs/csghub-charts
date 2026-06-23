@@ -198,10 +198,10 @@
         "model": {
           "type": "object",
           "properties": {
-            "deployTimeoutInMin": {"type": "string"},
+            "deployTimeoutInMin": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
             "downloadEndpoint": {"type": "string"},
             "dockerRegBase": {"type": "string"},
-            "deployStatusCheckInterval": {"type": "string"}
+            "deployStatusCheckInterval": {"oneOf": [{"type": "string"}, {"type": "integer"}]}
           },
           "additionalProperties": true
         },
@@ -210,13 +210,13 @@
           "properties": {
             "usePublicDomain": {"type": "boolean"},
             "pipIndexUrl": {"type": "string"},
-            "deployTimeoutInMin": {"type": "string"},
-            "buildTimeoutInMin": {"type": "string"},
+            "deployTimeoutInMin": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+            "buildTimeoutInMin": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
             "gpuModelLabel": {"type": "object", "additionalProperties": true},
-            "readinessDelaySeconds": {"type": "string"},
-            "readinessPeriodSeconds": {"type": "string"},
-            "readinessFailureThreshold": {"type": "string"},
-            "statusCheckInterval": {"type": "string"}
+            "readinessDelaySeconds": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+            "readinessPeriodSeconds": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+            "readinessFailureThreshold": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+            "statusCheckInterval": {"oneOf": [{"type": "string"}, {"type": "integer"}]}
           },
           "additionalProperties": true
         },
