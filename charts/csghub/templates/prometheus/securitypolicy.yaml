@@ -23,9 +23,9 @@ spec:
     group: gateway.networking.k8s.io
     kind: HTTPRoute
     name: {{ $serviceName }}
-    basicAuth:
-      users:
-        name: {{ $serviceName }}
-        namespace: {{ .Release.Namespace }}
-      forwardUsernameHeader: "X-Forwarded-User"
+  basicAuth:
+    users:
+      name: {{ $serviceName }}
+      namespace: {{ .Release.Namespace }}
+    forwardUsernameHeader: "X-Forwarded-User"
 {{- end }}
