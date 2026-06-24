@@ -82,7 +82,7 @@ Example:
 {{- end }}
 
 {{- $promeSvc := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}
-{{- if $promeSvc.gateway.enabled }}
+{{- if $promeSvc.gatewayAuth.enabled }}
 ---
 
 🔥 Prometheus Graph

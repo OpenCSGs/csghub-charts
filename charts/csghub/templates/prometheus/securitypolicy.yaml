@@ -5,7 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- if and $service.gateway.enabled (regexMatch "envoyproxy" .Values.global.gateway.controllerName) }}
+{{- if and $service.gatewayAuth.enabled (regexMatch "envoyproxy" .Values.global.gateway.controllerName) }}
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:
