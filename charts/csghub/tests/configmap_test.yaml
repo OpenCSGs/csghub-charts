@@ -161,7 +161,7 @@ tests:
           value: "https://csghub.example.com"
       - matchRegex:
           path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
-          pattern: "spaces.app.internal.*"
+          pattern: ".app.internal:8083"
       - equal:
           path: data.STARHUB_SERVER_CASDOOR_CERTIFICATE
           value: "/starhub-bin/casdoor/tls.crt"
