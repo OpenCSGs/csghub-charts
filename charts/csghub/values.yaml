@@ -851,11 +851,12 @@ reloader:
 
 ## Loki log aggregation configuration
 loki:
+  gatewayAuth:
+    enabled: false                         # Enable Gateway BasicAuth for Loki
+    # htpasswd: ""                         # Generate with: htpasswd -nbs <username> <password>
+
   gateway:
-    enabled: false                         # Enable Loki gateway
-    basicAuth: {}                          # Basic authentication
-      ## Pre-computed htpasswd entry, generate with: htpasswd -nbs <username> <password>
-      # htpasswd: ""
+    enabled: false                         # Disable loki internal gateway default
 
   memcachedExporter:
     enabled: false                         # Disable memcached exporter
@@ -940,11 +941,9 @@ tempo:
 prometheus:
   enabled: true                            # Enable Prometheus
 
-  gateway:
-    enabled: false                         # Enable Prometheus gateway
-    basicAuth: {}                          # Basic authentication
-      ## Pre-computed htpasswd entry, generate with: htpasswd -nbs <username> <password>
-      # htpasswd: ""
+  gatewayAuth:
+    enabled: false                         # Enable Gateway BasicAuth for Prometheus
+    # htpasswd: ""                         # Generate with: htpasswd -nbs <username> <password>
 
 ## MemMachine configuration
 memmachine:

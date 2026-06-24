@@ -328,9 +328,6 @@ data:
   {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
   {{- $promePort := dig "service" "port" 80 $promeSvc }}
   STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%v/api/v1/query" $promeHost $promePort | quote }}
-  {{- with $promeSvc.gateway.basicAuth }}
-  STARHUB_SERVER_PROMETHEUS_BASIC_AUTH: {{ printf "%s:%s" .username .password | b64enc | quote }}
-  {{- end }}
   {{- end }}
 
   ## Server Configuration for Loki
