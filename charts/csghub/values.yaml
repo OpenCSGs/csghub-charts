@@ -854,8 +854,8 @@ loki:
   gateway:
     enabled: false                         # Enable Loki gateway
     basicAuth: {}                          # Basic authentication
-      # username: "loki"
-      # password: "loki"
+      ## Pre-computed htpasswd entry, generate with: htpasswd -nbs <username> <password>
+      # htpasswd: ""
 
   memcachedExporter:
     enabled: false                         # Disable memcached exporter
@@ -943,8 +943,8 @@ prometheus:
   gateway:
     enabled: false                         # Enable Prometheus gateway
     basicAuth: {}                          # Basic authentication
-      # username: "prometheus"
-      # password: ""
+      ## Pre-computed htpasswd entry, generate with: htpasswd -nbs <username> <password>
+      # htpasswd: ""
 
 ## MemMachine configuration
 memmachine:
