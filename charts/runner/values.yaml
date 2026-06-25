@@ -116,6 +116,10 @@ runner:
   namespace: "spaces"                      # Namespace for user-deployed workloads
   mergingNamespace: "disable"              # Namespace merging: multi, single, disable
 
+  ## Cluster Scheduling Configuration
+  ## Allow CPU resource requests to be scheduled on GPU nodes
+  allowCpuOnGpuNodes: false
+
   # Image builder management
   # imageBuilderGitImage: ""               # Override image builder Git image
   # imageBuilderKanikoImage: ""            # Override image builder Kaniko image

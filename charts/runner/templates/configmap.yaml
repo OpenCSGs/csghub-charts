@@ -176,3 +176,6 @@ data:
   STARHUB_SERVER_RUNNER_VGPU_RESOURCE_REQ_KEY: "volcano.sh/vgpu-number"
   STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY: "volcano.sh/vgpu-memory"
   {{- end }}
+
+  ## Cluster Scheduling Configuration
+  STARHUB_SERVER_CLUSTER_ALLOW_CPU_RESOURCE_SCHEDULE_TO_GPU_NODE: {{ $service.runner.allowCpuOnGpuNodes | quote }}
