@@ -28,7 +28,7 @@ version: 2.2.2
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: v2.2.0
+appVersion: v2.2.1
 
 # Defined dependencies for subChart
 dependencies:
@@ -52,7 +52,7 @@ dependencies:
     repository: https://charts.opencsg.com/infra
     condition: prometheus.enabled
   - name: runner
-    version: 2.2.2
+    version: 2.2.3
     repository: https://charts.opencsg.com/csghub
     condition: runner.enabled
   - name: dataflow

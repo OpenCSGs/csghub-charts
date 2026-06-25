@@ -64,7 +64,7 @@ global:
   image:
     registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
-    tag: "v2.2.0"                   # Image tag format: {{version}}-{{edition}}
+    tag: "v2.2.1"                   # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never
     pullSecrets: []                 # Private registry authentication secrets
 
@@ -156,7 +156,7 @@ global:
 image:
   # registry: "docker.io"
   repository: "opencsghq/csghub-server"
-  tag: "v2.2.0"
+  tag: "v2.2.1"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
