@@ -41,8 +41,7 @@ data:
   CSGHUB_PORTAL_S3_ENDPOINT: {{ $s3DefaultEndpoint | trimPrefix "http://" | trimPrefix  "https://" | quote }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_ID: {{ $portalS3Config.accessKey | quote }}
   CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET: {{ $portalS3Config.secretKey | quote }}
-  {{- $portalPublicBucketName := include "common.names.custom" (list . (printf "%s-public" $portalSvc.name)) }}
-  CSGHUB_PORTAL_S3_BUCKET: {{ dig "objectStore" "bucket" $portalPublicBucketName $portalSvc | quote }}
+  CSGHUB_PORTAL_S3_BUCKET: {{ printf "%s-public" $portalS3Config.bucket | quote}}
   CSGHUB_PORTAL_S3_REGION: {{ $portalS3Config.region | quote }}
   CSGHUB_PORTAL_S3_ENABLE_SSL: {{ $portalS3Config.secure | quote }}
   ## Portal Configuration for ObjectStorage Private
