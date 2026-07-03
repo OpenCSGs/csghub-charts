@@ -141,8 +141,10 @@ tests:
       - equal:
           path: spec.provider.kubernetes.envoyService.type
           value: "ClusterIP"
+      - notExists:
+          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
 
-  - it: Should render knative envoy-proxy with global service type in standalone mode
+  - it: Should render knative envoy-proxy with NodePort and externalTrafficPolicy in standalone mode
     template: envoy-proxy.yaml
     documentIndex: 1
     asserts:
@@ -151,6 +153,26 @@ tests:
       - equal:
           path: spec.provider.kubernetes.envoyService.type
           value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
+          value: "Cluster"
+
+  - it: Should render knative envoy-proxy without externalTrafficPolicy when type is LoadBalancer
+    template: envoy-proxy.yaml
+    documentIndex: 1
+    set:
+      global:
+        gateway:
+          service:
+            type: "LoadBalancer"
+    asserts:
+      - isKind:
+          of: "EnvoyProxy"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "LoadBalancer"
+      - notExists:
+          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
 
   - it: Should NOT render knative gateways in kourier mode (default)
     template: gateway.yaml

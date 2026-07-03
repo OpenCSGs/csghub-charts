@@ -83,6 +83,10 @@ spec:
     {{- else }}
       envoyService:
         name: {{ include "common.names.custom" (list . "envoy-knative") }}
-        type: {{ $gateway.service.type }}
+        {{- $svcType := $gateway.service.type }}
+        type: {{ $svcType }}
+        {{- if eq $svcType "NodePort" }}
+        externalTrafficPolicy: Cluster
+        {{- end }}
     {{- end }}
 {{- end }}
