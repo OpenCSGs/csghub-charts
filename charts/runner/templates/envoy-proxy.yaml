@@ -90,3 +90,28 @@ spec:
         {{- end }}
     {{- end }}
 {{- end }}
+
+{{- /* EnvoyProxy for knative-local gateways (always ClusterIP since local gateways handle only internal traffic) */}}
+{{- if and $isEnvoyProxy (eq $ingressType "gateway-api") }}
+{{- $knativeLocalName := include "common.names.custom" (list . "envoy-proxy-knative-local") }}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: {{ $knativeLocalName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+    {{- if $isOpencsg }}
+      envoyDeployment:
+        container:
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+    {{- else }}
+      envoyDeployment: {}
+    {{- end }}
+      envoyService:
+        name: {{ include "common.names.custom" (list . "envoy-knative-local") }}
+        type: ClusterIP
+{{- end }}
