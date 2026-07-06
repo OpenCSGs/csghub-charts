@@ -216,8 +216,9 @@ tests:
           path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
           content: knative-serving
 
-  - it: Should render knative-gateway in gateway-api + builtIn mode
+  - it: Should render knative gateway in gateway-api + builtIn mode
     template: gateway.yaml
+    documentIndex: 0
     set:
       global:
         chartContext:
@@ -227,7 +228,26 @@ tests:
           ingress: gateway-api
     asserts:
       - hasDocuments:
-          count: 1
+          count: 2
+      - isKind:
+          of: Gateway
       - equal:
           path: metadata.name
           value: knative
+
+  - it: Should render knative-local gateway in gateway-api + builtIn mode
+    template: gateway.yaml
+    documentIndex: 1
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+      knative:
+        serving:
+          ingress: gateway-api
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: knative-local

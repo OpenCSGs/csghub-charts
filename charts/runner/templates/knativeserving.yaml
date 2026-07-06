@@ -106,7 +106,7 @@ spec:
           - HTTPRouteRequestTimeout
       local-gateways: |
         - class: eg-internal
-          gateway: {{ .Release.Namespace }}/knative
+          gateway: {{ .Release.Namespace }}/knative-local
           supported-features:
           - HTTPRouteRequestTimeout
     {{- end }}

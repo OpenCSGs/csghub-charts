@@ -81,4 +81,34 @@ spec:
                   - {{ .Release.Namespace }}
                   - {{ (.Values.runner | default dict).namespace | default "spaces" }}
                   - {{ include "namespace.knative" . }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: knative-local
+  namespace: {{ .Release.Namespace }}
+spec:
+  gatewayClassName: csghub-gateway
+  {{- if regexMatch "envoyproxy" .Values.global.gateway.controllerName }}
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: {{ include "common.names.custom" (list . "envoy-proxy-knative-local") }}
+  {{- end }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - {{ .Release.Namespace }}
+                  - {{ (.Values.runner | default dict).namespace | default "spaces" }}
+                  - {{ include "namespace.knative" . }}
 {{- end }}

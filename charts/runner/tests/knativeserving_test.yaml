@@ -310,6 +310,6 @@ tests:
           path: spec.config["gateway"]["local-gateways"]
           value: |
             - class: eg-internal
-              gateway: csghub/knative
+              gateway: csghub/knative-local
               supported-features:
               - HTTPRouteRequestTimeout
