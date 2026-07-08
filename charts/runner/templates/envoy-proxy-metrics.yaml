@@ -1,0 +1,63 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $gateway := .Values.global.gateway }}
+{{- $isEnvoyProxy := regexMatch "envoyproxy" $gateway.controllerName }}
+{{- $service := include "common.service" . | fromYaml }}
+{{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
+{{- $gatewayAPI := eq $ingressType "gateway-api" }}
+
+{{- /* Metrics Service for the main listeners Gateway (standalone mode only) */}}
+{{- if and $isEnvoyProxy (not .Values.global.chartContext.isBuiltIn) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-proxy-listeners-metrics
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '19001'
+    prometheus.io/path: '/stats/prometheus'
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: listeners
+    gateway.envoyproxy.io/owning-gateway-namespace: {{ .Release.Namespace }}
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 19001
+      targetPort: 19001
+{{- end }}
+
+{{- /* Metrics Service for the knative external Gateway (gateway-api mode only) */}}
+{{- if and $isEnvoyProxy $gatewayAPI }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-proxy-knative-metrics
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '19001'
+    prometheus.io/path: '/stats/prometheus'
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: knative
+    gateway.envoyproxy.io/owning-gateway-namespace: {{ .Release.Namespace }}
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 19001
+      targetPort: 19001
+{{- end }}
