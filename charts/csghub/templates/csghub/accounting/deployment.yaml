@@ -181,9 +181,12 @@ spec:
           tty: {{ $paymentSvc.tty }}
           {{- end }}
         {{- end }}
-      {{- if or $service.volumes $paymentSvc.volumes }}
       volumes:
+      {{- if $service.volumes }}
         {{- toYaml $service.volumes | nindent 8 }}
+      {{- end }}
+      {{- if $paymentSvc.volumes }}
+        {{- toYaml $paymentSvc.volumes | nindent 8 }}
       {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
