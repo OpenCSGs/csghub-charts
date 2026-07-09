@@ -796,10 +796,10 @@ if [[ -z "$K3S_SERVER" ]]; then
   if [[ "$ENABLE_NFS_PV" == "true" ]]; then
     HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.storageClass='nfs-client')
     HELM_EXTRA_ARGS+=(--set csgship.web.persistence.storageClass='nfs-client')
-    HELM_EXTRA_ARGS+=(--set runner.storageClassName='nfs-client')
+    HELM_EXTRA_ARGS+=(--set runner.runner.storageClassName='nfs-client')
   else
     HELM_EXTRA_ARGS+=(--set dataflow.dataflow.persistence.accessModes[0]="ReadWriteOnce")
-    HELM_EXTRA_ARGS+=(--set runner.storageClassName='local-path')
+    HELM_EXTRA_ARGS+=(--set runner.runner.storageClassName='local-path')
   fi
 
   HELM_EXTRA_ARGS+=(--set global.edition='ee')
