@@ -48,7 +48,7 @@ dependencies:
     repository: https://charts.opencsg.com/infra
     condition: tempo.enabled
   - name: prometheus
-    version: 28.6.0
+    version: 29.14.0
     repository: https://charts.opencsg.com/infra
     condition: prometheus.enabled
   - name: runner

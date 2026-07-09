@@ -945,61 +945,6 @@ prometheus:
     enabled: false                         # Enable Gateway BasicAuth for Prometheus
     # htpasswd: ""                         # Generate with: htpasswd -nbs <username> <password>
 
-  ## Extra scrape configs for Envoy Gateway / Envoy Proxy metrics
-  ## Scrapes envoy-proxy-*-metrics services exposed by envoy-proxy-metrics.yaml
-  ## templates in csghub and runner charts. Each Service targets one Gateway's
-  ## envoy pods (listeners / knative) via /stats/prometheus on port 19001.
-  extraScrapeConfigs: |
-    - job_name: knative-queue-proxy
-      scrape_interval: 30s
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      kubernetes_sd_configs:
-        - role: endpoints
-      relabel_configs:
-        - source_labels: [__meta_kubernetes_namespace]
-          regex: spaces?(-(stg|stage))?
-          action: keep
-        - source_labels: [__meta_kubernetes_service_label_networking_internal_knative_dev_serviceType]
-          regex: Private
-          action: keep
-        - source_labels: [__meta_kubernetes_endpoint_port_name]
-          regex: http-usermetric
-          action: keep
-        - source_labels: [__meta_kubernetes_pod_node_name]
-          target_label: kubernetes_node
-        - source_labels: [__meta_kubernetes_namespace]
-          target_label: namespace
-          action: replace
-        - source_labels: [__meta_kubernetes_pod_name]
-          target_label: pod
-          action: replace
-        - source_labels: [__meta_kubernetes_pod_name]
-          target_label: pod_name
-          action: replace
-        - source_labels: [__meta_kubernetes_pod_container_name]
-          target_label: container
-          action: replace
-    - job_name: envoy-proxy
-      scrape_interval: 30s
-      scrape_timeout: 10s
-      metrics_path: /stats/prometheus
-      kubernetes_sd_configs:
-        - role: endpoints
-      relabel_configs:
-        - source_labels: [__meta_kubernetes_service_name]
-          regex: envoy-proxy-.*-metrics
-          action: keep
-        - source_labels: [__meta_kubernetes_namespace]
-          target_label: namespace
-          action: replace
-        - source_labels: [__meta_kubernetes_service_name]
-          target_label: service
-          action: replace
-        - source_labels: [__meta_kubernetes_pod_node_name]
-          target_label: node
-          action: replace
-
 ## MemMachine configuration
 memmachine:
   enabled: false
