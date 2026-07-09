@@ -69,7 +69,7 @@ dependencies:
     condition: memmachine.enabled
   - name: gateway-helm
     alias: envoy
-    version: 1.6.7
+    version: 1.7.5
     repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
   - name: agentichub
