@@ -39,7 +39,7 @@ dependencies:
     version: 0.2.2
     repository: https://charts.opencsg.com/csghub
   - name: reloader
-    version: 2.2.7
+    version: 2.2.14
     repository: https://charts.opencsg.com/infra
     condition: reloader.enabled
     tags:

@@ -4,7 +4,7 @@ dependencies:
   version: 0.2.2
 - name: reloader
   repository: https://charts.opencsg.com/infra
-  version: 2.2.7
+  version: 2.2.14
 - name: loki
   repository: https://charts.opencsg.com/infra
   version: 6.29.0
@@ -32,5 +32,5 @@ dependencies:
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
   version: 0.6.2
-digest: sha256:d981a563f8cbf27a57fc71e0bad42deded5e58277a89d67b5791a2d0d7b16131
-generated: "2026-07-09T11:19:31.20937+08:00"
+digest: sha256:0d62964684a4bbd601f6c02b0407a92a1b8c4f762c4a65473913f2ff4186ff58
+generated: "2026-07-09T16:03:27.598266+08:00"
