@@ -4,9 +4,9 @@ dependencies:
   version: 0.2.2
 - name: reloader
   repository: https://charts.opencsg.com/infra
-  version: 2.2.7
+  version: 2.2.14
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
   version: 1.6.7
-digest: sha256:6fbdcfdea8555cd049a1c2ce197f43b3a802ab1dd27b6f732a1cad04d4ee91d0
-generated: "2026-06-16T17:29:48.241719+08:00"
+digest: sha256:256c2f5e6e12dcae1d89811c24898ffae641addfd0617ba473b26006fc85160a
+generated: "2026-07-09T15:50:53.489943+08:00"
