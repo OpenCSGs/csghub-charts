@@ -328,6 +328,12 @@ data:
   {{- $promeHost := include "common.names.custom" (list . "prometheus-server") }}
   {{- $promePort := dig "service" "port" 80 $promeSvc }}
   STARHUB_SERVER_PROMETHEUS_API_ADDRESS: {{ printf "http://%s:%v/api/v1/query" $promeHost $promePort | quote }}
+  STARHUB_SERVER_PROMETHEUS_CPU_LIMIT_METRIC: "kube_pod_container_resource_limits"
+  STARHUB_SERVER_PROMETHEUS_CPU_USAGE_METRIC: "container_cpu_usage_seconds_total"
+  STARHUB_SERVER_PROMETHEUS_MEMORY_USAGE_METRIC: "container_memory_usage_bytes"
+  STARHUB_SERVER_PROMETHEUS_METRIC_KEYS: "pod,service_name,namespace,http_response_status_code,le"
+  STARHUB_SERVER_PROMETHEUS_REQUEST_COUNT_METRIC: "kn_serving_invocation_duration_seconds_count"
+  STARHUB_SERVER_PROMETHEUS_REQUEST_LATENCY_METRIC: "http_server_request_duration_seconds_bucket"
   {{- end }}
 
   ## Server Configuration for Loki
