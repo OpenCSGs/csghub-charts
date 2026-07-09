@@ -7,7 +7,7 @@ dependencies:
   version: 2.2.7
 - name: prometheus
   repository: https://charts.opencsg.com/infra
-  version: 28.6.0
+  version: 29.14.0
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
   version: 1.6.7
@@ -26,5 +26,5 @@ dependencies:
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
   version: 0.2.1
-digest: sha256:de190ff3f024d23afdaf798309d47f1048d3f3c1e57e4db272453beb64aaa4ce
-generated: "2026-06-16T16:20:30.640531+08:00"
+digest: sha256:76005cec5be1772dceac2eb8137db6b4549227cd66bdd4a381e143c47f6d6d68
+generated: "2026-07-09T12:32:56.902445+08:00"

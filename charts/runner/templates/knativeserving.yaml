@@ -135,3 +135,7 @@ spec:
       {{- if $isOpencsgRegistry }}
       queue-sidecar-image: {{ $knativeRegistry }}/serving/cmd/queue:{{ $knativeVersion }}
       {{- end }}
+    observability:
+      metrics-protocol: "prometheus"
+      request-metrics-protocol: "prometheus"
+      request-metrics-endpoint: ":9091"
