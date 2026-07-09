@@ -16,15 +16,15 @@ dependencies:
   version: v0.6.1
 - name: argo-workflows
   repository: https://charts.opencsg.com/infra
-  version: 0.47.4
+  version: 0.47.5
 - name: knative-operator
   repository: https://charts.opencsg.com/infra
   version: 1.22.1
 - name: volcano
   repository: https://charts.opencsg.com/infra
-  version: 1.14.1
+  version: 1.14.3
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.1
-digest: sha256:9dc143aaf0d46f3cd367691c32a1cc3dd053bfccf60aaf1084c42716cf5a49a5
-generated: "2026-07-09T16:46:08.282325+08:00"
+  version: 0.4.6
+digest: sha256:fd709fb2a660d40335f4f259c87d7ed59062ccb9001d1f8c35434ba6932ea9a7
+generated: "2026-07-09T19:25:34.99002+08:00"
