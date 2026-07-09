@@ -19,7 +19,7 @@ dependencies:
   version: 2.2.4
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
-  version: 2.2.2
+  version: 2.3.0
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.3
@@ -32,5 +32,5 @@ dependencies:
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
   version: 0.6.2
-digest: sha256:81897ebbadf396d7ef2de6634a0e24efe12cd5a1b62d8da9b086daa7df809e78
-generated: "2026-07-09T16:41:49.380191+08:00"
+digest: sha256:6c319f8c3f31ad96b46224ff464b98c550b412721536e8531f09e82d920ea709
+generated: "2026-07-09T17:37:46.6295+08:00"
