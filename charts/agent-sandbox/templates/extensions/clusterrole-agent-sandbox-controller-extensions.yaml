@@ -6,22 +6,22 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - ""
-  resources:
   - pods
   verbs:
-  - create
-  - delete
   - get
   - list
   - patch
   - update
   - watch
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
 - apiGroups:
   - agents.x-k8s.io
   resources:
@@ -65,6 +65,7 @@ rules:
   resources:
   - sandboxclaims/finalizers
   - sandboxclaims/status
+  - sandboxtemplates/finalizers
   - sandboxtemplates/status
   - sandboxwarmpools/finalizers
   - sandboxwarmpools/status

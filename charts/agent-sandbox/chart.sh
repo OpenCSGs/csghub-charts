@@ -37,7 +37,7 @@ if ! kubectl slice --help &>/dev/null; then
 fi
 
 # 3. Configuration & Directory Setup
-VERSION="v0.2.1"
+VERSION="v0.4.6"
 BASE_URL="https://ghfast.top/https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}"
 TEMPLATE_DIR="templates"
 EXT_DIR="${TEMPLATE_DIR}/extensions"
