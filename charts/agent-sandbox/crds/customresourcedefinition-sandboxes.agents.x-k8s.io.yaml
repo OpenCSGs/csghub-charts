@@ -3613,6 +3613,10 @@ spec:
                                             type: integer
                                           signerName:
                                             type: string
+                                          userAnnotations:
+                                            additionalProperties:
+                                              type: string
+                                            type: object
                                         required:
                                         - keyType
                                         - signerName
@@ -3807,6 +3811,18 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
+                      workloadRef:
+                        properties:
+                          name:
+                            type: string
+                          podGroup:
+                            type: string
+                          podGroupReplicaKey:
+                            type: string
+                        required:
+                        - name
+                        - podGroup
+                        type: object
                     required:
                     - containers
                     type: object
@@ -3814,10 +3830,13 @@ spec:
                 - spec
                 type: object
               replicas:
+                default: 1
                 format: int32
                 maximum: 1
                 minimum: 0
                 type: integer
+              service:
+                type: boolean
               shutdownPolicy:
                 default: Retain
                 enum:
@@ -3935,6 +3954,7 @@ spec:
                   - spec
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
             required:
             - podTemplate
             type: object
@@ -3976,8 +3996,13 @@ spec:
                   - type
                   type: object
                 type: array
+              podIPs:
+                items:
+                  type: string
+                type: array
               replicas:
                 format: int32
+                minimum: 0
                 type: integer
               selector:
                 type: string
@@ -3985,8 +4010,6 @@ spec:
                 type: string
               serviceFQDN:
                 type: string
-            required:
-            - replicas
             type: object
         required:
         - spec
