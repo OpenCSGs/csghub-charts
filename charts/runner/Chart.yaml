@@ -66,7 +66,7 @@ dependencies:
     condition: lws.enabled
   - name: argo-workflows
     alias: argo
-    version: 0.47.4
+    version: 0.47.5
     repository: https://charts.opencsg.com/infra
     condition: argo.enabled
   - name: knative-operator
@@ -75,10 +75,10 @@ dependencies:
     repository: https://charts.opencsg.com/infra
     condition: knative.enabled
   - name: volcano
-    version: 1.14.1
+    version: 1.14.3
     repository: https://charts.opencsg.com/infra
     condition: volcano.enabled
   - name: agent-sandbox
-    version: 0.2.1
+    version: 0.4.6
     repository: https://charts.opencsg.com/csghub
     condition: agent-sandbox.enabled
