@@ -19,7 +19,7 @@ spec:
     {{- if regexMatch "^opencsg-registry" .Values.global.image.registry }}
       envoyDeployment:
         container:
-          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.37.5
     {{- else }}
       # Helm v4 uses Server-Side Apply (SSA) by default, which treats null
       # fields as explicit null values rather than unset. When the registry is

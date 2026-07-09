@@ -23,7 +23,7 @@ spec:
     {{- if $isOpencsg }}
       envoyDeployment:
         container:
-          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.37.5
     {{- else }}
       envoyDeployment: {}
     {{- end }}
@@ -72,7 +72,7 @@ spec:
     {{- if $isOpencsg }}
       envoyDeployment:
         container:
-          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.37.5
     {{- else }}
       envoyDeployment: {}
     {{- end }}
@@ -107,7 +107,7 @@ spec:
     {{- if $isOpencsg }}
       envoyDeployment:
         container:
-          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.36.4
+          image: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:distroless-v1.37.5
     {{- else }}
       envoyDeployment: {}
     {{- end }}
