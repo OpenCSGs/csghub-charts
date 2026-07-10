@@ -31,6 +31,6 @@ dependencies:
   version: 1.7.5
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
-  version: 0.6.2
-digest: sha256:52af5634fcab9f1474af7c8a892466f374048bed48f714a297f9db0435c11aec
-generated: "2026-07-09T19:32:36.334882+08:00"
+  version: 0.6.3
+digest: sha256:6208e3250f0dee46898d7f4fa678a0a095f0c004b6f0c51bf2b317be351e95ce
+generated: "2026-07-10T14:18:30.455215+08:00"
