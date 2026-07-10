@@ -202,7 +202,7 @@ postgresql:
   image:
     # registry: "docker.io"
     repository: "opencsghq/postgres"
-    tag: "15.17"                             # Image version tag
+    tag: "15.18"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -229,7 +229,7 @@ redis:
   image:
     # registry: "docker.io"
     repository: "redis"
-    tag: "7.2.5"                             # Image version tag
+    tag: "7.4.9"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 

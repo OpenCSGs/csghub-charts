@@ -566,7 +566,7 @@ postgresql:
   image:
     # registry: "docker.io"
     repository: "opencsghq/postgres"
-    tag: "15.17"                             # Image version tag
+    tag: "15.18"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -600,7 +600,7 @@ redis:
   image:
     # registry: "docker.io"
     repository: "redis"
-    tag: "7.2.5"                             # Image version tag
+    tag: "7.4.9"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -753,7 +753,7 @@ nats:
   image:
     # registry: "docker.io"
     repository: "nats"
-    tag: "2.10.16"                           # Image version tag
+    tag: "2.12.12"                           # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -805,7 +805,7 @@ temporal:
   image:
     # registry: "docker.io"
     repository: "temporalio/auto-setup"
-    tag: "1.25.1"                            # Image version tag
+    tag: "1.29.7"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -818,7 +818,7 @@ temporal:
     enabled: false                           # Enable console UI
     image:
       repository: "temporalio/ui"            # Console UI image repository
-      tag: "2.30.3"                          # Console UI image tag
+      tag: "2.48.4"                          # Console UI image tag
     service:
       port: 8080                             # Console service port
       protocol: "TCP"                        # Network protocol
