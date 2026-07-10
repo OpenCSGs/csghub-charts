@@ -123,7 +123,7 @@ agenticflow:
   image:
     # registry: "docker.io"
     repository: "opencsghq/agenticflow"
-    tag: "ee-v0.6-4"
+    tag: "ee-v0.6-5"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -212,7 +212,7 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/genius-sandbox"
-          tag: "58acc91d"
+          tag: "2026070902"
       doc:
         image:
           # registry: "docker.io"
