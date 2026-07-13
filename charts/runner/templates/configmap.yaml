@@ -121,6 +121,7 @@ data:
   STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $s3Config.secretKey | quote }}
   STARHUB_SERVER_S3_ENDPOINT: {{ coalesce $s3Config.externalEndpoint $s3Config.endpoint | quote }}
   STARHUB_SERVER_S3_BUCKET: {{ $s3Config.bucket | quote }}
+  STARHUB_SERVER_ARGO_S3_PUBLIC_BUCKET: {{ $s3Config.bucket | quote }}
   STARHUB_SERVER_S3_REGION: {{ $s3Config.region | quote }}
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $s3Config.secure | quote }}
   STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $s3Config.pathStyle "true") | quote }}
