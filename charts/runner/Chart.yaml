@@ -79,6 +79,6 @@ dependencies:
     repository: https://charts.opencsg.com/infra
     condition: volcano.enabled
   - name: agent-sandbox
-    version: 0.4.6
+    version: 0.2.1
     repository: https://charts.opencsg.com/csghub
     condition: agent-sandbox.enabled
