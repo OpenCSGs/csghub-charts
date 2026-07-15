@@ -300,7 +300,7 @@ tests:
           value: "unittest"
       - equal:
           path: data.STARHUB_SERVER_S3_ENDPOINT
-          value: "https://s3.unittest.io"
+          value: "s3.unittest.io"
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET
           value: "runner-unittest"
