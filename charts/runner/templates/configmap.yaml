@@ -119,7 +119,8 @@ data:
   {{- end }}
   STARHUB_SERVER_S3_ACCESS_KEY_ID: {{ $s3Config.accessKey | quote }}
   STARHUB_SERVER_S3_ACCESS_KEY_SECRET: {{ $s3Config.secretKey | quote }}
-  STARHUB_SERVER_S3_ENDPOINT: {{ coalesce $s3Config.externalEndpoint $s3Config.endpoint | quote }}
+  {{- $s3Endpoint := coalesce $s3Config.externalEndpoint $s3Config.endpoint | default "" | trimPrefix "http://" | trimPrefix "https://" }}
+  STARHUB_SERVER_S3_ENDPOINT: {{ $s3Endpoint | quote }}
   STARHUB_SERVER_S3_BUCKET: {{ $s3Config.bucket | quote }}
   STARHUB_SERVER_ARGO_S3_PUBLIC_BUCKET: {{ $s3Config.bucket | quote }}
   STARHUB_SERVER_S3_REGION: {{ $s3Config.region | quote }}
