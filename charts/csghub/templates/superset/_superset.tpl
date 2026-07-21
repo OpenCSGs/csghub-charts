@@ -111,4 +111,67 @@ pwd = os.environ.get('ADMIN_PASSWORD', '')
 if pwd:
     app.appbuilder.sm.reset_password('root', pwd)
 " 2>/dev/null || true
+# Pre-register CSGHub database connection so it appears in Data > Databases.
+# Connects to the Superset DB directly via psycopg2 (bypassing Flask import
+# issues with superset.app module resolution) and inserts into the dbs table.
+# Also repairs existing records with NULL timestamps (from early deploys).
+# Idempotent — skips if the URI already exists.
+python3 -c "
+import os, sys, uuid
+from datetime import datetime, timezone
+
+db_host = os.environ.get('DB_HOST', '')
+db_port = os.environ.get('DB_PORT', '5432')
+db_user = os.environ.get('DB_USER', '')
+db_pass = os.environ.get('DB_PASS', '')
+db_name = os.environ.get('DB_NAME', '')
+if not db_host or not db_user or not db_pass or not db_name:
+    sys.exit(0)
+
+t_host = os.environ.get('TARGET_DB_HOST', '')
+t_port = os.environ.get('TARGET_DB_PORT', '5432')
+t_user = os.environ.get('TARGET_DB_USER', '')
+t_pass = os.environ.get('TARGET_DB_PASS', '')
+t_name = os.environ.get('TARGET_DB_NAME', '')
+if not t_host or not t_user or not t_pass or not t_name:
+    sys.exit(0)
+
+target_uri = f'postgresql://{t_user}:{t_pass}@{t_host}:{t_port}/{t_name}'
+print(f'CSGHub DB: ensuring entry for {target_uri}', file=sys.stderr)
+
+try:
+    import psycopg2
+    conn = psycopg2.connect(
+        host=db_host, port=db_port, user=db_user,
+        password=db_pass, dbname=db_name
+    )
+    conn.autocommit = False
+    cur = conn.cursor()
+    cur.execute('SELECT id, created_on FROM dbs WHERE sqlalchemy_uri = %s', (target_uri,))
+    row = cur.fetchone()
+    now = datetime.now(timezone.utc)
+    if row:
+        db_id = row[0]
+        if row[1] is None:
+            cur.execute(
+                'UPDATE dbs SET created_on = %s, changed_on = %s, uuid = COALESCE(uuid, %s) WHERE id = %s',
+                (now, now, str(uuid.uuid4()), db_id)
+            )
+            conn.commit()
+            print(f'CSGHub DB: repaired null timestamps (id={db_id})', file=sys.stderr)
+        else:
+            print(f'CSGHub DB: already exists (id={db_id})', file=sys.stderr)
+    else:
+        cur.execute(
+            'INSERT INTO dbs (database_name, sqlalchemy_uri, created_on, changed_on, uuid) VALUES (%s, %s, %s, %s, %s) RETURNING id',
+            ('CSGHub', target_uri, now, now, str(uuid.uuid4()))
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        print(f'CSGHub DB: created (id={new_id})', file=sys.stderr)
+    cur.close()
+    conn.close()
+except Exception as e:
+    print(f'CSGHub DB: failed — {e}', file=sys.stderr)
+" 2>&1 || true
 {{- end -}}
