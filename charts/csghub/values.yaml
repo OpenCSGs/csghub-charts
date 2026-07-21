@@ -963,3 +963,37 @@ memmachine:
 ## EnvoyGateway configuration
 envoy:
   enabled: true
+
+## Apache Superset configuration
+## ref: https://github.com/apache/superset/tree/master/helm/superset
+superset:
+  enabled: true
+  secretEnv:
+    create: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  init:
+    adminUser:
+      username: root
+  bootstrapScript: |
+    {{- include "superset.bootstrap" . }}
+  configOverrides:
+    override: |
+      {{- include "superset.config.override" . }}
+  # APPLICATION_ROOT=/-/superset makes Flask serve /health at /-/superset/health.
+  # Override kube-probes to hit the prefixed path so the pod becomes ready.
+  supersetNode:
+    startupProbe:
+      httpGet:
+        path: /-/superset/health
+        port: http
+    livenessProbe:
+      httpGet:
+        path: /-/superset/health
+        port: http
+    readinessProbe:
+      httpGet:
+        path: /-/superset/health
+        port: http
