@@ -196,3 +196,50 @@ spec:
       timeouts:
         request: 5m
     {{- end }}
+{{- if .Values.superset.enabled }}
+    # Superset 6.1.0 frontend hardcodes OAuth links as /login/<provider> (missing
+    # the APPLICATION_ROOT prefix). Rewrite to /-/superset/login/<provider> so
+    # AppRootMiddleware doesn't 404.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /login/casdoor
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /-/superset/login/casdoor
+      backendRefs:
+        - name: {{ printf "%s-superset" .Release.Name }}
+          port: 8088
+      timeouts:
+        request: 5m
+    # Superset 6.1.0 frontend makeUrl() double-prefixes logout/login/index URLs
+    # (it prepends APPLICATION_ROOT to URLs that already include it from url_for).
+    # Collapse /-/superset/-/superset/* back to /-/superset/*.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /-/superset/-/superset
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /-/superset
+      backendRefs:
+        - name: {{ printf "%s-superset" .Release.Name }}
+          port: 8088
+      timeouts:
+        request: 5m
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /-/superset
+      backendRefs:
+        - name: {{ printf "%s-superset" .Release.Name }}
+          port: 8088
+      timeouts:
+        request: 5m
+{{- end }}
