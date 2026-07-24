@@ -95,6 +95,35 @@ FEATURE_FLAGS = {
     "DASHBOARD_RBAC": True,
 }
 
+# Bitnami chart hardcodes csghub-superset-redis-headless in these settings
+# when its built-in redis is disabled. Override to use env var REDIS_HOST.
+_rh = os.environ.get('REDIS_HOST', '')
+_rp = os.environ.get('REDIS_PORT', '6379')
+_rpw = os.environ.get('REDIS_PASSWORD', '')
+if _rh:
+    RESULTS_BACKEND = RedisCache(
+        host=_rh, password=_rpw, port=int(_rp),
+        key_prefix="superset_results",
+    )
+    GLOBAL_ASYNC_QUERIES_CACHE_BACKEND = {
+        "CACHE_TYPE": "RedisCache",
+        "CACHE_REDIS_HOST": _rh,
+        "CACHE_REDIS_PORT": int(_rp),
+        "CACHE_REDIS_PASSWORD": _rpw,
+        "CACHE_REDIS_DB": 0,
+        "CACHE_KEY_PREFIX": "qc-",
+        "CACHE_DEFAULT_TIMEOUT": 86400,
+        "CACHE_REDIS_SSL": False,
+    }
+    GLOBAL_ASYNC_QUERIES_RESULTS_BACKEND = {
+        "backend": "redis",
+        "host": _rh,
+        "port": int(_rp),
+        "prefix": "qc-",
+        "db": 0,
+        "password": _rpw,
+    }
+
 {{ include "superset.oauth" . }}
 {{- end -}}
 
@@ -147,24 +176,37 @@ try:
     )
     conn.autocommit = False
     cur = conn.cursor()
-    cur.execute('SELECT id, created_on FROM dbs WHERE sqlalchemy_uri = %s', (target_uri,))
+    # First try to find by URI (normal case)
+    cur.execute('SELECT id FROM dbs WHERE sqlalchemy_uri = %s', (target_uri,))
     row = cur.fetchone()
     now = datetime.now(timezone.utc)
+    uuid_val = str(uuid.uuid4())
     if row:
         db_id = row[0]
-        if row[1] is None:
-            cur.execute(
-                'UPDATE dbs SET created_on = %s, changed_on = %s, uuid = COALESCE(uuid, %s) WHERE id = %s',
-                (now, now, str(uuid.uuid4()), db_id)
-            )
-            conn.commit()
-            print(f'CSGHub DB: repaired null timestamps (id={db_id})', file=sys.stderr)
-        else:
-            print(f'CSGHub DB: already exists (id={db_id})', file=sys.stderr)
+        # Update existing record with all mandatory fields
+        cur.execute(
+            '''UPDATE dbs SET
+                database_name = 'CSGHub-BuiltIn',
+                created_on = COALESCE(created_on, %s),
+                changed_on = %s,
+                uuid = COALESCE(uuid, %s),
+                allow_ctas = COALESCE(allow_ctas, false),
+                allow_cvas = COALESCE(allow_cvas, false),
+                allow_dml = COALESCE(allow_dml, false),
+                allow_run_async = COALESCE(allow_run_async, false),
+                expose_in_sqllab = COALESCE(expose_in_sqllab, true),
+                impersonate_user = COALESCE(impersonate_user, false),
+                extra = COALESCE(extra, '{}'),
+                configuration_method = COALESCE(configuration_method, 'sqlalchemy_form')
+            WHERE id = %s''',
+            (now, now, uuid_val, db_id)
+        )
+        conn.commit()
+        print(f'CSGHub DB: updated (id={db_id})', file=sys.stderr)
     else:
         cur.execute(
-            'INSERT INTO dbs (database_name, sqlalchemy_uri, created_on, changed_on, uuid) VALUES (%s, %s, %s, %s, %s) RETURNING id',
-            ('CSGHub', target_uri, now, now, str(uuid.uuid4()))
+            'INSERT INTO dbs (database_name, sqlalchemy_uri, created_on, changed_on, uuid, allow_ctas, allow_cvas, allow_dml, allow_run_async, expose_in_sqllab, impersonate_user, extra, configuration_method) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
+            ('CSGHub-BuiltIn', target_uri, now, now, uuid_val, False, False, False, False, True, False, '{}', 'sqlalchemy_form')
         )
         new_id = cur.fetchone()[0]
         conn.commit()
