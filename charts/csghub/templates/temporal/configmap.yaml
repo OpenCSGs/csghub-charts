@@ -20,7 +20,7 @@ data:
   TEMPORAL_CORS_ORIGINS: {{ include "common.endpoint.csghub" . | quote }}
   TEMPORAL_CSRF_COOKIE_INSECURE: "true"
   TEMPORAL_UI_PUBLIC_PATH: "/-/temporal"
-  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace (include "common.names.custom" (list . "core"))).data | default dict }}
+  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
   {{- $app := include "csghub.casdoor.client" "Admin" | fromYaml }}
   {{- $casdoorClientID := dig "TEMPORAL_AUTH_CLIENT_ID" $app.clientId $data }}
   {{- $casdoorClientSecret := dig "TEMPORAL_AUTH_CLIENT_SECRET" $app.clientSecret $data }}
