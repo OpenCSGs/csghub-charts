@@ -117,17 +117,13 @@ spec:
               value: "$(STARHUB_SERVER_CASDOOR_CLIENT_ID)"
             - name: CSGHUB_CLIENT_SECRET
               value: "$(STARHUB_SERVER_CASDOOR_CLIENT_SECRET)"
-            {{- if .Values.temporal.console.enabled }}
             - name: ADMIN_CLIENT_ID
-              value: "$(TEMPORAL_AUTH_CLIENT_ID)"
+              value: "$(CASDOOR_ADMIN_CLIENT_ID)"
             - name: ADMIN_CLIENT_SECRET
-              value: "$(TEMPORAL_AUTH_CLIENT_SECRET)"
-            {{- end }}
-            {{- if .Values.csgship.enabled }}
+              value: "$(CASDOOR_ADMIN_CLIENT_SECRET)"
             {{- if .Values.csgship.enabled }}
             - name: CSGSHIP_EXTERNAL_ENDPOINT
               value: {{ include "common.endpoint.web" . | quote }}
-            {{- end }}
             {{- $webSvc := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
             - name: OAUTH_CLIENT_ID
               value: {{ dig "oauth" "clientId" "" $webSvc | quote }}
