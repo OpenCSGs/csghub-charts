@@ -92,7 +92,7 @@ fi
 
 echo "📊 Found ${CRD_COUNT} CRD files"
 
-if kubectl apply --server-side --recursive -f "${CRD_DIR}"; then
+if kubectl apply --server-side --recursive --force-conflicts -f "${CRD_DIR}"; then
   echo
   echo "🎉 All CRDs created successfully."
 else
