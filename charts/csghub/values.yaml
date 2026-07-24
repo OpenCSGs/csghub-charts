@@ -968,7 +968,7 @@ envoy:
 ## Apache Superset configuration
 ## ref: https://github.com/apache/superset/tree/master/helm/superset
 superset:
-  enabled: true
+  enabled: false
   secretEnv:
     create: false
   postgresql:
