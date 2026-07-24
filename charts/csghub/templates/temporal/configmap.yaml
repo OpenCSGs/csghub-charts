@@ -20,16 +20,17 @@ data:
   TEMPORAL_CORS_ORIGINS: {{ include "common.endpoint.csghub" . | quote }}
   TEMPORAL_CSRF_COOKIE_INSECURE: "true"
   TEMPORAL_UI_PUBLIC_PATH: "/-/temporal"
-  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
-  {{- $app := include "csghub.casdoor.client" "Admin" | fromYaml }}
-  {{- $casdoorClientID := dig "TEMPORAL_AUTH_CLIENT_ID" $app.clientId $data }}
-  {{- $casdoorClientSecret := dig "TEMPORAL_AUTH_CLIENT_SECRET" $app.clientSecret $data }}
+  {{- $casdoorInitName := printf "%s-init" (include "common.names.custom" (list . "casdoor")) }}
+  {{- $casdoorInitData := (lookup "v1" "Secret" .Release.Namespace $casdoorInitName).data | default dict }}
+  {{- $adminApp := include "csghub.casdoor.client" "Admin" | fromYaml }}
+  {{- $adminClientID := or (dig "CASDOOR_ADMIN_CLIENT_ID" "" $casdoorInitData | b64dec) $adminApp.clientId }}
+  {{- $adminClientSecret := or (dig "CASDOOR_ADMIN_CLIENT_SECRET" "" $casdoorInitData | b64dec) $adminApp.clientSecret }}
   TEMPORAL_AUTH_ENABLED: "true"
   TEMPORAL_AUTH_TYPE: "oidc"
   TEMPORAL_AUTH_PROVIDER_URL: {{ include "common.endpoint.casdoor" . | quote }}
   TEMPORAL_AUTH_ISSUER_URL: {{ include "common.endpoint.casdoor" . | quote }}
-  TEMPORAL_AUTH_CLIENT_ID: {{ $casdoorClientID | quote }}
-  TEMPORAL_AUTH_CLIENT_SECRET: {{ $casdoorClientSecret | quote }}
+  TEMPORAL_AUTH_CLIENT_ID: {{ $adminClientID | quote }}
+  TEMPORAL_AUTH_CLIENT_SECRET: {{ $adminClientSecret | quote }}
   TEMPORAL_AUTH_CALLBACK_URL: {{ printf "%s/-/temporal/auth/sso/callback" (include "common.endpoint.csghub" .) | quote }}
   TEMPORAL_AUTH_SCOPES: "openid,email,profile"
 {{- end }}
