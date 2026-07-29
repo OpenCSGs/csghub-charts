@@ -232,9 +232,11 @@ server:
     maxModelRepoSize: "536870912000"       # Max model repo size for mirror sync in bytes (default 500GB)
     maxDatasetRepoSize: "536870912000"     # Max dataset repo size for mirror sync in bytes (default 500GB)
 
+  maxUnLFileSize: "52428800"               # Max UnLFS file size (default 50MB)
+
   ## Space build configuration
   space:
-    buildTimeout: "30"                    # Timeout (in minutes) for space build operations
+    buildTimeout: "30"                     # Timeout (in minutes) for space build operations
 
   ## API documentation
   swaggerAPI:

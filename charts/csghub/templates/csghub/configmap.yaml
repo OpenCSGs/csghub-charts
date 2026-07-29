@@ -235,6 +235,7 @@ data:
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
   {{- $jwtToken := dig "STARHUB_JWT_SIGNING_KEY" (randNumeric 8 | sha1sum) $data }}
   STARHUB_JWT_SIGNING_KEY: {{ $jwtToken | quote }}
+  STARHUB_SERVER_GIT_MAX_UN_LFS_FILE_SIZE: {{ $serverSvc.maxUnLFileSize | quote }}
 
   ## Server Configuration for Model
   {{- $runnerSvc := include "common.service" (dict "ctx" . "service" "runner") | fromYaml }}
