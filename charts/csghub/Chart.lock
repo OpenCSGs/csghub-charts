@@ -35,5 +35,5 @@ dependencies:
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:f5f671c32423c934c15e92c737c6ffea992356b0e81765c4c8b42531003e22d8
-generated: "2026-07-21T18:08:33.749305+08:00"
+digest: sha256:fe63c8e165f09559fa7879c49e6b1f71f132aa4a0f29a4d26843dbfa21a41d0f
+generated: "2026-07-31T18:38:59.126192+08:00"
