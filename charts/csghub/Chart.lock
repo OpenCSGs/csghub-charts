@@ -19,7 +19,7 @@ dependencies:
   version: 2.3.0
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
-  version: 2.3.0
+  version: 2.3.1
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.3
