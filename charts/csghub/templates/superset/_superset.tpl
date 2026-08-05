@@ -79,12 +79,18 @@ TALISMAN_ENABLED = False
 # The frontend then prepends app_root again, causing a double prefix.
 APP_ICON = "/-/superset/static/assets/images/superset-logo-horiz.png"
 
-# Enable language picker and default to Chinese
-LANGUAGES = {
-    "en": {"flag": "us", "name": "English"},
-    "zh": {"flag": "cn", "name": "中文"},
-}
-BABEL_DEFAULT_LOCALE = "en"
+# Enable language picker and default locale, driven by env vars injected via
+# the superset-env secret (SUPERSET_ENABLED_LANGUAGES / SUPERSET_DEFAULT_LOCALE).
+_enabled_langs = os.environ.get('SUPERSET_ENABLED_LANGUAGES', 'en,zh')
+LANGUAGES = {}
+for _code in [c.strip() for c in _enabled_langs.split(',') if c.strip()]:
+    if _code == 'en':
+        LANGUAGES[_code] = {"flag": "us", "name": "English"}
+    elif _code == 'zh':
+        LANGUAGES[_code] = {"flag": "cn", "name": "中文"}
+    else:
+        LANGUAGES[_code] = {"flag": _code, "name": _code}
+BABEL_DEFAULT_LOCALE = os.environ.get('SUPERSET_DEFAULT_LOCALE', 'en')
 
 AUTH_ROLE_PUBLIC = "Public"
 PUBLIC_ROLE_LIKE = "Public"

@@ -971,6 +971,10 @@ envoy:
 ## ref: https://github.com/apache/superset/tree/master/helm/superset
 superset:
   enabled: false
+
+  image:
+    tag: "6.1.0-csg"
+
   secretEnv:
     create: false
   postgresql:
