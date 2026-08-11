@@ -19,7 +19,7 @@ spec:
   clusterIP: None
   ports:
     - port: {{ $service.service.port }}
-      targetPort: 5432
+      targetPort: 6379
       protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
   selector:
