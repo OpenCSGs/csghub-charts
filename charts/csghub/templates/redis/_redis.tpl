@@ -27,7 +27,7 @@ SPDX-License-Identifier: APACHE-2.0
     - -c
     - |
       {{- if or (and $ctx.Values.global.redis.enabled $redisSvc.requirePass) (and (not $ctx.Values.global.redis.enabled) $redisConfig.password) }}
-      until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} -a {{ $redisConfig.password }} ping | grep -q "PONG";
+      until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} -a {{ $redisConfig.password | quote }} ping | grep -q "PONG";
       {{- else }}
       until redis-cli -h {{ $redisConfig.host }} -p {{ $redisConfig.port }} ping | grep -q "PONG";
       {{- end }}
