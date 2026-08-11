@@ -158,7 +158,7 @@ agenticflow:
       memory: "512Mi"
     limits:
       cpu: "1"
-      memory: "1024Gi"
+      memory: "1024Mi"
 
 # CSGBot configuration
 csgbot:
@@ -179,7 +179,7 @@ csgbot:
     # port: 8070
 
   ## Credentials Configuration
-  environment: {}
+  environments: {}
 
   ## ConfigMap Configuration
   config:
