@@ -1,126 +1,154 @@
+# Test suite for the dataflow Gateway resources.
+#
+# The template renders a GatewayClass and a listeners Gateway in standalone
+# mode only. The listeners Gateway references the EnvoyProxy CR when the
+# controller is envoy, and aggregates TLS certificate refs from the global
+# gateway plus the dataflow and label-studio service-level TLS secrets.
+#
+# Document order follows the template: GatewayClass(0), listeners Gateway(1).
+
 suite: Test Dataflow Gateway
 templates:
   - gateway.yaml
-  - envoy-proxy.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  global:
-    gateway:
-      controllerName: "gateway.envoyproxy.io/gatewayclass-controller"
-      external:
-        domain: "csghub.example.cn"
-      tls:
-        enabled: true
-        secretName: "example-cn-tls"
-      service:
-        type: "NodePort"
-        nodePorts:
-          http: 30080
-          https: 30443
-          gitssh: 30022
-    image:
-      registry: "docker.io"
-  server:
-    gitlabShell:
-      sshPort: "22"
+values:
+  - values.yaml
 tests:
-  - it: Should render gateway correctly
+  ## ------------------------------------------------------------------
+  ## Standalone mode
+  ## ------------------------------------------------------------------
+  - it: renders the GatewayClass with the configured controller name
     template: gateway.yaml
     documentIndex: 0
     asserts:
+      - isKind:
+          of: GatewayClass
+      - equal:
+          path: metadata.name
+          value: "csghub-gateway"
       - equal:
           path: spec.controllerName
           value: "gateway.envoyproxy.io/gatewayclass-controller"
 
-  - it: Should render gateway correctly
+  - it: renders the listeners Gateway with an envoy proxy parametersRef
     template: gateway.yaml
     documentIndex: 1
     asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: "listeners"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.gatewayClassName
+          value: "csghub-gateway"
+      - equal:
+          path: spec.infrastructure.parametersRef.group
+          value: "gateway.envoyproxy.io"
+      - equal:
+          path: spec.infrastructure.parametersRef.kind
+          value: "EnvoyProxy"
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "csghub-envoy-proxy"
+      - equal:
+          path: spec.listeners[0].name
+          value: "http"
+      - equal:
+          path: spec.listeners[0].protocol
+          value: "HTTP"
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: "Same"
+
+  ## ------------------------------------------------------------------
+  ## TLS
+  ## ------------------------------------------------------------------
+  - it: renders an https listener with the global TLS certificate only
+    template: gateway.yaml
+    documentIndex: 1
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: "https"
       - equal:
           path: spec.listeners[1].protocol
           value: "HTTPS"
       - equal:
+          path: spec.listeners[1].port
+          value: 443
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: "Terminate"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].kind
+          value: "Secret"
+      - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          value: "test-tls"
 
-  - it: Should render gateway correctly
+  - it: aggregates service-level TLS certificates when they differ from global
     template: gateway.yaml
     documentIndex: 1
     set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "global-tls"
       dataflow:
         gateway:
           tls:
-            secretName: "csghub-dataflow-tls"
+            secretName: "df-tls"
       labelStudio:
         gateway:
           tls:
-            secretName: "csghub-label-studio-tls"
+            secretName: "ls-tls"
     asserts:
-      - equal:
-          path: spec.listeners[1].protocol
-          value: "HTTPS"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          value: "global-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[1].name
-          value: "csghub-dataflow-tls"
+          value: "df-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[2].name
-          value: "csghub-label-studio-tls"
+          value: "ls-tls"
 
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
-    asserts:
-      - isKind:
-          of: "EnvoyProxy"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30080
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30443
-
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
+  ## ------------------------------------------------------------------
+  ## Conditional rendering
+  ## ------------------------------------------------------------------
+  - it: omits the envoy proxy parametersRef for a non-envoy controller
+    template: gateway.yaml
+    documentIndex: 1
     set:
       global:
         gateway:
-          service:
-            nodePorts:
-              http: 30880
-              https: 30444
-              gitssh: 30222
-        image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          controllerName: "istio.io/gateway-controller"
     asserts:
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30880
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30444
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+      - notExists:
+          path: spec.infrastructure
 
-  - it: Should render envoyDeployment as empty object when using non-opencsg registry
-    template: envoy-proxy.yaml
+  - it: renders nothing in built-in mode
+    template: gateway.yaml
     set:
       global:
-        image:
-          registry: "docker.io"
+        chartContext:
+          isBuiltIn: true
     asserts:
-      - isKind:
-          of: "EnvoyProxy"
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment
-          value: {}
+      - hasDocuments:
+          count: 0

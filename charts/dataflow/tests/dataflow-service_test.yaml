@@ -1,0 +1,96 @@
+# Test suite for the dataflow Service.
+#
+# The Service exposes the dataflow port (8000 by default) and selects pods by
+# the dataflow service label. The targetPort is fixed at 8000.
+
+suite: Test Dataflow Service
+templates:
+  - dataflow/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the dataflow Service metadata and labels
+    template: dataflow/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-dataflow"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "dataflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "dataflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the dataflow Service spec with default port
+    template: dataflow/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "dataflow"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "dataflow"
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: "csghub"
+
+  - it: renders a custom port while keeping the target port fixed
+    template: dataflow/service.yaml
+    set:
+      dataflow:
+        service:
+          port: 9090
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 9090
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+
+  - it: renders a NodePort type when service.type is overridden
+    template: dataflow/service.yaml
+    set:
+      dataflow:
+        service:
+          type: "NodePort"
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+
+  - it: renders a custom protocol when service.protocol is overridden
+    template: dataflow/service.yaml
+    set:
+      dataflow:
+        service:
+          protocol: "UDP"
+    asserts:
+      - equal:
+          path: spec.ports[0].protocol
+          value: "UDP"

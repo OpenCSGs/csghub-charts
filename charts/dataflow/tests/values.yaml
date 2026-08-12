@@ -1,0 +1,116 @@
+# Shared baseline values for CSGHub Dataflow unit tests.
+#
+# Every value consumed by the templates is defined EXPLICITLY below.
+# Tests never rely on the default values shipped in values.yaml, so
+# changing those defaults cannot break the unit tests.
+#
+# Release context is fixed as release=csghub, namespace=csghub.
+# The chart is rendered in standalone mode (isBuiltIn=false) by default;
+# built-in (umbrella) mode is exercised via per-test overrides.
+
+## Global Configuration
+global:
+  ## Gateway configuration
+  gateway:
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    service:
+      type: LoadBalancer
+      nodePorts:
+        http: 30080
+        https: 30443
+        gitssh: 30022
+    external:
+      domain: csghub.example.com
+      public: ""
+      useTop: false
+    tls:
+      enabled: false
+      secretName: ""
+  ## Image management
+  image:
+    registry: docker.io
+    registryPolicy: default
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## Persistent volume configuration
+  persistence:
+    accessModes:
+      - ReadWriteOnce
+    size: "10Gi"
+  ## Database configuration (built-in PostgreSQL enabled by default)
+  postgresql:
+    enabled: true
+    external: {}
+  ## SubChart deployment context (standalone)
+  chartContext:
+    isBuiltIn: false
+  ## Image edition suffix (v2.4.0 -> v2.4.0-ee)
+  edition: ee
+
+## External CSGHub URL for accessing the hub interface
+externalUrl: "https://csghub.example.com"
+
+## Dataflow Configuration
+dataflow:
+  ## Image settings (overrides global.image)
+  image:
+    repository: opencsghq/dataflow
+    tag: v2.4.0-api
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## Gateway enablement (service-level override for common.gateway.config)
+  gateway:
+    enabled: true
+    tls: {}
+  ## Database configuration (empty: uses built-in PostgreSQL)
+  postgresql: {}
+  ## Persistent volume configuration
+  persistence:
+    accessModes:
+      - ReadWriteOnce
+    size: "50Gi"
+  ## Table rename migration
+  migrations:
+    enabled: true
+
+## Label Studio Configuration
+labelStudio:
+  ## Image settings (overrides global.image)
+  image:
+    repository: opencsghq/label-studio
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## Gateway enablement
+  gateway:
+    enabled: true
+    tls: {}
+  ## Database configuration (empty: uses built-in PostgreSQL)
+  postgresql: {}
+  ## Persistent volume configuration (empty: uses global defaults via statefulset)
+  persistence: {}
+  ## Security context
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
+## Embedded PostgreSQL configuration
+postgresql:
+  image:
+    repository: opencsghq/postgres
+    tag: "15.18"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 5432
+    protocol: TCP
+  ## Databases created on startup
+  databases:
+    - "csghub_dataflow"
+    - "csghub_label_studio"
+  ## Runtime parameters (empty by default; overridden per test)
+  parameters: {}
+  persistence:
+    size: "50Gi"
