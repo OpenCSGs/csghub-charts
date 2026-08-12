@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.3
+  version: 0.2.4
 - name: reloader
   repository: https://charts.opencsg.com/infra
   version: 2.2.14
@@ -11,5 +11,5 @@ dependencies:
 - name: memmachine
   repository: https://charts.opencsg.com/infra
   version: 0.1.0
-digest: sha256:e2f66fdcf2663e171eb38fa5aba692b8fe68ba9c095211bef53ccd2e225d8386
-generated: "2026-08-12T12:04:52.851031+08:00"
+digest: sha256:8c19b46dcee795f1ff9063545e78362432b0e70f864ed42db213b10f584bd3b6
+generated: "2026-08-12T16:32:51.616025+08:00"

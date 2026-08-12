@@ -41,10 +41,13 @@ Return Argo Namespace.
 {{- define "namespace.argo" }}
 {{- $ns := "" }}
 {{- $runner := .Values.runner | default dict }}
+{{- $runnerConfig := $runner.runner | default dict }}
 {{- $merging := "" }}
 
 {{- if hasKey $runner "mergingNamespace" }}
   {{- $merging = $runner.mergingNamespace }}
+{{- else if hasKey $runnerConfig "mergingNamespace" }}
+  {{- $merging = $runnerConfig.mergingNamespace }}
 {{- else if hasKey .Values "mergingNamespace" }}
   {{- $merging = .Values.mergingNamespace }}
 {{- end }}
@@ -64,10 +67,13 @@ Return Knative Namespace.
 {{- define "namespace.knative" }}
 {{- $ns := "" }}
 {{- $runner := .Values.runner | default dict }}
+{{- $runnerConfig := $runner.runner | default dict }}
 {{- $merging := "" }}
 
 {{- if hasKey $runner "mergingNamespace" }}
   {{- $merging = $runner.mergingNamespace }}
+{{- else if hasKey $runnerConfig "mergingNamespace" }}
+  {{- $merging = $runnerConfig.mergingNamespace }}
 {{- else if hasKey .Values "mergingNamespace" }}
   {{- $merging = .Values.mergingNamespace }}
 {{- end }}
@@ -88,10 +94,13 @@ Return Kourier Namespace.
 {{- define "namespace.kourier" }}
 {{- $ns := "" }}
 {{- $runner := .Values.runner | default dict }}
+{{- $runnerConfig := $runner.runner | default dict }}
 {{- $merging := "" }}
 
 {{- if hasKey $runner "mergingNamespace" }}
   {{- $merging = $runner.mergingNamespace }}
+{{- else if hasKey $runnerConfig "mergingNamespace" }}
+  {{- $merging = $runnerConfig.mergingNamespace }}
 {{- else if hasKey .Values "mergingNamespace" }}
   {{- $merging = .Values.mergingNamespace }}
 {{- end }}
@@ -113,10 +122,13 @@ Return LeaderWorkset (LWS) Namespace.
 {{- define "namespace.lws" }}
 {{- $ns := "" }}
 {{- $runner := .Values.runner | default dict }}
+{{- $runnerConfig := $runner.runner | default dict }}
 {{- $merging := "" }}
 
 {{- if hasKey $runner "mergingNamespace" }}
   {{- $merging = $runner.mergingNamespace }}
+{{- else if hasKey $runnerConfig "mergingNamespace" }}
+  {{- $merging = $runnerConfig.mergingNamespace }}
 {{- else if hasKey .Values "mergingNamespace" }}
   {{- $merging = .Values.mergingNamespace }}
 {{- end }}
