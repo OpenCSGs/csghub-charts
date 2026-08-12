@@ -1,0 +1,142 @@
+# Test suite for the runner Argo RBAC resources.
+#
+# The template renders a dedicated argo workflow executor Role, ServiceAccount
+# and RoleBinding, plus an addon Role/RoleBinding for the workflow controller,
+# all scoped to the spaces namespace.
+#
+# Document order follows the template: Role executor(0), ServiceAccount(1),
+# RoleBinding executor(2), Role addon(3), RoleBinding addon(4).
+
+suite: Test Runner Argo RBAC
+templates:
+  - rbac-argo.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders 5 documents in the spaces namespace
+    template: rbac-argo.yaml
+    asserts:
+      - hasDocuments:
+          count: 5
+
+  - it: renders nothing when RBAC creation is disabled
+    template: rbac-argo.yaml
+    set:
+      rbac:
+        create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders the argo workflow executor Role
+    template: rbac-argo.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: Role
+      - equal:
+          path: metadata.name
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - contains:
+          path: rules[0].resources
+          content: "pods/exec"
+      - contains:
+          path: rules[1].apiGroups
+          content: "argoproj.io"
+      - contains:
+          path: rules[1].resources
+          content: "cronworkflows"
+      - contains:
+          path: rules[2].resources
+          content: "secrets"
+
+  - it: renders the argo workflow executor ServiceAccount
+    template: rbac-argo.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.name
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+
+  - it: renders the argo workflow executor RoleBinding
+    template: rbac-argo.yaml
+    documentIndex: 2
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - equal:
+          path: metadata.name
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - equal:
+          path: roleRef.name
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: subjects[0].kind
+          value: "ServiceAccount"
+      - equal:
+          path: subjects[0].name
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: subjects[0].namespace
+          value: "spaces"
+
+  - it: renders the argo workflow controller addon Role
+    template: rbac-argo.yaml
+    documentIndex: 3
+    asserts:
+      - isKind:
+          of: Role
+      - equal:
+          path: metadata.name
+          value: "csghub-argo-workflow-executor-addon"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - equal:
+          path: rules[0].resources[0]
+          value: "secrets"
+      - equal:
+          path: rules[0].verbs
+          value: ["get", "list"]
+
+  - it: binds the addon Role to the workflow controller ServiceAccount
+    template: rbac-argo.yaml
+    documentIndex: 4
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - equal:
+          path: metadata.name
+          value: "csghub-argo-workflow-executor-addon"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - equal:
+          path: roleRef.kind
+          value: "Role"
+      - equal:
+          path: roleRef.name
+          value: "csghub-argo-workflow-executor-addon"
+      - equal:
+          path: subjects[0].kind
+          value: "ServiceAccount"
+      - equal:
+          path: subjects[0].name
+          value: "csghub-argo-workflow-controller"
+      - equal:
+          path: subjects[0].namespace
+          value: "csghub"

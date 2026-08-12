@@ -1,195 +1,73 @@
+# Test suite for the runner ConfigMap.
+#
+# Baseline values come from tests/values.yaml (standalone mode, isBuiltIn=false).
+# Every assertion targets explicitly defined values or template fallbacks,
+# so editing default values in values.yaml cannot break this suite.
+#
+# NOTE: The isBuiltIn=true branch of configmap.yaml calls common.s3.config,
+# which depends on "common.endpoint.minio" defined only in the csghub umbrella
+# chart. It cannot be rendered by the standalone runner chart, so all
+# isBuiltIn-specific keys are not covered here.
+
 suite: Test Runner ConfigMap
 templates:
   - configmap.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  ## Global Definition
-  global:
-    ## Gateway Definition
-    gateway:
-      ## Controller
-      controllerName: gateway.envoyproxy.io/gatewayclass-controller
-      service:
-        type: LoadBalancer
-        nodePort: {}
-
-      ## Access Domain
-      external:
-        domain: csghub.unittest.io
-        public: ""
-        useTop: false
-
-      ## TLS Encryption
-      tls:
-        enabled: false
-        secretName: ""
-
-    ## Image Definition
-    image:
-      registry: unittest.io
-      registryPolicy: default
-      tag: v2.0.0
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-
-    ## Registry Definition
-    registry:
-      enabled: false
-
-    ## objectStore Definition
-    objectStore:
-      enabled: false
-
-    ## chartContext Definition
-    chartContext:
-      isBuiltIn: false
-
-  ## Csghub Definition
-  externalUrl: https://csghub.unittest.io
-  image:
-    repository: opencsghq/csghub-server
-    tag: v2.0.0
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  gateway:
-    enabled: true
-    tls: {}
-  hubAPIToken: unittest-api-token-standalone
-  originClusterID: unittest-cluster
-
-  ## Runner Definition
-  name: runner-unittest
-
-  service:
-    type: ClusterIP
-    port: 8082
-    protocol: TCP
-
-  runner:
-    region: es-west-1
-    interval: 30
-    namespace: spaces
-    mergingNamespace: disable
-    imageBuilderGitImage: ""
-    imageBuilderKanikoImage: ""
-    imageBuilderStatusTTL: 300
-    imageBuilderKanikoArgs: []
-    hearBeatIntervalInSec: 120
-    applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
-    networkInterface: eth0
-    storageClassName: local-path
-
-  model:
-    deployTimeoutInMin: 60
-    downloadEndpoint: "https://hub.opencsg.com"
-    dockerRegBase: model.unittest.io
-    deployStatusCheckInterval: 10
-
-  space:
-    usePublicDomain: true
-    pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
-    deployTimeoutInMin: 30
-    buildTimeoutInMin: 30
-    gpuModelLabel:
-      typeLabel: nvidia.com/gpu.product
-      capacityLabel: nvidia.com/gpu
-    readinessDelaySeconds: 120
-    readinessPeriodSeconds: 10
-    readinessFailureThreshold: 3
-    statusCheckInterval: 10
-
-  knative:
-    serving:
-      domain: unittest.io
-
-      autoscaler:
-        enableScaleToZero: true
-        scaleToZeroPodRetentionPeriod: 30m
-
-  rbac:
-    create: true
-    serviceAccountName: runner-unittest
-
-  logcollector:
-    enabled: false
-
-    loki:
-      address: ""
-
-  tempo:
-    address: ""
-
-  registry:
-    registry: registry.unittest.io
-    repository: csghub
-    username: unittest
-    password: unittest
-    insecure: "true"
-
-  objectStore:
-    endpoint: https://s3.unittest.io
-    accessKey: unittest
-    secretKey: unittest
-    bucket: runner-unittest
-    region: cn-north-1
-    secure: "true"
-    encrypt: "false"
-    pathStyle: "true"
-
-  prometheus:
-    enabled: true
-    gateway:
-      enabled: false
-      basicAuth: {}
-    server:
-      remoteWrite: []
-
-  volcano:
-    enabled: true
-    basic:
-      image_pull_policy: IfNotPresent
-
+values:
+  - values.yaml
 tests:
-  - it: Should render ConfigMap metadata normally
+  ## ------------------------------------------------------------------
+  ## Metadata
+  ## ------------------------------------------------------------------
+  - it: renders ConfigMap metadata with standard labels
     asserts:
       - equal:
           path: metadata.name
-          value: "csghub-runner-unittest"
+          value: "csghub-runner"
       - equal:
           path: metadata.namespace
           value: "csghub"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: runner-unittest
+          value: "runner"
       - equal:
           path: metadata.labels["app.kubernetes.io/instance"]
-          value: csghub
+          value: "csghub"
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
-          value: runner
+          value: "runner"
       - equal:
           path: metadata.labels["app.kubernetes.io/managed-by"]
-          value: Helm
+          value: "Helm"
 
-  - it: Should render ConfigMap data with isBuiltIn=false normally
+  ## ------------------------------------------------------------------
+  ## Server configuration
+  ## ------------------------------------------------------------------
+  - it: renders server connection settings in standalone mode
     asserts:
       - equal:
           path: data.STARHUB_SERVER_API_TOKEN
-          value: "unittest-api-token-standalone"
+          value: "test-hub-api-token"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT
-          value: "https://csghub.unittest.io"
+          value: "https://csghub.example.com"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
-          value: "http://runner-unittest.unittest.io"
+          value: "http://runner.example.com"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME
-          value: "csghub-runner-unittest"
+          value: "csghub-runner"
       - equal:
           path: data.STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL
           value: ""
+
+  ## ------------------------------------------------------------------
+  ## Cluster configuration
+  ## ------------------------------------------------------------------
+  - it: renders cluster namespace and region settings
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_CLUSTER_SPACES_NAMESPACE
           value: "spaces"
@@ -201,76 +79,158 @@ tests:
           value: "30"
       - equal:
           path: data.STARHUB_SERVER_CLUSTER_REGION
-          value: "es-west-1"
+          value: "test-region"
+      - equal:
+          path: data.STARHUB_SERVER_CLUSTER_ALLOW_CPU_RESOURCE_SCHEDULE_TO_GPU_NODE
+          value: "false"
+
+  ## ------------------------------------------------------------------
+  ## Root domain configuration
+  ## ------------------------------------------------------------------
+  - it: renders public root domain derived from the gateway external domain
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: "csghub.unittest.io"
+          value: "csghub.example.com"
       - equal:
           path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
           value: "spaces.app.internal"
+
+  - it: leaves public root domain empty when usePublicDomain is false
+    set:
+      space:
+        usePublicDomain: false
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: ""
+
+  - it: keeps the full subdomain when useTop is true on a multi-level domain
+    set:
+      global:
+        gateway:
+          external:
+            useTop: true
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
+          value: "http://runner.csghub.example.com"
+
+  - it: prefixes a second-level domain with csghub for the public root domain
+    set:
+      global:
+        gateway:
+          external:
+            domain: "example.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
+          value: "http://runner.example.com"
+
+  ## ------------------------------------------------------------------
+  ## Registry and image builder configuration
+  ## ------------------------------------------------------------------
+  - it: renders registry and image builder settings from explicit values
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_DOCKER_REG_BASE
-          value: "registry.unittest.io/csghub/"
+          value: "registry.example.com/csghub/"
       - equal:
           path: data.STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET
           value: "csghub-docker-credential"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE
-          value: "unittest.io"
+          value: "docker.io"
       - equal:
           path: data.STARHUB_SERVER_SPACE_PYPI_INDEX_URL
-          value: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+          value: "https://pypi.example.com/simple"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
-          value: "unittest.io/opencsghq/git:2.52.0"
+          value: "docker.io/opencsghq/git:2.52.0"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
-          value: "unittest.io/opencsghq/kaniko-executor:v1.24.0"
+          value: "docker.io/opencsghq/kaniko-executor:v1.24.0"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL
           value: "300"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
           value: "300"
-      - matchRegex:
-          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
-          pattern: '--cache-repo=registry.unittest.io/csghub'
+
+  - it: keeps the kaniko job TTL fixed while the status TTL is overridden
+    set:
+      runner:
+        imageBuilderStatusTTL: 999
+    asserts:
       - equal:
-          path: data.STARHUB_SERVER_ARGO_SERVICE_ACCOUNT
-          value: "csghub-argo-workflow-executor"
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL
+          value: "300"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
+          value: "999"
+
+  - it: derives the docker registry base from externalUrl when registry is empty
+    set:
+      registry:
+        registry: ""
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_DOCKER_REG_BASE
+          value: "csghub.example.com/csghub/"
+
+  - it: builds kaniko args from registry, pip and hf endpoint
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
+          value: "--compressed-caching=true,--single-snapshot,--log-format=text,--cache=true,--cache-ttl=24h,--cache-repo=registry.example.com/csghub,--build-arg=PyPI=https://pypi.example.com/simple,--build-arg=HF_ENDPOINT=https://csghub.example.com/hf"
+
+  - it: appends skip-tls and extra args when registry insecure and extra args are set
+    set:
+      registry:
+        insecure: "true"
+      runner:
+        imageBuilderKanikoArgs:
+          - "--custom-arg=x"
+        imageBuilderGitImage: "git.example.com/git:9.9"
+        imageBuilderKanikoImage: "kaniko.example.com/kaniko:9.9"
+        imageBuilderStatusTTL: 999
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
+          value: "git.example.com/git:9.9"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
+          value: "kaniko.example.com/kaniko:9.9"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
+          value: "999"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
+          value: "--compressed-caching=true,--single-snapshot,--log-format=text,--cache=true,--cache-ttl=24h,--cache-repo=registry.example.com/csghub,--build-arg=PyPI=https://pypi.example.com/simple,--build-arg=HF_ENDPOINT=https://csghub.example.com/hf,--skip-tls-verify,--skip-tls-verify-pull,--insecure,--insecure-pull,--custom-arg=x"
+
+  ## ------------------------------------------------------------------
+  ## Argo and GPU labels
+  ## ------------------------------------------------------------------
+  - it: renders argo service account and gpu model label
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_ARGO_SERVICE_ACCOUNT
           value: "csghub-argo-workflow-executor"
       - equal:
           path: data.STARHUB_SERVER_GPU_MODEL_LABEL
           value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
+
+  ## ------------------------------------------------------------------
+  ## Timeouts and readiness probes
+  ## ------------------------------------------------------------------
+  - it: renders model and space timeouts from explicit values
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
           value: "60"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
-          value: "https://csghub.unittest.io"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
-          value: "model.unittest.io"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL
-          value: "10"
-      - equal:
-          path: data.STARHUB_SERVER_CLUSTER_ID
-          value: "unittest-cluster"
-      - equal:
-          path: data.STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC
-          value: "120"
-      - equal:
-          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_GIT_IMAGE
-          value: "unittest.io/opencsghq/git:2.52.0"
-      - equal:
-          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_IMAGE
-          value: "unittest.io/opencsghq/kaniko-executor:v1.24.0"
-      - equal:
-          path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
-          value: "300"
       - equal:
           path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
           value: "30"
@@ -289,21 +249,57 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_READINESS_FAILURE_THRESHOLD
           value: "3"
+
+  ## ------------------------------------------------------------------
+  ## Model endpoint and docker registry
+  ## ------------------------------------------------------------------
+  - it: renders model download endpoint and docker registry base
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
+          value: "docker.io"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL
+          value: "10"
       - equal:
           path: data.STARHUB_SERVER_CLUSTER_ID
-          value: "unittest-cluster"
+          value: "test-cluster-id"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC
+          value: "120"
+
+  - it: uses custom docker registry base when model.dockerRegBase is set
+    set:
+      model:
+        dockerRegBase: "model.example.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
+          value: "model.example.com"
+
+  ## ------------------------------------------------------------------
+  ## S3 / object store configuration
+  ## ------------------------------------------------------------------
+  - it: renders s3 connection settings from explicit values
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
-          value: "unittest"
+          value: "test-access"
       - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_SECRET
-          value: "unittest"
+          value: "test-secret"
       - equal:
           path: data.STARHUB_SERVER_S3_ENDPOINT
-          value: "s3.unittest.io"
+          value: "s3.example.com"
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET
-          value: "runner-unittest"
+          value: "test-bucket"
+      - equal:
+          path: data.STARHUB_SERVER_ARGO_S3_PUBLIC_BUCKET
+          value: "test-bucket"
       - equal:
           path: data.STARHUB_SERVER_S3_REGION
           value: "cn-north-1"
@@ -313,20 +309,117 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
           value: "path"
+
+  - it: uses auto bucket lookup when pathStyle is not true
+    set:
+      objectStore:
+        pathStyle: "false"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
+          value: "auto"
+
+  ## ------------------------------------------------------------------
+  ## Tracing (standalone mode)
+  ## ------------------------------------------------------------------
+  - it: disables tracing logging when tempo address is empty
+    asserts:
       - equal:
           path: data.OPENCSG_TRACING_OTLP_LOGGING
           value: "false"
       - notExists:
           path: data.OPENCSG_TRACING_OTLP_ENDPOINT
+
+  - it: enables tracing when tempo address is set
+    set:
+      tempo:
+        address: "https://tempo.example.com"
+    asserts:
+      - equal:
+          path: data.OPENCSG_TRACING_OTLP_LOGGING
+          value: "true"
+      - equal:
+          path: data.OPENCSG_TRACING_OTLP_ENDPOINT
+          value: "https://tempo.example.com"
+
+  ## ------------------------------------------------------------------
+  ## Application endpoint resolution
+  ## ------------------------------------------------------------------
+  - it: derives envoy-knative endpoint in gateway-api mode with envoy controller
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
+          value: "http://csghub-envoy-knative.csghub.svc.cluster.local"
+
+  - it: derives kourier endpoint in kourier mode
+    set:
+      knative:
+        serving:
+          ingress: "kourier"
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
           value: "http://kourier-internal.knative-serving.svc.cluster.local"
+
+  - it: falls back to auto endpoint with a non-envoy gateway controller
+    set:
+      global:
+        gateway:
+          controllerName: "istio.io/gateway-controller"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
+          value: "auto"
+
+  - it: uses the configured endpoint when applicationEndpoint is set
+    set:
+      runner:
+        applicationEndpoint: "http://custom.example.com:9999"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
+          value: "http://custom.example.com:9999"
+
+  ## ------------------------------------------------------------------
+  ## LWS and storage
+  ## ------------------------------------------------------------------
+  - it: renders empty network interface and storage class by default
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_RUNNER_NETWORK_INTERFACE
-          value: "eth0"
+          value: ""
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_STORAGE_CLASS
+          value: ""
+
+  - it: renders network interface and storage class when set
+    set:
+      runner:
+        networkInterface: "eth1"
+        storageClassName: "local-path"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_NETWORK_INTERFACE
+          value: "eth1"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_STORAGE_CLASS
           value: "local-path"
+
+  ## ------------------------------------------------------------------
+  ## Volcano scheduler
+  ## ------------------------------------------------------------------
+  - it: omits volcano keys when volcano is disabled
+    asserts:
+      - notExists:
+          path: data.STARHUB_SERVER_RUNNER_KUBE_SCHEDULER
+      - notExists:
+          path: data.STARHUB_SERVER_RUNNER_VGPU_NODE_RESOURCE_NAME
+
+  - it: enables volcano scheduler keys when volcano is enabled
+    set:
+      volcano:
+        enabled: true
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_RUNNER_KUBE_SCHEDULER
           value: "volcano"
@@ -343,7 +436,10 @@ tests:
           path: data.STARHUB_SERVER_RUNNER_VGPU_MEMORY_REQ_KEY
           value: "volcano.sh/vgpu-memory"
 
-  - it: Should render ConfigMap with gateway service type NodePort and TLS encryption normally
+  ## ------------------------------------------------------------------
+  ## Gateway-dependent keys
+  ## ------------------------------------------------------------------
+  - it: renders public domain with nodeport and tls ports when gateway is NodePort with TLS
     set:
       global:
         gateway:
@@ -355,29 +451,69 @@ tests:
               gitssh: 30022
           tls:
             enabled: true
-            secretName: unittest-tls
+            secretName: "test-tls"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
-          value: "https://runner-unittest.unittest.io:30443"
+          value: "https://runner.example.com:30443"
 
-  - it: Should render ConfigMap with loki and tempo normally
+  - it: renders loki url when logcollector loki address is set
     set:
       logcollector:
         enabled: true
-
         loki:
-          address: https://loki.unittest.io
-
-      tempo:
-        address: https://tempo.unittest.io
+          address: "https://loki.example.com"
     asserts:
       - equal:
           path: data.STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL
-          value: "https://loki.unittest.io"
+          value: "https://loki.example.com"
+
+  ## ------------------------------------------------------------------
+  ## Template fallback defaults (explicitly nulled via empty strings)
+  ## ------------------------------------------------------------------
+  - it: falls back to template defaults when values are empty
+    set:
+      runner:
+        region: ""
+        hearBeatIntervalInSec: ""
+      model:
+        deployTimeoutInMin: ""
+        deployStatusCheckInterval: ""
+      space:
+        deployTimeoutInMin: ""
+        buildTimeoutInMin: ""
+        statusCheckInterval: ""
+        readinessDelaySeconds: ""
+        readinessPeriodSeconds: ""
+        readinessFailureThreshold: ""
+    asserts:
       - equal:
-          path: data.OPENCSG_TRACING_OTLP_LOGGING
-          value: "true"
+          path: data.STARHUB_SERVER_CLUSTER_REGION
+          value: "region-0"
       - equal:
-          path: data.OPENCSG_TRACING_OTLP_ENDPOINT
-          value: "https://tempo.unittest.io"
+          path: data.STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC
+          value: "120"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "60"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_READINESS_DELAY_SECONDS
+          value: "120"
+      - equal:
+          path: data.STARHUB_SERVER_READINESS_PERIOD_SECONDS
+          value: "10"
+      - equal:
+          path: data.STARHUB_SERVER_READINESS_FAILURE_THRESHOLD
+          value: "3"

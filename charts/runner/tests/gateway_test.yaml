@@ -1,253 +1,664 @@
+# Test suite for the runner Gateway resources.
+#
+# Covers gateway.yaml (GatewayClass, listeners, knative, knative-local),
+# envoy-proxy.yaml (main, knative, knative-local EnvoyProxy CRs),
+# envoy-proxy-metrics.yaml, httproutes.yaml and httproutes-redirect.yaml.
+#
+# Baseline is standalone mode (isBuiltIn=false) with gateway-api ingress and
+# an Envoy Gateway controller. Multi-document templates select the target
+# document by name via documentSelector instead of relying on fragile indexes.
+
 suite: Test Runner Gateway
 templates:
   - gateway.yaml
   - envoy-proxy.yaml
+  - envoy-proxy-metrics.yaml
   - httproutes.yaml
+  - httproutes-redirect.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  global:
-    gateway:
-      controllerName: "gateway.envoyproxy.io/gatewayclass-controller"
-      external:
-        domain: "csghub.example.cn"
-      tls:
-        enabled: true
-        secretName: "example-cn-tls"
-      service:
-        type: "NodePort"
-        nodePorts:
-          http: 30080
-          https: 30443
-          gitssh: 30022
-    image:
-      registry: "docker.io"
-    chartContext:
-      isBuiltIn: false
-  name: "runner-svc"
-  service:
-    port: 8082
+values:
+  - values.yaml
 tests:
-  - it: Should render gateway correctly
+  ## ------------------------------------------------------------------
+  ## gateway.yaml: standalone mode
+  ## ------------------------------------------------------------------
+  - it: renders the GatewayClass with the configured controller name
     template: gateway.yaml
-    documentIndex: 0
+    documentSelector:
+      path: metadata.name
+      value: csghub-gateway
     asserts:
+      - isKind:
+          of: GatewayClass
       - equal:
           path: spec.controllerName
           value: "gateway.envoyproxy.io/gatewayclass-controller"
 
-  - it: Should render gateway correctly
+  - it: renders the listeners Gateway with an envoy proxy parametersRef
     template: gateway.yaml
-    documentIndex: 1
+    documentSelector:
+      path: metadata.name
+      value: listeners
     asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.gatewayClassName
+          value: "csghub-gateway"
+      - equal:
+          path: spec.infrastructure.parametersRef.group
+          value: "gateway.envoyproxy.io"
+      - equal:
+          path: spec.infrastructure.parametersRef.kind
+          value: "EnvoyProxy"
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "csghub-envoy-proxy"
+      - equal:
+          path: spec.listeners[0].name
+          value: "http"
+      - equal:
+          path: spec.listeners[0].protocol
+          value: "HTTP"
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: "Same"
+
+  - it: renders the knative Gateway with a namespace selector
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: knative
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "csghub-envoy-proxy-knative"
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: "Selector"
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].key
+          value: "kubernetes.io/metadata.name"
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].operator
+          value: "In"
+      - contains:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
+          content: "csghub"
+      - contains:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
+          content: "spaces"
+      - contains:
+          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
+          content: "knative-serving"
+
+  - it: renders the knative-local Gateway
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: knative-local
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "csghub-envoy-proxy-knative-local"
+
+  ## ------------------------------------------------------------------
+  ## gateway.yaml: TLS
+  ## ------------------------------------------------------------------
+  - it: renders an https listener with certificate when TLS is enabled
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: listeners
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: "https"
       - equal:
           path: spec.listeners[1].protocol
           value: "HTTPS"
       - equal:
+          path: spec.listeners[1].port
+          value: 443
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: "Terminate"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].kind
+          value: "Secret"
+      - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          value: "test-tls"
 
-  - it: Should render gateway correctly with local
+  ## ------------------------------------------------------------------
+  ## gateway.yaml: ingress modes
+  ## ------------------------------------------------------------------
+  - it: renders only GatewayClass and listeners in kourier mode
     template: gateway.yaml
-    documentIndex: 1
     set:
-      gateway:
-        tls:
-          secretName: "example-cn-tls-local"
+      knative:
+        serving:
+          ingress: "kourier"
     asserts:
-      - equal:
-          path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls-local"
+      - hasDocuments:
+          count: 2
 
-  - it: Should render httpRoutes correctly
-    template: httproutes.yaml
-    asserts:
-      - contains:
-          path: spec.hostnames
-          content: "runner-svc.example.cn"
-      - equal:
-          path: spec.rules[0].backendRefs[0].name
-          value: "csghub-runner-svc"
-      - equal:
-          path: spec.rules[0].backendRefs[0].port
-          value: 8082
-
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
-    documentIndex: 0
-    asserts:
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30080
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30443
-
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
-    documentIndex: 0
+  - it: renders only the knative Gateways in builtIn mode
+    template: gateway.yaml
     set:
       global:
-        gateway:
-          service:
-            nodePorts:
-              http: 30880
-              https: 30444
-              gitssh: 30222
-        image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+        chartContext:
+          isBuiltIn: true
     asserts:
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30880
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30444
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+      - hasDocuments:
+          count: 2
 
-  - it: Should render envoyDeployment as empty object when using non-opencsg registry
-    template: envoy-proxy.yaml
-    documentIndex: 0
-    set:
-      global:
-        image:
-          registry: "docker.io"
-    asserts:
-      - isKind:
-          of: "EnvoyProxy"
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment
-          value: {}
-
-  - it: Should render knative envoy-proxy with ClusterIP in builtIn mode
-    template: envoy-proxy.yaml
-    documentIndex: 0
+  - it: renders the knative Gateway in builtIn mode
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: knative
     set:
       global:
         chartContext:
           isBuiltIn: true
     asserts:
       - isKind:
-          of: "EnvoyProxy"
+          of: Gateway
       - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "ClusterIP"
-      - notExists:
-          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
+          path: metadata.name
+          value: "knative"
 
-  - it: Should render knative envoy-proxy with NodePort and externalTrafficPolicy in standalone mode
-    template: envoy-proxy.yaml
-    documentIndex: 1
-    asserts:
-      - isKind:
-          of: "EnvoyProxy"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
-          value: "Cluster"
-
-  - it: Should render knative envoy-proxy without externalTrafficPolicy when type is LoadBalancer
-    template: envoy-proxy.yaml
-    documentIndex: 1
+  - it: renders the knative-local Gateway in builtIn mode
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: knative-local
     set:
       global:
-        gateway:
-          service:
-            type: "LoadBalancer"
+        chartContext:
+          isBuiltIn: true
     asserts:
       - isKind:
-          of: "EnvoyProxy"
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: "knative-local"
+
+  - it: renders nothing when the gateway is disabled
+    template: gateway.yaml
+    set:
+      gateway:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  ## ------------------------------------------------------------------
+  ## envoy-proxy.yaml: standalone mode
+  ## ------------------------------------------------------------------
+  - it: renders the main EnvoyProxy with an empty deployment for docker registry
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.provider.type
+          value: "Kubernetes"
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment
+          value: {}
+
+  - it: renders the knative EnvoyProxy with a LoadBalancer service
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy-knative
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: spec.provider.kubernetes.envoyService.name
+          value: "csghub-envoy-knative"
       - equal:
           path: spec.provider.kubernetes.envoyService.type
           value: "LoadBalancer"
       - notExists:
           path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
 
-  - it: Should NOT render knative gateways in kourier mode (default)
-    template: gateway.yaml
-    set:
-      knative:
-        serving:
-          ingress: kourier
-    asserts:
-      - hasDocuments:
-          count: 2
-
-  - it: Should render knative-gateway in gateway-api mode
-    template: gateway.yaml
-    documentIndex: 2
-    set:
-      knative:
-        serving:
-          ingress: gateway-api
+  - it: renders the knative-local EnvoyProxy with a ClusterIP service
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy-knative-local
     asserts:
       - isKind:
-          of: Gateway
+          of: EnvoyProxy
       - equal:
-          path: metadata.name
-          value: knative
+          path: spec.provider.kubernetes.envoyService.name
+          value: "csghub-envoy-knative-local"
       - equal:
-          path: spec.listeners[0].allowedRoutes.namespaces.from
-          value: Selector
-      - equal:
-          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].key
-          value: kubernetes.io/metadata.name
-      - equal:
-          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].operator
-          value: In
-      - contains:
-          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
-          content: csghub
-      - contains:
-          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
-          content: spaces
-      - contains:
-          path: spec.listeners[0].allowedRoutes.namespaces.selector.matchExpressions[0].values
-          content: knative-serving
+          path: spec.provider.kubernetes.envoyService.type
+          value: "ClusterIP"
 
-  - it: Should render knative gateway in gateway-api + builtIn mode
-    template: gateway.yaml
-    documentIndex: 0
+  ## ------------------------------------------------------------------
+  ## envoy-proxy.yaml: NodePort + TLS + OpenCSG registry
+  ## ------------------------------------------------------------------
+  - it: renders NodePort patch ports when the gateway type is NodePort
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
+          value: "Cluster"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].name
+          value: "http-80"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "http-443"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].name
+          value: "tcp-22"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].port
+          value: 22
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].targetPort
+          value: 10022
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
+          value: 30022
+
+  - it: overrides the envoy image for the OpenCSG registry
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+
+  - it: omits the https port patch when TLS is disabled on NodePort
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].name
+          value: "http-80"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "tcp-22"
+      - notExists:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2]
+
+  - it: pads short ssh ports and leaves long ssh ports unchanged
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+      server:
+        gitlabShell:
+          sshPort: 2222
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "tcp-2222"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].port
+          value: 2222
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].targetPort
+          value: 2222
+
+  ## ------------------------------------------------------------------
+  ## envoy-proxy.yaml: builtIn and non-envoy controller
+  ## ------------------------------------------------------------------
+  - it: renders two EnvoyProxies in builtIn mode
+    template: envoy-proxy.yaml
     set:
       global:
         chartContext:
           isBuiltIn: true
-      knative:
-        serving:
-          ingress: gateway-api
     asserts:
       - hasDocuments:
           count: 2
-      - isKind:
-          of: Gateway
-      - equal:
-          path: metadata.name
-          value: knative
 
-  - it: Should render knative-local gateway in gateway-api + builtIn mode
-    template: gateway.yaml
-    documentIndex: 1
+  - it: renders the knative EnvoyProxy with ClusterIP in builtIn mode
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy-knative
     set:
       global:
         chartContext:
           isBuiltIn: true
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.name
+          value: "csghub-envoy-knative"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "ClusterIP"
+
+  - it: renders the knative-local EnvoyProxy with ClusterIP in builtIn mode
+    template: envoy-proxy.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-envoy-proxy-knative-local
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.name
+          value: "csghub-envoy-knative-local"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "ClusterIP"
+
+  - it: renders no EnvoyProxy with a non-envoy controller
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          controllerName: "istio.io/gateway-controller"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  ## ------------------------------------------------------------------
+  ## envoy-proxy-metrics.yaml
+  ## ------------------------------------------------------------------
+  - it: renders the listeners metrics service with prometheus annotations
+    template: envoy-proxy-metrics.yaml
+    documentSelector:
+      path: metadata.name
+      value: envoy-proxy-listeners-metrics
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["prometheus.io/port"]
+          value: "19001"
+      - equal:
+          path: spec.selector["gateway.envoyproxy.io/owning-gateway-name"]
+          value: "listeners"
+      - equal:
+          path: spec.selector["gateway.envoyproxy.io/owning-gateway-namespace"]
+          value: "csghub"
+      - equal:
+          path: spec.ports[0].name
+          value: "metrics"
+      - equal:
+          path: spec.ports[0].port
+          value: 19001
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 19001
+
+  - it: renders the knative metrics service in gateway-api mode
+    template: envoy-proxy-metrics.yaml
+    documentSelector:
+      path: metadata.name
+      value: envoy-proxy-knative-metrics
+    asserts:
+      - equal:
+          path: spec.selector["gateway.envoyproxy.io/owning-gateway-name"]
+          value: "knative"
+      - equal:
+          path: spec.ports[0].port
+          value: 19001
+
+  - it: renders only the listeners metrics service in kourier mode
+    template: envoy-proxy-metrics.yaml
+    set:
       knative:
         serving:
-          ingress: gateway-api
+          ingress: "kourier"
     asserts:
-      - isKind:
-          of: Gateway
+      - hasDocuments:
+          count: 1
+
+  - it: renders the listeners metrics service name in kourier mode
+    template: envoy-proxy-metrics.yaml
+    documentSelector:
+      path: metadata.name
+      value: envoy-proxy-listeners-metrics
+    set:
+      knative:
+        serving:
+          ingress: "kourier"
+    asserts:
       - equal:
           path: metadata.name
-          value: knative-local
+          value: "envoy-proxy-listeners-metrics"
+      - equal:
+          path: spec.selector["gateway.envoyproxy.io/owning-gateway-name"]
+          value: "listeners"
+
+  ## ------------------------------------------------------------------
+  ## httproutes.yaml
+  ## ------------------------------------------------------------------
+  - it: renders the runner HTTPRoute with an http parent section
+    template: httproutes.yaml
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csghub-runner"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "runner"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - contains:
+          path: spec.hostnames
+          content: "runner.example.com"
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: "PathPrefix"
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: "/"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "csghub-runner"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8082
+
+  - it: targets the https parent section when TLS is enabled
+    template: httproutes.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+
+  - it: replaces common labels with service-level labels when set
+    template: httproutes.yaml
+    set:
+      labels:
+        foo: "bar"
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csghub-runner"
+      - equal:
+          path: metadata.labels["foo"]
+          value: "bar"
+      - notExists:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+
+  - it: renders the hostname from the runner domain with useTop
+    template: httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            useTop: true
+    asserts:
+      - contains:
+          path: spec.hostnames
+          content: "runner.csghub.example.com"
+
+  - it: renders nothing when the gateway is disabled
+    template: httproutes.yaml
+    set:
+      gateway:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  ## ------------------------------------------------------------------
+  ## httproutes-redirect.yaml
+  ## ------------------------------------------------------------------
+  - it: renders no redirect route when TLS is disabled
+    template: httproutes-redirect.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders an https redirect route when TLS is enabled
+    template: httproutes-redirect.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-runner-redirect"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - contains:
+          path: spec.hostnames
+          content: "runner.example.com"
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: "RequestRedirect"
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.scheme
+          value: "https"
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.statusCode
+          value: 301
