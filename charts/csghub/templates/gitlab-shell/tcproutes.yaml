@@ -20,7 +20,7 @@ metadata:
 spec:
   parentRefs:
     - name: listeners
-      sectionName: git-ssh
+      sectionName: gitssh
   rules:
     - backendRefs:
         - name: {{ $serviceName }}
