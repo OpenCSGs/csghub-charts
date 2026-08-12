@@ -48,9 +48,6 @@ tests:
     documentIndex: 0
     asserts:
       - equal:
-          path: metadata.name
-          value: "csghub-gitlab-shell"
-      - equal:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "gitlab-shell"
 

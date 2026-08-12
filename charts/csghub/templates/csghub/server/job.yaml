@@ -8,7 +8,7 @@ SPDX-License-Identifier: APACHE-2.0
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ $serviceName }}
+  name: {{ printf "%s-migrate" $serviceName }}
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/service: {{ $service.name }}

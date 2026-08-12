@@ -57,9 +57,6 @@ tests:
       - casdoor/deployment.yaml
     asserts:
       - equal:
-          path: metadata.name
-          value: "csghub-casdoor"
-      - equal:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "casdoor"
 

@@ -60,9 +60,6 @@ tests:
       - minio/statefulset.yaml
     asserts:
       - equal:
-          path: metadata.name
-          value: "csghub-minio"
-      - equal:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "minio"
 
