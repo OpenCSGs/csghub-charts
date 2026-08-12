@@ -10,10 +10,14 @@ Return Space Namespace.
 {{- $ns := "" }}
 
 {{- $runner := .Values.runner | default dict }}
+{{- /* Support both .Values.runner.* (standalone) and .Values.runner.runner.* (umbrella parent) */}}
+{{- $runnerConfig := $runner.runner | default dict }}
 {{- $merging := "" }}
 
 {{- if hasKey $runner "mergingNamespace" }}
   {{- $merging = $runner.mergingNamespace }}
+{{- else if hasKey $runnerConfig "mergingNamespace" }}
+  {{- $merging = $runnerConfig.mergingNamespace }}
 {{- else if hasKey .Values "mergingNamespace" }}
   {{- $merging = .Values.mergingNamespace }}
 {{- end }}
@@ -22,6 +26,8 @@ Return Space Namespace.
   {{- $ns = .Release.Namespace }}
 {{- else if hasKey $runner "namespace" }}
   {{- $ns = $runner.namespace }}
+{{- else if hasKey $runnerConfig "namespace" }}
+  {{- $ns = $runnerConfig.namespace }}
 {{- else if hasKey .Values "namespace" }}
   {{- $ns = .Values.namespace }}
 {{- end }}
