@@ -115,7 +115,7 @@ spec:
     {{- end }}
     {{- if .Values.dataflow.enabled }}
     {{- $dataflowSvc := include "common.service" (dict "ctx" . "service" "dataflow") | fromYaml }}
-    {{- $labelStudioSvcName := include "common.names.custom" (list . "label-studio") }}
+    {{- $labelStudioSvcName := include "common.names.custom" (list . (dig "name" "label-studio" (dig "labelStudio" dict $dataflowSvc))) }}
     - matches:
         - path:
             type: PathPrefix

@@ -20,7 +20,8 @@ data:
   TEMPORAL_CORS_ORIGINS: {{ include "common.endpoint.csghub" . | quote }}
   TEMPORAL_CSRF_COOKIE_INSECURE: "true"
   TEMPORAL_UI_PUBLIC_PATH: "/-/temporal"
-  {{- $casdoorInitName := printf "%s-init" (include "common.names.custom" (list . "casdoor")) }}
+  {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
+  {{- $casdoorInitName := printf "%s-init" (include "common.names.custom" (list . $casdoorSvc.name)) }}
   {{- $casdoorInitData := (lookup "v1" "Secret" .Release.Namespace $casdoorInitName).data | default dict }}
   {{- $adminApp := include "csghub.casdoor.client" "Admin" | fromYaml }}
   {{- $adminClientID := or (dig "CASDOOR_ADMIN_CLIENT_ID" "" $casdoorInitData | b64dec) $adminApp.clientId }}
