@@ -79,7 +79,7 @@ spec:
                 operator: In
                 values:
                   - {{ .Release.Namespace }}
-                  - {{ (.Values.runner | default dict).namespace | default "spaces" }}
+                  - {{ include "namespace.spaces" . }}
                   - {{ include "namespace.knative" . }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
@@ -109,6 +109,6 @@ spec:
                 operator: In
                 values:
                   - {{ .Release.Namespace }}
-                  - {{ (.Values.runner | default dict).namespace | default "spaces" }}
+                  - {{ include "namespace.spaces" . }}
                   - {{ include "namespace.knative" . }}
 {{- end }}

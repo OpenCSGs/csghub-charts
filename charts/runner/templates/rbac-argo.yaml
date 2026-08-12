@@ -66,6 +66,6 @@ roleRef:
   name: {{ $argoWorkflowRoleAddOn }}
 subjects:
   - kind: ServiceAccount
-    name: {{ printf "%s-argo-workflows-workflow-controller" .Release.Name }}
+    name: {{ printf "%s-argo-workflow-controller" .Release.Name }}
     namespace: {{ .Release.Namespace }}
 {{- end }}
