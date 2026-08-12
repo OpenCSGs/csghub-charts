@@ -44,12 +44,20 @@ Returns:
   {{- $service := .service }}
   {{- $isBuiltIn := $ctx.Values.global.chartContext.isBuiltIn }}
 
-  {{- $registry := $service.registry }}
-  {{- if $isBuiltIn }}
-    {{- $registry = include "common.registry.config" (dict "ctx" $ctx "service" $service) | fromYaml }}
+  {{- $regRegistry := dig "registry" "registry" "" $service }}
+  {{- $regRepository := dig "registry" "repository" "" $service }}
+  {{- if not $regRegistry }}
+    {{- if $isBuiltIn }}
+      {{- $regRegistry = (include "common.registry.config" (dict "ctx" $ctx "service" $service) | fromYaml).registry }}
+    {{- else }}
+      {{- $regRegistry = $service.externalUrl | default "" | trimPrefix "https://" | trimPrefix "http://" }}
+    {{- end }}
+  {{- end }}
+  {{- if not $regRepository }}
+    {{- $regRepository = $ctx.Release.Namespace }}
   {{- end }}
 
-  {{- $kanikoCache := printf "--cache-repo=%s/%s" $registry.registry $registry.repository }}
+  {{- $kanikoCache := printf "--cache-repo=%s/%s" $regRegistry $regRepository }}
   {{- $args := list "--compressed-caching=true" "--single-snapshot" "--log-format=text" }}
   {{- $args = concat $args (list "--cache=true" "--cache-ttl=24h" $kanikoCache) }}
 

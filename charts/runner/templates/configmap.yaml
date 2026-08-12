@@ -64,12 +64,19 @@ data:
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal" (include "namespace.spaces" .) | quote }}
 
   ## Runner Configuration for Kaniko
-  {{- $dockerRegBase := printf "%s/%s/" $service.registry.registry $service.registry.repository }}
-  {{- if $isBuiltIn }}
-    {{- $runnerRegistry := include "common.registry.config" (dict "ctx" . "service" $service) | fromYaml }}
-    {{- $dockerRegBase = printf "%s/%s/" $runnerRegistry.registry $runnerRegistry.repository }}
+  {{- $regRegistry := dig "registry" "registry" "" $service }}
+  {{- $regRepository := dig "registry" "repository" "" $service }}
+  {{- if not $regRegistry }}
+    {{- if $isBuiltIn }}
+      {{- $regRegistry = (include "common.registry.config" (dict "ctx" . "service" $service) | fromYaml).registry }}
+    {{- else }}
+      {{- $regRegistry = $service.externalUrl | default "" | trimPrefix "https://" | trimPrefix "http://" }}
+    {{- end }}
   {{- end }}
-  STARHUB_SERVER_DOCKER_REG_BASE: {{ $dockerRegBase | quote }}
+  {{- if not $regRepository }}
+    {{- $regRepository = .Release.Namespace }}
+  {{- end }}
+  STARHUB_SERVER_DOCKER_REG_BASE: {{ printf "%s/%s/" $regRegistry $regRepository | quote }}
   STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET: {{ include "common.names.custom" (list . "docker-credential") | quote }}
   ## Runner Configuration for space-runtime
   STARHUB_SERVER_RUNNER_PUBLIC_DOCKER_REG_BASE: {{ or .Values.global.image.registry "docker.io" | quote }}
