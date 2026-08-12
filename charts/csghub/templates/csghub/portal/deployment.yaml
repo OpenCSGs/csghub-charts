@@ -74,7 +74,7 @@ spec:
               ./csghub-portal db seed && \
               ./csghub-portal start server
           ports:
-            - containerPort: 8095
+            - containerPort: 8090
               name: {{ dig "service" "name" $service.name $service }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
