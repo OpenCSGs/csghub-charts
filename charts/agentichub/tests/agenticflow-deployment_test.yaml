@@ -1,0 +1,450 @@
+# Test suite for the agenticflow Deployment.
+#
+# Baseline values come from tests/values.yaml. The Deployment mounts the
+# agenticflow PVC and runs wait-for-redis and wait-for-postgresql init
+# containers. It only renders when global.edition is not "ce".
+
+suite: Test AgenticFlow Deployment
+templates:
+  - agenticflow/deployment.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata and labels
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment metadata with standard labels
+    template: agenticflow/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-agenticflow"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agenticflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: replaces common labels with service-level labels when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        labels:
+          foo: "bar"
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agenticflow"
+      - equal:
+          path: metadata.labels["foo"]
+          value: "bar"
+      - notExists:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+
+  ## ------------------------------------------------------------------
+  ## Spec defaults
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment spec defaults
+    template: agenticflow/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "agenticflow"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "agenticflow"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  - it: omits the service account block when serviceAccountName is not set
+    template: agenticflow/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.serviceAccountName
+
+  ## ------------------------------------------------------------------
+  ## Init containers
+  ## ------------------------------------------------------------------
+  - it: renders the wait-for-redis and wait-for-postgresql init containers
+    template: agenticflow/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-redis"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/redis:7.4.9"
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: "wait-for-postgresql"
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: "docker.io/opencsghq/psql:latest"
+
+  ## ------------------------------------------------------------------
+  ## Container image, ports and probes
+  ## ------------------------------------------------------------------
+  - it: renders the agenticflow container with image, ports and probes
+    template: agenticflow/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "agenticflow"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/agenticflow:ee-v0.6-5"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 7860
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "agenticflow"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "agentichub-agenticflow"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 7860
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: renders the data volume mount and claim
+    template: agenticflow/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/app/data"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: "data-agentichub-agenticflow"
+
+  - it: renders the baseline resources
+    template: agenticflow/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "500m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "512Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "1"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "1024Mi"
+
+  ## ------------------------------------------------------------------
+  ## Image configuration
+  ## ------------------------------------------------------------------
+  - it: overrides the image registry when registryPolicy is force
+    template: agenticflow/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agenticflow:ee-v0.6-5"
+
+  - it: prefers service-level pullSecrets over global pullSecrets
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        image:
+          pullSecrets:
+            - "svc-secret"
+      global:
+        image:
+          pullSecrets:
+            - "global-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "svc-secret"
+
+  ## ------------------------------------------------------------------
+  ## Environment variables
+  ## ------------------------------------------------------------------
+  - it: renders container environment variables when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        environments:
+          DEBUG: "false"
+          WORKERS: "10"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "DEBUG"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "false"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "WORKERS"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "10"
+
+  ## ------------------------------------------------------------------
+  ## Scheduling
+  ## ------------------------------------------------------------------
+  - it: renders nodeSelector, tolerations and affinity when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        nodeSelector:
+          diskType: "ssd"
+        tolerations:
+          - key: "dedicated"
+            operator: "Equal"
+            value: "csghub"
+            effect: "NoSchedule"
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: "kubernetes.io/hostname"
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["diskType"]
+          value: "ssd"
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: "dedicated"
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight
+          value: 100
+
+  ## ------------------------------------------------------------------
+  ## Pod labels and annotations
+  ## ------------------------------------------------------------------
+  - it: renders pod labels and annotations when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        podLabels:
+          sidecar.istio.io/inject: "true"
+        podAnnotations:
+          prometheus.io/scrape: "true"
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["sidecar.istio.io/inject"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+
+  - it: renders pod security context and topology spread constraints when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        podSecurityContext:
+          fsGroup: 1000
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: "kubernetes.io/hostname"
+            whenUnsatisfiable: "ScheduleAnyway"
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].maxSkew
+          value: 1
+
+  - it: renders lifecycle, hostname and subdomain when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "10"]
+        hostname: "langflow"
+        subdomain: "csghub"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.exec.command[1]
+          value: "10"
+      - equal:
+          path: spec.template.spec.hostname
+          value: "langflow"
+      - equal:
+          path: spec.template.spec.subdomain
+          value: "csghub"
+
+  - it: appends extra volumes and volume mounts when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        volumes:
+          - name: extra
+            emptyDir: {}
+        volumeMounts:
+          - name: extra
+            mountPath: /extra
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: "extra"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "extra"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/extra"
+
+  ## ------------------------------------------------------------------
+  ## Optional container fields
+  ## ------------------------------------------------------------------
+  - it: renders the readiness probe when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        readinessProbe:
+          httpGet:
+            path: "/healthz"
+            port: 7860
+          initialDelaySeconds: 5
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+
+  - it: renders the startup probe when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        startupProbe:
+          exec:
+            command: ["ls"]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[0]
+          value: "ls"
+
+  - it: renders the container security context when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+
+  - it: renders the service account block when serviceAccountName is set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        serviceAccountName: "custom-sa"
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "custom-sa"
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+
+  ## ------------------------------------------------------------------
+  ## Spec overrides
+  ## ------------------------------------------------------------------
+  - it: renders overridden spec scalars when provided
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        replicas: 3
+        minReadySeconds: 10
+        terminationGracePeriodSeconds: 60
+        revisionHistoryLimit: 5
+        progressDeadlineSeconds: 300
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.minReadySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 5
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 300
+
+  - it: renders the rolling update strategy when set
+    template: agenticflow/deployment.yaml
+    set:
+      agenticflow:
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 1
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 1
+
+  ## ------------------------------------------------------------------
+  ## Conditional rendering
+  ## ------------------------------------------------------------------
+  - it: renders nothing when the edition is ce
+    template: agenticflow/deployment.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

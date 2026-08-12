@@ -1,0 +1,410 @@
+# Test suite for the csgbot Deployment.
+#
+# The csgbot deployment serves on port 8070 and mounts a config ConfigMap
+# volume plus a data PVC. It only renders when global.edition is not "ce".
+
+suite: Test CSGBot Deployment
+templates:
+  - csgbot/deployment.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata and labels
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment metadata with standard labels
+    template: csgbot/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgbot"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgbot"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  ## ------------------------------------------------------------------
+  ## Spec defaults
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment spec defaults
+    template: csgbot/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "csgbot"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  - it: omits the service account block when serviceAccountName is not set
+    template: csgbot/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.serviceAccountName
+
+  - it: renders the service account block when serviceAccountName is set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        serviceAccountName: "csgbot-sa"
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "csgbot-sa"
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+
+  ## ------------------------------------------------------------------
+  ## Container image, command and probes
+  ## ------------------------------------------------------------------
+  - it: renders the csgbot container with image, command and probes
+    template: csgbot/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "csgbot"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgbot:v0.6.2-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: "uvicorn csgbot.server:app --host 0.0.0.0 --port 8070 --workers 1 --no-access-log"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8070
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "csgbot"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "CSGBOT_CONFIG_FILE"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "/config/csgbot.toml"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8070
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 180
+
+  - it: renders the config and data volume mounts and volumes
+    template: csgbot/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/app/codesouler_data"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "agentichub-csgbot"
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.volumes[1].persistentVolumeClaim.claimName
+          value: "data-agentichub-csgbot"
+
+  - it: renders resources when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "250m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "512Mi"
+
+  - it: renders pod labels and annotations when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        podLabels:
+          sidecar.istio.io/inject: "true"
+        podAnnotations:
+          prometheus.io/scrape: "true"
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["sidecar.istio.io/inject"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+
+  - it: renders pod security context and topology spread constraints when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        podSecurityContext:
+          fsGroup: 1000
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: "kubernetes.io/hostname"
+            whenUnsatisfiable: "ScheduleAnyway"
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].maxSkew
+          value: 1
+
+  - it: renders lifecycle, hostname and subdomain when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "10"]
+        hostname: "csgbot"
+        subdomain: "csghub"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.exec.command[1]
+          value: "10"
+      - equal:
+          path: spec.template.spec.hostname
+          value: "csgbot"
+      - equal:
+          path: spec.template.spec.subdomain
+          value: "csghub"
+
+  - it: appends extra volumes and volume mounts when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        volumes:
+          - name: extra
+            emptyDir: {}
+        volumeMounts:
+          - name: extra
+            mountPath: /extra
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: "extra"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].name
+          value: "extra"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].mountPath
+          value: "/extra"
+
+  ## ------------------------------------------------------------------
+  ## Environment variables
+  ## ------------------------------------------------------------------
+  - it: appends service-level environments after the CSGBOT_CONFIG_FILE env
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        environments:
+          DEBUG: "false"
+          LOG_LEVEL: "debug"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "DEBUG"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "false"
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: "LOG_LEVEL"
+      - equal:
+          path: spec.template.spec.containers[0].env[2].value
+          value: "debug"
+
+  ## ------------------------------------------------------------------
+  ## Image configuration
+  ## ------------------------------------------------------------------
+  - it: overrides the image registry when registryPolicy is force
+    template: csgbot/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csgbot:v0.6.2-ee"
+
+  - it: prefers service-level pullSecrets over global pullSecrets
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        image:
+          pullSecrets:
+            - "svc-secret"
+      global:
+        image:
+          pullSecrets:
+            - "global-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "svc-secret"
+
+  ## ------------------------------------------------------------------
+  ## Optional container fields
+  ## ------------------------------------------------------------------
+  - it: renders the readiness probe when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        readinessProbe:
+          httpGet:
+            path: "/healthz"
+            port: 8070
+          initialDelaySeconds: 10
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+
+  - it: renders container security context when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        securityContext:
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+
+  ## ------------------------------------------------------------------
+  ## Scheduling
+  ## ------------------------------------------------------------------
+  - it: renders nodeSelector, tolerations and affinity when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        nodeSelector:
+          diskType: "ssd"
+        tolerations:
+          - key: "dedicated"
+            operator: "Equal"
+            value: "csghub"
+            effect: "NoSchedule"
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: "kubernetes.io/hostname"
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["diskType"]
+          value: "ssd"
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: "dedicated"
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight
+          value: 100
+
+  ## ------------------------------------------------------------------
+  ## Spec overrides
+  ## ------------------------------------------------------------------
+  - it: renders overridden spec scalars when provided
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        replicas: 3
+        minReadySeconds: 10
+        terminationGracePeriodSeconds: 60
+        revisionHistoryLimit: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.minReadySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 5
+
+  - it: renders the rolling update strategy when set
+    template: csgbot/deployment.yaml
+    set:
+      csgbot:
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 1
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 1
+
+  ## ------------------------------------------------------------------
+  ## Conditional rendering
+  ## ------------------------------------------------------------------
+  - it: renders nothing when the edition is ce
+    template: csgbot/deployment.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

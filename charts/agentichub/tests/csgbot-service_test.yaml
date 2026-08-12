@@ -1,0 +1,99 @@
+# Test suite for the csgbot Service.
+#
+# The Service exposes the csgbot port (8070 by default) and selects pods
+# by the csgbot service label. Only renders when global.edition is not "ce".
+
+suite: Test CSGBot Service
+templates:
+  - csgbot/service.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata and labels
+    template: csgbot/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgbot"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgbot"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the Service spec with default port
+    template: csgbot/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8070
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8070
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "csgbot"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "csgbot"
+
+  - it: renders a custom port when service.port is overridden
+    template: csgbot/service.yaml
+    set:
+      csgbot:
+        service:
+          port: 9090
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 9090
+
+  - it: renders a custom service type when overridden
+    template: csgbot/service.yaml
+    set:
+      csgbot:
+        service:
+          type: NodePort
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+
+  - it: renders a custom protocol when overridden
+    template: csgbot/service.yaml
+    set:
+      csgbot:
+        service:
+          protocol: "UDP"
+    asserts:
+      - equal:
+          path: spec.ports[0].protocol
+          value: "UDP"
+
+  - it: renders nothing when the edition is ce
+    template: csgbot/service.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

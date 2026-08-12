@@ -1,0 +1,149 @@
+# Test suite for the agentichub HTTPRoute resources.
+#
+# The template renders two HTTPRoutes by default: agenticflow (always when
+# edition is not ce) and csgbot (only in standalone mode). The parent
+# section is http or https based on the global gateway TLS setting. Each
+# HTTPRoute carries its own timeouts.request value.
+#
+# Document order follows the template: agenticflow(0), csgbot(1).
+
+suite: Test Agentichub HTTPRoutes
+templates:
+  - httproutes.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Agenticflow route (always rendered)
+  ## ------------------------------------------------------------------
+  - it: renders the agenticflow HTTPRoute with an http parent section
+    template: httproutes.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-agenticflow
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agenticflow"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - contains:
+          path: spec.hostnames
+          content: "agenticflow.example.com"
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: "PathPrefix"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "agentichub-agenticflow"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 7860
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: "2m"
+
+  - it: targets the https parent section for the agenticflow route when TLS is enabled
+    template: httproutes.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-agenticflow
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+
+  ## ------------------------------------------------------------------
+  ## CSGBot route (only rendered in standalone mode)
+  ## ------------------------------------------------------------------
+  - it: renders the csgbot HTTPRoute in standalone mode
+    template: httproutes.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-csgbot
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgbot"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - contains:
+          path: spec.hostnames
+          content: "csgbot.example.com"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "agentichub-csgbot"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8070
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: "5m"
+
+  - it: targets the https parent section for the csgbot route when TLS is enabled
+    template: httproutes.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-csgbot
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+
+  - it: renders only the agenticflow route in built-in mode (no csgbot)
+    template: httproutes.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-agenticflow
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: "agentichub-agenticflow"
+
+  - it: renders nothing when the edition is ce
+    template: httproutes.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

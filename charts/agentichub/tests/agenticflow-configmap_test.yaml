@@ -1,0 +1,226 @@
+# Test suite for the agenticflow ConfigMap.
+#
+# Baseline values come from tests/values.yaml (ee edition, standalone mode,
+# built-in PostgreSQL and Redis enabled). The agenticflow ConfigMap only
+# renders when global.edition is not "ce".
+#
+# NOTE: The isBuiltIn=true branch calls endpoint.aigateway which calls
+# common.endpoint.aigateway defined only in the csghub umbrella chart.
+# The isBuiltIn branch cannot be tested standalone; standalone behaviour
+# is fully covered below.
+#
+# All connection credentials and tokens are non-deterministic; they are
+# matched by structure (length, presence) rather than exact value.
+
+suite: Test AgenticFlow ConfigMap
+templates:
+  - agenticflow/configmap.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata
+  ## ------------------------------------------------------------------
+  - it: renders the ConfigMap metadata with standard labels
+    template: agenticflow/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-agenticflow"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agentichub-agenticflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  ## ------------------------------------------------------------------
+  ## Static settings
+  ## ------------------------------------------------------------------
+  - it: renders the static settings
+    template: agenticflow/configmap.yaml
+    asserts:
+      - equal:
+          path: data.CHORMA_DATA_PATH
+          value: "/data/chroma"
+      - equal:
+          path: data.LANGFLOW_PORT
+          value: "7860"
+      - equal:
+          path: data.LANGFLOW_LOG_LEVEL
+          value: "info"
+      - equal:
+          path: data.LANGFLOW_CACHE_TYPE
+          value: "async"
+      - equal:
+          path: data.LANGFLOW_PRETTY_LOGS
+          value: "false"
+      - equal:
+          path: data.LANGFLOW_DO_NOT_TRACK
+          value: "true"
+      - equal:
+          path: data.LANGFLOW_CONFIG_DIR
+          value: "/app/data/config_data"
+      - equal:
+          path: data.LANGFLOW_LOG_FILE
+          value: "/app/data/logs/langflow.log"
+      - equal:
+          path: data.LANGFLOW_WORKERS
+          value: "2"
+      - equal:
+          path: data.LANGFLOW_ACCESS_HTTPONLY
+          value: "false"
+      - equal:
+          path: data.LANGFLOW_REFRESH_HTTPONLY
+          value: "false"
+      - equal:
+          path: data.LANGFLOW_COOKIE_DOMAIN
+          value: "example.com"
+
+  - it: renders the configured LANGFLOW_WORKERS count
+    template: agenticflow/configmap.yaml
+    set:
+      agenticflow:
+        workers: 4
+    asserts:
+      - equal:
+          path: data.LANGFLOW_WORKERS
+          value: "4"
+
+  - it: uses the top-level domain when useTop is enabled
+    template: agenticflow/configmap.yaml
+    set:
+      global:
+        gateway:
+          external:
+            useTop: true
+    asserts:
+      - equal:
+          path: data.LANGFLOW_COOKIE_DOMAIN
+          value: "csghub.example.com"
+      - matchRegex:
+          path: data.LANGFLOW_LOGIN_URL
+          pattern: "redirect_url=http://agenticflow\\.csghub\\.example\\.com/api/v1/opencsg/callback/csghub"
+
+  ## ------------------------------------------------------------------
+  ## CSGHub and login URLs (standalone)
+  ## ------------------------------------------------------------------
+  - it: renders the csghub endpoint and login URL in standalone mode
+    template: agenticflow/configmap.yaml
+    asserts:
+      - equal:
+          path: data.CSGHUB_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.CSGHUB_INTERNAL_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.CSGHUB_API_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.CSGHUB_AIGATEWAY_URL
+          value: "http://csghub.example.com/aigateway"
+      - equal:
+          path: data.CSGHUB_API_ACCESS_TOKEN
+          value: "test-hub-api-token"
+      - matchRegex:
+          path: data.LANGFLOW_LOGIN_URL
+          pattern: "https://csghub\\.example\\.com/sso/login\\?redirect_url=http://agenticflow\\.example\\.com/api/v1/opencsg/callback/csghub"
+      - matchRegex:
+          path: data.REDIRECT_STATE
+          pattern: "^http://agenticflow\\.example\\.com/api/v1/opencsg/callback/csghub$"
+      - equal:
+          path: data.BACKEND_URL
+          value: "http://agenticflow.example.com"
+      - equal:
+          path: data.FRONTEND_URL
+          value: "http://agenticflow.example.com"
+
+  - it: renders the aigateway endpoint as basepath when aigateway.endpoint is set
+    template: agenticflow/configmap.yaml
+    set:
+      aigateway:
+        endpoint: "https://ai.example.com"
+    asserts:
+      - equal:
+          path: data.CSGHUB_AIGATEWAY_URL
+          value: "https://ai.example.com"
+
+  ## ------------------------------------------------------------------
+  ## Database and Redis connections (built-in)
+  ## ------------------------------------------------------------------
+  - it: renders the built-in postgresql connection
+    template: agenticflow/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.LANGFLOW_DATABASE_URL
+          pattern: "^postgresql://csghub:.*@agentichub-postgresql:5432/agentichub_agenticflow\\?sslmode=disable$"
+
+  - it: renders the redis URL without auth when built-in redis has no password
+    template: agenticflow/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.CSG_REDIS_URL
+          pattern: "^redis://agentichub-redis:6379/0$"
+
+  - it: renders the redis URL with auth when built-in redis requires a password
+    template: agenticflow/configmap.yaml
+    set:
+      redis:
+        requirePass: true
+    asserts:
+      - matchRegex:
+          path: data.CSG_REDIS_URL
+          pattern: "^redis://default:.*@agentichub-redis:6379/0$"
+
+  - it: renders the redis URL from external redis
+    template: agenticflow/configmap.yaml
+    set:
+      global:
+        redis:
+          enabled: false
+          external:
+            host: "redis.ext"
+            port: 7000
+            password: "redpass"
+    asserts:
+      - matchRegex:
+          path: data.CSG_REDIS_URL
+          pattern: "^redis://default:redpass@redis\\.ext:7000/0$"
+
+  ## ------------------------------------------------------------------
+  ## Token generation
+  ## ------------------------------------------------------------------
+  - it: generates the flows access token and reuses it as the langflow secret key
+    template: agenticflow/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.FLOWS_ACCESS_TOKEN
+          pattern: "^[A-Za-z0-9+/=]+$"
+      - matchRegex:
+          path: data.LANGFLOW_SECRET_KEY
+          pattern: "^[A-Za-z0-9+/=]+$"
+
+  ## ------------------------------------------------------------------
+  ## Conditional rendering
+  ## ------------------------------------------------------------------
+  - it: renders nothing when the edition is ce
+    template: agenticflow/configmap.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

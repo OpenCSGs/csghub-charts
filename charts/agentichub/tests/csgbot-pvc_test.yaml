@@ -1,0 +1,88 @@
+# Test suite for the csgbot PersistentVolumeClaim.
+#
+# The PVC is named data-<serviceName>. Only renders when global.edition is
+# not "ce".
+
+suite: Test CSGBot PVC
+templates:
+  - csgbot/pvc.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the PVC metadata with a keep annotation
+    template: csgbot/pvc.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "data-agentichub-csgbot"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agentichub-csgbot"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.annotations["helm.sh/resource-policy"]
+          value: "keep"
+
+  - it: renders the PVC spec from service-level persistence
+    template: csgbot/pvc.yaml
+    asserts:
+      - equal:
+          path: spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.resources.requests.storage
+          value: "20Gi"
+      - notExists:
+          path: spec.storageClassName
+
+  - it: ignores the global storageClass for csgbot
+    template: csgbot/pvc.yaml
+    set:
+      global:
+        persistence:
+          storageClass: "nfs-provisioner"
+    asserts:
+      - notExists:
+          path: spec.storageClassName
+
+  - it: renders the csgbot service-level storageClass
+    template: csgbot/pvc.yaml
+    set:
+      csgbot:
+        persistence:
+          storageClass: "local-sc"
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: "local-sc"
+
+  - it: prefers the service-level storageClass over the global one
+    template: csgbot/pvc.yaml
+    set:
+      global:
+        persistence:
+          storageClass: "global-sc"
+      csgbot:
+        persistence:
+          storageClass: "local-sc"
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: "local-sc"
+
+  - it: renders nothing when the edition is ce
+    template: csgbot/pvc.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

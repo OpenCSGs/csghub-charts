@@ -1,0 +1,394 @@
+# Test suite for the csgbot ConfigMap.
+#
+# Baseline values come from tests/values.yaml (ee edition, standalone mode).
+# The csgbot.toml ConfigMap is fully rendered with explicit dig defaults.
+# Tokens and connection credentials are matched by regex (non-deterministic).
+#
+# NOTE: The isBuiltIn=true branch calls endpoint.aigateway which calls
+# common.endpoint.aigateway defined only in the csghub umbrella chart.
+# The isBuiltIn branch cannot be tested standalone; standalone behaviour
+# is fully covered below.
+
+suite: Test CSGBot ConfigMap
+templates:
+  - csgbot/configmap.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata
+  ## ------------------------------------------------------------------
+  - it: renders the ConfigMap metadata with standard labels
+    template: csgbot/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgbot"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agentichub-csgbot"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the data key with the csgbot.toml content
+    template: csgbot/configmap.yaml
+    asserts:
+      - exists:
+          path: data["csgbot.toml"]
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "name = \"ee\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "project-path = \"/root/csgbot\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "base-path = \"/data/\""
+
+  ## ------------------------------------------------------------------
+  ## Credentials section
+  ## ------------------------------------------------------------------
+  - it: renders the hub-access-token from the standalone value
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "hub-access-token = \"test-hub-api-token\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "langflow-access-token = \"[A-Za-z0-9+/=]+\""
+
+  ## ------------------------------------------------------------------
+  ## CSGHub section
+  ## ------------------------------------------------------------------
+  - it: renders the csghub endpoints from externalUrl in standalone mode
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "endpoint = \"https://csghub.example.com\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "portal-endpoint = \"https://csghub.example.com\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "starship-endpoint = \"\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "mcp-gateway-endpoint = \"http://csghub.example.com/aigateway/v1/gateway/mcp\""
+
+  - it: overrides the starship endpoint
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          starship:
+            endpoint: "https://starship.example.com"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "starship-endpoint = \"https://starship\\.example\\.com\""
+
+  ## ------------------------------------------------------------------
+  ## AIGateway section
+  ## ------------------------------------------------------------------
+  - it: renders the aigateway defaults
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "\\[aigateway\\]"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "endpoint = \"http://csghub.example.com/aigateway\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "model-id = \"qwen3.6-plus\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "temperature = 0.1"
+
+  - it: overrides the aigateway model id and temperature
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          aigateway:
+            model: "custom-model"
+            temperature: 0.5
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "model-id = \"custom-model\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "temperature = 0.5"
+
+  - it: uses the aigateway endpoint for the aigateway and mcp gateway endpoints when set
+    template: csgbot/configmap.yaml
+    set:
+      aigateway:
+        endpoint: "https://ai.example.com"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "endpoint = \"https://ai\\.example\\.com\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "mcp-gateway-endpoint = \"https://ai\\.example\\.com/v1/gateway/mcp\""
+
+  ## ------------------------------------------------------------------
+  ## Speech-to-text section
+  ## ------------------------------------------------------------------
+  - it: renders the speech-to-text defaults
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "model-id = \"qwen3-asr-flash\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "api-mode = \"chat-completions\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "response-format = \"json\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "max-file-bytes = \"26214400\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "forward-timeout-seconds = 120"
+
+  - it: overrides the speech-to-text config
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          speechToText:
+            modelId: "custom-asr"
+            apiMode: "completions"
+            prompt: "be concise"
+            responseFormat: "text"
+            maxFileBytes: "1000000"
+            forwardTimeoutSeconds: 60.0
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "model-id = \"custom-asr\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "api-mode = \"completions\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "prompt = \"be concise\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "response-format = \"text\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "max-file-bytes = \"1000000\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "forward-timeout-seconds = 60"
+
+  ## ------------------------------------------------------------------
+  ## Sandbox section
+  ## ------------------------------------------------------------------
+  - it: renders the sandbox defaults with each sandbox image
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "backend = \"csghub\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "workspace-volume-prefix = \"/genius\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "timeout-seconds = 600"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "max-upload-file-bytes = 52428800"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/opencsghq/genius-sandbox:2026070902\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/opencsghq/doc-sandbox:03c2897c\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/opencsghq/openclaw-sandbox:03c2897c\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/opencsghq/csgclaw-server-sandbox:2026060701\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/opencsghq/csgclaw-agent-sandbox:2026060301\""
+
+  - it: overrides the sandbox genius image
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          sandbox:
+            genius:
+              image:
+                repository: "custom/genius"
+                tag: "v9.9"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/custom/genius:v9.9\""
+
+  ## ------------------------------------------------------------------
+  ## Observability section
+  ## ------------------------------------------------------------------
+  - it: renders the observability defaults
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "service-name = \"csgbot-ee\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "phoenix-endpoint = \"\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "otlp-traces-endpoint = \"\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "otlp-insecure = true"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "otlp-protocol = \"grpc\""
+
+  - it: overrides the observability endpoints and protocol
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          observability:
+            otlpTracesEndpoint: "otel.example.com:4317"
+            otlpInsecure: false
+            otlpProtocol: "http/protobuf"
+            phoenixEndpoint: "phoenix.example.com"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "otlp-traces-endpoint = \"otel.example.com:4317\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "otlp-insecure = false"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "otlp-protocol = \"http/protobuf\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "phoenix-endpoint = \"phoenix.example.com\""
+
+  ## ------------------------------------------------------------------
+  ## Integrations section
+  ## ------------------------------------------------------------------
+  - it: renders the integrations defaults
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "notifications-enabled = \"false\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "notification-endpoint = \"https://csghub.example.com/api/v1/notifications\\?current_user=csgbot\""
+
+  - it: renders the memmachine endpoint when memmachine is enabled
+    template: csgbot/configmap.yaml
+    set:
+      memmachine:
+        enabled: true
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "memmachine-endpoint = \"http://agentichub-memmachine:8080/mcp/\""
+
+  - it: renders the file-server endpoint when set
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          fileServer:
+            endpoint: "https://fs.example.com"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "file-server-endpoint = \"https://fs\\.example\\.com\""
+      - notMatchRegex:
+          path: data["csgbot.toml"]
+          pattern: "file-server-endpoint = \"\""
+
+  ## ------------------------------------------------------------------
+  ## Logging section
+  ## ------------------------------------------------------------------
+  - it: renders the logging defaults
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "log-path = \"logs/server.log\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "log-level = \"INFO\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "disable-genius-chat = false"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "disable-planner-chat = false"
+
+  ## ------------------------------------------------------------------
+  ## Langflow section
+  ## ------------------------------------------------------------------
+  - it: renders the langflow endpoint from the agenticflow domain
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "endpoint = \"http://agenticflow.example.com\""
+
+  ## ------------------------------------------------------------------
+  ## User-facing errors section
+  ## ------------------------------------------------------------------
+  - it: renders the platform quota maintenance contact when set
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          userFacingErrors:
+            platformQuotaMaintenanceContact: "support@example.com"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "platform-quota-maintenance-contact = \"support@example\\.com\""
+
+  ## ------------------------------------------------------------------
+  ## Conditional rendering
+  ## ------------------------------------------------------------------
+  - it: renders nothing when the edition is ce
+    template: csgbot/configmap.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0
