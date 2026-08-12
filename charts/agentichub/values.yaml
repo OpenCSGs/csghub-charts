@@ -127,6 +127,9 @@ agenticflow:
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
+  ## Number of Langflow workers
+  workers: 2
+
   ## Service configuration
   service: {}
     # port: 7860
