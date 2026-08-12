@@ -1,0 +1,180 @@
+# Test suite for the CSGShip web StatefulSet.
+#
+# The StatefulSet runs the web app on port 8000, sources the csghub-csgship
+# ConfigMap, and provisions a data volumeClaimTemplate. A NATS secretRef is
+# only added in built-in mode (isBuiltIn=true).
+
+suite: Test Web StatefulSet
+templates:
+  - web/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata and spec defaults
+  ## ------------------------------------------------------------------
+  - it: renders the StatefulSet metadata and spec defaults
+    template: web/statefulset.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-csgship"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgship"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.serviceName
+          value: "csghub-csgship"
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "csgship"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  ## ------------------------------------------------------------------
+  ## Container
+  ## ------------------------------------------------------------------
+  - it: renders the csgship container with the web image and port 8000
+    template: web/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "csgship"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgship-web:v0.4.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "csgship"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: adds the nats secretRef only in built-in mode
+    template: web/statefulset.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].secretRef.name
+          value: "csghub-nats"
+
+  ## ------------------------------------------------------------------
+  ## Volume claim template
+  ## ------------------------------------------------------------------
+  - it: provisions the data volume claim template from the persistence settings
+    template: web/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: "data"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "10Gi"
+
+  - it: falls back to the global persistence settings when web.persistence is empty
+    template: web/statefulset.yaml
+    set:
+      global:
+        persistence:
+          storageClass: "nfs-provisioner"
+          accessModes:
+            - ReadWriteOnce
+            - ReadWriteMany
+          size: "25Gi"
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "nfs-provisioner"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes
+          value:
+            - ReadWriteOnce
+            - ReadWriteMany
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "25Gi"
+
+  - it: prefers the service-level persistence over the global settings
+    template: web/statefulset.yaml
+    set:
+      web:
+        persistence:
+          storageClass: "hostPath"
+          accessModes:
+            - ReadWriteOnce
+          size: "20Gi"
+      global:
+        persistence:
+          storageClass: "nfs-provisioner"
+          size: "25Gi"
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "hostPath"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "20Gi"
+
+  ## ------------------------------------------------------------------
+  ## Optional fields
+  ## ------------------------------------------------------------------
+  - it: renders update strategy and pod management policy when set
+    template: web/statefulset.yaml
+    set:
+      web:
+        updateStrategy:
+          type: RollingUpdate
+          rollingUpdate:
+            partition: 1
+        podManagementPolicy: "Parallel"
+        revisionHistoryLimit: 3
+    asserts:
+      - equal:
+          path: spec.updateStrategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.updateStrategy.rollingUpdate.partition
+          value: 1
+      - equal:
+          path: spec.podManagementPolicy
+          value: "Parallel"
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3

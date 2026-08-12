@@ -1,0 +1,243 @@
+# Test suite for the CSGShip web ConfigMap.
+#
+# Baseline values come from tests/values.yaml (standalone mode, TLS enabled).
+# Endpoints are deterministic given the baseline domain and TLS settings.
+# CASDOOR_CLIENT_ID/SECRET_KEY and the DATABASE_PASSWORD are non-deterministic
+# (generated per render) and are matched by regex.
+#
+# The external PostgreSQL/Redis branch is covered via per-test overrides.
+
+suite: Test Web ConfigMap
+templates:
+  - configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata
+  ## ------------------------------------------------------------------
+  - it: renders the ConfigMap metadata with standard labels
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-csgship"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgship"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "csgship"
+
+  ## ------------------------------------------------------------------
+  ## Casdoor configuration
+  ## ------------------------------------------------------------------
+  - it: renders the Casdoor endpoint from the casdoor domain
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.CASDOOR_ENDPOINT
+          value: "https://casdoor.example.com"
+      - equal:
+          path: data.CASDOOR_REDIRECT_URI_PATH
+          value: "/api/v1/account/casdoor/login/callback/"
+      - matchRegex:
+          path: data.CASDOOR_CLIENT_ID
+          pattern: "^[0-9a-f]{20}$"
+      - matchRegex:
+          path: data.CASDOOR_SECRET_KEY
+          pattern: "^[0-9a-f]{40}$"
+
+  ## ------------------------------------------------------------------
+  ## PostgreSQL configuration (built-in)
+  ## ------------------------------------------------------------------
+  - it: renders the built-in PostgreSQL connection settings
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.DATABASE_TYPE
+          value: "postgresql"
+      - equal:
+          path: data.DATABASE_HOST
+          value: "csghub-postgresql"
+      - equal:
+          path: data.DATABASE_PORT
+          value: "5432"
+      - equal:
+          path: data.DATABASE_USERNAME
+          value: "csghub"
+      - matchRegex:
+          path: data.DATABASE_PASSWORD
+          pattern: "^[A-Za-z0-9+/]{32}$"
+      - equal:
+          path: data.DATABASE_NAME
+          value: "csghub_csgship"
+
+  - it: renders the external PostgreSQL connection settings when built-in is disabled
+    template: configmap.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+          external:
+            host: "10.6.0.10"
+            port: 6432
+            user: "postgres"
+            password: "Postgres2025"
+            sslmode: "prefer"
+    asserts:
+      - equal:
+          path: data.DATABASE_HOST
+          value: "10.6.0.10"
+      - equal:
+          path: data.DATABASE_PORT
+          value: "6432"
+      - equal:
+          path: data.DATABASE_USERNAME
+          value: "postgres"
+      - equal:
+          path: data.DATABASE_PASSWORD
+          value: "Postgres2025"
+      - equal:
+          path: data.DATABASE_NAME
+          value: "csghub_csgship"
+
+  ## ------------------------------------------------------------------
+  ## Redis configuration
+  ## ------------------------------------------------------------------
+  - it: renders the built-in Redis connection settings
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.REDIS_URL
+          value: ":@csghub-redis"
+      - equal:
+          path: data.REDIS_PORT
+          value: "6379"
+
+  - it: renders the external Redis connection settings when built-in is disabled
+    template: configmap.yaml
+    set:
+      global:
+        redis:
+          enabled: false
+          external:
+            host: "10.6.0.11"
+            port: 6380
+            password: "Redis2025"
+    asserts:
+      - equal:
+          path: data.REDIS_URL
+          value: ":@10.6.0.11"
+      - equal:
+          path: data.REDIS_PORT
+          value: "6380"
+
+  ## ------------------------------------------------------------------
+  ## Web endpoints
+  ## ------------------------------------------------------------------
+  - it: renders the web endpoints from the derived domains
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARSHIP_WEB_URL
+          value: "https://csgship.example.com"
+      - equal:
+          path: data.STARSHIP_API_URL
+          value: "https://csgship-api.example.com"
+      - equal:
+          path: data.WEB_SVC_API_BASE
+          value: "http://csghub-csgship:8000"
+
+  ## ------------------------------------------------------------------
+  ## Accounting and CSGHub (standalone mode)
+  ## ------------------------------------------------------------------
+  - it: renders the accounting and CSGHub settings from externalUrl and hubAPIToken
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.ACCOUNTING_API_BASE
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.ACCOUNTING_API_KEY
+          value: "test-hub-api-token"
+      - equal:
+          path: data.OPENCSG_HUB_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.OPENCSG_HUB_ACCESS_TOKEN
+          value: "test-hub-api-token"
+
+  ## ------------------------------------------------------------------
+  ## Billing / agentic / megalinter service bases
+  ## ------------------------------------------------------------------
+  - it: renders the billing, agentic and megalinter service base URLs
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARSHIP_BILLING_API_BASE
+          value: "http://csghub-billing:8080"
+      - equal:
+          path: data.BILLING_SVC_API_BASE
+          value: "http://csghub-billing:8080"
+      - equal:
+          path: data.AGENTIC_SVC_API_BASE
+          value: "http://csghub-agentic:8000"
+      - equal:
+          path: data.MEGALINTER_SVC_API_BASE
+          value: "http://csghub-megalinter:8000"
+
+  ## ------------------------------------------------------------------
+  ## Nats
+  ## ------------------------------------------------------------------
+  - it: renders the Nats URL from the billing nats settings in standalone mode
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.NATS_URL
+          value: "nats://natsAdmin:natsPassword@csghub-nats:4222"
+
+  ## ------------------------------------------------------------------
+  ## GitLab OAuth
+  ## ------------------------------------------------------------------
+  - it: renders the sync permissions git server from the web oauth issuer
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.SYNC_PERMS_GIT_SERVER
+          value: "gitlab.example.com"
+
+  - it: omits the sync permissions git server when no oauth issuer is set
+    template: configmap.yaml
+    set:
+      web:
+        oauth:
+          issuer: ""
+    asserts:
+      - notExists:
+          path: data.SYNC_PERMS_GIT_SERVER
+
+  ## ------------------------------------------------------------------
+  ## MegaLinter redis reporter
+  ## ------------------------------------------------------------------
+  - it: renders the MegaLinter server redis reporter settings
+    template: configmap.yaml
+    asserts:
+      - equal:
+          path: data.MEGALINTER_SERVER_REDIS_HOST
+          value: "csghub-redis"
+      - equal:
+          path: data.MEGALINTER_SERVER_REDIS_PORT
+          value: "6379"
+      - equal:
+          path: data.MEGALINTER_SERVER_REDIS_QUEUE
+          value: "megalinter:queue:requests"

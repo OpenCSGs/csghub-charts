@@ -1,0 +1,100 @@
+# Test suite for the CSGShip casdoor HTTPRoute.
+#
+# The route targets the casdoor domain with a CORS filter allowing the csghub
+# and web endpoints. It renders only when the casdoor gateway is enabled and
+# the chart is in standalone mode (isBuiltIn=false).
+
+suite: Test Casdoor HTTPRoutes
+templates:
+  - casdoor/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the HTTPRoute metadata with standard labels
+    template: casdoor/httproutes.yaml
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+
+  - it: targets the casdoor domain and the https parent section
+    template: casdoor/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - contains:
+          path: spec.hostnames
+          content: "casdoor.example.com"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "csghub-casdoor"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8000
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: "60s"
+
+  - it: allows the csghub and web endpoints for CORS
+    template: casdoor/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: "CORS"
+      - contains:
+          path: spec.rules[0].filters[0].cors.allowOrigins
+          content: "https://csghub.example.com"
+      - contains:
+          path: spec.rules[0].filters[0].cors.allowOrigins
+          content: "https://csgship.example.com"
+      - equal:
+          path: spec.rules[0].filters[0].cors.allowCredentials
+          value: true
+
+  - it: targets the http parent section when TLS is disabled
+    template: casdoor/httproutes.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+
+  - it: renders nothing when the casdoor gateway is disabled
+    template: casdoor/httproutes.yaml
+    set:
+      casdoor:
+        gateway:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing in built-in mode
+    template: casdoor/httproutes.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 0

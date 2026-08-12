@@ -1,0 +1,89 @@
+# Test suite for the CSGShip web Service.
+#
+# The Service exposes two ports: the web app on 8000 (named csgship) and the
+# embedded nginx on 80 (named csgship-nginx). The Service type and protocol
+# come from web.service with dig defaults.
+
+suite: Test Web Service
+templates:
+  - web/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: web/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-csgship"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgship"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "csgship"
+
+  - it: renders the two service ports with the default ClusterIP type
+    template: web/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "csgship"
+      - equal:
+          path: spec.ports[1].port
+          value: 80
+      - equal:
+          path: spec.ports[1].targetPort
+          value: 80
+      - equal:
+          path: spec.ports[1].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[1].name
+          value: "csgship-nginx"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "csgship"
+
+  - it: overrides the service type, port and protocol when set
+    template: web/service.yaml
+    set:
+      web:
+        service:
+          type: "NodePort"
+          port: 9000
+          protocol: "UDP"
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 9000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "UDP"
+      - equal:
+          path: spec.ports[1].protocol
+          value: "UDP"

@@ -1,0 +1,81 @@
+# Test suite for the CSGShip secscan Deployment.
+#
+# The secscan service mounts the web data PVC (subPaths gitrepos/codedata) and
+# does NOT source any ConfigMap. It renders only when secscan.enabled is true.
+
+suite: Test SecScan Deployment
+templates:
+  - secscan/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: secscan/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-secscan"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "secscan"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the secscan container with image and no envFrom
+    template: secscan/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "secscan"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgship-secscan:sec-2.0.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - notExists:
+          path: spec.template.spec.containers[0].envFrom
+
+  - it: mounts the web data PVC with gitrepos and codedata subpaths
+    template: secscan/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/var/repo/gitrepos"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPath
+          value: "gitrepos"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/code/data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].subPath
+          value: "codedata"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: "data-csghub-csgship-0"
+
+  - it: renders nothing when secscan is disabled
+    template: secscan/deployment.yaml
+    set:
+      secscan:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

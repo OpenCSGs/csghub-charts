@@ -1,0 +1,74 @@
+# Test suite for the CSGShip frontend HTTPRoute.
+#
+# The route targets the web domain (csgship.example.com) and backends to the
+# frontend Service on port 80. It renders only when the frontend gateway is
+# enabled.
+
+suite: Test Frontend HTTPRoutes
+templates:
+  - frontend/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the HTTPRoute metadata with standard labels
+    template: frontend/httproutes.yaml
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-frontend"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "frontend"
+
+  - it: targets the web domain and the https parent section when TLS is enabled
+    template: frontend/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - contains:
+          path: spec.hostnames
+          content: "csgship.example.com"
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: "/"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "csghub-frontend"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 80
+
+  - it: targets the http parent section when TLS is disabled
+    template: frontend/httproutes.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+
+  - it: renders nothing when the frontend gateway is disabled
+    template: frontend/httproutes.yaml
+    set:
+      frontend:
+        gateway:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

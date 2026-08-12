@@ -1,0 +1,180 @@
+# Shared baseline values for CSGShip unit tests.
+#
+# Every value consumed by the templates is defined EXPLICITLY below.
+# Tests never rely on the default values shipped in values.yaml, so
+# changing those defaults cannot break the unit tests.
+#
+# Release context is fixed as release=csghub, namespace=csghub.
+# The chart is rendered in standalone mode (isBuiltIn=false) by default,
+# which also enables the bundled casdoor/postgresql/redis components.
+# TLS is enabled on the gateway so https endpoints and https sectionName
+# are exercised; the http path is covered via per-test overrides.
+
+## Global Configuration
+global:
+  ## Gateway configuration
+  gateway:
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    service:
+      type: LoadBalancer
+      nodePorts:
+        http: 30080
+        https: 30443
+        gitssh: 30022
+    external:
+      domain: csghub.example.com
+      public: ""
+      useTop: false
+    tls:
+      enabled: true
+      secretName: csghub-tls
+  ## Image management
+  image:
+    registry: docker.io
+    registryPolicy: default
+    tag: v1.11.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## Persistent volume configuration
+  persistence:
+    accessModes:
+      - ReadWriteOnce
+    size: "10Gi"
+  ## Database configuration (built-in PostgreSQL enabled by default)
+  postgresql:
+    enabled: true
+    external: {}
+  ## Redis configuration (built-in Redis enabled by default)
+  redis:
+    enabled: true
+    external: {}
+  ## SubChart deployment context (standalone)
+  chartContext:
+    isBuiltIn: false
+
+## External CSGHub URL
+externalUrl: "https://csghub.example.com"
+
+## API token for standalone mode
+hubAPIToken: "test-hub-api-token"
+
+## Global image configuration (base image merged into every service)
+image:
+  repository: opencsghq/csgship-web
+  tag: v0.4.0
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+## Web Configuration
+web:
+  name: csgship
+  image: {}
+  gateway:
+    enabled: true
+    tls: {}
+  oauth:
+    issuer: "https://gitlab.example.com"
+    clientId: "gitlab-client-id"
+    clientSecret: "gitlab-client-secret"
+  postgresql: {}
+  redis: {}
+  persistence: {}
+
+## Agentic Configuration
+agentic:
+  image:
+    repository: opencsghq/csgship-agentic
+    tag: v0.4.0
+
+## Billing Configuration
+billing:
+  enabled: true
+  image:
+    repository: opencsghq/csgship-billing
+    tag: bl-2.0.1
+  nats:
+    host: csghub-nats
+    port: 4222
+    user: natsAdmin
+    password: natsPassword
+
+## Frontend Configuration
+frontend:
+  image:
+    repository: opencsghq/csgship-portal
+    tag: v1.2.1
+  gateway:
+    enabled: true
+
+## MegaLinter Server Configuration
+megalinterServer:
+  enabled: true
+  image:
+    repository: oxsecurity/megalinter-server
+    tag: beta
+
+## MegaLinter Worker Configuration
+megalinterWorker:
+  enabled: true
+  image:
+    repository: oxsecurity/megalinter-worker
+    tag: v8.0.0
+
+## SecScan Configuration
+secscan:
+  enabled: true
+  image:
+    repository: opencsghq/csgship-secscan
+    tag: sec-2.0.0
+
+## Embedded PostgreSQL configuration
+postgresql:
+  image:
+    repository: opencsghq/postgres
+    tag: "15.18"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 5432
+    protocol: TCP
+  databases:
+    - "csghub_csgship"
+    - "csghub_casdoor"
+  parameters: {}
+  persistence:
+    size: "50Gi"
+
+## Embedded Redis configuration
+redis:
+  image:
+    repository: redis
+    tag: "7.4.9"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 6379
+    protocol: TCP
+  requirePass: false
+  persistence:
+    size: "10Gi"
+
+## Embedded Casdoor configuration
+casdoor:
+  admin:
+    name: root
+    password: test-admin-password
+  image:
+    repository: casbin/casdoor
+    tag: "3.62.0"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 8000
+    protocol: TCP
+  gateway:
+    enabled: true
+    tls: {}
+  postgresql: {}

@@ -1,0 +1,121 @@
+# Test suite for the CSGShip EnvoyProxy resource.
+#
+# The EnvoyProxy renders only when the gateway controller is envoyproxy and the
+# chart is in standalone mode. With a non-opencsg registry the envoyDeployment
+# is an empty object (letting Envoy Gateway use its default image); with the
+# opencsg-registry it pins the envoy image. A NodePort gateway service adds an
+# envoyService patch with the configured node ports.
+
+suite: Test EnvoyProxy
+templates:
+  - envoy-proxy.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the EnvoyProxy metadata with standard labels
+    template: envoy-proxy.yaml
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: metadata.name
+          value: "csghub-envoy-proxy"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.provider.type
+          value: "Kubernetes"
+
+  - it: leaves envoyDeployment empty with a non-opencsg registry
+    template: envoy-proxy.yaml
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment
+          value: {}
+
+  - it: pins the envoy image when using the opencsg registry
+    template: envoy-proxy.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+
+  - it: patches the envoy service with node ports for a NodePort gateway
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.type
+          value: "StrategicMerge"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].name
+          value: "http-80"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "http-443"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+
+  - it: uses the configured node ports for the envoy service patch
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30880
+              https: 30444
+              gitssh: 30222
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30880
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30444
+
+  - it: omits the envoyService patch for a LoadBalancer gateway
+    template: envoy-proxy.yaml
+    asserts:
+      - notExists:
+          path: spec.provider.kubernetes.envoyService
+
+  - it: renders nothing in built-in mode
+    template: envoy-proxy.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the controller is not envoyproxy
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          controllerName: "istio.io/gateway-controller"
+    asserts:
+      - hasDocuments:
+          count: 0

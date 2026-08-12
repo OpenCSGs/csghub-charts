@@ -1,0 +1,99 @@
+# Test suite for the CSGShip billing Deployment.
+#
+# The billing service runs on port 8080, sources both the billing and the web
+# ConfigMaps, and mounts the billing ConfigMap at /tmp to run config.sh before
+# starting. It renders only when billing.enabled is true.
+#
+# The image resolves through csgship.service.image to
+# docker.io/opencsghq/csgship-billing:bl-2.0.1.
+
+suite: Test Billing Deployment
+templates:
+  - billing/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: billing/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-billing"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "billing"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the billing container with image, port and probes
+    template: billing/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "billing"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgship-billing:bl-2.0.1"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "billing"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: sources the billing and web ConfigMaps
+    template: billing/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-billing"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: "csghub-csgship"
+
+  - it: mounts the billing ConfigMap at /tmp and under volumes
+    template: billing/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/tmp"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-billing"
+
+  - it: renders nothing when billing is disabled
+    template: billing/deployment.yaml
+    set:
+      billing:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
