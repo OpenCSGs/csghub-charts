@@ -22,8 +22,8 @@ spec:
       protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
     {{- if eq .Values.global.edition "saas" }}
-    - port: {{ dig "service" "port" 8090 $paymentSvc }}
-      targetPort: 8090
+    - port: {{ dig "service" "port" 8094 $paymentSvc }}
+      targetPort: 8094
       protocol: {{ dig "service" "protocol" "TCP" $paymentSvc }}
       name: {{ $paymentSvc.name }}
     {{- end }}
