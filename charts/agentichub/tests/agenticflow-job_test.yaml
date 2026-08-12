@@ -1,0 +1,139 @@
+# Test suite for the agenticflow template importer Job.
+#
+# The Job runs the agenticflow-importer image to seed Langflow templates.
+# Its service label is fixed at "template-importer" (overriding the agenticflow
+# service label), and the Job name is fixed at <release>-template-importer.
+# Only renders when global.edition is not "ce".
+
+suite: Test AgenticFlow Template Importer Job
+templates:
+  - agenticflow/job.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Job metadata and labels
+    template: agenticflow/job.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-template-importer"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "template-importer"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "10"
+
+  - it: renders the Job spec defaults
+    template: agenticflow/job.yaml
+    asserts:
+      - equal:
+          path: spec.activeDeadlineSeconds
+          value: 3600
+      - equal:
+          path: spec.backoffLimit
+          value: 10
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 300
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: "OnFailure"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 30
+
+  - it: renders the importer container with the fixed image
+    template: agenticflow/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "importer"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/agenticflow-importer:v1.0.4"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "agentichub-agenticflow"
+
+  - it: renders the baseline resources from the agenticflow values
+    template: agenticflow/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "500m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "512Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "1"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "1024Mi"
+
+  - it: renders imagePullSecrets from global image pullSecrets
+    template: agenticflow/job.yaml
+    set:
+      global:
+        image:
+          pullSecrets:
+            - "global-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "global-secret"
+
+  - it: renders container environments when set
+    template: agenticflow/job.yaml
+    set:
+      agenticflow:
+        environments:
+          EXTRA: "foo"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "EXTRA"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "foo"
+
+  - it: renders nodeSelector and tolerations when set
+    template: agenticflow/job.yaml
+    set:
+      agenticflow:
+        nodeSelector:
+          diskType: "ssd"
+        tolerations:
+          - key: "dedicated"
+            operator: "Equal"
+            value: "csghub"
+            effect: "NoSchedule"
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["diskType"]
+          value: "ssd"
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: "dedicated"
+
+  - it: renders nothing when the edition is ce
+    template: agenticflow/job.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

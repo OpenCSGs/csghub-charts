@@ -1,0 +1,131 @@
+# Test suite for the agentichub EnvoyProxy CR.
+#
+# The EnvoyProxy renders only in standalone mode with an envoy controller
+# and edition not ce. It overrides the envoy image for the OpenCSG registry
+# and patches the service ports when the gateway type is NodePort. No gitssh
+# port (no git SSH traffic in agentichub).
+
+suite: Test Agentichub EnvoyProxy
+templates:
+  - envoy-proxy.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the EnvoyProxy with an empty deployment for docker registry
+    template: envoy-proxy.yaml
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: metadata.name
+          value: "agentichub-envoy-proxy"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.provider.type
+          value: "Kubernetes"
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment
+          value: {}
+
+  - it: overrides the envoy image for the OpenCSG registry
+    template: envoy-proxy.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+
+  - it: renders NodePort patch ports when the gateway type is NodePort with TLS
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].name
+          value: "http-80"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "http-443"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+
+  - it: omits the https port patch when TLS is disabled on NodePort
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].name
+          value: "http-80"
+      - notExists:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1]
+
+  - it: omits the envoyService patch when the gateway type is LoadBalancer
+    template: envoy-proxy.yaml
+    asserts:
+      - notExists:
+          path: spec.provider.kubernetes.envoyService
+
+  - it: renders nothing with a non-envoy controller
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          controllerName: "istio.io/gateway-controller"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing in built-in mode
+    template: envoy-proxy.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: envoy-proxy.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

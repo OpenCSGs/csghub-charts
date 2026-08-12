@@ -1,0 +1,168 @@
+# Shared baseline values for CSGHub AgenticHub unit tests.
+#
+# Every value consumed by the templates is defined EXPLICITLY below.
+# Tests never rely on the default values shipped in values.yaml, so
+# changing those defaults cannot break the unit tests.
+#
+# Release context is fixed as release=agentichub, namespace=csghub.
+# Edition is ee (agenticflow/csgbot only render when edition is not ce).
+# The chart is rendered in standalone mode (isBuiltIn=false) by default;
+# built-in (umbrella) mode is exercised via per-test overrides.
+
+## Global Configuration
+global:
+  ## Deployment edition (agenticflow/csgbot render only when not "ce")
+  edition: "ee"
+  ## Gateway configuration
+  gateway:
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    service:
+      type: LoadBalancer
+      nodePorts:
+        http: 30080
+        https: 30443
+        gitssh: 30022
+    external:
+      domain: csghub.example.com
+      public: ""
+      useTop: false
+      aigateway:
+        useDomain: false
+        domain: ""
+    tls:
+      enabled: false
+      secretName: ""
+  ## Image management
+  image:
+    registry: docker.io
+    registryPolicy: default
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## Persistent volume configuration
+  persistence:
+    accessModes:
+      - ReadWriteOnce
+    size: "10Gi"
+  ## Database configuration (built-in PostgreSQL enabled by default)
+  postgresql:
+    enabled: true
+    external: {}
+  ## Redis configuration (built-in Redis enabled by default)
+  redis:
+    enabled: true
+    external: {}
+  ## SubChart deployment context (standalone)
+  chartContext:
+    isBuiltIn: false
+
+## External CSGHub URL
+externalUrl: "https://csghub.example.com"
+
+## API token for standalone mode
+hubAPIToken: "test-hub-api-token"
+
+## AIGateway endpoint (empty by default: uses /aigateway base path)
+aigateway:
+  endpoint: ""
+
+## AgenticFlow configuration
+agenticflow:
+  image:
+    repository: opencsghq/agenticflow
+    tag: ee-v0.6-5
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  workers: 2
+  service: {}
+  postgresql: {}
+  redis: {}
+  persistence:
+    accessModes:
+      - ReadWriteOnce
+    size: "20Gi"
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1024Mi"
+
+## CSGBot configuration
+csgbot:
+  persistence:
+    size: "20Gi"
+  image:
+    repository: opencsghq/csgbot
+    tag: v0.6.2-ee
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service: {}
+  environments: {}
+  config:
+    aigateway: {}
+    starship: {}
+    speechToText: {}
+    integrations: {}
+    fileServer: {}
+    sandbox:
+      genius:
+        image:
+          repository: opencsghq/genius-sandbox
+          tag: "2026070902"
+      doc:
+        image:
+          repository: opencsghq/doc-sandbox
+          tag: "03c2897c"
+      openclaw:
+        image:
+          repository: opencsghq/openclaw-sandbox
+          tag: "03c2897c"
+      csgclawServer:
+        image:
+          repository: opencsghq/csgclaw-server-sandbox
+          tag: "2026060701"
+      csgclawAgent:
+        image:
+          repository: opencsghq/csgclaw-agent-sandbox
+          tag: "2026060301"
+    logging: {}
+    observability: {}
+    userFacingErrors: {}
+
+## Embedded PostgreSQL configuration
+postgresql:
+  image:
+    repository: opencsghq/postgres
+    tag: "15.18"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 5432
+    protocol: TCP
+  databases:
+    - "agentichub_agenticflow"
+  parameters: {}
+  persistence:
+    size: "50Gi"
+
+## Embedded Redis configuration
+redis:
+  image:
+    repository: redis
+    tag: "7.4.9"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 6379
+    protocol: TCP
+  requirePass: false
+  persistence:
+    size: "10Gi"
+
+## MemMachine (disabled by default)
+memmachine:
+  enabled: false

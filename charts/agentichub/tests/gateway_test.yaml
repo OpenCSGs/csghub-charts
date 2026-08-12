@@ -1,0 +1,124 @@
+# Test suite for the agentichub Gateway resources.
+#
+# The template renders a GatewayClass and a listeners Gateway in standalone
+# mode only (edition not ce and not isBuiltIn). The listeners Gateway
+# references the EnvoyProxy CR when the controller is envoy.
+#
+# Document order follows the template: GatewayClass(0), listeners Gateway(1).
+
+suite: Test Agentichub Gateway
+templates:
+  - gateway.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the GatewayClass with the configured controller name
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: csghub-gateway
+    asserts:
+      - isKind:
+          of: GatewayClass
+      - equal:
+          path: spec.controllerName
+          value: "gateway.envoyproxy.io/gatewayclass-controller"
+
+  - it: renders the listeners Gateway with an envoy proxy parametersRef
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: listeners
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.gatewayClassName
+          value: "csghub-gateway"
+      - equal:
+          path: spec.infrastructure.parametersRef.group
+          value: "gateway.envoyproxy.io"
+      - equal:
+          path: spec.infrastructure.parametersRef.kind
+          value: "EnvoyProxy"
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "agentichub-envoy-proxy"
+      - equal:
+          path: spec.listeners[0].name
+          value: "http"
+      - equal:
+          path: spec.listeners[0].protocol
+          value: "HTTP"
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
+      - equal:
+          path: spec.listeners[0].allowedRoutes.namespaces.from
+          value: "Same"
+
+  - it: renders an https listener with certificate when TLS is enabled
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: listeners
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - equal:
+          path: spec.listeners[1].name
+          value: "https"
+      - equal:
+          path: spec.listeners[1].protocol
+          value: "HTTPS"
+      - equal:
+          path: spec.listeners[1].port
+          value: 443
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: "Terminate"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "test-tls"
+
+  - it: omits the envoy proxy parametersRef for a non-envoy controller
+    template: gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: listeners
+    set:
+      global:
+        gateway:
+          controllerName: "istio.io/gateway-controller"
+    asserts:
+      - notExists:
+          path: spec.infrastructure
+
+  - it: renders nothing in built-in mode
+    template: gateway.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: gateway.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

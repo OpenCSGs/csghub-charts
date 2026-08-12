@@ -1,0 +1,128 @@
+# Test suite for the agentichub HTTPS redirect HTTPRoutes.
+#
+# The template renders two redirect routes when when global.gateway.tls.enabled
+# is true: agenticflow-redirect (always when edition not ce) and
+# csgbot-redirect (only in standalone mode). Each route uses the http parent
+# section with a 301 redirect to https.
+#
+# Document order follows the template: agenticflow-redirect(0), csgbot-redirect(1).
+
+suite: Test Agentichub HTTPRoutes Redirect
+templates:
+  - httproutes-redirect.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Disabled by default
+  ## ------------------------------------------------------------------
+  - it: renders no redirect routes when TLS is disabled
+    template: httproutes-redirect.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders no redirect routes when the edition is ce
+    template: httproutes-redirect.yaml
+    set:
+      global:
+        edition: "ce"
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  ## ------------------------------------------------------------------
+  ## Agenticflow redirect (always rendered when TLS on)
+  ## ------------------------------------------------------------------
+  - it: renders the agenticflow redirect route when TLS is enabled
+    template: httproutes-redirect.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-agenticflow-redirect
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agenticflow"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - contains:
+          path: spec.hostnames
+          content: "agenticflow.example.com"
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: "RequestRedirect"
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.scheme
+          value: "https"
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.statusCode
+          value: 301
+
+  ## ------------------------------------------------------------------
+  ## CSGBot redirect (standalone only)
+  ## ------------------------------------------------------------------
+  - it: renders the csgbot redirect route when TLS is enabled in standalone mode
+    template: httproutes-redirect.yaml
+    documentSelector:
+      path: metadata.name
+      value: agentichub-csgbot-redirect
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgbot"
+      - contains:
+          path: spec.hostnames
+          content: "csgbot.example.com"
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: "RequestRedirect"
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.scheme
+          value: "https"
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.statusCode
+          value: 301
+
+  - it: renders nothing in built-in mode (whole block gated on not isBuiltIn)
+    template: httproutes-redirect.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+        gateway:
+          tls:
+            enabled: true
+            secretName: "test-tls"
+    asserts:
+      - hasDocuments:
+          count: 0
