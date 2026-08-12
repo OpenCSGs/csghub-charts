@@ -1,0 +1,85 @@
+# Test suite for the label-studio Service.
+#
+# The Service exposes the label-studio port (8002 by default) and selects
+# pods by the label-studio service label. The targetPort is fixed at 8002.
+
+suite: Test Label Studio Service
+templates:
+  - label-studio/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the label-studio Service metadata and labels
+    template: label-studio/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "dataflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the label-studio Service spec with default port
+    template: label-studio/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8002
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8002
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "label-studio"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "label-studio"
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: "csghub"
+
+  - it: renders a custom port while keeping the target port fixed
+    template: label-studio/service.yaml
+    set:
+      labelStudio:
+        service:
+          port: 9000
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 9000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8002
+
+  - it: renders a NodePort type when service.type is overridden
+    template: label-studio/service.yaml
+    set:
+      labelStudio:
+        service:
+          type: "NodePort"
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"

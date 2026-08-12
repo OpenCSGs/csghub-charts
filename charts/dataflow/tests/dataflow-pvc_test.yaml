@@ -1,0 +1,93 @@
+# Test suite for the dataflow PersistentVolumeClaim.
+#
+# The PVC uses service-level persistence when set, falling back to global
+# persistence defaults. The keep annotation prevents deletion on upgrade.
+
+suite: Test Dataflow PVC
+templates:
+  - dataflow/pvc.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the PVC metadata with a keep annotation
+    template: dataflow/pvc.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-dataflow"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "dataflow"
+      - equal:
+          path: metadata.annotations["helm.sh/resource-policy"]
+          value: "keep"
+
+  - it: renders the PVC spec from service-level persistence
+    template: dataflow/pvc.yaml
+    asserts:
+      - equal:
+          path: spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.resources.requests.storage
+          value: "50Gi"
+      - notExists:
+          path: spec.storageClassName
+
+  - it: renders the global storageClass when service-level is unset
+    template: dataflow/pvc.yaml
+    set:
+      global:
+        persistence:
+          storageClass: "nfs-provisioner"
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: "nfs-provisioner"
+
+  - it: prefers the service-level storageClass over the global one
+    template: dataflow/pvc.yaml
+    set:
+      global:
+        persistence:
+          storageClass: "global-sc"
+      dataflow:
+        persistence:
+          storageClass: "local-sc"
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: "local-sc"
+
+  - it: prefers the service-level size over the global one
+    template: dataflow/pvc.yaml
+    set:
+      global:
+        persistence:
+          size: "10Gi"
+      dataflow:
+        persistence:
+          size: "20Gi"
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: "20Gi"
+
+  - it: renders multiple access modes from service-level persistence
+    template: dataflow/pvc.yaml
+    set:
+      dataflow:
+        persistence:
+          accessModes:
+            - "ReadWriteOnce"
+            - "ReadWriteMany"
+    asserts:
+      - equal:
+          path: spec.accessModes
+          value: ["ReadWriteOnce", "ReadWriteMany"]

@@ -1,0 +1,78 @@
+# Test suite for the embedded PostgreSQL ConfigMap.
+#
+# The ConfigMap renders only when built-in PostgreSQL is enabled and the
+# chart is in standalone mode. It renders a runtime.conf with the configured
+# PostgreSQL parameters.
+
+suite: Test PostgreSQL ConfigMap
+templates:
+  - postgresql/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with standard labels
+    template: postgresql/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "dataflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the runtime.conf with the include directive by default
+    template: postgresql/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "include_if_exists = '/var/lib/postgresql/data/postgresql.conf'"
+
+  - it: renders the runtime parameters when set
+    template: postgresql/configmap.yaml
+    set:
+      postgresql:
+        parameters:
+          max_connections: 400
+          shared_buffers: "128MB"
+    asserts:
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "max_connections = '400'"
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "shared_buffers = '128MB'"
+
+  - it: renders nothing when built-in PostgreSQL is disabled
+    template: postgresql/configmap.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing in built-in mode
+    template: postgresql/configmap.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 0
