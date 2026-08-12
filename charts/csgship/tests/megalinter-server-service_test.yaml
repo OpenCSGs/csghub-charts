@@ -1,0 +1,55 @@
+# Test suite for the CSGShip MegaLinter Server Service.
+#
+# The Service template looks up the "megalinter-server" value key (hyphenated)
+# while the values file defines megalinterServer (camelCase), so the Service is
+# NOT rendered by default. It renders only when megalinter-server.enabled is
+# set explicitly. The port name is truncated to 15 chars.
+
+suite: Test MegaLinter Server Service
+templates:
+  - megalinter-server/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders nothing by default because the hyphenated value key is unset
+    template: megalinter-server/service.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders the Service when megalinter-server.enabled is set
+    template: megalinter-server/service.yaml
+    set:
+      megalinter-server:
+        enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-megalinter-server"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "megalinter-server"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "megalinter-serv"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "megalinter-server"

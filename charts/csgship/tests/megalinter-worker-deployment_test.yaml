@@ -1,0 +1,95 @@
+# Test suite for the CSGShip MegaLinter Worker Deployment.
+#
+# The worker sources the csgship web ConfigMap and resolves the redis reporter
+# host/port from the MEGALINTER_SERVER_REDIS_* env vars via $(VAR) expansion.
+# It renders only when megalinterWorker.enabled is true.
+#
+# NOTE: the template guards livenessProbe with an if but renders it as
+# readinessProbe; with no livenessProbe set, no probe block is emitted.
+
+suite: Test MegaLinter Worker Deployment
+templates:
+  - megalinter-worker/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: megalinter-worker/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-megalinter-worker"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "megalinter-worker"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the worker container with image and the redis reporter env
+    template: megalinter-worker/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "megalinter-worker"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/oxsecurity/megalinter-worker:v8.0.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "REDIS_REPORTER_HOST"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "$(MEGALINTER_SERVER_REDIS_HOST)"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "REDIS_REPORTER_PORT"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "$(MEGALINTER_SERVER_REDIS_PORT)"
+
+  - it: omits any probe block when no liveness probe is configured
+    template: megalinter-worker/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: appends service-level environments when set
+    template: megalinter-worker/deployment.yaml
+    set:
+      megalinterWorker:
+        environments:
+          EXTRA: "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: "EXTRA"
+      - equal:
+          path: spec.template.spec.containers[0].env[2].value
+          value: "value"
+
+  - it: renders nothing when megalinterWorker is disabled
+    template: megalinter-worker/deployment.yaml
+    set:
+      megalinterWorker:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

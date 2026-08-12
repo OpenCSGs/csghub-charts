@@ -1,0 +1,60 @@
+# Test suite for the CSGShip frontend ConfigMap.
+#
+# The ConfigMap embeds config.js (web/API endpoints plus the Casdoor login URL)
+# and default.conf (nginx server block). The client_id in the login URL comes
+# from csghub.casdoor.client and is non-deterministic, so it is matched by regex.
+
+suite: Test Frontend ConfigMap
+templates:
+  - frontend/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with standard labels
+    template: frontend/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-frontend"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "frontend"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "csgship"
+
+  - it: renders the web and API endpoints in config.js
+    template: frontend/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.js"]
+          pattern: "VITE_APP_BASE_WEB: 'https://csgship\\.example\\.com'"
+      - matchRegex:
+          path: data["config.js"]
+          pattern: "VITE_APP_BASE_API: 'https://csgship-api\\.example\\.com'"
+
+  - it: renders the Casdoor login URL with the generated client id
+    template: frontend/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.js"]
+          pattern: "VITE_APP_LOGIN_URL: 'https://casdoor\\.example\\.com/login/oauth/authorize\\?client_id=[0-9a-f]{20}&response_type=code&redirect_uri=https://csgship-api\\.example\\.com/api/v1/account/casdoor/login/callback&scope=profile&state=casdoor'"
+
+  - it: renders the nginx server block with the web domain
+    template: frontend/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["default.conf"]
+          pattern: "server_name csgship\\.example\\.com;"
+      - matchRegex:
+          path: data["default.conf"]
+          pattern: "listen 80;"

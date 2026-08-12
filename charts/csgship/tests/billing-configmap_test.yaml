@@ -1,0 +1,53 @@
+# Test suite for the CSGShip billing ConfigMap.
+#
+# The ConfigMap embeds a config.sh that writes a NATS configuration with a
+# webhook back to the web service. It renders only when billing.enabled is true.
+
+suite: Test Billing ConfigMap
+templates:
+  - billing/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with standard labels
+    template: billing/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-billing"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "billing"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "csgship"
+
+  - it: renders the webhook url to the web service in config.sh
+    template: billing/configmap.yaml
+    asserts:
+      - exists:
+          path: data["config.sh"]
+      - matchRegex:
+          path: data["config.sh"]
+          pattern: "url: http://csghub-csgship:8000/api/v1/platforms/billing-events/"
+      - matchRegex:
+          path: data["config.sh"]
+          pattern: "durable_name: starship-billing-durable-consumer"
+
+  - it: renders nothing when billing is disabled
+    template: billing/configmap.yaml
+    set:
+      billing:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -1,0 +1,109 @@
+# Test suite for the CSGShip frontend Deployment.
+#
+# The frontend runs nginx on port 80, sources both the frontend and the web
+# ConfigMaps, and mounts config.js and default.conf with subPaths. The image
+# resolves through csgship.service.image to
+# docker.io/opencsghq/csgship-portal:v1.2.1.
+
+suite: Test Frontend Deployment
+templates:
+  - frontend/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: frontend/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-frontend"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "frontend"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the frontend container with image, port and liveness probe
+    template: frontend/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "frontend"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgship-portal:v1.2.1"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 80
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "frontend"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 80
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: sources the frontend and web ConfigMaps
+    template: frontend/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-frontend"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: "csghub-csgship"
+
+  - it: mounts config.js and default.conf from the frontend ConfigMap
+    template: frontend/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/usr/share/nginx/html/config.js"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPath
+          value: "config.js"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/etc/nginx/conf.d/default.conf"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].subPath
+          value: "default.conf"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-frontend"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: frontend/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csgship-portal:v1.2.1"

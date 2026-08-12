@@ -1,27 +1,61 @@
+# Test suite for the CSGShip Gateway resources.
+#
+# The template renders a GatewayClass and a Gateway in one file. helm-unittest
+# preserves the file order, so the GatewayClass is document 0 and the Gateway
+# is document 1; tests select documents via documentIndex. The resources render
+# only in standalone mode (isBuiltIn=false).
+#
+# With the envoyproxy controller, the Gateway references the csghub-envoy-proxy
+# EnvoyProxy via infrastructure.parametersRef. The https listener references
+# the global TLS secret plus any distinct web/casdoor TLS secrets.
+
 suite: Test Gateway Resources
 templates:
   - gateway.yaml
-  - envoy-proxy.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  global:
-    gateway:
-      external:
-        domain: "csghub.example.cn"
-        public: ""
-      tls:
-        enabled: true
-        secretName: "example-cn-tls"
-      service:
-        type: LoadBalancer
-        nodePorts:
-          http: 30080
-          https: 30443
-          gitssh: 30022
+values:
+  - values.yaml
 tests:
-  - it: Should render gateway resource correctly
+  ## ------------------------------------------------------------------
+  ## Gateway
+  ## ------------------------------------------------------------------
+  - it: renders the Gateway with the http and https listeners
+    template: gateway.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: "listeners"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.gatewayClassName
+          value: "csghub-gateway"
+      - equal:
+          path: spec.infrastructure.parametersRef.group
+          value: "gateway.envoyproxy.io"
+      - equal:
+          path: spec.infrastructure.parametersRef.kind
+          value: "EnvoyProxy"
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "csghub-envoy-proxy"
+      - equal:
+          path: spec.listeners[0].name
+          value: "http"
+      - equal:
+          path: spec.listeners[0].protocol
+          value: "HTTP"
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
+
+  - it: renders the https listener with the global TLS secret
     template: gateway.yaml
     documentIndex: 1
     asserts:
@@ -29,91 +63,85 @@ tests:
           path: spec.listeners[1].name
           value: "https"
       - equal:
+          path: spec.listeners[1].protocol
+          value: "HTTPS"
+      - equal:
+          path: spec.listeners[1].port
+          value: 443
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: "Terminate"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].kind
+          value: "Secret"
+      - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          value: "csghub-tls"
 
-  - it: Should render gateway resource correctly
+  - it: appends distinct web and casdoor TLS secrets to the certificate refs
     template: gateway.yaml
     documentIndex: 1
     set:
-      casdoor:
-        gateway:
-          tls:
-            secretName: "casdoor-cn-tls"
       web:
         gateway:
           tls:
-            secretName: "web-cn-tls"
+            secretName: "web-tls"
+      casdoor:
+        gateway:
+          tls:
+            secretName: "casdoor-tls"
     asserts:
-      - equal:
-          path: spec.listeners[1].name
-          value: "https"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          value: "csghub-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[1].name
-          value: "web-cn-tls"
+          value: "web-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[2].name
-          value: "casdoor-cn-tls"
+          value: "casdoor-tls"
 
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
+  - it: omits the https listener when TLS is disabled
+    template: gateway.yaml
+    documentIndex: 1
     set:
       global:
         gateway:
-          service:
-            type: NodePort
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - equal:
+          path: spec.listeners[0].name
+          value: "http"
+      - notExists:
+          path: spec.listeners[1]
+
+  ## ------------------------------------------------------------------
+  ## GatewayClass
+  ## ------------------------------------------------------------------
+  - it: renders the GatewayClass with the envoyproxy controller
+    template: gateway.yaml
+    documentIndex: 0
     asserts:
       - isKind:
-          of: "EnvoyProxy"
+          of: GatewayClass
       - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
+          path: metadata.name
+          value: "csghub-gateway"
       - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30080
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30443
+          path: spec.controllerName
+          value: "gateway.envoyproxy.io/gatewayclass-controller"
 
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
+  ## ------------------------------------------------------------------
+  ## Gating
+  ## ------------------------------------------------------------------
+  - it: renders nothing in built-in mode
+    template: gateway.yaml
     set:
       global:
-        gateway:
-          service:
-            type: NodePort
-            nodePorts:
-              http: 30880
-              https: 30444
-              gitssh: 30222
-        image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+        chartContext:
+          isBuiltIn: true
     asserts:
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30880
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30444
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
-
-  - it: Should render envoyDeployment as empty object when using non-opencsg registry
-    template: envoy-proxy.yaml
-    set:
-      global:
-        image:
-          registry: "docker.io"
-    asserts:
-      - isKind:
-          of: "EnvoyProxy"
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment
-          value: {}
+      - hasDocuments:
+          count: 0

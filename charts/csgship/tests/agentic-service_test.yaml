@@ -1,0 +1,66 @@
+# Test suite for the CSGShip agentic Service.
+
+suite: Test Agentic Service
+templates:
+  - agentic/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: agentic/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-agentic"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agentic"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "csgship"
+
+  - it: renders the single port 8000 with the default ClusterIP type
+    template: agentic/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "agentic"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "agentic"
+
+  - it: overrides the service port and type when set
+    template: agentic/service.yaml
+    set:
+      agentic:
+        service:
+          type: "NodePort"
+          port: 9000
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 9000

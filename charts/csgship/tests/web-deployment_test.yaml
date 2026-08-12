@@ -1,0 +1,265 @@
+# Test suite for the CSGShip web Deployment (Celery workers).
+#
+# The template renames the web service to "celery" via mergeOverwrite, so the
+# Deployment is named csghub-celery while the containers reference the
+# csghub-csgship ConfigMap. Three containers run: producer, worker, worker-beat.
+#
+# Baseline values come from tests/values.yaml. The image resolves through
+# csgship.service.image (chart image merged with the empty web.image), i.e.
+# docker.io/opencsghq/csgship-web:v0.4.0.
+
+suite: Test Web Deployment
+templates:
+  - web/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata and labels
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment metadata with the celery service label
+    template: web/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-celery"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "celery"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  ## ------------------------------------------------------------------
+  ## Spec defaults
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment spec defaults
+    template: web/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "celery"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  - it: omits the service account block when serviceAccountName is not set
+    template: web/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.serviceAccountName
+
+  - it: renders the service account block when serviceAccountName is set
+    template: web/deployment.yaml
+    set:
+      web:
+        serviceAccountName: "web-sa"
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "web-sa"
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+
+  ## ------------------------------------------------------------------
+  ## Containers
+  ## ------------------------------------------------------------------
+  - it: renders three celery containers with the web image
+    template: web/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "celery-producer"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgship-web:v0.4.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: "celery-worker"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "docker.io/opencsghq/csgship-web:v0.4.0"
+      - equal:
+          path: spec.template.spec.containers[2].name
+          value: "celery-worker-beat"
+      - equal:
+          path: spec.template.spec.containers[2].image
+          value: "docker.io/opencsghq/csgship-web:v0.4.0"
+
+  - it: sources the environment from the csgship ConfigMap in every container
+    template: web/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+      - equal:
+          path: spec.template.spec.containers[1].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+      - equal:
+          path: spec.template.spec.containers[2].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+
+  - it: mounts the data volume with gitrepos and codedata subpaths
+    template: web/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/var/repo/gitrepos"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPath
+          value: "gitrepos"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/code/data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].subPath
+          value: "codedata"
+
+  - it: references the data PVC created by the web StatefulSet
+    template: web/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: "data-csghub-csgship-0"
+
+  ## ------------------------------------------------------------------
+  ## Optional fields
+  ## ------------------------------------------------------------------
+  - it: appends environments and resources when set
+    template: web/deployment.yaml
+    set:
+      web:
+        environments:
+          CELERY_WORKER_CONCURRENCY: "4"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "CELERY_WORKER_CONCURRENCY"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "4"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "250m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "1Gi"
+
+  - it: renders probes when set
+    template: web/deployment.yaml
+    set:
+      web:
+        livenessProbe:
+          tcpSocket:
+            port: 8000
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+
+  - it: renders pod security context, node selector and strategy when set
+    template: web/deployment.yaml
+    set:
+      web:
+        podSecurityContext:
+          fsGroup: 1000
+        nodeSelector:
+          diskType: ssd
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 0
+        revisionHistoryLimit: 3
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+
+  ## ------------------------------------------------------------------
+  ## Image configuration
+  ## ------------------------------------------------------------------
+  - it: overrides the image registry when registryPolicy is force
+    template: web/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csgship-web:v0.4.0"
+
+  - it: prefers service-level pullSecrets over global pullSecrets
+    template: web/deployment.yaml
+    set:
+      web:
+        image:
+          pullSecrets:
+            - "web-secret"
+      global:
+        image:
+          pullSecrets:
+            - "global-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "web-secret"

@@ -1,0 +1,100 @@
+# Test suite for the CSGShip casdoor Deployment.
+#
+# The Deployment runs the casbin/casdoor image on port 8000, waits for
+# PostgreSQL, and mounts the casdoor ConfigMap at /conf. It renders only in
+# standalone mode (isBuiltIn=false).
+
+suite: Test Casdoor Deployment
+templates:
+  - casdoor/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the postgresql wait init container
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-postgresql"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+
+  - it: renders the casdoor container with image, port and probes
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "casdoor"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/casbin/casdoor:3.62.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "casdoor"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/api/health"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 8000
+
+  - it: mounts the casdoor ConfigMap at /conf
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/conf"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-casdoor"
+
+  - it: renders nothing in built-in mode
+    template: casdoor/deployment.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+    asserts:
+      - hasDocuments:
+          count: 0

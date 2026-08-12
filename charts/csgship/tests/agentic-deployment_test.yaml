@@ -1,0 +1,139 @@
+# Test suite for the CSGShip agentic Deployment.
+#
+# The agentic service runs on port 8000 and sources the csgship web ConfigMap.
+# Its image resolves through csgship.service.image, giving
+# docker.io/opencsghq/csgship-agentic:v0.4.0.
+
+suite: Test Agentic Deployment
+templates:
+  - agentic/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: agentic/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-agentic"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "agentic"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the Deployment spec defaults
+    template: agentic/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "agentic"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  - it: renders the agentic container with image, port and liveness probe
+    template: agentic/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "agentic"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgship-agentic:v0.4.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "agentic"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8000
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: renders pod labels, node selector and strategy when set
+    template: agentic/deployment.yaml
+    set:
+      agentic:
+        podLabels:
+          sidecar.istio.io/inject: "true"
+        nodeSelector:
+          diskType: ssd
+        strategy:
+          type: Recreate
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["sidecar.istio.io/inject"]
+          value: "true"
+      - equal:
+          path: spec.template.spec.nodeSelector.diskType
+          value: "ssd"
+      - equal:
+          path: spec.strategy.type
+          value: "Recreate"
+
+  - it: appends environments and volume mounts when set
+    template: agentic/deployment.yaml
+    set:
+      agentic:
+        environments:
+          WORKERS: "4"
+        volumeMounts:
+          - name: data
+            mountPath: /code/data
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "WORKERS"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "4"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/code/data"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: agentic/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csgship-agentic:v0.4.0"

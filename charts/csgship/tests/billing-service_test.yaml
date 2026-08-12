@@ -1,0 +1,62 @@
+# Test suite for the CSGShip billing Service.
+#
+# The Service exposes port 8080 and renders only when billing.enabled is true.
+
+suite: Test Billing Service
+templates:
+  - billing/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: billing/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-billing"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "billing"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "csgship"
+
+  - it: renders the single port 8080 with the default ClusterIP type
+    template: billing/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "billing"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "billing"
+
+  - it: renders nothing when billing is disabled
+    template: billing/service.yaml
+    set:
+      billing:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

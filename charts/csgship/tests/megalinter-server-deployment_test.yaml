@@ -1,0 +1,73 @@
+# Test suite for the CSGShip MegaLinter Server Deployment.
+#
+# The server runs uvicorn on port 9000 and sources the csgship web ConfigMap.
+# The container port name is truncated to 15 chars. It renders only when
+# megalinterServer.enabled is true.
+
+suite: Test MegaLinter Server Deployment
+templates:
+  - megalinter-server/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata with standard labels
+    template: megalinter-server/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-megalinter-server"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "megalinter-server"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the server container with image, truncated port name and probe
+    template: megalinter-server/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "megalinter-server"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/oxsecurity/megalinter-server:beta"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 9000
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "megalinter-serv"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-csgship"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 9000
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: renders nothing when megalinterServer is disabled
+    template: megalinter-server/deployment.yaml
+    set:
+      megalinterServer:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
