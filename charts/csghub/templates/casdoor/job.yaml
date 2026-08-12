@@ -91,8 +91,9 @@ spec:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
             {{- if .Values.temporal.console.enabled }}
+            {{- $temporalSvc := include "common.service" (dict "ctx" . "service" "temporal") | fromYaml }}
             - configMapRef:
-                name: {{ include "common.names.custom" (list . "temporal") }}
+                name: {{ include "common.names.custom" (list . $temporalSvc.name) }}
             {{- end }}
             {{- if .Values.csgship.enabled }}
             - configMapRef:
