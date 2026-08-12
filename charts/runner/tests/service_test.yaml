@@ -1,30 +1,106 @@
+# Test suite for the runner Service resource.
+#
+# The Service exposes the runner port (8082 by default) and selects pods by the
+# runner service label. Baseline comes from tests/values.yaml.
+
 suite: Test Runner Service
 templates:
   - service.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  name: "runner-svc"
-  service:
-    port: 8082
+values:
+  - values.yaml
 tests:
-  - it: Should render service correctly
+  - it: renders the runner Service metadata and labels
     template: service.yaml
-    set:
-      casdoor:
-        console:
-          enabled: true
     asserts:
       - equal:
-          path: metadata.labels["app.kubernetes.io/service"]
-          value: "runner-svc"
+          path: metadata.name
+          value: "csghub-runner"
       - equal:
-          path: spec.selector["app.kubernetes.io/service"]
-          value: "runner-svc"
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "runner"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the runner Service spec with default port
+    template: service.yaml
+    asserts:
       - equal:
           path: spec.type
           value: "ClusterIP"
       - equal:
           path: spec.ports[0].port
           value: 8082
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8082
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "runner"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: "runner"
+
+  - it: renders a NodePort type when service.type is overridden
+    template: service.yaml
+    set:
+      service:
+        type: NodePort
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+
+  - it: renders a custom port when service.port is overridden
+    template: service.yaml
+    set:
+      service:
+        port: 9090
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 9090
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8082
+
+  - it: renders a custom protocol when service.protocol is overridden
+    template: service.yaml
+    set:
+      service:
+        protocol: "UDP"
+    asserts:
+      - equal:
+          path: spec.ports[0].protocol
+          value: "UDP"
+
+  - it: renders a LoadBalancer type when service.type is overridden
+    template: service.yaml
+    set:
+      service:
+        type: "LoadBalancer"
+    asserts:
+      - equal:
+          path: spec.type
+          value: "LoadBalancer"

@@ -1,198 +1,165 @@
+# Test suite for the runner KnativeServing resources.
+#
+# The template renders two documents: a Namespace and a KnativeServing CR.
+# Baseline is standalone mode (isBuiltIn=false) with gateway-api ingress and a
+# docker registry. All values are explicitly defined in tests/values.yaml.
+
 suite: Test Runner KnativeServing
 templates:
   - knativeserving.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  ## Global Definition
-  global:
-    gateway:
-      controllerName: gateway.envoyproxy.io/gatewayclass-controller
-      service:
-        type: LoadBalancer
-        nodePort: {}
-      external:
-        domain: csghub.unittest.io
-        public: ""
-        useTop: false
-      tls:
-        enabled: false
-        secretName: ""
-    image:
-      registry: unittest.io
-      registryPolicy: default
-      tag: v2.0.0
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-    registry:
-      enabled: false
-    objectStore:
-      enabled: false
-    chartContext:
-      isBuiltIn: false
-
-  externalUrl: https://csghub.unittest.io
-  image:
-    repository: opencsghq/csghub-server
-    tag: v2.0.0
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  gateway:
-    enabled: true
-    tls: {}
-  hubAPIToken: unittest-api-token-standalone
-  originClusterID: unittest-cluster
-  region: es-west-1
-
-  name: runner-unittest
-
-  service:
-    type: ClusterIP
-    port: 8082
-    protocol: TCP
-
-  interval: 30
-
-  namespace: spaces
-  mergingNamespace: disable
-
-  usePublicDomain: true
-
-  pipIndexUrl: https://pypi.tuna.tsinghua.edu.cn/simple/
-
-  extraBuildArgs: []
-
-  model:
-    deployTimeout: 30
-    registry: model.unittest.io
-
-  gpuModelLabel:
-    typeLabel: nvidia.com/gpu.product
-    capacityLabel: nvidia.com/gpu
-
-  applicationEndpoint: http://kourier-internal.knative-serving.svc.cluster.local
-
-  networkInterface: eth0
-
-  storageClassName: local-path
-
-  knative:
-    serving:
-      domain: unittest.io
-      ingress: kourier
-      autoscaler:
-        enableScaleToZero: true
-        scaleToZeroPodRetentionPeriod: 30m
-
-  rbac:
-    create: true
-    serviceAccountName: runner-unittest
-
-  logcollector:
-    enabled: false
-    loki:
-      address: ""
-
-  tempo:
-    address: ""
-
-  registry:
-    registry: registry.unittest.io
-    repository: csghub
-    username: unittest
-    password: unittest
-    insecure: "true"
-
-  objectStore:
-    endpoint: https://s3.unittest.io
-    accessKey: unittest
-    secretKey: unittest
-    bucket: runner-unittest
-    region: cn-north-1
-    secure: "true"
-    encrypt: "false"
-    pathStyle: "true"
-
-  prometheus:
-    enabled: true
-    gateway:
-      enabled: false
-      basicAuth: {}
-    server:
-      remoteWrite: []
-
-  volcano:
-    enabled: true
-    basic:
-      image_pull_policy: IfNotPresent
-
+values:
+  - values.yaml
 tests:
-  - it: Should render Namespace metadata normally
-    documentIndex: 0
+  ## ------------------------------------------------------------------
+  ## Namespace document
+  ## ------------------------------------------------------------------
+  - it: renders the knative-serving Namespace metadata
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: Namespace
     asserts:
       - equal:
           path: metadata.name
-          value: knative-serving
-      - equal:
-          path: metadata.labels["app.kubernetes.io/service"]
-          value: csghub-runner-unittest
-      - equal:
-          path: metadata.labels["app.kubernetes.io/instance"]
-          value: csghub
+          value: "knative-serving"
       - equal:
           path: metadata.labels["app.kubernetes.io/managed-by"]
-          value: Helm
+          value: "Helm"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csghub-runner"
       - equal:
           path: metadata.annotations["helm.sh/resource-policy"]
-          value: keep
+          value: "keep"
 
-  - it: Should render KnativeServing CR metadata normally
-    documentIndex: 1
+  - it: renders the knative Namespace in the release namespace when merging is single
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: Namespace
+    set:
+      runner:
+        mergingNamespace: "single"
     asserts:
       - equal:
           path: metadata.name
-          value: knative-serving
+          value: "csghub"
+
+  ## ------------------------------------------------------------------
+  ## KnativeServing CR metadata
+  ## ------------------------------------------------------------------
+  - it: renders the KnativeServing CR metadata
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "knative-serving"
       - equal:
           path: metadata.namespace
-          value: knative-serving
-      - equal:
-          path: metadata.labels["app.kubernetes.io/service"]
-          value: csghub-runner-unittest
-      - equal:
-          path: metadata.labels["app.kubernetes.io/instance"]
-          value: csghub
+          value: "knative-serving"
       - equal:
           path: metadata.labels["app.kubernetes.io/managed-by"]
-          value: Helm
+          value: "Helm"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csghub-runner"
       - equal:
           path: metadata.annotations["meta.helm.sh/release-name"]
-          value: csghub
+          value: "csghub"
       - equal:
           path: metadata.annotations["meta.helm.sh/release-namespace"]
-          value: csghub
+          value: "csghub"
 
-  - it: Should render KnativeServing spec normally
-    documentIndex: 1
+  - it: adds a post-install hook annotation on install
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "post-install"
+
+  - it: adds a post-upgrade hook annotation on upgrade
+    template: knativeserving.yaml
+    release:
+      name: csghub
+      namespace: csghub
+      upgrade: true
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "post-upgrade"
+
+  ## ------------------------------------------------------------------
+  ## KnativeServing CR spec: gateway-api mode (baseline)
+  ## ------------------------------------------------------------------
+  - it: renders the baseline KnativeServing spec in gateway-api mode
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
     asserts:
       - equal:
           path: spec.version
           value: "1.22"
       - equal:
           path: spec.ingress.kourier.enabled
+          value: false
+      - equal:
+          path: spec.ingress.gateway-api.enabled
           value: true
       - equal:
-          path: spec.config.domain["unittest.io"]
+          path: spec.ingress.istio.enabled
+          value: false
+      - equal:
+          path: spec.config.domain["example.com"]
           value: ""
       - equal:
           path: spec.config.autoscaler.enable-scale-to-zero
           value: "true"
       - equal:
           path: spec.config.autoscaler.scale-to-zero-pod-retention-period
-          value: 30m
+          value: "60m"
       - equal:
           path: spec.config.network.ingress-class
-          value: kourier.ingress.networking.knative.dev
+          value: "gateway-api.ingress.networking.knative.dev"
+      - equal:
+          path: spec.config["gateway"]["external-gateways"]
+          value: |
+            - class: eg-external
+              gateway: csghub/knative
+              supported-features:
+              - HTTPRouteRequestTimeout
+      - equal:
+          path: spec.config["gateway"]["local-gateways"]
+          value: |
+            - class: eg-internal
+              gateway: csghub/knative-local
+              supported-features:
+              - HTTPRouteRequestTimeout
+
+  - it: renders the enabled knative features
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    asserts:
       - equal:
           path: spec.config.features["kubernetes.podspec-priorityclassname"]
           value: "enabled"
@@ -241,75 +208,172 @@ tests:
       - equal:
           path: spec.config.features["tag-header-based-routing"]
           value: "enabled"
+
+  - it: renders the tag resolving list from externalUrl and global registry
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    asserts:
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.unittest.io,csghub.unittest.io,unittest.io"
+          value: "csghub.example.com,csghub.example.com,docker.io"
 
-  - it: Should render KnativeServing with scale-to-zero disabled
+  - it: composes the tag resolving list from domain, externalUrl and registry
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    set:
+      externalUrl: "https://hub.other.com"
+      global:
+        image:
+          registry: "myreg.io"
+    asserts:
+      - equal:
+          path: spec.config.deployment.registries-skipping-tag-resolving
+          value: "csghub.example.com,hub.other.com,myreg.io"
+
+  - it: renders the observability configuration
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    asserts:
+      - equal:
+          path: spec.config.observability.metrics-protocol
+          value: "prometheus"
+      - equal:
+          path: spec.config.observability.request-metrics-protocol
+          value: "prometheus"
+      - equal:
+          path: spec.config.observability.request-metrics-endpoint
+          value: ":9091"
+
+  ## ------------------------------------------------------------------
+  ## KnativeServing CR spec: kourier mode
+  ## ------------------------------------------------------------------
+  - it: renders the kourier ingress in kourier mode
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    set:
+      knative:
+        serving:
+          ingress: "kourier"
+    asserts:
+      - equal:
+          path: spec.ingress.kourier.enabled
+          value: true
+      - notExists:
+          path: spec.ingress.gateway-api
+      - equal:
+          path: spec.config.network.ingress-class
+          value: "kourier.ingress.networking.knative.dev"
+      - notExists:
+          path: spec.config["gateway"]
+
+  ## ------------------------------------------------------------------
+  ## KnativeServing CR spec: OpenCSG registry override
+  ## ------------------------------------------------------------------
+  - it: overrides serving images for the OpenCSG registry in gateway-api mode
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.registry.override.activator
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/activator:v1.22.0"
+      - equal:
+          path: spec.registry.override.controller
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/controller:v1.22.0"
+      - equal:
+          path: spec.registry.override.webhook
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/webhook:v1.22.0"
+      - equal:
+          path: spec.registry.override["net-gateway-api-controller/controller"]
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/controller:v1.22.0"
+      - equal:
+          path: spec.registry.override["net-gateway-api-webhook/webhook"]
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/webhook:v1.22.0"
+      - equal:
+          path: spec.config.deployment.registries-skipping-tag-resolving
+          value: "csghub.example.com,csghub.example.com,opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      - equal:
+          path: spec.config.deployment.queue-sidecar-image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/queue:v1.22.0"
+
+  - it: overrides the kourier images for the OpenCSG registry in kourier mode
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      knative:
+        serving:
+          ingress: "kourier"
+    asserts:
+      - equal:
+          path: spec.registry.override["net-kourier-controller/controller"]
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.22.0"
+      - equal:
+          path: spec.registry.override["3scale-kourier-gateway/kourier-gateway"]
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:v1.37-latest"
+
+  ## ------------------------------------------------------------------
+  ## KnativeServing CR spec: autoscaler and domain overrides
+  ## ------------------------------------------------------------------
+  - it: disables scale to zero when configured
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
     set:
       knative:
         serving:
           autoscaler:
             enableScaleToZero: false
-    documentIndex: 1
     asserts:
       - equal:
           path: spec.config.autoscaler.enable-scale-to-zero
           value: "false"
 
-  - it: Should render KnativeServing with custom domain
-    documentIndex: 1
-    set:
-      knative:
-        serving:
-          domain: custom.io
-    asserts:
-      - equal:
-          path: spec.config.domain["custom.io"]
-          value: ""
-      - notEqual:
-          path: spec.config.domain["unittest.io"]
-          value: ""
-
-  - it: Should render KnativeServing with custom grace period
+  - it: renders a custom scale-to-zero retention period
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
     set:
       knative:
         serving:
           autoscaler:
-            scaleToZeroPodRetentionPeriod: 60s
-    documentIndex: 1
+            scaleToZeroPodRetentionPeriod: "30s"
     asserts:
       - equal:
           path: spec.config.autoscaler.scale-to-zero-pod-retention-period
-          value: 60s
+          value: "30s"
 
-  - it: Should render KnativeServing with Gateway API ingress
+  - it: renders a custom domain
+    template: knativeserving.yaml
+    documentSelector:
+      path: kind
+      value: KnativeServing
     set:
       knative:
         serving:
-          ingress: gateway-api
-    documentIndex: 1
+          domain: "custom.io"
     asserts:
       - equal:
-          path: spec.ingress.kourier.enabled
-          value: false
-      - equal:
-          path: spec.ingress.gateway-api.enabled
-          value: true
-      - equal:
-          path: spec.config.network.ingress-class
-          value: gateway-api.ingress.networking.knative.dev
-      - equal:
-          path: spec.config["gateway"]["external-gateways"]
-          value: |
-            - class: eg-external
-              gateway: csghub/knative
-              supported-features:
-              - HTTPRouteRequestTimeout
-      - equal:
-          path: spec.config["gateway"]["local-gateways"]
-          value: |
-            - class: eg-internal
-              gateway: csghub/knative-local
-              supported-features:
-              - HTTPRouteRequestTimeout
+          path: spec.config.domain["custom.io"]
+          value: ""
+      - notExists:
+          path: spec.config.domain["example.com"]

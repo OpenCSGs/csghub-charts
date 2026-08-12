@@ -1,37 +1,246 @@
-# tests/rbac_test.yaml
+# Test suite for the runner RBAC resources.
+#
+# The template renders RBAC objects for the runner service account, plus a
+# ClusterRole/ClusterRoleBinding when the spaces namespace differs from the
+# release namespace. Baseline (namespace.spaces=spaces, release=csghub)
+# renders 8 documents; with merging into the release namespace it renders 6.
+#
+# Document order follows the template: ServiceAccount(0), Role watch-config(1),
+# RoleBinding watch-config(2), Role runner(3), RoleBinding runner(4),
+# RoleBinding argo-executor(5), ClusterRole(6), ClusterRoleBinding(7).
+
 suite: Test Runner RBAC
 templates:
   - rbac.yaml
 release:
-  name: runner
+  name: csghub
   namespace: csghub
+values:
+  - values.yaml
 tests:
-  - it: should create multiple RBAC with global.namespace <> Release.Namespace
-    set:
-      runner:
-        namespace: "spaces"
-      rbac.create: true
+  ## ------------------------------------------------------------------
+  ## Document counts
+  ## ------------------------------------------------------------------
+  - it: renders 8 documents when the spaces namespace differs from release namespace
+    template: rbac.yaml
     asserts:
       - hasDocuments:
           count: 8
-      - exists:
-          path: metadata
-          docSelector:
-            kind: ClusterRole
-            name: runner-cluster-reader
-        name: ClusterRole should be created
-      - exists:
-          path: metadata
-          docSelector:
-            kind: ClusterRoleBinding
-            name: runner-cluster-reader
-        name: ClusterRoleBinding should be created
 
-  - it: should create multiple RBAC with global.namespace = Release.Namespace
+  - it: renders 6 documents when the spaces namespace equals the release namespace
+    template: rbac.yaml
     set:
       runner:
         namespace: "csghub"
-      rbac.create: true
     asserts:
       - hasDocuments:
           count: 6
+
+  - it: renders nothing when RBAC creation is disabled
+    template: rbac.yaml
+    set:
+      rbac:
+        create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  ## ------------------------------------------------------------------
+  ## ServiceAccount
+  ## ------------------------------------------------------------------
+  - it: renders the runner ServiceAccount in the release namespace
+    template: rbac.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+
+  ## ------------------------------------------------------------------
+  ## Watch config Role and RoleBinding
+  ## ------------------------------------------------------------------
+  - it: renders the watch-config Role in the release namespace
+    template: rbac.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: Role
+      - equal:
+          path: metadata.name
+          value: "csghub-runner-watch-config"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: rules[0].apiGroups[0]
+          value: ""
+      - equal:
+          path: rules[0].resources[0]
+          value: "configmaps"
+      - equal:
+          path: rules[0].verbs
+          value: ["get", "list", "watch"]
+
+  - it: renders the watch-config RoleBinding bound to the runner ServiceAccount
+    template: rbac.yaml
+    documentIndex: 2
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - equal:
+          path: metadata.name
+          value: "csghub-runner-watch-config"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: subjects[0].kind
+          value: "ServiceAccount"
+      - equal:
+          path: subjects[0].name
+          value: "csghub-runner"
+      - equal:
+          path: subjects[0].namespace
+          value: "csghub"
+      - equal:
+          path: roleRef.kind
+          value: "Role"
+      - equal:
+          path: roleRef.name
+          value: "csghub-runner-watch-config"
+
+  ## ------------------------------------------------------------------
+  ## Spaces namespace Role and RoleBinding
+  ## ------------------------------------------------------------------
+  - it: renders the runner Role in the spaces namespace with workload rules
+    template: rbac.yaml
+    documentIndex: 3
+    asserts:
+      - isKind:
+          of: Role
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - contains:
+          path: rules[0].resources
+          content: "resourcequotas"
+      - contains:
+          path: rules[1].resources
+          content: "pods"
+      - contains:
+          path: rules[1].resources
+          content: "workflows"
+      - contains:
+          path: rules[1].resources
+          content: "revisions"
+      - contains:
+          path: rules[1].apiGroups
+          content: "argoproj.io"
+      - contains:
+          path: rules[2].apiGroups
+          content: "agents.x-k8s.io"
+      - contains:
+          path: rules[2].resources
+          content: "sandboxes"
+
+  - it: renders the runner RoleBinding in the spaces namespace
+    template: rbac.yaml
+    documentIndex: 4
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - equal:
+          path: roleRef.name
+          value: "csghub-runner"
+
+  ## ------------------------------------------------------------------
+  ## Argo executor RoleBinding
+  ## ------------------------------------------------------------------
+  - it: binds the runner ServiceAccount to the argo workflow executor Role
+    template: rbac.yaml
+    documentIndex: 5
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - equal:
+          path: metadata.name
+          value: "csghub-runner-argo-workflow-executor"
+      - equal:
+          path: metadata.namespace
+          value: "spaces"
+      - equal:
+          path: roleRef.name
+          value: "csghub-argo-workflow-executor"
+      - equal:
+          path: subjects[0].name
+          value: "csghub-runner"
+
+  ## ------------------------------------------------------------------
+  ## ClusterRole and ClusterRoleBinding
+  ## ------------------------------------------------------------------
+  - it: renders the ClusterRole with cluster-wide node and namespace rules
+    template: rbac.yaml
+    documentIndex: 6
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - contains:
+          path: rules[0].resources
+          content: "nodes"
+      - contains:
+          path: rules[0].resources
+          content: "pods"
+      - equal:
+          path: rules[1].resourceNames[0]
+          value: "spaces"
+      - contains:
+          path: rules[2].resourceNames
+          content: "kourier"
+      - contains:
+          path: rules[3].resources
+          content: "sandboxes"
+      - contains:
+          path: rules[4].resources
+          content: "persistentvolumeclaims"
+
+  - it: binds the runner ServiceAccount with the ClusterRole
+    template: rbac.yaml
+    documentIndex: 7
+    asserts:
+      - isKind:
+          of: ClusterRoleBinding
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: roleRef.kind
+          value: "ClusterRole"
+      - equal:
+          path: roleRef.name
+          value: "csghub-runner"
+      - equal:
+          path: subjects[0].kind
+          value: "ServiceAccount"
+      - equal:
+          path: subjects[0].name
+          value: "csghub-runner"
+      - equal:
+          path: subjects[0].namespace
+          value: "csghub"

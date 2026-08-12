@@ -1,44 +1,643 @@
+# Test suite for the runner Deployment and logcollector Deployment.
+#
+# Baseline values come from tests/values.yaml. The main deployment renders in
+# all cases; the logcollector deployment renders only when logcollector.enabled
+# is true. isBuiltIn branches that call common.s3.config cannot be rendered by
+# the standalone runner chart and are intentionally not covered.
+
 suite: Test Runner Deployment
 templates:
   - deployment.yaml
   - deployment-logcollector.yaml
 release:
-  name: runner
+  name: csghub
   namespace: csghub
-set:
-  global:
-    image:
-      registry: "docker.io"
-      registryPolicy: "default"
-      tag: "v1.11.0"
-  image:
-    registry: "docker.io"
-    repository: "opencsghq/csghub-server"
-    tag: "v1.11.0"
-  rbac:
-    enabled: true
-    serviceAccountName: "csghub-runner"
-  logcollector:
-    enabled: true
-    loki:
-      address: "https://loki.example.cn"
+values:
+  - values.yaml
 tests:
-  - it: should render deployment correct when default
+  ## ------------------------------------------------------------------
+  ## Main deployment: default rendering
+  ## ------------------------------------------------------------------
+  - it: renders the main deployment metadata and labels
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "runner"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: renders the main deployment spec defaults
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+
+  - it: renders the runner container with image, command and probes
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "runner"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: "/starhub-bin/starhub"
+      - equal:
+          path: spec.template.spec.containers[0].command[1]
+          value: "deploy"
+      - equal:
+          path: spec.template.spec.containers[0].command[2]
+          value: "runner"
+      - equal:
+          path: spec.template.spec.containers[0].command[4]
+          value: "info"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8082
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "runner"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-runner"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8082
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.scheme
+          value: "HTTP"
+
+  ## ------------------------------------------------------------------
+  ## Main deployment: service account
+  ## ------------------------------------------------------------------
+  - it: uses the default service account name when not overridden
+    template: deployment.yaml
     asserts:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: "csghub-runner"
-      - equal:
-          path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/csghub-server:v1.11.0-ee"
 
-  - it: should render deployment correct when default
+  - it: uses the custom service account name when rbac.serviceAccountName is set
+    template: deployment.yaml
+    set:
+      rbac:
+        serviceAccountName: "custom-sa"
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "custom-sa"
+
+  ## ------------------------------------------------------------------
+  ## Main deployment: env and resources
+  ## ------------------------------------------------------------------
+  - it: renders container environment variables with quoted values
+    template: deployment.yaml
+    set:
+      environments:
+        DEBUG: "false"
+        MAX_WORKERS: "10"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "DEBUG"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "false"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "MAX_WORKERS"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "10"
+
+  - it: renders container resources
+    template: deployment.yaml
+    set:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "250m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "256Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "500m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "512Mi"
+
+  - it: omits resources block when not configured
+    template: deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+
+  ## ------------------------------------------------------------------
+  ## Main deployment: pod metadata and scheduling
+  ## ------------------------------------------------------------------
+  - it: renders pod labels and pod annotations when set
+    template: deployment.yaml
+    set:
+      podLabels:
+        app.kubernetes.io/component: "runner"
+        environment: "production"
+      podAnnotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/component"]
+          value: "runner"
+      - equal:
+          path: spec.template.metadata.labels["environment"]
+          value: "production"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "9090"
+
+  - it: renders nodeSelector, tolerations and affinity when set
+    template: deployment.yaml
+    set:
+      nodeSelector:
+        node-type: "compute-optimized"
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "csghub"
+          effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: "In"
+                      values: ["runner"]
+                topologyKey: "kubernetes.io/hostname"
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["node-type"]
+          value: "compute-optimized"
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: "dedicated"
+      - equal:
+          path: spec.template.spec.tolerations[0].operator
+          value: "Equal"
+      - equal:
+          path: spec.template.spec.tolerations[0].effect
+          value: "NoSchedule"
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight
+          value: 100
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey
+          value: "kubernetes.io/hostname"
+
+  - it: renders pod and container security contexts when set
+    template: deployment.yaml
+    set:
+      podSecurityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+      securityContext:
+        capabilities:
+          drop: ["ALL"]
+        readOnlyRootFilesystem: true
+        runAsUser: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+
+  ## ------------------------------------------------------------------
+  ## Main deployment: image configuration
+  ## ------------------------------------------------------------------
+  - it: overrides the image registry when registryPolicy is force
+    template: deployment.yaml
     set:
       global:
         image:
+          registryPolicy: force
           registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
-          registryPolicy: "force"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v1.11.0-ee"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"
+
+  - it: appends the ce edition suffix when global.edition is ce
+    template: deployment.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ce"
+
+  - it: appends no suffix when global.edition is saas
+    template: deployment.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0"
+
+  - it: uses the service-level image tag when image.tag is overridden
+    template: deployment.yaml
+    set:
+      image:
+        tag: "v9.9.9"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v9.9.9-ee"
+
+  - it: renders imagePullSecrets from global pullSecrets
+    template: deployment.yaml
+    set:
+      global:
+        image:
+          pullSecrets:
+            - "regsecret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "regsecret"
+
+  - it: prefers service-level pullSecrets over global pullSecrets
+    template: deployment.yaml
+    set:
+      image:
+        pullSecrets:
+          - "svc-secret"
+      global:
+        image:
+          pullSecrets:
+            - "global-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "svc-secret"
+
+  - it: prefers the service-level pull policy over the global pull policy
+    template: deployment.yaml
+    set:
+      image:
+        pullPolicy: "Always"
+      global:
+        image:
+          pullPolicy: "Never"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Always"
+
+  ## ------------------------------------------------------------------
+  ## Main deployment: service-level label and selector overrides
+  ## ------------------------------------------------------------------
+  - it: replaces common labels with service-level labels when set
+    template: deployment.yaml
+    set:
+      labels:
+        foo: "bar"
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: metadata.labels["foo"]
+          value: "bar"
+      - notExists:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+      - notExists:
+          path: metadata.labels["app.kubernetes.io/instance"]
+
+  - it: replaces the common selector with service-level selector when set
+    template: deployment.yaml
+    set:
+      selector:
+        custom: "sel"
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "runner"
+      - equal:
+          path: spec.selector.matchLabels["custom"]
+          value: "sel"
+      - notExists:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+
+  - it: appends service-level annotations next to the reloader annotation
+    template: deployment.yaml
+    set:
+      annotations:
+        custom: "ann"
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["custom"]
+          value: "ann"
+
+  ## ------------------------------------------------------------------
+  ## Main deployment: spec overrides and optional container fields
+  ## ------------------------------------------------------------------
+  - it: renders overridden spec scalars when provided
+    template: deployment.yaml
+    set:
+      replicas: 3
+      minReadySeconds: 10
+      terminationGracePeriodSeconds: 60
+      revisionHistoryLimit: 5
+      progressDeadlineSeconds: 300
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.minReadySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 5
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 300
+
+  - it: renders the rolling update strategy when set
+    template: deployment.yaml
+    set:
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 1
+
+  - it: renders the startup probe when set
+    template: deployment.yaml
+    set:
+      startupProbe:
+        exec:
+          command: ["ls"]
+        initialDelaySeconds: 5
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[0]
+          value: "ls"
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+          value: 5
+
+  - it: renders the lifecycle hook when set
+    template: deployment.yaml
+    set:
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "sleep 5"]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.exec.command[0]
+          value: "/bin/sh"
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.exec.command[2]
+          value: "sleep 5"
+
+  - it: renders stdin and tty when set
+    template: deployment.yaml
+    set:
+      stdin: true
+      tty: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].stdin
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].tty
+          value: true
+
+  - it: renders volumes and volumeMounts when set
+    template: deployment.yaml
+    set:
+      volumes:
+        - name: data
+          emptyDir: {}
+      volumeMounts:
+        - name: data
+          mountPath: /data
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/data"
+
+  - it: renders topologySpreadConstraints when set
+    template: deployment.yaml
+    set:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "zone"
+          whenUnsatisfiable: "DoNotSchedule"
+          labelSelector:
+            matchLabels:
+              app: "runner"
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].maxSkew
+          value: 1
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: "zone"
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].whenUnsatisfiable
+          value: "DoNotSchedule"
+
+  - it: renders hostname and subdomain when set
+    template: deployment.yaml
+    set:
+      hostname: "runner-host"
+      subdomain: "runner-svc"
+    asserts:
+      - equal:
+          path: spec.template.spec.hostname
+          value: "runner-host"
+      - equal:
+          path: spec.template.spec.subdomain
+          value: "runner-svc"
+
+  ## ------------------------------------------------------------------
+  ## Logcollector deployment
+  ## ------------------------------------------------------------------
+  - it: renders no logcollector deployment when disabled
+    template: deployment-logcollector.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders the logcollector deployment when enabled
+    template: deployment-logcollector.yaml
+    set:
+      logcollector:
+        enabled: true
+        loki:
+          address: "https://loki.example.com"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-logcollector"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "logcollector"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "runner"
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "csghub-runner"
+
+  - it: renders the logcollector container with its own port
+    template: deployment-logcollector.yaml
+    set:
+      logcollector:
+        enabled: true
+        loki:
+          address: "https://loki.example.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "logcollector"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8096
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "logcollector"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-runner"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8096
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 8096
+
+  - it: renders the wait-for-loki init container with the loki address
+    template: deployment-logcollector.yaml
+    set:
+      logcollector:
+        enabled: true
+        loki:
+          address: "https://loki.example.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-loki"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/busybox:latest"
+      - equal:
+          path: spec.template.spec.initContainers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: 'https://loki\.example\.com/ready'

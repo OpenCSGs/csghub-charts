@@ -1,0 +1,180 @@
+# Shared baseline values for CSGHub Runner unit tests.
+#
+# Every value consumed by the templates is defined EXPLICITLY below.
+# Tests never rely on the default values shipped in values.yaml, so
+# changing those defaults cannot break the unit tests.
+#
+# Release context is fixed as release=csghub, namespace=csghub.
+# The chart is rendered in standalone mode (isBuiltIn=false) by default;
+# built-in (umbrella) mode is exercised via per-test overrides.
+
+## Global Configuration
+global:
+  ## Gateway configuration
+  gateway:
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    service:
+      type: LoadBalancer
+      nodePorts:
+        http: 30080
+        https: 30443
+        gitssh: 30022
+    external:
+      domain: csghub.example.com
+      public: ""
+      useTop: false
+    tls:
+      enabled: false
+      secretName: ""
+  ## Image management
+  image:
+    registry: docker.io
+    registryPolicy: default
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## Internal registry flag (standalone mode uses external registry)
+  registry:
+    enabled: false
+  ## Internal object store flag
+  objectStore:
+    enabled: false
+  ## SubChart deployment context (standalone)
+  chartContext:
+    isBuiltIn: false
+  ## Image edition suffix (v2.4.0 -> v2.4.0-ee)
+  edition: ee
+
+## CSGHub Configuration
+externalUrl: "https://csghub.example.com"
+
+## Global image configuration (used by the runner deployment)
+image:
+  repository: opencsghq/csghub-server
+  tag: v2.4.0
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+## Gateway enablement (service-level override for common.gateway.config)
+gateway:
+  enabled: true
+  tls: {}
+
+## API token for standalone mode
+hubAPIToken: "test-hub-api-token"
+
+## Unique identifier for the origin cluster
+originClusterID: "test-cluster-id"
+
+## Log level for the runner binary
+logging:
+  level: info
+
+## Defined resource name
+name: "runner"
+
+## Service configuration
+service:
+  type: ClusterIP
+  port: 8082
+  protocol: TCP
+
+## Runner configuration
+runner:
+  region: "test-region"
+  namespace: "spaces"
+  mergingNamespace: "disable"
+  interval: 30
+  hearBeatIntervalInSec: 120
+  applicationEndpoint: ""
+  networkInterface: ""
+  storageClassName: ""
+  allowCpuOnGpuNodes: false
+  imageBuilderGitImage: ""
+  imageBuilderKanikoImage: ""
+  imageBuilderStatusTTL: 300
+  imageBuilderKanikoArgs: []
+
+## Model deploy configuration
+model:
+  deployTimeoutInMin: 60
+  deployStatusCheckInterval: 10
+  dockerRegBase: ""
+
+## Space deploy configuration
+space:
+  usePublicDomain: true
+  pipIndexUrl: "https://pypi.example.com/simple"
+  deployTimeoutInMin: 30
+  buildTimeoutInMin: 30
+  statusCheckInterval: 10
+  readinessDelaySeconds: 120
+  readinessPeriodSeconds: 10
+  readinessFailureThreshold: 3
+  gpuModelLabel:
+    typeLabel: nvidia.com/gpu.product
+    capacityLabel: nvidia.com/gpu
+
+## Knative Serving configuration
+knative:
+  serving:
+    domain: "example.com"
+    ingress: "gateway-api"
+    autoscaler:
+      enableScaleToZero: true
+      scaleToZeroPodRetentionPeriod: "60m"
+
+## RBAC configuration
+rbac:
+  create: true
+  serviceAccountName: ""
+
+## Logcollector configuration
+logcollector:
+  enabled: false
+  loki:
+    address: ""
+
+## Trace logging configuration
+tempo:
+  address: ""
+
+## External registry configuration (empty insecure avoids skip-tls flags)
+registry:
+  registry: "registry.example.com"
+  repository: "csghub"
+  username: "test-user"
+  password: "test-pass"
+  insecure: ""
+
+## External object store configuration
+objectStore:
+  endpoint: "https://s3.example.com"
+  accessKey: "test-access"
+  secretKey: "test-secret"
+  bucket: "test-bucket"
+  region: "cn-north-1"
+  secure: "true"
+  pathStyle: "true"
+
+## Pod metadata (empty by default; overridden per test)
+podAnnotations: {}
+podLabels: {}
+annotations: {}
+environments: {}
+
+## Scheduling (empty by default; overridden per test)
+podSecurityContext: {}
+securityContext: {}
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+## Resource quota (disabled by default)
+resourceQuota:
+  enabled: false
+
+## Volcano scheduler (disabled by default)
+volcano:
+  enabled: false

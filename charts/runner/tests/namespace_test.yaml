@@ -1,0 +1,52 @@
+# Test suite for the runner spaces Namespace.
+#
+# The Namespace for user workloads is created when it does not already exist
+# (lookup returns empty in unit tests). Its name follows namespace.spaces,
+# which respects runner.mergingNamespace.
+
+suite: Test Runner Namespace
+templates:
+  - namespace.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the spaces Namespace with a keep annotation
+    template: namespace.yaml
+    asserts:
+      - isKind:
+          of: Namespace
+      - equal:
+          path: metadata.name
+          value: "spaces"
+      - equal:
+          path: metadata.labels["kubernetes.io/metadata.name"]
+          value: "spaces"
+      - equal:
+          path: metadata.annotations["helm.sh/resource-policy"]
+          value: "keep"
+
+  - it: renders the Namespace in the release namespace when merging is single
+    template: namespace.yaml
+    set:
+      runner:
+        mergingNamespace: "single"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub"
+      - equal:
+          path: metadata.labels["kubernetes.io/metadata.name"]
+          value: "csghub"
+
+  - it: renders the Namespace with a custom name from runner.namespace
+    template: namespace.yaml
+    set:
+      runner:
+        namespace: "tenant-a"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "tenant-a"
