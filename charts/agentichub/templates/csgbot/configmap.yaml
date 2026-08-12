@@ -96,9 +96,11 @@ data:
     [integrations]
     notifications-enabled = {{ dig "config" "integrations" "notification" "enabled" false .Values.csgbot | quote }}
     notification-endpoint = {{ printf "%s/api/v1/notifications?current_user=csgbot" $csghubEndpoint | quote }}
+    {{- if .Values.memmachine.enabled }}
     {{- $memSvc := include "common.service" (dict "ctx" . "service" "memmachine") | fromYaml }}
     {{- $memsSvcName := include "common.names.custom" (list . $memSvc.name) }}
     memmachine-endpoint = {{ printf "http://%s:8080/mcp/" $memsSvcName | quote }}
+    {{- end }}
     file-server-endpoint = {{ dig "config" "fileServer" "endpoint" "" .Values.csgbot | quote }}
 
     [observability]
