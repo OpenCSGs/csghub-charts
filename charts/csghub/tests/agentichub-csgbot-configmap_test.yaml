@@ -1,0 +1,63 @@
+# Test suite for the AgenticHub Csgbot ConfigMap when bundled with CSGHub.
+#
+# With global.chartContext.isBuiltIn the csgbot reuses the CSGHub console
+# endpoint and the generated api tokens instead of the standalone externalUrl.
+# This branch cannot be tested when rendering the agentichub chart standalone,
+# so it is verified here from the csghub umbrella.
+
+suite: Test AgenticHub Csgbot ConfigMap (builtin)
+templates:
+  - charts/agentichub/templates/csgbot/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the csgbot labels
+    template: charts/agentichub/templates/csgbot/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-csgbot"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csghub-csgbot"
+
+  - it: embeds the generated csghub and langflow access tokens
+    template: charts/agentichub/templates/csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: 'hub-access-token = "[0-9a-f]{128}"'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: 'langflow-access-token = "[A-Za-z0-9+/]{43}="'
+
+  - it: points the csghub and aigateway endpoints at the CSGHub console
+    template: charts/agentichub/templates/csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^endpoint = "https://csghub.example.com"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^portal-endpoint = "https://csghub.example.com"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: 'mcp-gateway-endpoint = "https://csghub.example.com/aigateway/v1/gateway/mcp"'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^endpoint = "https://csghub.example.com/aigateway"$'
+
+  - it: points the langflow endpoint at the agenticflow service
+    template: charts/agentichub/templates/csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^endpoint = "https://agenticflow.example.com"$'

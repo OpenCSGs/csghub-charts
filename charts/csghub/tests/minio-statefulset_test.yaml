@@ -1,0 +1,93 @@
+# Test suite for the CSGHub MinIO StatefulSet.
+#
+# The StatefulSet runs the minio server from the minio Secret and provisions a
+# volumeClaimTemplate for the data.
+
+suite: Test MinIO StatefulSet
+templates:
+  - minio/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the StatefulSet metadata and spec defaults
+    template: minio/statefulset.yaml
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: "csghub-minio"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "minio"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.serviceName
+          value: "csghub-minio"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "minio"
+
+  - it: runs the minio server from the minio Secret
+    template: minio/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "minio"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z"
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - server
+            - /data
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 9000
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: "csghub-minio"
+
+  - it: provisions the default data volume claim template
+    template: minio/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: "data"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "500Gi"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: minio/statefulset.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/minio/minio:RELEASE.2025-09-07T16-13-09Z"
+
+  - it: renders nothing when the built-in object storage is disabled
+    template: minio/statefulset.yaml
+    set:
+      global:
+        objectStore:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

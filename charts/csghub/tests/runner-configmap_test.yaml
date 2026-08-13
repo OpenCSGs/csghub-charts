@@ -1,0 +1,106 @@
+# Test suite for the Runner ConfigMap when bundled with CSGHub.
+#
+# With global.chartContext.isBuiltIn the runner reuses the CSGHub server, loki,
+# minio and registry infrastructure instead of standalone external endpoints.
+# This branch cannot be tested when rendering the runner chart standalone, so
+# it is verified here from the csghub umbrella.
+
+suite: Test Runner ConfigMap (builtin)
+templates:
+  - charts/runner/templates/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the runner service labels
+    template: charts/runner/templates/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-runner"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "runner"
+
+  - it: reuses the CSGHub server webhook and generated api token
+    template: charts/runner/templates/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.STARHUB_SERVER_API_TOKEN
+          pattern: "^[0-9a-f]{128}$"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT
+          value: "http://csghub-server:8080"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_PUBLIC_DOMAIN
+          value: "http://csghub-runner:8082"
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_WATCH_CONFIGMAP_NAME
+          value: "csghub-runner"
+      - equal:
+          path: data.STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL
+          value: "http://csghub-loki:3100"
+
+  - it: points the model download endpoint at the CSGHub console
+    template: charts/runner/templates/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_DOCKER_REG_BASE
+          value: "csghub.example.com/csghub/"
+      - equal:
+          path: data.STARHUB_SERVER_DOCKER_IMAGE_PULL_SECRET
+          value: "csghub-docker-credential"
+
+  - it: reuses the bundled minio object store
+    template: charts/runner/templates/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
+          value: "minio"
+      - matchRegex:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_SECRET
+          pattern: "^[A-Za-z0-9+/]{32}$"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENDPOINT
+          value: "minio.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET
+          value: "csghub-runner"
+      - equal:
+          path: data.STARHUB_SERVER_ARGO_S3_PUBLIC_BUCKET
+          value: "csghub-runner"
+      - equal:
+          path: data.STARHUB_SERVER_S3_REGION
+          value: "cn-north-1"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENABLE_SSL
+          value: "true"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
+          value: "path"
+
+  - it: disables tracing when tempo is not deployed
+    template: charts/runner/templates/configmap.yaml
+    asserts:
+      - equal:
+          path: data.OPENCSG_TRACING_OTLP_LOGGING
+          value: "false"
+      - notExists:
+          path: data.OPENCSG_TRACING_OTLP_ENDPOINT
+
+  - it: routes application traffic through the envoy knative service
+    template: charts/runner/templates/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_RUNNER_APPLICATION_ENDPOINT
+          value: "http://csghub-envoy-knative.csghub.svc.cluster.local"

@@ -1,0 +1,74 @@
+# Test suite for the CSGHub PostgreSQL Service.
+#
+# The postgresql Service exposes port 5432 with a ClusterIP type.
+
+suite: Test PostgreSQL Service
+templates:
+  - postgresql/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: postgresql/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+
+  - it: renders the single port 5432 with the default ClusterIP type
+    template: postgresql/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 5432
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 5432
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "postgresql"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "postgresql"
+
+  - it: renders a custom port and type when set
+    template: postgresql/service.yaml
+    set:
+      postgresql:
+        service:
+          type: NodePort
+          port: 6432
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 6432
+
+  - it: renders nothing when the built-in PostgreSQL is disabled
+    template: postgresql/service.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

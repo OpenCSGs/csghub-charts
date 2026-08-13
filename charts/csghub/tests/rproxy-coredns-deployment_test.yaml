@@ -1,0 +1,106 @@
+# Test suite for the CSGHub RProxy CoreDNS Deployment.
+#
+# The Deployment runs coreDNS from the coredns ConfigMap. It renders only when
+# coredns is enabled.
+
+suite: Test RProxy CoreDNS Deployment
+templates:
+  - csghub/rproxy/coredns/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/rproxy/coredns/deployment.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy-coredns"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "coredns"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "coredns"
+
+  - it: runs coreDNS with the corefile and dns ports
+    template: csghub/rproxy/coredns/deployment.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "rproxy"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/coredns/coredns:1.11.1"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].args[0]
+          value: "-conf"
+      - equal:
+          path: spec.template.spec.containers[0].args[1]
+          value: "/etc/coredns/corefile"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 53
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "coredns-tcp"
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].containerPort
+          value: 53
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].name
+          value: "coredns-udp"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "corefile"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/etc/coredns"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "corefile"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-rproxy-coredns"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/rproxy/coredns/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      rproxy:
+        coredns:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/coredns/coredns:1.11.1"
+
+  - it: renders nothing when coredns is disabled
+    template: csghub/rproxy/coredns/deployment.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

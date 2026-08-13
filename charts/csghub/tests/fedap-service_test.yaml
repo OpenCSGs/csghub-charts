@@ -1,0 +1,66 @@
+# Test suite for the CSGHub FedAP Service.
+#
+# The FedAP Service exposes the fedap port 8099. It renders only in the saas
+# edition with the component enabled.
+
+suite: Test FedAP Service
+templates:
+  - csghub/fedap/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service when the edition is saas
+    template: csghub/fedap/service.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-fedap"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "fedap"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8099
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8099
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "fedap"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "fedap"
+
+  - it: renders nothing on the default ee edition
+    template: csghub/fedap/service.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the component is disabled
+    template: csghub/fedap/service.yaml
+    set:
+      global:
+        edition: "saas"
+      fedap:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

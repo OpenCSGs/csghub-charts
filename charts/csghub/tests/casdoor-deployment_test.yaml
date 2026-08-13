@@ -1,0 +1,91 @@
+# Test suite for the CSGHub casdoor Deployment.
+#
+# The casdoor Deployment waits for PostgreSQL, mounts the casdoor ConfigMap at
+# /conf and serves the casdoor UI on port 8000.
+
+suite: Test Casdoor Deployment
+templates:
+  - casdoor/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: casdoor/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "casdoor"
+
+  - it: waits for PostgreSQL in the init container
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-postgresql"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+
+  - it: runs the casdoor container on port 8000
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "casdoor"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/casbin/casdoor:3.62.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8000
+
+  - it: mounts the casdoor ConfigMap at /conf
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/conf"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-casdoor"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: casdoor/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/casbin/casdoor:3.62.0"

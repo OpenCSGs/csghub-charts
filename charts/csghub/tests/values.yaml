@@ -1,0 +1,484 @@
+# Shared baseline values for the CSGHub chart unit tests.
+#
+# The umbrella chart is tested in its natural bundled state (isBuiltIn=true) so
+# that both the chart's own templates and the isBuiltIn=true branches of the
+# bundled subcharts (runner/agentichub/csgship/dataflow) are exercised. TLS is
+# enabled by default to match the primary standalone rendering; suites override
+# leaf values explicitly when they need a different mode.
+#
+# The subchart branches require the dependency archives extracted into charts/
+# and the subchart tests must be skipped:
+#   helm dependency update
+#   tar -xzf charts/runner-2.4.0.tgz -C charts/runner --strip-components=1  (etc.)
+#   helm unittest . --with-subchart=false
+
+global:
+  edition: "ee"
+
+  gateway:
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    service:
+      type: LoadBalancer
+      nodePorts: {}
+    external:
+      domain: "csghub.example.com"
+      public: ""
+      useTop: false
+    tls:
+      enabled: true
+      secretName: "csghub-tls"
+
+  image:
+    registry: "docker.io"
+    registryPolicy: "default"
+    tag: "v2.4.0"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  persistence:
+    accessModes: ["ReadWriteOnce"]
+    size: "10Gi"
+
+  postgresql:
+    enabled: true
+    external: {}
+  redis:
+    enabled: true
+    external: {}
+  objectStore:
+    enabled: true
+    external: {}
+  registry:
+    enabled: true
+    external: {}
+  gitaly:
+    enabled: true
+    external: {}
+  dataflow:
+    enabled: true
+    external: {}
+
+  chartContext:
+    isBuiltIn: true
+
+image:
+  repository: "opencsghq/csghub-server"
+  tag: "v2.4.0"
+  pullPolicy: "IfNotPresent"
+  pullSecrets: []
+
+logging:
+  level: "info"
+
+environments: {}
+
+portal:
+  image:
+    repository: "opencsghq/csghub-portal"
+  gateway:
+    enabled: true
+    tls: {}
+  docs: {}
+  postgresql: {}
+  objectStore: {}
+
+server:
+  image: {}
+  gitlabShell: {}
+  multiSync:
+    enabled: true
+    proxy: ""
+  mirrorSync:
+    maxModelRepoSize: "536870912000"
+    maxDatasetRepoSize: "536870912000"
+  maxUnLFileSize: "52428800"
+  space:
+    buildTimeout: "30"
+  swaggerAPI:
+    enabled: false
+  enablePresignedUrlProxy: true
+  allowCpuOnGpuNodes: false
+  agenticflow: {}
+  csgbot: {}
+  memory:
+    enabled: true
+    host: "http://csghub-memmachine"
+    port: 8080
+    basePath: "/api/v2"
+    apiKey: ""
+    timeoutSeconds: 10
+    retryCount: 1
+    retryDelayMillis: 100
+  postgresql: {}
+  redis: {}
+  objectStore: {}
+  xnet: {}
+
+rproxy:
+  coredns:
+    enabled: false
+    image:
+      repository: "coredns/coredns"
+      tag: "1.11.1"
+  nginx:
+    enabled: false
+    image:
+      repository: "nginx"
+      tag: "latest"
+
+notifier:
+  repoSyncTime: "Asia/Shanghai"
+  smtp: {}
+  feiShu: {}
+
+payment:
+  billingBucket: "csghub-billing"
+
+aigateway:
+  aigateway:
+    llm:
+      log: {}
+      trace: {}
+  moderation:
+    enabled: false
+
+xnet:
+  image:
+    repository: "opencsghq/csghub-xnet"
+    tag: "v2.4.0-ee"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service: {}
+  postgresql: {}
+  redis: {}
+  objectStore: {}
+
+runner:
+  enabled: true
+  volcano:
+    enabled: false
+  runner:
+    region: "region-0"
+    interval: 60
+    namespace: "spaces"
+    mergingNamespace: "disable"
+  model:
+    deployTimeoutInMin: 60
+  space:
+    usePublicDomain: true
+    pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+    gpuModelLabel:
+      typeLabel: "nvidia.com/gpu.product"
+      capacityLabel: "nvidia.com/gpu"
+  knative:
+    serving:
+      domain: "example.com"
+      autoscaler:
+        enableScaleToZero: true
+        scaleToZeroPodRetentionPeriod: "60m"
+  logcollector:
+    enabled: true
+
+dataflow:
+  enabled: true
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+
+csgship:
+  enabled: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  casdoor:
+    enabled: false
+
+agentichub:
+  enabled: true
+  aigateway: {}
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+
+llmlog: {}
+accounting: {}
+user: {}
+dataviewer: {}
+fedap: {}
+trustregistry: {}
+mirror: {}
+temporalWorker: {}
+
+tags:
+  dependencies: false
+
+postgresql:
+  image:
+    repository: "opencsghq/postgres"
+    tag: "15.18"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 5432
+    protocol: "TCP"
+  databases:
+    - "csghub_casdoor"
+    - "csghub_temporal"
+    - "csghub_server"
+    - "csghub_portal"
+    - "csghub_dataflow"
+    - "csghub_label_studio"
+    - "csghub_csgship"
+    - "csghub_xnet"
+    - "csghub_agenticflow"
+    - "csghub_superset"
+  parameters: {}
+  persistence:
+    size: "50Gi"
+
+redis:
+  image:
+    repository: "redis"
+    tag: "7.4.9"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 6379
+    protocol: "TCP"
+  requirePass: false
+  persistence:
+    size: "10Gi"
+
+minio:
+  image:
+    repository: "minio/minio"
+    tag: "RELEASE.2025-09-07T16-13-09Z"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 9000
+    protocol: "TCP"
+  console:
+    enabled: false
+    service:
+      port: 9001
+      protocol: "TCP"
+  gateway:
+    enabled: true
+    tls: {}
+  region: "cn-north-1"
+  buckets:
+    - name: "csghub-registry"
+      policy: "none"
+    - name: "csghub-billing"
+      policy: "none"
+    - name: "csghub-server"
+      policy: "none"
+    - name: "csghub-portal"
+      policy: "none"
+    - name: "csghub-portal-public"
+      policy: "download"
+    - name: "csghub-runner"
+      policy: "none"
+    - name: "csghub-xnet"
+      policy: "none"
+    - name: "csghub-llmlog"
+      policy: "none"
+  persistence:
+    size: "500Gi"
+
+registry:
+  deleteEnabled: true
+  image:
+    repository: "registry"
+    tag: "2.8.3"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 5000
+    protocol: "TCP"
+  logging:
+    level: "info"
+    formatter: "json"
+    accesslog: true
+  objectStore: {}
+
+gitaly:
+  image:
+    repository: "opencsghq/gitlab-gitaly"
+    tag: "v17.5.0"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 8075
+    protocol: "TCP"
+  storage: "default"
+  logging:
+    level: "info"
+  persistence:
+    size: "200Gi"
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
+gitlabShell:
+  image:
+    repository: "opencsghq/gitlab-shell"
+    tag: "v17.5.0"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 22
+    protocol: "TCP"
+  rbac:
+    create: true
+  securityContext:
+    runAsUser: 0
+
+nats:
+  image:
+    repository: "nats"
+    tag: "2.12.12"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 4222
+    protocol: "TCP"
+  persistence: {}
+
+casdoor:
+  admin:
+    name: "root"
+    password: "test-admin-password"
+  image:
+    repository: "casbin/casdoor"
+    tag: "3.62.0"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 8000
+    protocol: "TCP"
+  gateway:
+    enabled: true
+    tls: {}
+  postgresql: {}
+
+temporal:
+  image:
+    repository: "temporalio/auto-setup"
+    tag: "1.29.7"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+  service:
+    type: "ClusterIP"
+    port: 7233
+    protocol: "TCP"
+  console:
+    enabled: false
+    image:
+      repository: "temporalio/ui"
+      tag: "2.48.4"
+    service:
+      port: 8080
+      protocol: "TCP"
+  gateway:
+    enabled: true
+    tls: {}
+  postgresql: {}
+
+reloader:
+  image:
+    name: "opencsghq/stakater-reloader"
+
+loki:
+  gatewayAuth:
+    enabled: false
+  gateway:
+    enabled: false
+  memcachedExporter:
+    enabled: false
+  deploymentMode: "SingleBinary"
+  singleBinary:
+    replicas: 1
+    extraVolumeMounts:
+      - name: "storage"
+        mountPath: "/loki"
+    extraEnv:
+      - name: "GOMEMLIMIT"
+        value: "2048MiB"
+  write:
+    replicas: 0
+  read:
+    replicas: 0
+  backend:
+    replicas: 0
+  lokiCanary:
+    enabled: false
+  loki:
+    auth_enabled: false
+  test:
+    enabled: false
+  chunksCache:
+    writebackSizeLimit: "10MB"
+    connectionLimit: 1000
+    resources:
+      limits:
+        memory: "2048Mi"
+      requests:
+        memory: "1024Mi"
+  resultsCache:
+    connectionLimit: 1000
+    resources:
+      limits:
+        memory: "1024Mi"
+      requests:
+        memory: "512Mi"
+
+tempo:
+  enabled: false
+
+prometheus:
+  enabled: true
+  gatewayAuth:
+    enabled: false
+
+memmachine:
+  enabled: false
+  model:
+    embedding:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+      dimensions: 0
+    chat:
+      baseUrl: ""
+      apiKey: ""
+      model: ""
+
+envoy:
+  enabled: true
+
+superset:
+  enabled: false
+  image:
+    tag: "6.1.0-csg"
+  secretEnv:
+    create: false
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  init:
+    adminUser:
+      username: root

@@ -1,0 +1,60 @@
+# Test suite for the CSGHub GitLab Shell Service.
+#
+# The GitLab Shell Service is a ClusterIP service exposing the SSH port 22.
+
+suite: Test GitLab Shell Service
+templates:
+  - gitlab-shell/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: gitlab-shell/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+
+  - it: renders the SSH port 22
+    template: gitlab-shell/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 22
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 22
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "gitlab-shell"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+
+  - it: honors a custom service port
+    template: gitlab-shell/service.yaml
+    set:
+      gitlabShell:
+        service:
+          port: 2222
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 2222

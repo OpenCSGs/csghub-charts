@@ -1,0 +1,88 @@
+# Test suite for the CSGHub AIGateway HTTPRoute.
+#
+# The route renders only when the aigateway uses a dedicated domain
+# (useDomain=true) or a custom domain. With useDomain the hostname is
+# aigateway.example.com; a custom domain takes precedence.
+
+suite: Test AIGateway HTTPRoute
+templates:
+  - csghub/aigateway/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders nothing by default
+    template: csghub/aigateway/httproutes.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders the route with the aigateway subdomain when useDomain is true
+    template: csghub/aigateway/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              useDomain: true
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-aigateway"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - equal:
+          path: spec.hostnames[0]
+          value: "aigateway.example.com"
+      - equal:
+          path: spec.rules[0]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: csghub-aigateway
+                port: 8094
+            timeouts:
+              request: 5m
+
+  - it: renders the route with a custom domain
+    template: csghub/aigateway/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.custom.com"
+    asserts:
+      - equal:
+          path: spec.hostnames[0]
+          value: "ai.custom.com"
+
+  - it: renders the route on the http parent section when TLS is disabled
+    template: csghub/aigateway/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.custom.com"
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"

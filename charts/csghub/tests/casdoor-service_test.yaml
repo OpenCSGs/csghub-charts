@@ -1,0 +1,67 @@
+# Test suite for the CSGHub casdoor Service.
+#
+# The casdoor Service exposes port 8000 with a ClusterIP type.
+
+suite: Test Casdoor Service
+templates:
+  - casdoor/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: casdoor/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+
+  - it: renders the single port 8000 with the default ClusterIP type
+    template: casdoor/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "casdoor"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "casdoor"
+
+  - it: renders a custom port and type when set
+    template: casdoor/service.yaml
+    set:
+      casdoor:
+        service:
+          type: NodePort
+          port: 8002
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 8002

@@ -1,0 +1,120 @@
+# Test suite for the CSGHub AIGateway Deployment.
+#
+# The Deployment runs the aigateway module of the server image, with an
+# optional moderation container. It always renders because the built-in
+# aigateway has no enable switch.
+
+suite: Test AIGateway Deployment
+templates:
+  - csghub/aigateway/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/aigateway/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-aigateway"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "aigateway"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "aigateway"
+
+  - it: runs the aigateway launch command from the ee server image
+    template: csghub/aigateway/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "aigateway-aigateway"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "aigateway", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8094
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "aigateway"
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "POD_IP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8094
+
+  - it: renders a single container when moderation is disabled
+    template: csghub/aigateway/deployment.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+
+  - it: prepends the moderation container when moderation is enabled
+    template: csghub/aigateway/deployment.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 2
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "aigateway-moderation"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "moderation", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8089
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "moderation"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+
+  - it: waits for the server in the init container
+    template: csghub/aigateway/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-server"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/aigateway/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"

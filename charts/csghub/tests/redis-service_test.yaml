@@ -1,0 +1,78 @@
+# Test suite for the CSGHub Redis Service.
+#
+# The Redis Service is a headless (clusterIP: None) ClusterIP service exposing
+# port 6379. It renders only when the built-in Redis is enabled.
+
+suite: Test Redis Service
+templates:
+  - redis/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the headless Service metadata with standard labels
+    template: redis/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-redis"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "redis"
+
+  - it: renders the single port 6379 with a None cluster IP
+    template: redis/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.clusterIP
+          value: "None"
+      - equal:
+          path: spec.ports[0].port
+          value: 6379
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 6379
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "redis"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "redis"
+
+  - it: renders a custom port and type when set
+    template: redis/service.yaml
+    set:
+      redis:
+        service:
+          type: NodePort
+          port: 6380
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 6380
+
+  - it: renders nothing when the built-in Redis is disabled
+    template: redis/service.yaml
+    set:
+      global:
+        redis:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

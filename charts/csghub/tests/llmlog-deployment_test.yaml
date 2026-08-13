@@ -1,0 +1,78 @@
+# Test suite for the CSGHub LLMLog Deployment.
+#
+# The Deployment runs the llmlog module of the server image. It renders in any
+# non-ce edition when the aigateway llm log is enabled.
+
+suite: Test LLMLog Deployment
+templates:
+  - csghub/llmlog/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/llmlog/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-llmlog"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "llmlog"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "llmlog"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: runs the llmlog launch command from the ee server image
+    template: csghub/llmlog/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "llmlog"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "llmlog", "launch", "-l", "info"]
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - notExists:
+          path: spec.template.spec.containers[0].ports
+
+  - it: renders nothing when the aigateway llm log is disabled
+    template: csghub/llmlog/deployment.yaml
+    set:
+      aigateway:
+        aigateway:
+          llm:
+            log:
+              enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: csghub/llmlog/deployment.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

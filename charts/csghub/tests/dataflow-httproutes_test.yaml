@@ -1,0 +1,21 @@
+# Test suite for the Dataflow HTTPRoute when bundled with CSGHub.
+#
+# When bundled with CSGHub the dataflow HTTPRoute is suppressed because the
+# csghub gateway already routes the label-studio and dataflow hostnames. This
+# branch cannot be tested when rendering the dataflow chart standalone, so it
+# is verified here from the csghub umbrella.
+
+suite: Test Dataflow HTTPRoute (builtin)
+templates:
+  - charts/dataflow/templates/dataflow/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders nothing for the bundled dataflow
+    template: charts/dataflow/templates/dataflow/httproutes.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

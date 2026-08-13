@@ -1,0 +1,99 @@
+# Test suite for the CSGHub casdoor ConfigMap.
+#
+# The ConfigMap holds casdoor's app.conf pointing at the built-in PostgreSQL
+# and the init_data.json bootstrap (organization, CSGHub application with
+# client credentials and the root admin). The DSN and client credentials are
+# non-deterministic and matched by regex.
+
+suite: Test Casdoor ConfigMap
+templates:
+  - casdoor/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the casdoor service label
+    template: casdoor/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+
+  - it: points app.conf at the built-in PostgreSQL and casdoor origin
+    template: casdoor/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "dataSourceName\\s*=\\s*\"postgresql://csghub:[A-Za-z0-9+/=]{32}@csghub-postgresql:5432/csghub_casdoor\\?sslmode=disable\""
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "origin\\s*=\\s*\"https://casdoor.example.com\""
+
+  - it: embeds the CSGHub application with client credentials in init_data
+    template: casdoor/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "websiteUrl":\s*"https://csghub\.example\.com"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "homepageUrl":\s*"https://csghub\.example\.com"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "clientId":\s*"[0-9a-f]{20}"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "clientSecret":\s*"[0-9a-f]{40}"
+
+  - it: embeds the root admin with a bcrypt password hash
+    template: casdoor/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "name":\s*"root"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "password":\s*"[^\"]{60}"
+      - matchRegex:
+          path: data["init_data.json"]
+          pattern: |-
+            "email":\s*"root@example\.com"
+
+  - it: embeds the casdoor update SQL script
+    template: casdoor/configmap.yaml
+    asserts:
+      - isNotNullOrEmpty:
+          path: data["1768547229_casdoor_update_conf.sql"]
+
+  - it: points app.conf at an external PostgreSQL when configured
+    template: casdoor/configmap.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+          external:
+            host: "10.6.0.10"
+            port: 6432
+            user: "postgres"
+            password: "Postgres2025"
+            sslmode: "prefer"
+    asserts:
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "dataSourceName\\s*=\\s*\"postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_casdoor\\?sslmode=prefer\""

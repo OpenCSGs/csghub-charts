@@ -1,0 +1,132 @@
+# Test suite for the CSGHub NATS StatefulSet.
+#
+# The StatefulSet runs the nats server mounting nats-server.conf and a data
+# volume claim template for jetstream storage.
+
+suite: Test NATS StatefulSet
+templates:
+  - nats/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the StatefulSet metadata and spec defaults
+    template: nats/statefulset.yaml
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: "csghub-nats"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "nats"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.serviceName
+          value: "csghub-nats"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "nats"
+
+  - it: runs the nats server with the config and data volumes
+    template: nats/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "nats"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/nats:2.12.12"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 4222
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].containerPort
+          value: 8222
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/nats-server.conf"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/data/jetstream"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-nats"
+
+  - it: configures the liveness and readiness probes
+    template: nats/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 4222
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 8222
+
+  - it: provisions the default data volume claim template
+    template: nats/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: "data"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "10Gi"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: nats/statefulset.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nats:2.12.12"
+
+  - it: honors a custom persistence size and storage class
+    template: nats/statefulset.yaml
+    set:
+      global:
+        persistence:
+          storageClass: "nfs-provisioner"
+      nats:
+        persistence:
+          size: "25Gi"
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "nfs-provisioner"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "25Gi"

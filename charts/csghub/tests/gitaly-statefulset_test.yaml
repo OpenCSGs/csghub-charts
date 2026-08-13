@@ -1,0 +1,120 @@
+# Test suite for the CSGHub Gitaly StatefulSet.
+#
+# The StatefulSet runs the gitaly server from the gitaly ConfigMap and
+# provisions a volumeClaimTemplate for the repositories. It renders only when
+# the built-in gitaly is enabled.
+
+suite: Test Gitaly StatefulSet
+templates:
+  - gitaly/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the StatefulSet metadata and spec defaults
+    template: gitaly/statefulset.yaml
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: "csghub-gitaly"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitaly"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.serviceName
+          value: "csghub-gitaly"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "gitaly"
+
+  - it: runs the gitaly server with the config volume
+    template: gitaly/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "gitaly"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/gitlab-gitaly:v17.5.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8075
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "data"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/var/opt/gitaly/repositories"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/etc/gitaly"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-gitaly"
+
+  - it: configures the liveness and readiness probes
+    template: gitaly/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8075
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command[0]
+          value: "/scripts/healthcheck"
+
+  - it: provisions the default data volume claim template
+    template: gitaly/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: "data"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "200Gi"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: gitaly/statefulset.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/gitlab-gitaly:v17.5.0"
+
+  - it: renders nothing when the built-in gitaly is disabled
+    template: gitaly/statefulset.yaml
+    set:
+      global:
+        gitaly:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

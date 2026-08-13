@@ -1,419 +1,181 @@
+# Test suite for the CSGHub Gateway resources.
+#
+# The template renders a GatewayClass and a Gateway in one file. helm-unittest
+# preserves file order, so the GatewayClass is document 0 and the Gateway is
+# document 1; tests select documents via documentIndex.
+#
+# With the envoyproxy controller, the Gateway references the csghub-envoy-proxy
+# EnvoyProxy via infrastructure.parametersRef. The https listener references
+# the global TLS secret plus any distinct casdoor/minio/portal TLS secrets.
+
 suite: Test Gateway Resources
 templates:
   - gateway.yaml
-  - envoy-proxy.yaml
-  - csghub/httproutes.yaml
-  - csghub/httproutes-wildcard.yaml
-  - csghub/httproutes-redirect.yaml
-  - csghub/aigateway/httproutes.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  global:
-    gateway:
-      external:
-        domain: "csghub.example.cn"
-        public: ""
-      tls:
-        enabled: true
-        secretName: "example-cn-tls"
-      service:
-        type: LoadBalancer
-    image:
-      registry: "docker.io"
-    registry:
-      enabled: true
-  dataflow:
-    labelStudio:
-      enabled: true
-  temporal:
-    console:
-      enabled: true
-  runner:
-    usePublicDomain: true
-  server:
-    gitlabShell:
-      sshPort: 22
+values:
+  - values.yaml
 tests:
-  - it: Should render gateway resource correctly
+  ## ------------------------------------------------------------------
+  ## Gateway
+  ## ------------------------------------------------------------------
+  - it: renders the Gateway with http, https and gitssh listeners
     template: gateway.yaml
     documentIndex: 1
     asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: "listeners"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.gatewayClassName
+          value: "csghub-gateway"
+      - equal:
+          path: spec.infrastructure.parametersRef.group
+          value: "gateway.envoyproxy.io"
+      - equal:
+          path: spec.infrastructure.parametersRef.kind
+          value: "EnvoyProxy"
+      - equal:
+          path: spec.infrastructure.parametersRef.name
+          value: "csghub-envoy-proxy"
+      - equal:
+          path: spec.listeners[0].name
+          value: "http"
+      - equal:
+          path: spec.listeners[0].protocol
+          value: "HTTP"
+      - equal:
+          path: spec.listeners[0].port
+          value: 80
       - equal:
           path: spec.listeners[1].name
           value: "https"
       - equal:
-          path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          path: spec.listeners[1].protocol
+          value: "HTTPS"
+      - equal:
+          path: spec.listeners[1].port
+          value: 443
+      - equal:
+          path: spec.listeners[2].name
+          value: "gitssh"
+      - equal:
+          path: spec.listeners[2].protocol
+          value: "TCP"
       - equal:
           path: spec.listeners[2].port
           value: 22
 
-  - it: Should render gateway resource correctly
+  - it: references the global TLS secret on the https listener
+    template: gateway.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.listeners[1].tls.mode
+          value: "Terminate"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].kind
+          value: "Secret"
+      - equal:
+          path: spec.listeners[1].tls.certificateRefs[0].name
+          value: "csghub-tls"
+
+  - it: appends distinct casdoor, minio and portal TLS secrets
     template: gateway.yaml
     documentIndex: 1
     set:
       casdoor:
         gateway:
           tls:
-            secretName: "casdoor-cn-tls"
+            secretName: "casdoor-tls"
       minio:
         gateway:
           tls:
-            secretName: "minio-cn-tls"
+            secretName: "minio-tls"
       portal:
         gateway:
           tls:
-            secretName: "portal-cn-tls"
+            secretName: "portal-tls"
     asserts:
-      - equal:
-          path: spec.listeners[1].name
-          value: "https"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[0].name
-          value: "example-cn-tls"
+          value: "csghub-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[1].name
-          value: "casdoor-cn-tls"
+          value: "casdoor-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[2].name
-          value: "minio-cn-tls"
+          value: "minio-tls"
       - equal:
           path: spec.listeners[1].tls.certificateRefs[3].name
-          value: "portal-cn-tls"
+          value: "portal-tls"
 
-  - it: Should render httpRoutes resources correctly
-    template: csghub/httproutes.yaml
-    asserts:
-      - equal:
-          path: apiVersion
-          value: "gateway.networking.k8s.io/v1"
-      - isKind:
-          of: HTTPRoute
-      - equal:
-          path: spec.parentRefs[0].name
-          value: "listeners"
-      - equal:
-          path: spec.parentRefs[0].sectionName
-          value: "https"
-      - equal:
-          path: spec.rules[0]
-          value:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /
-            backendRefs:
-              - name: csghub-portal
-                port: 8090
-            timeouts:
-              request: 2m
-      - equal:
-          path: spec.rules[1]
-          value:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /api
-              - path:
-                  type: RegularExpression
-                  value: ^/(hf|csg|ms)(/.*)?$
-            filters:
-              - type: CORS
-                cors:
-                  allowOrigins:
-                    - "https://casdoor.example.cn"
-                  allowCredentials: true
-            backendRefs:
-              - name: csghub-server
-                port: 8080
-            timeouts:
-              request: 5m
-      - equal:
-          path: spec.rules[4]
-          value:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /v2
-            backendRefs:
-              - name: csghub-registry
-                port: 5000
-            timeouts:
-              backendRequest: 30m
-      - equal:
-          path: spec.rules[6]
-          value:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /-/temporal
-            backendRefs:
-              - name: csghub-temporal
-                port: 8080
-            timeouts:
-              request: 60s
-      - contains:
-          path: spec.rules
-          content:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /aigateway/v1/gateway/mcp
-            filters:
-              - type: URLRewrite
-                urlRewrite:
-                  path:
-                    type: ReplacePrefixMatch
-                    replacePrefixMatch: /v1/gateway/mcp
-            backendRefs:
-              - name: csghub-aigateway
-                port: 8094
-            timeouts:
-              request: 0s
-      - contains:
-          path: spec.rules
-          content:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /aigateway
-            filters:
-              - type: URLRewrite
-                urlRewrite:
-                  path:
-                    type: ReplacePrefixMatch
-                    replacePrefixMatch: /
-            backendRefs:
-              - name: csghub-aigateway
-                port: 8094
-            timeouts:
-              request: 5m
-
-  - it: Should render httpRoutes resources correctly
-    template: csghub/httproutes.yaml
+  - it: omits the https listener when TLS is disabled
+    template: gateway.yaml
+    documentIndex: 1
     set:
       global:
         gateway:
           tls:
             enabled: false
+            secretName: ""
     asserts:
       - equal:
-          path: spec.parentRefs[0].sectionName
-          value: "http"
-
-  - it: Should render httpRoutes resources correctly
-    template: csghub/httproutes-wildcard.yaml
-    asserts:
-      - equal:
-          path: apiVersion
-          value: "gateway.networking.k8s.io/v1"
-      - isKind:
-          of: HTTPRoute
-      - equal:
-          path: spec.parentRefs[0].sectionName
-          value: "https"
-      - contains:
-          path: spec.hostnames
-          content: "*.csghub.example.cn"
-      - contains:
-          path: spec.rules
-          content:
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /
-            backendRefs:
-              - name: csghub-rproxy
-                port: 8083
-            timeouts:
-              request: 60s
-
-
-  - it: Should render httpRoutes resources correctly
-    template: csghub/httproutes-redirect.yaml
-    asserts:
-      - equal:
-          path: apiVersion
-          value: "gateway.networking.k8s.io/v1"
-      - isKind:
-          of: HTTPRoute
-      - equal:
-          path: spec.parentRefs[0].sectionName
+          path: spec.listeners[0].name
           value: "http"
       - equal:
-          path: spec.parentRefs[0].name
-          value: "listeners"
-      - contains:
-          path: spec.hostnames
-          content:
-            "csghub.example.cn"
-      - contains:
-          path: spec.hostnames
-          content:
-            "minio.example.cn"
-      - contains:
-          path: spec.hostnames
-          content:
-            "casdoor.example.cn"
-      - contains:
-          path: spec.hostnames
-          content:
-            "*.csghub.example.cn"
-      - equal:
-          path: spec.rules
-          value:
-            - filters:
-                - type: RequestRedirect
-                  requestRedirect:
-                    scheme: https
-                    statusCode: 301
+          path: spec.listeners[1].name
+          value: "gitssh"
+      - notExists:
+          path: spec.listeners[2]
 
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
+  - it: renders the gitssh listener with a custom ssh port
+    template: gateway.yaml
+    documentIndex: 1
     set:
-      global:
-        gateway:
-          service:
-            type: "NodePort"
-            nodePorts:
-              http: 30080
-              https: 30443
-              gitssh: 30022
-    asserts:
-      - isKind:
-          of: "EnvoyProxy"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30080
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30443
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
-          value: 30022
-
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
-    set:
-      global:
-        gateway:
-          service:
-            type: "NodePort"
-            nodePorts:
-              http: 30880
-              https: 30444
-              gitssh: 30222
       server:
         gitlabShell:
           sshPort: 222
     asserts:
       - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
+          path: spec.listeners[2].name
+          value: "gitssh"
       - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30880
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30444
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
-          value: 30222
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].name
-          value: "tcp-222"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].port
+          path: spec.listeners[2].port
           value: 222
       - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].targetPort
-          value: 10222
+          path: spec.listeners[2].allowedRoutes.kinds[0].kind
+          value: "TCPRoute"
 
-  - it: Should render envoy-proxy correctly
-    template: envoy-proxy.yaml
+  - it: omits the EnvoyProxy parametersRef for a non-envoyproxy controller
+    template: gateway.yaml
+    documentIndex: 1
     set:
       global:
         gateway:
-          service:
-            type: "NodePort"
-            nodePorts:
-              http: 30080
-              https: 30443
-              gitssh: 30022
-          tls:
-            enabled: false
-        image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          controllerName: istio.io/gateway-controller
     asserts:
-      - equal:
-          path: spec.provider.kubernetes.envoyService.type
-          value: "NodePort"
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
-          value: 30080
-      - equal:
-          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
-          value: 30022
-      - equal:
-          path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+      - notExists:
+          path: spec.infrastructure
 
-  - it: Should render envoyDeployment as empty object when using non-opencsg registry
-    template: envoy-proxy.yaml
-    set:
-      global:
-        image:
-          registry: "docker.io"
+  ## ------------------------------------------------------------------
+  ## GatewayClass
+  ## ------------------------------------------------------------------
+  - it: renders the GatewayClass with the envoyproxy controller
+    template: gateway.yaml
+    documentIndex: 0
     asserts:
       - isKind:
-          of: "EnvoyProxy"
+          of: GatewayClass
       - equal:
-          path: spec.provider.kubernetes.envoyDeployment
-          value: {}
-
-  - it: Should NOT render aigateway HTTPRoute when useDomain=false (default)
-    template: csghub/aigateway/httproutes.yaml
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: Should render aigateway HTTPRoute when useDomain=true
-    template: csghub/aigateway/httproutes.yaml
-    set:
-      global:
-        gateway:
-          external:
-            aigateway:
-              useDomain: true
-    asserts:
-      - isKind:
-          of: HTTPRoute
+          path: metadata.name
+          value: "csghub-gateway"
       - equal:
-          path: spec.hostnames[0]
-          value: "aigateway.example.cn"
-      - equal:
-          path: spec.rules[0].backendRefs[0].name
-          value: "csghub-aigateway"
-      - equal:
-          path: spec.rules[0].backendRefs[0].port
-          value: 8094
-
-  - it: Should render aigateway HTTPRoute with custom domain
-    template: csghub/aigateway/httproutes.yaml
-    set:
-      global:
-        gateway:
-          external:
-            aigateway:
-              domain: "ai.custom.com"
-    asserts:
-      - isKind:
-          of: HTTPRoute
-      - equal:
-          path: spec.hostnames[0]
-          value: "ai.custom.com"
+          path: spec.controllerName
+          value: "gateway.envoyproxy.io/gatewayclass-controller"

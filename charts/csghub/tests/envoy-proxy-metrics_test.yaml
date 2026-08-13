@@ -1,0 +1,65 @@
+# Test suite for the EnvoyProxy metrics Service.
+#
+# The Service exposes the envoy listener stats at port 19001 so prometheus can
+# scrape them. It is rendered only for an envoyproxy controller.
+
+suite: Test EnvoyProxy Metrics Service
+templates:
+  - envoy-proxy-metrics.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the metrics Service with prometheus annotations
+    template: envoy-proxy-metrics.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "envoy-proxy-listeners-metrics"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["prometheus.io/port"]
+          value: "19001"
+      - equal:
+          path: metadata.annotations["prometheus.io/path"]
+          value: "/stats/prometheus"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.selector["gateway.envoyproxy.io/owning-gateway-name"]
+          value: "listeners"
+      - equal:
+          path: spec.selector["gateway.envoyproxy.io/owning-gateway-namespace"]
+          value: "csghub"
+      - equal:
+          path: spec.ports[0].name
+          value: "metrics"
+      - equal:
+          path: spec.ports[0].port
+          value: 19001
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 19001
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+
+  - it: renders nothing for a non-envoyproxy controller
+    template: envoy-proxy-metrics.yaml
+    set:
+      global:
+        gateway:
+          controllerName: istio.io/gateway-controller
+    asserts:
+      - hasDocuments:
+          count: 0

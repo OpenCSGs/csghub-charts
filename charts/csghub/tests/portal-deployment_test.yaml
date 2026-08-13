@@ -1,0 +1,90 @@
+# Test suite for the CSGHub Portal Deployment.
+#
+# The Deployment runs the csghub-portal image and runs the portal migrations
+# before starting the server. It always renders because the built-in portal has
+# no enable switch.
+
+suite: Test Portal Deployment
+templates:
+  - csghub/portal/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/portal/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-portal"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "portal"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "portal"
+
+  - it: runs the portal image with the migration command
+    template: csghub/portal/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "portal"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-portal:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: "/bin/sh"
+      - equal:
+          path: spec.template.spec.containers[0].command[1]
+          value: "-c"
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: "./csghub-portal start server"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8090
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "portal"
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8090
+
+  - it: waits for the server in the init container
+    template: csghub/portal/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-server"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/portal/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-portal:v2.4.0-ee"

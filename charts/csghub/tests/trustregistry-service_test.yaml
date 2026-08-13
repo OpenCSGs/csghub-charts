@@ -1,0 +1,66 @@
+# Test suite for the CSGHub TrustRegistry Service.
+#
+# The TrustRegistry Service exposes the trustregistry port 8098. It renders
+# only in the saas edition with the component enabled.
+
+suite: Test TrustRegistry Service
+templates:
+  - csghub/trustregistry/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service when the edition is saas
+    template: csghub/trustregistry/service.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-trustregistry"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "trustregistry"
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8098
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8098
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "trustregistry"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "trustregistry"
+
+  - it: renders nothing on the default ee edition
+    template: csghub/trustregistry/service.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the component is disabled
+    template: csghub/trustregistry/service.yaml
+    set:
+      global:
+        edition: "saas"
+      trustregistry:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

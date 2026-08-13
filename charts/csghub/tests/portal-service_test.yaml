@@ -1,0 +1,49 @@
+# Test suite for the CSGHub Portal Service.
+#
+# The Portal Service exposes the portal port 8090.
+
+suite: Test Portal Service
+templates:
+  - csghub/portal/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: csghub/portal/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-portal"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "portal"
+
+  - it: renders the portal port 8090
+    template: csghub/portal/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8090
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8090
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "portal"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "portal"

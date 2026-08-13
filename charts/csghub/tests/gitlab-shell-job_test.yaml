@@ -1,0 +1,75 @@
+# Test suite for the CSGHub GitLab Shell init Job.
+#
+# The Job generates the SSH host keys into the gitlab-shell Secret using the
+# init ConfigMap script. It renders only when rbac.create is enabled.
+
+suite: Test GitLab Shell Job
+templates:
+  - gitlab-shell/job.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Job metadata, hooks and spec defaults
+    template: gitlab-shell/job.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: "csghub-gitlab-shell-keygen"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-install, pre-upgrade"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "0"
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: "OnFailure"
+
+  - it: runs the key generation script with the ServiceAccount and scripts volume
+    template: gitlab-shell/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/kubectl:latest"
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: "/scripts/generate_ssh_keys.sh"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "scripts"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-gitlab-shell-init"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.defaultMode
+          value: 484
+
+  - it: renders nothing when rbac.create is disabled
+    template: gitlab-shell/job.yaml
+    set:
+      gitlabShell:
+        rbac:
+          create: false
+    asserts:
+      - hasDocuments:
+          count: 0

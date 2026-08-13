@@ -1,0 +1,74 @@
+# Test suite for the CSGHub server Service.
+#
+# The server Service exposes port 8080 with a ClusterIP type.
+
+suite: Test Server Service
+templates:
+  - csghub/server/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: csghub/server/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-server"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "server"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+
+  - it: renders the single port 8080 with the default ClusterIP type
+    template: csghub/server/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "server"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "server"
+
+  - it: renders a custom port, type and service name when set
+    template: csghub/server/service.yaml
+    set:
+      server:
+        name: "server-test"
+        service:
+          type: NodePort
+          port: 8081
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-server-test"
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 8081
+      - equal:
+          path: spec.ports[0].name
+          value: "server-test"

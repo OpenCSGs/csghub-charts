@@ -1,0 +1,62 @@
+# Test suite for the Runner EnvoyProxies when bundled with CSGHub.
+#
+# When bundled with CSGHub the runner skips the standalone listeners EnvoyProxy
+# but keeps the knative and knative-local EnvoyProxies with ClusterIP
+# services for the space runtimes. This branch cannot be tested when rendering
+# the runner chart standalone, so it is verified here from the csghub umbrella.
+
+suite: Test Runner EnvoyProxies (builtin)
+templates:
+  - charts/runner/templates/envoy-proxy.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders only the two knative EnvoyProxies
+    template: charts/runner/templates/envoy-proxy.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: renders the knative EnvoyProxy with a ClusterIP service
+    template: charts/runner/templates/envoy-proxy.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: metadata.name
+          value: "csghub-envoy-proxy-knative"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.provider.type
+          value: "Kubernetes"
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment
+          value: {}
+      - equal:
+          path: spec.provider.kubernetes.envoyService.name
+          value: "csghub-envoy-knative"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "ClusterIP"
+
+  - it: renders the knative-local EnvoyProxy with a ClusterIP service
+    template: charts/runner/templates/envoy-proxy.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: metadata.name
+          value: "csghub-envoy-proxy-knative-local"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.name
+          value: "csghub-envoy-knative-local"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "ClusterIP"

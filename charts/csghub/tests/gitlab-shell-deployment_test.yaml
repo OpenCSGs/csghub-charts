@@ -1,0 +1,111 @@
+# Test suite for the CSGHub GitLab Shell Deployment.
+#
+# The Deployment runs the gitlab-sshd daemon mounting the ssh host key Secret
+# and the gitlab-shell ConfigMap.
+
+suite: Test GitLab Shell Deployment
+templates:
+  - gitlab-shell/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: gitlab-shell/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+
+  - it: runs the gitlab-sshd server with the ssh env vars
+    template: gitlab-shell/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "gitlab-shell"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/gitlab-shell:v17.5.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 22
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "SSH_DAEMON"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "gitlab-sshd"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "KEYS_DIRECTORY"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "/srv/gitlab-shell/keys"
+
+  - it: mounts the ssh key Secret and the config ConfigMap
+    template: gitlab-shell/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "ssh-key-pairs"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/srv/gitlab-shell/keys"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/srv/gitlab-shell/config.yml"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].mountPath
+          value: "/srv/gitlab-shell/.gitaly_token"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "ssh-key-pairs"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[1].configMap.name
+          value: "csghub-gitlab-shell"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: gitlab-shell/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/gitlab-shell:v17.5.0"

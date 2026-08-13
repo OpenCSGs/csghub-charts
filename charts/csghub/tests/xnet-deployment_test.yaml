@@ -1,0 +1,91 @@
+# Test suite for the CSGHub XNet Deployment.
+#
+# The Deployment runs the xnet server from the xnet ConfigMap, waiting for
+# postgresql, redis and temporal first. It always renders because the built-in
+# xnet has no enable switch.
+
+suite: Test XNet Deployment
+templates:
+  - xnet/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: xnet/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-xnet"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "xnet"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "xnet"
+
+  - it: runs the xnet server command from the xnet image
+    template: xnet/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "xnet"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-xnet:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/xnet-bin/xnet", "start", "server"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8097
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "xnet"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-xnet"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8097
+
+  - it: waits for postgresql, redis and temporal in the init containers
+    template: xnet/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-postgresql"
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: "wait-for-redis"
+      - equal:
+          path: spec.template.spec.initContainers[2].name
+          value: "wait-for-temporal"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: xnet/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-xnet:v2.4.0-ee"

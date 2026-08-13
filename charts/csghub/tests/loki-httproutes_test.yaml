@@ -1,0 +1,62 @@
+# Test suite for the Loki HTTPRoute.
+#
+# The HTTPRoute exposes the loki gateway hostname through the listeners
+# gateway. It renders only when loki gateway auth is enabled.
+
+suite: Test Loki HTTPRoute
+templates:
+  - loki/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders nothing when gateway auth is disabled
+    template: loki/httproutes.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: exposes the loki hostname through the https listeners
+    template: loki/httproutes.yaml
+    set:
+      loki:
+        gatewayAuth:
+          enabled: true
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-loki"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "loki"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - equal:
+          path: spec.hostnames[0]
+          value: "loki.example.com"
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: "PathPrefix"
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: "/"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "csghub-loki"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 3100
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: "5m"

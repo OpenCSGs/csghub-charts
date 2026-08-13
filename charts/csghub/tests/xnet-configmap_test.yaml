@@ -1,0 +1,121 @@
+# Test suite for the CSGHub XNet ConfigMap.
+#
+# The ConfigMap holds the xnet server connection settings for PostgreSQL,
+# object storage, redis, nats, temporal and prometheus. The api token, JWT key,
+# passwords and DSN are non-deterministic and matched by regex.
+
+suite: Test XNet ConfigMap
+templates:
+  - xnet/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the xnet service labels
+    template: xnet/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-xnet"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "xnet"
+
+  - it: encodes the api token, server port and cas URL
+    template: xnet/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.STARHUB_SERVER_API_TOKEN
+          pattern: "^[0-9a-f]{128}$"
+      - equal:
+          path: data.STARHUB_SERVER_XNET_SERVER_PORT
+          value: "8097"
+      - equal:
+          path: data.STARHUB_SERVER_CAS_URL
+          value: "https://csghub.example.com/xnet"
+
+  - it: encodes the postgresql DSN and driver
+    template: xnet/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_DATABASE_DRIVER
+          value: "pg"
+      - matchRegex:
+          path: data.STARHUB_DATABASE_DSN
+          pattern: 'postgresql://csghub:[A-Za-z0-9+/=]{32}@csghub-postgresql:5432/csghub_xnet\?sslmode=disable'
+      - equal:
+          path: data.STARHUB_DATABASE_TIMEZONE
+          value: "Asia/Shanghai"
+
+  - it: encodes the internal minio object store settings
+    template: xnet/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_XNET_XORB_S3_URL
+          value: "https://minio.example.com/csghub-xnet"
+      - equal:
+          path: data.STARHUB_XNET_XORB_SIGNED_URL_EXPIRE_HOURS
+          value: "3"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENDPOINT
+          value: "minio.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_S3_INTERNAL_ENDPOINT
+          value: "csghub-minio:9000"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
+          value: "minio"
+      - matchRegex:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_SECRET
+          pattern: "^[A-Za-z0-9+/]{32}$"
+      - equal:
+          path: data.STARHUB_SERVER_S3_XORB_BUCKET
+          value: "csghub-xnet"
+      - equal:
+          path: data.STARHUB_SERVER_S3_REGION
+          value: "cn-north-1"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENABLE_SSL
+          value: "true"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
+          value: "path"
+      - equal:
+          path: data.STARHUB_SERVER_S3_LFS_BUCKET
+          value: "csghub-server"
+
+  - it: encodes the redis and jwt settings
+    template: xnet/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_REDIS_ENDPOINT
+          value: "csghub-redis:6379"
+      - equal:
+          path: data.STARHUB_SERVER_REDIS_USER
+          value: "default"
+      - matchRegex:
+          path: data.STARHUB_JWT_SIGNING_KEY
+          pattern: "^[0-9a-f]{40}$"
+
+  - it: encodes the nats, prometheus, tracing and workflow endpoints
+    template: xnet/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          pattern: 'nats://natsadmin:[A-Za-z0-9+/]{32}@csghub-nats:4222'
+      - equal:
+          path: data.STARHUB_SERVER_PROMETHEUS_API_ADDRESS
+          value: "http://csghub-prometheus-server:80/api/v1/query"
+      - equal:
+          path: data.OPENCSG_TRACING_OTLP_LOGGING
+          value: "false"
+      - equal:
+          path: data.OPENCSG_WORKFLOW_SERVER_ENDPOINT
+          value: "csghub-temporal:7233"

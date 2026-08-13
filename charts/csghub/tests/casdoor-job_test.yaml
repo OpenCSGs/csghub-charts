@@ -1,0 +1,185 @@
+# Test suite for the CSGHub casdoor migration Job.
+#
+# The Job waits for casdoor, then applies the SQL scripts with psql, sourcing
+# the core ConfigMap and the casdoor init Secret and resolving the database and
+# oauth client variables from the environment.
+
+suite: Test Casdoor Job
+templates:
+  - casdoor/job.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Job metadata, hooks and spec defaults
+    template: casdoor/job.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: "csghub-casdoor-migrate"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "casdoor"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "0"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: "before-hook-creation"
+      - equal:
+          path: spec.completionMode
+          value: "Indexed"
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: "OnFailure"
+
+  - it: waits for casdoor in the init container
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-casdoor"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/busybox:latest"
+
+  - it: runs psql with the core ConfigMap and the init Secret
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "casdoor"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-core"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].secretRef.name
+          value: "csghub-casdoor-init"
+
+  - it: resolves the built-in PostgreSQL connection from the environment
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "EXTERNAL_ENDPOINT"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "https://csghub.example.com"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "PGHOST"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "csghub-postgresql"
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: "PGPORT"
+      - equal:
+          path: spec.template.spec.containers[0].env[2].value
+          value: "5432"
+      - equal:
+          path: spec.template.spec.containers[0].env[3].name
+          value: "PGDATABASE"
+      - equal:
+          path: spec.template.spec.containers[0].env[3].value
+          value: "csghub_casdoor"
+      - equal:
+          path: spec.template.spec.containers[0].env[4].name
+          value: "PGUSER"
+      - equal:
+          path: spec.template.spec.containers[0].env[4].value
+          value: "csghub"
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[5].value
+          pattern: "^[A-Za-z0-9+/]{32}$"
+
+  - it: wires the CSGHub and admin client credentials as environment references
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[6].name
+          value: "CSGHUB_CLIENT_ID"
+      - equal:
+          path: spec.template.spec.containers[0].env[6].value
+          value: "$(STARHUB_SERVER_CASDOOR_CLIENT_ID)"
+      - equal:
+          path: spec.template.spec.containers[0].env[7].name
+          value: "CSGHUB_CLIENT_SECRET"
+      - equal:
+          path: spec.template.spec.containers[0].env[7].value
+          value: "$(STARHUB_SERVER_CASDOOR_CLIENT_SECRET)"
+      - equal:
+          path: spec.template.spec.containers[0].env[8].name
+          value: "ADMIN_CLIENT_ID"
+      - equal:
+          path: spec.template.spec.containers[0].env[8].value
+          value: "$(CASDOOR_ADMIN_CLIENT_ID)"
+      - equal:
+          path: spec.template.spec.containers[0].env[9].name
+          value: "ADMIN_CLIENT_SECRET"
+      - equal:
+          path: spec.template.spec.containers[0].env[9].value
+          value: "$(CASDOOR_ADMIN_CLIENT_SECRET)"
+
+  - it: runs as root and mounts the update-conf scripts
+    template: casdoor/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 0
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "update-conf"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "update-conf"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-casdoor"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.defaultMode
+          value: 484
+
+  - it: renders csgship oauth variables when csgship is enabled
+    template: casdoor/job.yaml
+    set:
+      csgship:
+        enabled: true
+        name: "csgship"
+        image:
+          repository: "opencsghq/csgship-web"
+          tag: "v0.4.0"
+        gateway:
+          enabled: true
+      web:
+        oauth:
+          issuer: "https://gitlab.example.com"
+          clientId: "gitlab-client-id"
+          clientSecret: "gitlab-client-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: "csghub-csgship"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OAUTH_CLIENT_ID
+            value: "gitlab-client-id"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OAUTH_ISSUER
+            value: "https://gitlab.example.com"

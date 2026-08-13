@@ -1,0 +1,44 @@
+# Test suite for the CSGHub GitLab Shell TCPRoute.
+#
+# The TCPRoute forwards the gitssh gateway listener to the gitlab-shell service
+# SSH port.
+
+suite: Test GitLab Shell TCPRoute
+templates:
+  - gitlab-shell/tcproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the TCPRoute metadata with the gitlab-shell hostname
+    template: gitlab-shell/tcproutes.yaml
+    asserts:
+      - isKind:
+          of: TCPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitlab-shell"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "gitssh"
+
+  - it: routes to the gitlab-shell service on port 22
+    template: gitlab-shell/tcproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "csghub-gitlab-shell"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 22

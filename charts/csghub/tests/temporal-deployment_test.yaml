@@ -1,0 +1,82 @@
+# Test suite for the CSGHub Temporal Deployment.
+#
+# The Deployment runs the temporal auto-setup image with an init container that
+# waits for postgresql. It always renders because the built-in temporal has no
+# enable switch.
+
+suite: Test Temporal Deployment
+templates:
+  - temporal/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: temporal/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-temporal"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "temporal"
+
+  - it: waits for postgresql in the init container
+    template: temporal/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-postgresql"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+
+  - it: runs the auto-setup container from the temporal Secret
+    template: temporal/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "temporal"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/temporalio/auto-setup:1.29.7"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 7233
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: "csghub-temporal"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: temporal/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/psql:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/temporalio/auto-setup:1.29.7"

@@ -1,0 +1,160 @@
+# Test suite for the CSGHub EnvoyProxy.
+#
+# The EnvoyProxy is rendered only for an envoyproxy controller. With a
+# non-opencsg registry the envoyDeployment is an empty object so Envoy Gateway
+# uses its default envoy image; with the opencsg registry it pins the image.
+# When the gateway service type is NodePort, an envoyService patch maps the
+# http/https/gitssh node ports.
+
+suite: Test EnvoyProxy
+templates:
+  - envoy-proxy.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the EnvoyProxy metadata with an empty envoyDeployment by default
+    template: envoy-proxy.yaml
+    asserts:
+      - isKind:
+          of: EnvoyProxy
+      - equal:
+          path: metadata.name
+          value: "csghub-envoy-proxy"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.provider.type
+          value: "Kubernetes"
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment
+          value: {}
+
+  - it: pins the envoy image when using the opencsg registry
+    template: envoy-proxy.yaml
+    set:
+      global:
+        image:
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyDeployment.container.image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+
+  - it: patches the envoyService with the default node ports
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.externalTrafficPolicy
+          value: "Cluster"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.type
+          value: "StrategicMerge"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].name
+          value: "http-80"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "http-443"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30443
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].name
+          value: "tcp-22"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
+          value: 30022
+
+  - it: renders custom node ports and a custom ssh port
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30880
+              https: 30444
+              gitssh: 30222
+      server:
+        gitlabShell:
+          sshPort: 222
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30880
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30444
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].name
+          value: "tcp-222"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].port
+          value: 222
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].targetPort
+          value: 10222
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[2].nodePort
+          value: 30222
+
+  - it: omits the https node port patch when TLS is disabled
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          service:
+            type: NodePort
+            nodePorts:
+              http: 30080
+              https: 30443
+              gitssh: 30022
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - equal:
+          path: spec.provider.kubernetes.envoyService.type
+          value: "NodePort"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[0].nodePort
+          value: 30080
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].name
+          value: "tcp-22"
+      - equal:
+          path: spec.provider.kubernetes.envoyService.patch.value.spec.ports[1].nodePort
+          value: 30022
+
+  - it: renders nothing for a non-envoyproxy controller
+    template: envoy-proxy.yaml
+    set:
+      global:
+        gateway:
+          controllerName: istio.io/gateway-controller
+    asserts:
+      - hasDocuments:
+          count: 0
