@@ -1,0 +1,85 @@
+# Test suite for the CSGHub Temporal ConfigMap.
+#
+# The ConfigMap configures the temporal UI console with OIDC auth against the
+# casdoor admin client. It renders only when the console is enabled.
+
+suite: Test Temporal ConfigMap
+templates:
+  - temporal/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap with the temporal UI and OIDC auth config
+    template: temporal/configmap.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-temporal"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+      - equal:
+          path: data.TEMPORAL_UI_ENABLED
+          value: "true"
+      - equal:
+          path: data.TEMPORAL_ADDRESS
+          value: "csghub-temporal:7233"
+      - equal:
+          path: data.TEMPORAL_CORS_ORIGINS
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.TEMPORAL_CSRF_COOKIE_INSECURE
+          value: "true"
+      - equal:
+          path: data.TEMPORAL_UI_PUBLIC_PATH
+          value: "/-/temporal"
+
+  - it: configures OIDC auth against the casdoor admin client
+    template: temporal/configmap.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+    asserts:
+      - equal:
+          path: data.TEMPORAL_AUTH_ENABLED
+          value: "true"
+      - equal:
+          path: data.TEMPORAL_AUTH_TYPE
+          value: "oidc"
+      - equal:
+          path: data.TEMPORAL_AUTH_PROVIDER_URL
+          value: "https://casdoor.example.com"
+      - equal:
+          path: data.TEMPORAL_AUTH_ISSUER_URL
+          value: "https://casdoor.example.com"
+      - matchRegex:
+          path: data.TEMPORAL_AUTH_CLIENT_ID
+          pattern: "^[0-9a-f]{20}$"
+      - matchRegex:
+          path: data.TEMPORAL_AUTH_CLIENT_SECRET
+          pattern: "^[0-9a-f]{40}$"
+      - equal:
+          path: data.TEMPORAL_AUTH_CALLBACK_URL
+          value: "https://csghub.example.com/-/temporal/auth/sso/callback"
+      - equal:
+          path: data.TEMPORAL_AUTH_SCOPES
+          value: "openid,email,profile"
+
+  - it: renders nothing when the console is disabled
+    template: temporal/configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

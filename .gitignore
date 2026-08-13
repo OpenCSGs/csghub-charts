@@ -7,6 +7,8 @@
 **/.DS_Store
 **/*.tgz
 **/__snapshot__
+# Extracted subchart dependencies, needed only to run the umbrella chart tests
+charts/csghub/charts/*/
 **/.debug/
 **/.codesouler
 **/.claude

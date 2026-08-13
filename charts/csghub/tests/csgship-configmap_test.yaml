@@ -1,0 +1,90 @@
+# Test suite for the CSGShip ConfigMap when bundled with CSGHub.
+#
+# With global.chartContext.isBuiltIn the csgship web reuses the CSGHub console
+# endpoint, api token and the bundled nats instead of the standalone
+# externalUrl. This branch cannot be tested when rendering the csgship chart
+# standalone, so it is verified here from the csghub umbrella.
+
+suite: Test CSGShip ConfigMap (builtin)
+templates:
+  - charts/csgship/templates/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+set:
+  csgship:
+    enabled: true
+tests:
+  - it: renders the ConfigMap metadata with the csgship labels
+    template: charts/csgship/templates/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-csgship"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgship"
+
+  - it: points the hub and accounting endpoints at the CSGHub console
+    template: charts/csgship/templates/configmap.yaml
+    asserts:
+      - equal:
+          path: data.ACCOUNTING_API_BASE
+          value: "https://csghub.example.com"
+      - matchRegex:
+          path: data.ACCOUNTING_API_KEY
+          pattern: "^[0-9a-f]{128}$"
+      - equal:
+          path: data.OPENCSG_HUB_BASE_URL
+          value: "https://csghub.example.com"
+      - matchRegex:
+          path: data.OPENCSG_HUB_ACCESS_TOKEN
+          pattern: "^[0-9a-f]{128}$"
+
+  - it: points the nats url at the bundled nats
+    template: charts/csgship/templates/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.NATS_URL
+          pattern: 'nats://natsadmin:[A-Za-z0-9+/]{32}@csghub-nats:4222'
+
+  - it: encodes the postgresql, redis and service endpoints
+    template: charts/csgship/templates/configmap.yaml
+    asserts:
+      - equal:
+          path: data.DATABASE_HOST
+          value: "csghub-postgresql"
+      - equal:
+          path: data.DATABASE_PORT
+          value: "5432"
+      - equal:
+          path: data.DATABASE_USERNAME
+          value: "csghub"
+      - matchRegex:
+          path: data.DATABASE_PASSWORD
+          pattern: "^[A-Za-z0-9+/]{32}$"
+      - equal:
+          path: data.DATABASE_NAME
+          value: "csghub_csgship"
+      - equal:
+          path: data.REDIS_URL
+          value: ":@csghub-redis"
+      - equal:
+          path: data.REDIS_PORT
+          value: "6379"
+      - equal:
+          path: data.WEB_SVC_API_BASE
+          value: "http://csghub-csgship:8000"
+      - equal:
+          path: data.STARSHIP_BILLING_API_BASE
+          value: "http://csghub-billing:8080"
+      - equal:
+          path: data.AGENTIC_SVC_API_BASE
+          value: "http://csghub-agentic:8000"

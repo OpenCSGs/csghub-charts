@@ -1,0 +1,78 @@
+# Test suite for the CSGHub Temporal Service.
+#
+# The Temporal Service is a ClusterIP service exposing the temporal port 7233,
+# with an optional console port when the console is enabled.
+
+suite: Test Temporal Service
+templates:
+  - temporal/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: temporal/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-temporal"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "temporal"
+
+  - it: renders the single temporal port 7233
+    template: temporal/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 7233
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 7233
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "temporal"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "temporal"
+
+  - it: appends the console port when the console is enabled
+    template: temporal/service.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.ports[1].port
+          value: 8080
+      - equal:
+          path: spec.ports[1].targetPort
+          value: 8080
+      - equal:
+          path: spec.ports[1].name
+          value: "console"
+
+  - it: honors a custom service port
+    template: temporal/service.yaml
+    set:
+      temporal:
+        service:
+          port: 7234
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 7234

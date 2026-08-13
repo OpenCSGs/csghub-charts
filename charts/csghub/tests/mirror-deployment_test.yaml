@@ -1,0 +1,96 @@
+# Test suite for the CSGHub Mirror Deployment.
+#
+# The Deployment runs the mirror repo-sync and lfs-sync modules of the server
+# image. It always renders because the built-in mirror has no enable switch.
+
+suite: Test Mirror Deployment
+templates:
+  - csghub/mirror/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/mirror/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-mirror"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "mirror"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "mirror"
+
+  - it: runs the repo-sync container from the ee server image
+    template: csghub/mirror/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "mirror-repo"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "mirror", "repo-sync", "-l", "info"]
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+
+  - it: runs the lfs-sync container on port 8092
+    template: csghub/mirror/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: "mirror-lfs"
+      - equal:
+          path: spec.template.spec.containers[1].command
+          value: ["/starhub-bin/starhub", "mirror", "lfs-sync", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 8092
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].name
+          value: "mirror"
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.tcpSocket.port
+          value: 8092
+
+  - it: waits for the server in the init container
+    template: csghub/mirror/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-server"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/mirror/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"

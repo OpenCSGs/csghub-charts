@@ -1,0 +1,149 @@
+# Test suite for the CSGHub RProxy Deployment.
+#
+# The Deployment runs the rproxy module of the server image, with an optional
+# nginx container and coreDNS-based dnsConfig. It always renders because the
+# built-in rproxy has no enable switch.
+
+suite: Test RProxy Deployment
+templates:
+  - csghub/rproxy/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/rproxy/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "rproxy"
+
+  - it: runs the rproxy launch command from the ee server image
+    template: csghub/rproxy/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "rproxy"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "start", "rproxy", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8083
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8083
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+
+  - it: waits for the server in the init container
+    template: csghub/rproxy/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-server"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/busybox:latest"
+
+  - it: renders only the rproxy container when coredns and nginx are disabled
+    template: csghub/rproxy/deployment.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+
+  - it: adds the nginx container and config volume when nginx is enabled
+    template: csghub/rproxy/deployment.yaml
+    set:
+      rproxy:
+        nginx:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: "rproxy-nginx"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "docker.io/nginx:latest"
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 80
+      - equal:
+          path: spec.template.spec.containers[1].volumeMounts[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.containers[1].volumeMounts[0].mountPath
+          value: "/etc/nginx/conf.d"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-rproxy-nginx"
+
+  - it: configures dnsPolicy and dnsConfig when coredns is enabled
+    template: csghub/rproxy/deployment.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.dnsPolicy
+          value: "None"
+      - equal:
+          path: spec.template.spec.dnsConfig.nameservers[0]
+          value: "10.96.0.176"
+      - equal:
+          path: spec.template.spec.dnsConfig.searches[0]
+          value: "csghub.svc.cluster.local"
+      - equal:
+          path: spec.template.spec.dnsConfig.options[0].name
+          value: "ndots"
+      - equal:
+          path: spec.template.spec.dnsConfig.options[0].value
+          value: "5"
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/rproxy/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"

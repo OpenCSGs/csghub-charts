@@ -1,0 +1,21 @@
+# Test suite for the Runner HTTPRoute when bundled with CSGHub.
+#
+# When bundled with CSGHub the runner HTTPRoute is suppressed because the
+# csghub gateway already routes the runner hostname. This branch cannot be
+# tested when rendering the runner chart standalone, so it is verified here
+# from the csghub umbrella.
+
+suite: Test Runner HTTPRoute (builtin)
+templates:
+  - charts/runner/templates/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders nothing for the bundled runner
+    template: charts/runner/templates/httproutes.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

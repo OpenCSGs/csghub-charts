@@ -1,0 +1,101 @@
+# Test suite for the CSGHub RProxy nginx ConfigMap.
+#
+# The ConfigMap holds one server block per runner service, proxying to a fixed
+# host or to the knative kourier backend, plus a default server block. It
+# renders only when nginx is enabled.
+
+suite: Test RProxy nginx ConfigMap
+templates:
+  - csghub/rproxy/nginx/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata when nginx is enabled
+    template: csghub/rproxy/nginx/configmap.yaml
+    set:
+      rproxy:
+        nginx:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy-nginx"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+
+  - it: writes a server block per runner service with a fixed proxy host
+    template: csghub/rproxy/nginx/configmap.yaml
+    set:
+      rproxy:
+        nginx:
+          enabled: true
+      runner:
+        mergingNamespace: "disable"
+        knative:
+          serving:
+            services:
+              - domain: "app1.internal"
+                host: "10.0.6.10"
+                port: "30022"
+              - domain: "app2.internal"
+                host: "10.0.6.11"
+                port: "30023"
+    asserts:
+      - matchRegex:
+          path: data["app1.internal.conf"]
+          pattern: "server_name \\*\\.spaces.app1.internal;"
+      - matchRegex:
+          path: data["app1.internal.conf"]
+          pattern: "resolver kube-dns.kube-system.svc.cluster.local valid=5s;"
+      - matchRegex:
+          path: data["app1.internal.conf"]
+          pattern: "proxy_pass http://10.0.6.10:30022;"
+      - matchRegex:
+          path: data["app2.internal.conf"]
+          pattern: "proxy_pass http://10.0.6.11:30023;"
+
+  - it: proxies to the kourier backend when no host and port are set
+    template: csghub/rproxy/nginx/configmap.yaml
+    set:
+      rproxy:
+        nginx:
+          enabled: true
+      runner:
+        mergingNamespace: "multi"
+        knative:
+          serving:
+            services:
+              - domain: "app.internal"
+    asserts:
+      - matchRegex:
+          path: data["app.internal.conf"]
+          pattern: "\\$knativeBackend kourier.knative-serving.svc.cluster.local;"
+      - matchRegex:
+          path: data["app.internal.conf"]
+          pattern: "proxy_pass http://\\$knativeBackend;"
+
+  - it: writes the default server block
+    template: csghub/rproxy/nginx/configmap.yaml
+    set:
+      rproxy:
+        nginx:
+          enabled: true
+    asserts:
+      - matchRegex:
+          path: data["default.conf"]
+          pattern: "server_name  localhost;"
+
+  - it: renders nothing when nginx is disabled
+    template: csghub/rproxy/nginx/configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

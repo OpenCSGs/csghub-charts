@@ -1,0 +1,73 @@
+# Test suite for the CSGHub AIGateway Service.
+#
+# The AIGateway Service exposes the aigateway port 8094, with an optional
+# moderation port when moderation is enabled.
+
+suite: Test AIGateway Service
+templates:
+  - csghub/aigateway/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: csghub/aigateway/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-aigateway"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "aigateway"
+
+  - it: renders the aigateway port 8094
+    template: csghub/aigateway/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8094
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8094
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "aigateway-aigateway"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "aigateway"
+
+  - it: prepends the moderation port when moderation is enabled
+    template: csghub/aigateway/service.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 8089
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8089
+      - equal:
+          path: spec.ports[0].name
+          value: "aigateway-moderation"
+      - equal:
+          path: spec.ports[1].port
+          value: 8094
+      - equal:
+          path: spec.ports[1].name
+          value: "aigateway-aigateway"

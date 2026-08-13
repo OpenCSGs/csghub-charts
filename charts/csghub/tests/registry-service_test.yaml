@@ -1,0 +1,71 @@
+# Test suite for the CSGHub Registry Service.
+#
+# The Registry Service is a ClusterIP service exposing the registry port 5000.
+# It renders only when the built-in registry is enabled.
+
+suite: Test Registry Service
+templates:
+  - registry/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: registry/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-registry"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "registry"
+
+  - it: renders the registry port 5000
+    template: registry/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 5000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 5000
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "registry"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "registry"
+
+  - it: honors a custom service port
+    template: registry/service.yaml
+    set:
+      registry:
+        service:
+          port: 5001
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 5001
+
+  - it: renders nothing when the built-in registry is disabled
+    template: registry/service.yaml
+    set:
+      global:
+        registry:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

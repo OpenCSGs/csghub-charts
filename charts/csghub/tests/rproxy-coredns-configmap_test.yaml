@@ -1,0 +1,111 @@
+# Test suite for the CSGHub RProxy CoreDNS ConfigMap.
+#
+# The ConfigMap holds the coreDNS Corefile with a forward block per runner
+# service and a zone file per domain. It renders only when coredns is enabled.
+
+suite: Test RProxy CoreDNS ConfigMap
+templates:
+  - csghub/rproxy/coredns/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata when coredns is enabled
+    template: csghub/rproxy/coredns/configmap.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-rproxy-coredns"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "rproxy"
+
+  - it: writes a forward block per runner service in the Corefile
+    template: csghub/rproxy/coredns/configmap.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+      runner:
+        mergingNamespace: "disable"
+        knative:
+          serving:
+            services:
+              - domain: "app1.internal"
+                host: "10.0.6.10"
+                port: "30022"
+              - domain: "app2.internal"
+                host: "10.0.6.11"
+                port: "30023"
+    asserts:
+      - matchRegex:
+          path: data.corefile
+          pattern: "forward spaces.app1.internal. /etc/resolv.conf"
+      - matchRegex:
+          path: data.corefile
+          pattern: "forward spaces.app2.internal. /etc/resolv.conf"
+      - matchRegex:
+          path: data.corefile
+          pattern: "forward \\. 10.96.0.10"
+      - matchRegex:
+          path: data.corefile
+          pattern: "app1.internal:53 \\{"
+
+  - it: writes a zone file per runner service domain
+    template: csghub/rproxy/coredns/configmap.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+      runner:
+        mergingNamespace: "disable"
+        knative:
+          serving:
+            services:
+              - domain: "app1.internal"
+                host: "10.0.6.10"
+                port: "30022"
+    asserts:
+      - matchRegex:
+          path: data["app1.internal"]
+          pattern: "\\$ORIGIN spaces.app1.internal."
+      - matchRegex:
+          path: data["app1.internal"]
+          pattern: "ns1.spaces.app1.internal. admin.spaces.app1.internal."
+      - matchRegex:
+          path: data["app1.internal"]
+          pattern: "\\*   3600 IN A  10.96.0.177"
+
+  - it: uses the release namespace in single merge mode
+    template: csghub/rproxy/coredns/configmap.yaml
+    set:
+      rproxy:
+        coredns:
+          enabled: true
+      runner:
+        mergingNamespace: "single"
+        knative:
+          serving:
+            services:
+              - domain: "app1.internal"
+    asserts:
+      - matchRegex:
+          path: data.corefile
+          pattern: "forward csghub.app1.internal. /etc/resolv.conf"
+
+  - it: renders nothing when coredns is disabled
+    template: csghub/rproxy/coredns/configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

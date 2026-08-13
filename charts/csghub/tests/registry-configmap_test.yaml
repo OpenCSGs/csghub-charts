@@ -1,0 +1,162 @@
+# Test suite for the CSGHub Registry ConfigMap.
+#
+# The ConfigMap drives the registry deployment via environment variables. When
+# the built-in minio is enabled it targets the internal endpoint; otherwise it
+# uses the configured external object storage. It renders only when the
+# built-in registry is enabled.
+
+suite: Test Registry ConfigMap
+templates:
+  - registry/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the registry service labels
+    template: registry/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-registry"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "registry"
+
+  - it: configures htpasswd auth and logging
+    template: registry/configmap.yaml
+    asserts:
+      - equal:
+          path: data.REGISTRY_AUTH
+          value: "htpasswd"
+      - equal:
+          path: data.REGISTRY_AUTH_HTPASSWD_REALM
+          value: "Registry Realm"
+      - equal:
+          path: data.REGISTRY_AUTH_HTPASSWD_PATH
+          value: "/auth/htpasswd"
+      - equal:
+          path: data.REGISTRY_LOG_LEVEL
+          value: "info"
+      - equal:
+          path: data.REGISTRY_LOG_FORMATTER
+          value: "json"
+      - equal:
+          path: data.REGISTRY_LOG_ACCESSLOG_DISABLED
+          value: "false"
+      - equal:
+          path: data.REGISTRY_STORAGE_DELETE_ENABLED
+          value: "true"
+
+  - it: targets the internal minio endpoint for s3 storage
+    template: registry/configmap.yaml
+    asserts:
+      - equal:
+          path: data.REGISTRY_STORAGE
+          value: "s3"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_REGIONENDPOINT
+          value: "http://csghub-minio:9000"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_ACCESSKEY
+          value: "minio"
+      - matchRegex:
+          path: data.REGISTRY_STORAGE_S3_SECRETKEY
+          pattern: "^[A-Za-z0-9+/]{32}$"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_REGION
+          value: "cn-north-1"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_BUCKET
+          value: "csghub-registry"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_ENCRYPT
+          value: "false"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_SECURE
+          value: "true"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_FORCEPATHSTYLE
+          value: "true"
+
+  - it: targets the external object storage when the built-in minio is disabled
+    template: registry/configmap.yaml
+    set:
+      global:
+        objectStore:
+          enabled: false
+          external:
+            endpoint: "https://s3.example.com"
+            accessKey: "testUser"
+            secretKey: "testPassword"
+            region: "es-west-1"
+            encrypt: "false"
+            secure: "true"
+            pathStyle: "true"
+    asserts:
+      - equal:
+          path: data.REGISTRY_STORAGE
+          value: "s3"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_REGIONENDPOINT
+          value: "https://s3.example.com"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_ACCESSKEY
+          value: "testUser"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_SECRETKEY
+          value: "testPassword"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_REGION
+          value: "es-west-1"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_BUCKET
+          value: "csghub-registry"
+      - equal:
+          path: data.REGISTRY_STORAGE_S3_SECURE
+          value: "true"
+
+  - it: uses oss storage when the endpoint contains aliyun
+    template: registry/configmap.yaml
+    set:
+      global:
+        objectStore:
+          enabled: false
+          external:
+            endpoint: "https://aliyun-oss.example.com"
+            accessKey: "aliUser"
+            secretKey: "aliPassword"
+            region: "cn-beijing"
+            bucket: "ali-bucket"
+    asserts:
+      - equal:
+          path: data.REGISTRY_STORAGE
+          value: "oss"
+      - equal:
+          path: data.REGISTRY_STORAGE_OSS_REGIONENDPOINT
+          value: "https://aliyun-oss.example.com"
+      - equal:
+          path: data.REGISTRY_STORAGE_OSS_ACCESSKEYID
+          value: "aliUser"
+      - equal:
+          path: data.REGISTRY_STORAGE_OSS_ACCESSKEYSECRET
+          value: "aliPassword"
+      - equal:
+          path: data.REGISTRY_STORAGE_OSS_BUCKET
+          value: "ali-bucket"
+
+  - it: renders nothing when the built-in registry is disabled
+    template: registry/configmap.yaml
+    set:
+      global:
+        registry:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

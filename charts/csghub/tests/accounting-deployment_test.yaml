@@ -1,0 +1,113 @@
+# Test suite for the CSGHub Accounting Deployment.
+#
+# The Deployment runs the accounting module of the server image, plus a payment
+# container in the saas edition. It always renders because the built-in
+# accounting has no enable switch.
+
+suite: Test Accounting Deployment
+templates:
+  - csghub/accounting/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and spec defaults
+    template: csghub/accounting/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-accounting"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "accounting"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "accounting"
+
+  - it: runs the accounting launch command from the ee server image
+    template: csghub/accounting/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "accounting"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "accounting", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8086
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "accounting"
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8086
+
+  - it: waits for the server in the init container
+    template: csghub/accounting/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-server"
+
+  - it: renders a single container on the default ee edition
+    template: csghub/accounting/deployment.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+
+  - it: adds the payment container in the saas edition
+    template: csghub/accounting/deployment.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 2
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: "payment"
+      - equal:
+          path: spec.template.spec.containers[1].command
+          value: ["/starhub-bin/starhub", "payment", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 8094
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/accounting/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"

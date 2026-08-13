@@ -1,0 +1,81 @@
+# Test suite for the AgenticHub AgenticFlow ConfigMap when bundled with CSGHub.
+#
+# With global.chartContext.isBuiltIn the agenticflow reuses the CSGHub console
+# endpoint and server service instead of the standalone externalUrl. This
+# branch cannot be tested when rendering the agentichub chart standalone, so it
+# is verified here from the csghub umbrella.
+
+suite: Test AgenticHub AgenticFlow ConfigMap (builtin)
+templates:
+  - charts/agentichub/templates/agenticflow/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the agenticflow labels
+    template: charts/agentichub/templates/agenticflow/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-agenticflow"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csghub-agenticflow"
+
+  - it: points the login and csghub URLs at the CSGHub console
+    template: charts/agentichub/templates/agenticflow/configmap.yaml
+    asserts:
+      - equal:
+          path: data.REDIRECT_STATE
+          value: "https://agenticflow.example.com/api/v1/opencsg/callback/csghub"
+      - equal:
+          path: data.LANGFLOW_LOGIN_URL
+          value: "https://csghub.example.com/sso/login?redirect_url=https://agenticflow.example.com/api/v1/opencsg/callback/csghub"
+      - equal:
+          path: data.CSGHUB_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.CSGHUB_INTERNAL_BASE_URL
+          value: "http://csghub-server:8080"
+      - equal:
+          path: data.CSGHUB_API_BASE_URL
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.CSGHUB_AIGATEWAY_URL
+          value: "https://csghub.example.com/aigateway"
+
+  - it: uses the generated csghub api token and bundled redis
+    template: charts/agentichub/templates/agenticflow/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.CSGHUB_API_ACCESS_TOKEN
+          pattern: "^[0-9a-f]{128}$"
+      - equal:
+          path: data.CSG_REDIS_URL
+          value: "redis://csghub-redis:6379/0"
+
+  - it: encodes the langflow access token and database
+    template: charts/agentichub/templates/agenticflow/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.FLOWS_ACCESS_TOKEN
+          pattern: "^[A-Za-z0-9+/]{43}=$"
+      - matchRegex:
+          path: data.LANGFLOW_SECRET_KEY
+          pattern: "^[A-Za-z0-9+/]{43}=$"
+      - matchRegex:
+          path: data.LANGFLOW_DATABASE_URL
+          pattern: '^postgresql://csghub:[A-Za-z0-9+/]{32}@csghub-postgresql:5432/csghub_agenticflow\?sslmode=disable$'
+      - equal:
+          path: data.LANGFLOW_COOKIE_DOMAIN
+          value: "example.com"
+      - equal:
+          path: data.LANGFLOW_PORT
+          value: "7860"

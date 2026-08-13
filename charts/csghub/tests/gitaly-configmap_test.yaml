@@ -1,0 +1,72 @@
+# Test suite for the CSGHub Gitaly ConfigMap.
+#
+# The ConfigMap holds config.toml with the storage, logging, auth token and the
+# internal server URL. The token is non-deterministic and matched by regex. It
+# renders only when the built-in gitaly is enabled.
+
+suite: Test Gitaly ConfigMap
+templates:
+  - gitaly/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the gitaly service labels
+    template: gitaly/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-gitaly"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "gitaly"
+
+  - it: configures the listen address, storage and logging
+    template: gitaly/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'listen_addr = "0.0.0.0:8075"'
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'name = "default"'
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'path = "/var/opt/gitaly/repositories"'
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'level = "info"'
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'format = "json"'
+
+  - it: writes a generated auth token
+    template: gitaly/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'token = "[A-Za-z0-9+/]{32}"'
+
+  - it: points at the internal server service
+    template: gitaly/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: 'url = "http://csghub-server:8080"'
+
+  - it: renders nothing when the built-in gitaly is disabled
+    template: gitaly/configmap.yaml
+    set:
+      global:
+        gitaly:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

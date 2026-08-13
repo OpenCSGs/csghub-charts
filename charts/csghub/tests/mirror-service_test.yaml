@@ -1,0 +1,49 @@
+# Test suite for the CSGHub Mirror Service.
+#
+# The Mirror Service exposes the mirror lfs port 8092.
+
+suite: Test Mirror Service
+templates:
+  - csghub/mirror/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: csghub/mirror/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-mirror"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "mirror"
+
+  - it: renders the mirror port 8092
+    template: csghub/mirror/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8092
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8092
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "mirror"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "mirror"

@@ -1,0 +1,125 @@
+# Test suite for the CSGHub Redis StatefulSet.
+#
+# The StatefulSet runs redis with save/appendonly args and a volumeClaimTemplate
+# for data. When requirePass is true it adds the --requirepass arg and sources
+# the redis Secret.
+
+suite: Test Redis StatefulSet
+templates:
+  - redis/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the StatefulSet metadata and spec defaults
+    template: redis/statefulset.yaml
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: "csghub-redis"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "redis"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.serviceName
+          value: "csghub-redis"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "redis"
+
+  - it: runs redis with the default save and appendonly args
+    template: redis/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "redis"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/redis:7.4.9"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - "--save"
+            - "60 1000"
+            - "--appendonly"
+            - "yes"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 6379
+
+  - it: adds the requirepass arg and secret when requirePass is true
+    template: redis/statefulset.yaml
+    set:
+      redis:
+        requirePass: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args[0]
+          value: "--requirepass"
+      - equal:
+          path: spec.template.spec.containers[0].args[1]
+          value: "$(REDIS_PASSWD)"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: "csghub-redis"
+
+  - it: provisions the default data volume claim template
+    template: redis/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: "data"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: "ReadWriteOnce"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "10Gi"
+
+  - it: overrides the image registry and persistence when set
+    template: redis/statefulset.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      redis:
+        persistence:
+          storageClass: "hostPath"
+          size: "5Gi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/redis:7.4.9"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: "hostPath"
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "5Gi"
+
+  - it: renders nothing when the built-in Redis is disabled
+    template: redis/statefulset.yaml
+    set:
+      global:
+        redis:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

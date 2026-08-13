@@ -1,0 +1,36 @@
+# Test suite for the CSGHub server init-scripts ConfigMap.
+#
+# The ConfigMap embeds the scripts/*_server_*.sql files so the migration Job can
+# apply them against the server database.
+
+suite: Test Server ConfigMap
+templates:
+  - csghub/server/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap with the server service label
+    template: csghub/server/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "csghub-server"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "server"
+
+  - it: embeds the server SQL init scripts in the data
+    template: csghub/server/configmap.yaml
+    asserts:
+      - isNotNullOrEmpty:
+          path: data
+      - exists:
+          path: data["1768547229_server_promote_root.sql"]

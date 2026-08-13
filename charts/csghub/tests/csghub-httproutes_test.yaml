@@ -1,0 +1,309 @@
+# Test suite for the CSGHub main HTTPRoute.
+#
+# The route targets the csghub domain and routes the root to the portal, /api
+# and git paths to the server, /xnet, /v2 to the registry, /-/label-studio to
+# dataflow and /aigateway to the aigateway service. The parentRefs sectionName
+# follows the gateway TLS setting.
+
+suite: Test CSGHub HTTPRoute
+templates:
+  - csghub/httproutes.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the HTTPRoute metadata targeting the https parent section
+    template: csghub/httproutes.yaml
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-portal"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "portal"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+      - contains:
+          path: spec.hostnames
+          content: "csghub.example.com"
+
+  - it: routes the root to the portal with a 2m timeout
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[0]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: csghub-portal
+                port: 8090
+            timeouts:
+              request: 2m
+
+  - it: routes the API and git paths to the server with CORS
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[1]
+          value:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /api
+              - path:
+                  type: RegularExpression
+                  value: ^/(hf|csg|ms)(/.*)?$
+            filters:
+              - type: CORS
+                cors:
+                  allowOrigins:
+                    - "https://casdoor.example.com"
+                  allowCredentials: true
+            backendRefs:
+              - name: csghub-server
+                port: 8080
+            timeouts:
+              request: 5m
+
+  - it: routes git clone paths to the server with a 15m timeout
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[2].matches[0].path.value
+          value: "/.*\\.git(/.*)?$"
+      - equal:
+          path: spec.rules[2].backendRefs[0].name
+          value: "csghub-server"
+      - equal:
+          path: spec.rules[2].backendRefs[0].port
+          value: 8080
+
+  - it: routes /xnet to the xnet service with a URL rewrite
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[3].matches[0].path.value
+          value: "/xnet"
+      - equal:
+          path: spec.rules[3].filters[0].type
+          value: "URLRewrite"
+      - equal:
+          path: spec.rules[3].backendRefs[0].name
+          value: "csghub-xnet"
+      - equal:
+          path: spec.rules[3].backendRefs[0].port
+          value: 8097
+
+  - it: routes /v2 to the registry with a backendRequest timeout
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[4].matches[0].path.value
+          value: "/v2"
+      - equal:
+          path: spec.rules[4].backendRefs[0].name
+          value: "csghub-registry"
+      - equal:
+          path: spec.rules[4].backendRefs[0].port
+          value: 5000
+      - equal:
+          path: spec.rules[4].timeouts.backendRequest
+          value: 30m
+
+  - it: routes /-/label-studio to dataflow
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[5].matches[0].path.value
+          value: "/-/label-studio"
+      - equal:
+          path: spec.rules[5].backendRefs[0].name
+          value: "csghub-label-studio"
+      - equal:
+          path: spec.rules[5].backendRefs[0].port
+          value: 8002
+
+  - it: routes /aigateway to the aigateway service with rewrites
+    template: csghub/httproutes.yaml
+    asserts:
+      - equal:
+          path: spec.rules[6].matches[0].path.value
+          value: "/aigateway/v1/gateway/mcp"
+      - equal:
+          path: spec.rules[6].filters[0].urlRewrite.path.replacePrefixMatch
+          value: "/v1/gateway/mcp"
+      - equal:
+          path: spec.rules[6].backendRefs[0].name
+          value: "csghub-aigateway"
+      - equal:
+          path: spec.rules[6].backendRefs[0].port
+          value: 8094
+      - equal:
+          path: spec.rules[7].matches[0].path.value
+          value: "/aigateway"
+      - equal:
+          path: spec.rules[7].filters[0].urlRewrite.path.replacePrefixMatch
+          value: "/"
+      - equal:
+          path: spec.rules[7].backendRefs[0].name
+          value: "csghub-aigateway"
+
+  - it: omits the aigateway rules when a dedicated aigateway domain is used
+    template: csghub/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              useDomain: true
+    asserts:
+      - notExists:
+          path: spec.rules[6]
+      - equal:
+          path: spec.rules[5].matches[0].path.value
+          value: "/-/label-studio"
+
+  - it: omits the /v2 registry rule when the registry is external
+    template: csghub/httproutes.yaml
+    set:
+      global:
+        registry:
+          enabled: false
+    asserts:
+      - equal:
+          path: spec.rules[3].matches[0].path.value
+          value: "/xnet"
+      - equal:
+          path: spec.rules[4].matches[0].path.value
+          value: "/-/label-studio"
+
+  - it: targets the http parent section when TLS is disabled
+    template: csghub/httproutes.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+
+  - it: routes /-/temporal to the temporal console when enabled
+    template: csghub/httproutes.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+    asserts:
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /-/temporal
+            backendRefs:
+              - name: csghub-temporal
+                port: 8080
+            timeouts:
+              request: 60s
+
+  - it: routes /docs to the docs service when configured
+    template: csghub/httproutes.yaml
+    set:
+      portal:
+        docs:
+          service: "docs-svc"
+          port: 8080
+    asserts:
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /docs
+            filters:
+              - type: URLRewrite
+                urlRewrite:
+                  path:
+                    type: ReplacePrefixMatch
+                    replacePrefixMatch: /
+            backendRefs:
+              - name: docs-svc
+                port: 8080
+            timeouts:
+              request: 10s
+
+  - it: routes /endpoint to the rproxy when usePublicDomain is false
+    template: csghub/httproutes.yaml
+    set:
+      runner:
+        space:
+          usePublicDomain: false
+    asserts:
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /endpoint/
+            backendRefs:
+              - name: csghub-rproxy
+                port: 8083
+            timeouts:
+              request: 15m
+
+  - it: adds superset routes when superset is enabled
+    template: csghub/httproutes.yaml
+    set:
+      superset:
+        enabled: true
+    asserts:
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /-/superset
+            backendRefs:
+              - name: csghub-superset
+                port: 8088
+            timeouts:
+              request: 5m
+      - contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /login/casdoor
+            filters:
+              - type: URLRewrite
+                urlRewrite:
+                  path:
+                    type: ReplacePrefixMatch
+                    replacePrefixMatch: /-/superset/login/casdoor
+            backendRefs:
+              - name: csghub-superset
+                port: 8088
+            timeouts:
+              request: 5m

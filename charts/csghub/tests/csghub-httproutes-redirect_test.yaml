@@ -1,0 +1,64 @@
+# Test suite for the CSGHub redirect HTTPRoute.
+#
+# The redirect route listens on the http parent section and 301-redirects the
+# csghub, casdoor and minio domains (plus the wildcard) to https. It renders
+# only when TLS is enabled.
+
+suite: Test CSGHub Redirect HTTPRoute
+templates:
+  - csghub/httproutes-redirect.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the redirect route on the http parent section
+    template: csghub/httproutes-redirect.yaml
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "csghub-portal-redirect"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - contains:
+          path: spec.hostnames
+          content: "csghub.example.com"
+      - contains:
+          path: spec.hostnames
+          content: "casdoor.example.com"
+      - contains:
+          path: spec.hostnames
+          content: "minio.example.com"
+      - contains:
+          path: spec.hostnames
+          content: "*.csghub.example.com"
+      - equal:
+          path: spec.rules
+          value:
+            - filters:
+                - type: RequestRedirect
+                  requestRedirect:
+                    scheme: https
+                    statusCode: 301
+
+  - it: renders nothing when TLS is disabled
+    template: csghub/httproutes-redirect.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: false
+            secretName: ""
+    asserts:
+      - hasDocuments:
+          count: 0

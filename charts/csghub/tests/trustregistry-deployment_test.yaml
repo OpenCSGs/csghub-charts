@@ -1,0 +1,84 @@
+# Test suite for the CSGHub TrustRegistry Deployment.
+#
+# The Deployment runs the trustregistry module of the server image. It renders
+# only in the saas edition with the component enabled.
+
+suite: Test TrustRegistry Deployment
+templates:
+  - csghub/trustregistry/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment when the edition is saas
+    template: csghub/trustregistry/deployment.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "csghub-trustregistry"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "trustregistry"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "trustregistry"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: runs the trustregistry launch command from the server image
+    template: csghub/trustregistry/deployment.yaml
+    set:
+      global:
+        edition: "saas"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "trustregistry"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0"
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/starhub-bin/starhub", "trustregistry", "launch", "-l", "info"]
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8098
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8098
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+
+  - it: renders nothing on the default ee edition
+    template: csghub/trustregistry/deployment.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the component is disabled
+    template: csghub/trustregistry/deployment.yaml
+    set:
+      global:
+        edition: "saas"
+      trustregistry:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

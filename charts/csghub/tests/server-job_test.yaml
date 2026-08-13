@@ -1,0 +1,119 @@
+# Test suite for the CSGHub server migration Job.
+#
+# The Job runs the DB migration before the server starts: it waits for the
+# server health endpoint in an init container, then applies /scripts/*.sql with
+# psql using the STARHUB_DATABASE_DSN from the csghub-core ConfigMap.
+
+suite: Test Server Job
+templates:
+  - csghub/server/job.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Job metadata, hooks and spec defaults
+    template: csghub/server/job.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: "csghub-server-migrate"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "0"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: "before-hook-creation"
+      - equal:
+          path: spec.parallelism
+          value: 1
+      - equal:
+          path: spec.completions
+          value: 1
+      - equal:
+          path: spec.completionMode
+          value: "Indexed"
+      - equal:
+          path: spec.activeDeadlineSeconds
+          value: 1200
+      - equal:
+          path: spec.backoffLimit
+          value: 5
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: "OnFailure"
+
+  - it: waits for the server health endpoint in the init container
+    template: csghub/server/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: "wait-for-server"
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "docker.io/busybox:latest"
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].command[2]
+          pattern: "csghub-server:.*/healthz"
+
+  - it: applies the SQL scripts with psql from the core ConfigMap
+    template: csghub/server/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "server"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/psql:latest"
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: 'psql "\$STARHUB_DATABASE_DSN" -v ON_ERROR_STOP=1 -f \$\$sql_file;'
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-core"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "init-scripts"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/scripts"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].readOnly
+          value: true
+
+  - it: mounts the init-scripts ConfigMap with the exec default mode
+    template: csghub/server/job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "init-scripts"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-server"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.defaultMode
+          value: 484
+
+  - it: overrides the image registry when registryPolicy is force
+    template: csghub/server/job.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/busybox:latest"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/psql:latest"

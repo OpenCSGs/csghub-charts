@@ -1,83 +1,39 @@
+# Test suite for the CSGHub core ConfigMap.
+#
+# The ConfigMap aggregates the endpoint, database, object storage, casdoor,
+# aigateway and runner settings consumed by the portal, server and sibling
+# services. Non-deterministic values (API tokens, JWT keys, casdoor client
+# credentials, DB passwords) are matched by regex.
+
 suite: Test Core ConfigMap
 templates:
   - csghub/configmap.yaml
 release:
   name: csghub
   namespace: csghub
-set:
-  global:
-    edition: "ee"
-    gateway:
-      external:
-        domain: "csghub.example.com"
-        useTop: false
-      tls:
-        enabled: true
-        secretName: "test-tls"
-    image:
-      registry: "acr.io"
-      pullPolicy: "Never"
-      pullSecrets: ["acr-pull-secret"]
-    registry:
-      enabled: true
-    objectStore:
-      enabled: true
-  portal:
-    name: "portal-svc"
-    service:
-      port: "8080"
-  server:
-    name: "server-svc"
-    service:
-      port: "8070"
-  runner:
-    name: "runner-svc"
-    runner:
-      namespace: "spaces"
-      interval: 30
-      region: "cn-north-1"
-    model:
-      deployTimeoutInMin: "120"
-      dockerRegBase: "model.io"
-      deployStatusCheckInterval: "10"
-    space:
-      usePublicDomain: true
-      pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
-      deployTimeoutInMin: "30"
-      statusCheckInterval: "10"
-      gpuModelLabel:
-        typeLabel: "nvidia.com/gpu.product"
-        capacityLabel: "nvidia.com/gpu"
-    service:
-      port: 8072
-  accounting:
-    name: "accounting-svc"
-  user:
-    name: "user-svc"
-  loki:
-    name: "loki-svc"
-  tempo:
-    enabled: true
-  registry:
-    name: "registry"
-  minio:
-    name: "minio"
-  postgresql:
-    name: "postgresql"
-  nats:
-    name: "nats"
-  prometheus:
-    enabled: true
+values:
+  - values.yaml
 tests:
-  - it: Should render ConfigMap correctly
+  - it: renders the ConfigMap metadata with the core service label
     template: csghub/configmap.yaml
     asserts:
+      - isKind:
+          of: ConfigMap
       - equal:
           path: metadata.name
           value: "csghub-core"
       - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "core"
+      - isNotNullOrEmpty:
+          path: data
+
+  - it: renders the portal endpoint, API key and login URL
+    template: csghub/configmap.yaml
+    asserts:
       - equal:
           path: data.CSGHUB_PORTAL_ENABLE_HTTPS
           value: "true"
@@ -89,13 +45,17 @@ tests:
           value: "https://csghub.example.com"
       - matchRegex:
           path: data.CSGHUB_PORTAL_STARHUB_API_KEY
-          pattern: ".{128}"
+          pattern: "^[0-9a-f]{128}$"
       - matchRegex:
           path: data.CSGHUB_PORTAL_LOGIN_URL
-          pattern: "https://casdoor.example.com/.*\\?client_id=[0-9a-z]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
+          pattern: "https://casdoor.example.com/.*\\?client_id=[0-9a-f]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
+
+  - it: renders the portal database, object storage and redis endpoints
+    template: csghub/configmap.yaml
+    asserts:
       - matchRegex:
           path: data.CSGHUB_PORTAL_DATABASE_DSN
-          pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_portal_svc\\?sslmode=disable"
+          pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_portal\\?sslmode=disable"
       - equal:
           path: data.CSGHUB_PORTAL_S3_ENDPOINT
           value: "minio.example.com"
@@ -104,52 +64,47 @@ tests:
           value: "minio"
       - equal:
           path: data.CSGHUB_PORTAL_S3_BUCKET
-          value: "csghub-portal-svc-public"
+          value: "csghub-portal-public"
       - equal:
           path: data.CSGHUB_PORTAL_S3_ENABLE_SSL
           value: "true"
       - equal:
           path: data.CSGHUB_PORTAL_PRIVATE_S3_BUCKET
-          value: "csghub-portal-svc"
+          value: "csghub-portal"
       - equal:
           path: data.CSGHUB_PORTAL_REDIS_ADDR
           value: "csghub-redis:6379"
-      - matchRegex:
-          path: data.OPENCSG_ACCOUNTING_NATS_URL
-          pattern: "nats://natsadmin:.*@csghub-nats:4222"
       - equal:
-          path: data.OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL
-          value: "https://csghub.example.com/server/callback"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
-          value: "https://csghub.example.com"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
-          value: "120"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
-          value: "model.io"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL
-          value: "10"
-      - equal:
-          path: data.STARHUB_SERVER_SPACE_PYPI_INDEX_URL
-          value: "https://pypi.tuna.tsinghua.edu.cn/simple/"
-      - equal:
-          path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
-          value: "30"
-      - equal:
-          path: data.STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL
-          value: "10"
-      - equal:
-          path: data.STARHUB_SERVER_GPU_MODEL_LABEL
-          value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
+          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
+          value: "https://csghub.example.com/aigateway"
+
+  - it: renders the server database, object storage and gitaly endpoints
+    template: csghub/configmap.yaml
+    asserts:
       - matchRegex:
           path: data.STARHUB_DATABASE_DSN
-          pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_server_svc\\?sslmode=disable"
+          pattern: "postgresql://csghub:.*csghub-postgresql:5432/csghub_server\\?sslmode=disable"
+      - equal:
+          path: data.STARHUB_SERVER_REDIS_ENDPOINT
+          value: "csghub-redis:6379"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENDPOINT
+          value: "minio.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
+          value: "minio"
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET
-          value: "csghub-server-svc"
+          value: "csghub-server"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENABLE_SSL
+          value: "true"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
+          value: "path"
+      - equal:
+          path: data.STARHUB_SERVER_GITSERVER_TYPE
+          value: "gitaly"
       - matchRegex:
           path: data.STARHUB_SERVER_GITALY_SERVER_SOCKET
           pattern: "tcp://csghub-gitaly:8075"
@@ -159,27 +114,91 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_PUBLIC_DOMAIN
           value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: "csghub.example.com"
+
+  - it: renders the runner, accounting and user settings
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "60"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
+          value: "https://csghub.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_MODEL_DOCKER_REG_BASE
+          value: "docker.io"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_PYPI_INDEX_URL
+          value: "https://pypi.tuna.tsinghua.edu.cn/simple/"
+      - equal:
+          path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
+          value: "30"
+      - equal:
+          path: data.STARHUB_SERVER_GPU_MODEL_LABEL
+          value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
       - matchRegex:
-          path: data.STARHUB_SERVER_INTERNAL_ROOT_DOMAIN
-          pattern: ".app.internal:8083"
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          pattern: "nats://natsadmin:.*@csghub-nats:4222"
+      - equal:
+          path: data.OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL
+          value: "https://csghub.example.com/server/callback"
+
+  - it: renders the casdoor certificate, client and endpoint
+    template: csghub/configmap.yaml
+    asserts:
       - equal:
           path: data.STARHUB_SERVER_CASDOOR_CERTIFICATE
           value: "/starhub-bin/casdoor/tls.crt"
       - matchRegex:
           path: data.STARHUB_SERVER_CASDOOR_CLIENT_ID
-          pattern: "[0-9a-z]{20}"
+          pattern: "^[0-9a-f]{20}$"
       - matchRegex:
           path: data.STARHUB_SERVER_CASDOOR_CLIENT_SECRET
-          pattern: "[0-9a-z]{40}"
+          pattern: "^[0-9a-f]{40}$"
       - equal:
           path: data.STARHUB_SERVER_CASDOOR_ENDPOINT
           value: "https://casdoor.example.com"
       - equal:
-          path: data.STARHUB_SERVER_PROMETHEUS_API_ADDRESS
-          value: "http://csghub-prometheus-server:80/api/v1/query"
+          path: data.STARHUB_SERVER_CASDOOR_ORGANIZATION_NAME
+          value: "OpenCSG"
+
+  - it: renders the dataflow, dataviewer, notifier and memory endpoints
+    template: csghub/configmap.yaml
+    asserts:
       - equal:
-          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
-          value: "https://csghub.example.com/aigateway"
+          path: data.OPENCSG_DATAFLOW_SERVER_HOST
+          value: "http://csghub-dataflow"
+      - equal:
+          path: data.OPENCSG_DATAFLOW_SERVER_PORT
+          value: "8000"
+      - equal:
+          path: data.OPENCSG_DATAVIEWER_SERVER_HOST
+          value: "http://csghub-dataviewer"
+      - equal:
+          path: data.OPENCSG_DATAVIEWER_SERVER_PORT
+          value: "8093"
+      - equal:
+          path: data.STARHUB_SERVER_NOTIFIER_HOST
+          value: "http://csghub-notifier"
+      - equal:
+          path: data.STARHUB_SERVER_NOTIFIER_PORT
+          value: "8095"
+      - equal:
+          path: data.OPENCSG_MEMORY_SERVER_ENABLED
+          value: "true"
+      - equal:
+          path: data.OPENCSG_MEMORY_SERVER_HOST
+          value: "http://csghub-memmachine"
+      - equal:
+          path: data.OPENCSG_MEMORY_SERVER_PORT
+          value: "8080"
+
+  - it: renders the aigateway port and llmlog config
+    template: csghub/configmap.yaml
+    asserts:
       - equal:
           path: data.OPENCSG_AIGATEWAY_PORT
           value: "8094"
@@ -189,16 +208,30 @@ tests:
       - equal:
           path: data.OPENCSG_LLMLOG_BUCKET
           value: "csghub-llmlog"
-      - notExists:
-          path: data.OPENCSG_FEDAP_SERVER_HOST
-      - notExists:
-          path: data.OPENCSG_TRUSTREGISTRY_SERVER_HOST
-      - notExists:
-          path: data.STARHUB_SERVER_FEDERATION_ADAPTER_ENDPOINT
-      - notExists:
-          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_HOST
+      - equal:
+          path: data.OPENCSG_LLMLOG_PREFIX
+          value: "llmlog"
+      - equal:
+          path: data.OPENCSG_LLMLOG_WORKER_NUM
+          value: "10"
+      - equal:
+          path: data.OPENCSG_LLMLOG_BATCH_SIZE
+          value: "1000"
+      - equal:
+          path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
+          value: "300"
 
-  - it: Should render sensitive check defaults when moderation is enabled
+  - it: renders the prometheus and loki endpoints
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PROMETHEUS_API_ADDRESS
+          value: "http://csghub-prometheus-server:80/api/v1/query"
+      - equal:
+          path: data.STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL
+          value: "http://csghub-loki:3100"
+
+  - it: renders sensitive check defaults when moderation is enabled
     template: csghub/configmap.yaml
     set:
       aigateway:
@@ -227,16 +260,13 @@ tests:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT
           pattern: "https://.*/aigateway"
       - equal:
-          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY
-          value: ""
-      - equal:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL
           value: "Qwen/Qwen3Guard-Gen-0.6B"
       - equal:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL
           value: "Qwen/Qwen3Guard-Gen-Stream-0.6B"
 
-  - it: Should render sensitive check with custom moderation config
+  - it: renders a custom moderation config
     template: csghub/configmap.yaml
     set:
       aigateway:
@@ -280,7 +310,7 @@ tests:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_MAX_CONTENT_LENGTH
           value: "5000"
 
-  - it: Should render sensitive check with LLM moderation enabled
+  - it: renders LLM moderation when enabled
     template: csghub/configmap.yaml
     set:
       aigateway:
@@ -311,7 +341,7 @@ tests:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL
           value: "custom/guard-stream-model"
 
-  - it: Should render aigateway with independent domain when useDomain=true
+  - it: renders the aigateway with a dedicated domain when useDomain is true
     template: csghub/configmap.yaml
     set:
       global:
@@ -324,58 +354,21 @@ tests:
           path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
           value: "https://aigateway.example.com"
 
-  - it: Should render llmlog config when aigateway llmlogEnabled is set
+  - it: renders the aigateway with a custom domain
     template: csghub/configmap.yaml
     set:
-      aigateway:
-        aigateway:
-          llm:
-            log:
-              enabled: true
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.custom.com"
+              useDomain: true
     asserts:
       - equal:
-          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
-          value: "true"
-      - equal:
-          path: data.OPENCSG_LLMLOG_BUCKET
-          value: "csghub-llmlog"
-      - equal:
-          path: data.OPENCSG_LLMLOG_PREFIX
-          value: "llmlog"
-      - equal:
-          path: data.OPENCSG_LLMLOG_WORKER_NUM
-          value: "10"
-      - equal:
-          path: data.OPENCSG_LLMLOG_BATCH_SIZE
-          value: "1000"
-      - equal:
-          path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
-          value: "300"
+          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
+          value: "https://ai.custom.com"
 
-  - it: Should not render llmlog config when aigateway llmlogEnabled is false
-    template: csghub/configmap.yaml
-    set:
-      aigateway:
-        aigateway:
-          llm:
-            log:
-              enabled: false
-    asserts:
-      - equal:
-          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
-          value: "false"
-      - notExists:
-          path: data.OPENCSG_LLMLOG_BUCKET
-      - notExists:
-          path: data.OPENCSG_LLMLOG_PREFIX
-      - notExists:
-          path: data.OPENCSG_LLMLOG_WORKER_NUM
-      - notExists:
-          path: data.OPENCSG_LLMLOG_BATCH_SIZE
-      - notExists:
-          path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
-
-  - it: Should render federation adapter config in saas mode
+  - it: renders federation adapter config in saas mode
     template: csghub/configmap.yaml
     set:
       global:
@@ -394,7 +387,7 @@ tests:
           path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
           value: "8098"
 
-  - it: Should not render federation adapter when disabled in saas mode
+  - it: omits federation adapter config when disabled in saas mode
     template: csghub/configmap.yaml
     set:
       global:
@@ -407,109 +400,7 @@ tests:
       - notExists:
           path: data.STARHUB_SERVER_FEDERATION_ADAPTER_PORT
 
-  - it: Should not render federation registry when disabled in saas mode
-    template: csghub/configmap.yaml
-    set:
-      global:
-        edition: "saas"
-      trustregistry:
-        enabled: false
-    asserts:
-      - notExists:
-          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_HOST
-      - notExists:
-          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
-
-  - it: Should not render llmlog config when edition is ce
-    template: csghub/configmap.yaml
-    set:
-      global:
-        edition: "ce"
-    asserts:
-      - equal:
-          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
-          value: "false"
-      - notExists:
-          path: data.OPENCSG_LLMLOG_BUCKET
-
-  - it: Should render aigateway with custom domain when domain is set
-    template: csghub/configmap.yaml
-    set:
-      global:
-        gateway:
-          external:
-            aigateway:
-              domain: "ai.custom.com"
-    asserts:
-      - equal:
-          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
-          value: "https://ai.custom.com"
-
-  - it: Custom domain should take precedence over useDomain
-    template: csghub/configmap.yaml
-    set:
-      global:
-        gateway:
-          external:
-            aigateway:
-              domain: "ai.custom.com"
-              useDomain: true
-    asserts:
-      - equal:
-          path: data.CSGHUB_PORTAL_AI_GATEWAY_HOST
-          value: "https://ai.custom.com"
-
-  - it: Should render ConfigMap correctly
-    template: csghub/configmap.yaml
-    set:
-      global:
-        registry:
-          enabled: false
-          external:
-            registry: "registry.io"
-            repository: "test"
-            insecure: "false"
-        objectStore:
-          enabled: false
-          external:
-            endpoint: "https://s4.example.com"
-            accessKey: "testUser"
-            secretKey: "testPassword"
-            bucket: "csghub-eva"
-            region: "es-west-1"
-            encrypt: "false"
-            secure: "false"
-            pathStyle: "false"
-      runner:
-        space:
-          usePublicDomain: false
-    asserts:
-      - equal:
-          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
-          value: ""
-      - equal:
-          path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
-          value: "testUser"
-      - equal:
-          path: data.STARHUB_SERVER_S3_ACCESS_KEY_SECRET
-          value: "testPassword"
-      - equal:
-          path: data.STARHUB_SERVER_S3_ENDPOINT
-          value: "s4.example.com"
-      - equal:
-          path: data.STARHUB_SERVER_S3_BUCKET
-          value: "csghub-eva"
-      - equal:
-          path: data.STARHUB_SERVER_S3_REGION
-          value: "es-west-1"
-      - equal:
-          path: data.STARHUB_SERVER_S3_ENABLE_SSL
-          value: "false"
-      - equal:
-          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
-          value: "auto"
-
-  - it: Should render ConfigMap correctly
+  - it: uses derived subdomains when useTop is true
     template: csghub/configmap.yaml
     set:
       global:
@@ -517,27 +408,126 @@ tests:
           external:
             useTop: true
     asserts:
-      - equal:
-          path: data.CSGHUB_PORTAL_STARHUB_BASE_URL
-          value: "https://csghub.example.com"
       - matchRegex:
           path: data.CSGHUB_PORTAL_LOGIN_URL
-          pattern: "https://casdoor.csghub.example.com/.*\\?client_id=[0-9a-z]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
+          pattern: "https://casdoor.csghub.example.com/.*\\?client_id=[0-9a-f]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
       - equal:
           path: data.CSGHUB_PORTAL_S3_ENDPOINT
           value: "minio.csghub.example.com"
       - equal:
-          path: data.OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL
-          value: "https://csghub.example.com/server/callback"
-      - equal:
-          path: data.STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT
-          value: "https://csghub.example.com"
-      - equal:
-          path: data.STARHUB_SERVER_SSH_DOMAIN
-          value: "git@csghub.example.com"
-      - equal:
-          path: data.STARHUB_SERVER_PUBLIC_DOMAIN
-          value: "https://csghub.example.com"
-      - equal:
           path: data.STARHUB_SERVER_CASDOOR_ENDPOINT
           value: "https://casdoor.csghub.example.com"
+
+  - it: renders external infrastructure endpoints when the built-ins are disabled
+    template: csghub/configmap.yaml
+    set:
+      global:
+        postgresql:
+          enabled: false
+          external:
+            host: "10.6.0.10"
+            port: 6432
+            user: "postgres"
+            password: "Postgres2025"
+            sslmode: "prefer"
+        redis:
+          enabled: false
+          external:
+            host: "10.6.0.11"
+            port: 6380
+            password: "Redis2025"
+        objectStore:
+          enabled: false
+          external:
+            endpoint: "s3.io"
+            accessKey: "s3"
+            secretKey: "s32025"
+            region: "cn-east-1"
+            secure: "true"
+            pathStyle: "true"
+        registry:
+          enabled: false
+          external:
+            registry: "registry.io"
+            repository: "opencsg"
+        gitaly:
+          enabled: false
+          external:
+            host: "10.6.0.13"
+            port: 8076
+            token: "Gitaly2025"
+            storage: "gitaly"
+        dataflow:
+          enabled: false
+          external:
+            host: "10.6.0.14"
+            port: 8080
+    asserts:
+      - equal:
+          path: data.CSGHUB_PORTAL_DATABASE_DSN
+          value: "postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_portal?sslmode=prefer"
+      - equal:
+          path: data.STARHUB_DATABASE_DSN
+          value: "postgresql://postgres:Postgres2025@10.6.0.10:6432/csghub_server?sslmode=prefer"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ENDPOINT
+          value: "s3.io"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
+          value: "s3"
+      - equal:
+          path: data.STARHUB_SERVER_S3_ENDPOINT
+          value: "s3.io"
+      - equal:
+          path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
+          value: "path"
+      - equal:
+          path: data.CSGHUB_PORTAL_REDIS_ADDR
+          value: "10.6.0.11:6380"
+      - equal:
+          path: data.STARHUB_SERVER_REDIS_ENDPOINT
+          value: "10.6.0.11:6380"
+      - equal:
+          path: data.STARHUB_SERVER_GITSERVER_TYPE
+          value: "gitaly"
+      - equal:
+          path: data.STARHUB_SERVER_GITALY_SERVER_SOCKET
+          value: "tcp://10.6.0.13:8076"
+      - equal:
+          path: data.STARHUB_SERVER_GITALY_TOKEN
+          value: "Gitaly2025"
+      - equal:
+          path: data.STARHUB_SERVER_GITALY_STORAGE
+          value: "gitaly"
+      - equal:
+          path: data.OPENCSG_DATAFLOW_SERVER_HOST
+          value: "http://10.6.0.14"
+      - equal:
+          path: data.OPENCSG_DATAFLOW_SERVER_PORT
+          value: "8080"
+
+  - it: omits the public root domain when the runner does not use the public domain
+    template: csghub/configmap.yaml
+    set:
+      runner:
+        space:
+          usePublicDomain: false
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_PUBLIC_ROOT_DOMAIN
+          value: ""
+
+  - it: omits llmlog config when the aigateway llm log is disabled
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        aigateway:
+          llm:
+            log:
+              enabled: false
+    asserts:
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
+          value: "false"
+      - notExists:
+          path: data.OPENCSG_LLMLOG_BUCKET

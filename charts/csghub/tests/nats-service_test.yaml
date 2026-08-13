@@ -1,0 +1,70 @@
+# Test suite for the CSGHub NATS Service.
+#
+# The NATS Service is a headless ClusterIP service exposing the client port
+# 4222 and the HTTP monitoring port 8222.
+
+suite: Test NATS Service
+templates:
+  - nats/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the headless Service metadata with standard labels
+    template: nats/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-nats"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "nats"
+
+  - it: renders the client and monitoring ports with a None cluster IP
+    template: nats/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.clusterIP
+          value: "None"
+      - equal:
+          path: spec.ports[0].port
+          value: 4222
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 4222
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "nats"
+      - equal:
+          path: spec.ports[1].port
+          value: 8222
+      - equal:
+          path: spec.ports[1].name
+          value: "nats-monitor"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "nats"
+
+  - it: honors a custom client port
+    template: nats/service.yaml
+    set:
+      nats:
+        service:
+          port: 4223
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 4223

@@ -1,0 +1,55 @@
+# Test suite for the CSGHub PostgreSQL ConfigMap.
+#
+# The ConfigMap renders the runtime postgresql.conf override with the
+# dynamically-configured parameters.
+
+suite: Test PostgreSQL ConfigMap
+templates:
+  - postgresql/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with the postgresql service label
+    template: postgresql/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: "csghub-postgresql"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "postgresql"
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "include_if_exists = '/var/lib/postgresql/data/postgresql.conf'"
+
+  - it: renders the default runtime parameters
+    template: postgresql/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "max_connections = 300"
+
+  - it: renders the configured runtime parameters
+    template: postgresql/configmap.yaml
+    set:
+      postgresql:
+        parameters:
+          max_connections: 666
+          shared_buffers: "1024MB"
+    asserts:
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "max_connections = '666'"
+      - matchRegex:
+          path: data["runtime.conf"]
+          pattern: "shared_buffers = '1024MB'"

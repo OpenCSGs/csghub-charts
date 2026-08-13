@@ -1,0 +1,49 @@
+# Test suite for the CSGHub Notifier Service.
+#
+# The Notifier Service exposes the notifier port 8095.
+
+suite: Test Notifier Service
+templates:
+  - csghub/notifier/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata with standard labels
+    template: csghub/notifier/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: "csghub-notifier"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "notifier"
+
+  - it: renders the notifier port 8095
+    template: csghub/notifier/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].port
+          value: 8095
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8095
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.ports[0].name
+          value: "notifier"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "notifier"
