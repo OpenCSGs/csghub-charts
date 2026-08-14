@@ -400,6 +400,19 @@ tests:
       - notExists:
           path: data.STARHUB_SERVER_FEDERATION_ADAPTER_PORT
 
+  - it: omits federation registry host when trustregistry is disabled in saas mode
+    template: csghub/configmap.yaml
+    set:
+      global:
+        edition: "saas"
+      trustregistry:
+        enabled: false
+    asserts:
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_HOST
+      - notExists:
+          path: data.STARHUB_SERVER_FEDERATION_REGISTRY_PORT
+
   - it: uses derived subdomains when useTop is true
     template: csghub/configmap.yaml
     set:
@@ -473,6 +486,39 @@ tests:
           path: data.CSGHUB_PORTAL_S3_ENDPOINT
           value: "s3.io"
       - equal:
+          path: data.CSGHUB_PORTAL_S3_ACCESS_KEY_ID
+          value: "s3"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ACCESS_KEY_SECRET
+          value: "s32025"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_BUCKET
+          value: "csghub-portal-public"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_REGION
+          value: "cn-east-1"
+      - equal:
+          path: data.CSGHUB_PORTAL_S3_ENABLE_SSL
+          value: "true"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_ENDPOINT
+          value: "s3.io"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_ID
+          value: "s3"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_ACCESS_KEY_SECRET
+          value: "s32025"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_BUCKET
+          value: "csghub-portal"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_REGION
+          value: "cn-east-1"
+      - equal:
+          path: data.CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL
+          value: "true"
+      - equal:
           path: data.STARHUB_SERVER_S3_ACCESS_KEY_ID
           value: "s3"
       - equal:
@@ -525,6 +571,18 @@ tests:
           llm:
             log:
               enabled: false
+    asserts:
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE
+          value: "false"
+      - notExists:
+          path: data.OPENCSG_LLMLOG_BUCKET
+
+  - it: omits llmlog config when the global edition is ce
+    template: csghub/configmap.yaml
+    set:
+      global:
+        edition: "ce"
     asserts:
       - equal:
           path: data.OPENCSG_AIGATEWAY_LLMLOG_ENABLE

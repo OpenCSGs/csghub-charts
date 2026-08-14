@@ -73,3 +73,41 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: adds console redirect and rewrite rules when the minio console is enabled
+    template: minio/httproutes.yaml
+    set:
+      minio:
+        console:
+          enabled: true
+    asserts:
+      - lengthEqual:
+          path: spec.rules
+          count: 3
+      - equal:
+          path: spec.rules[1].matches[0].path.type
+          value: "Exact"
+      - equal:
+          path: spec.rules[1].matches[0].path.value
+          value: "/console"
+      - equal:
+          path: spec.rules[1].filters[0].type
+          value: "RequestRedirect"
+      - equal:
+          path: spec.rules[1].filters[0].requestRedirect.path.replaceFullPath
+          value: "/console/"
+      - equal:
+          path: spec.rules[1].filters[0].requestRedirect.statusCode
+          value: 301
+      - equal:
+          path: spec.rules[2].matches[0].path.value
+          value: "/console/"
+      - equal:
+          path: spec.rules[2].filters[0].type
+          value: "URLRewrite"
+      - equal:
+          path: spec.rules[2].backendRefs[0].name
+          value: "csghub-minio"
+      - equal:
+          path: spec.rules[2].backendRefs[0].port
+          value: 9001

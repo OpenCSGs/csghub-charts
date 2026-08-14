@@ -82,6 +82,23 @@ tests:
           path: spec.template.spec.containers[0].image
           value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/minio/minio:RELEASE.2025-09-07T16-13-09Z"
 
+  - it: exposes the minio console address and port when the console is enabled
+    template: minio/statefulset.yaml
+    set:
+      minio:
+        console:
+          enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--console-address"
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].name
+          value: "minio-console"
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].containerPort
+          value: 9001
+
   - it: renders nothing when the built-in object storage is disabled
     template: minio/statefulset.yaml
     set:
