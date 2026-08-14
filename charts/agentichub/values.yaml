@@ -173,7 +173,7 @@ csgbot:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgbot"
-    tag: "v0.6.2-ee"
+    tag: "v0.6.7-ee"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -230,7 +230,7 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/csgclaw-server-sandbox"
-          tag: "2026060701"
+          tag: "2026080703"
       csgclawAgent:
         image:
           # registry: "docker.io"
