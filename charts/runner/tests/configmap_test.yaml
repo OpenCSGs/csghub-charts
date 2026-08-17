@@ -185,6 +185,7 @@ tests:
     asserts:
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
+          # yamllint disable-line rule:line-length
           value: "--compressed-caching=true,--single-snapshot,--log-format=text,--cache=true,--cache-ttl=24h,--cache-repo=registry.example.com/csghub,--build-arg=PyPI=https://pypi.example.com/simple,--build-arg=HF_ENDPOINT=https://csghub.example.com/hf"
 
   - it: appends skip-tls and extra args when registry insecure and extra args are set
@@ -209,6 +210,7 @@ tests:
           value: "999"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS
+          # yamllint disable-line rule:line-length
           value: "--compressed-caching=true,--single-snapshot,--log-format=text,--cache=true,--cache-ttl=24h,--cache-repo=registry.example.com/csghub,--build-arg=PyPI=https://pypi.example.com/simple,--build-arg=HF_ENDPOINT=https://csghub.example.com/hf,--skip-tls-verify,--skip-tls-verify-pull,--insecure,--insecure-pull,--custom-arg=x"
 
   ## ------------------------------------------------------------------
@@ -475,7 +477,7 @@ tests:
     set:
       runner:
         region: ""
-        hearBeatIntervalInSec: ""
+        hearbeatIntervalInSec: ""
       model:
         deployTimeoutInMin: ""
         deployStatusCheckInterval: ""

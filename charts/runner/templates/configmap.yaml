@@ -117,7 +117,7 @@ data:
   STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL: {{ $service.model.deployStatusCheckInterval | default 10 | quote }}
   STARHUB_SERVER_CLUSTER_ID: {{ $service.originClusterID | quote }}
   ## Runner Configuration for HeartBeat
-  STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC: {{ $service.runner.hearBeatIntervalInSec | default 120 | quote }}
+  STARHUB_SERVER_RUNNER_HEARTBEAT_INTERVAL_IN_SEC: {{ $service.runner.hearbeatIntervalInSec | default 120 | quote }}
 
   ## Runner Configuration for S3
   {{- $s3Config := $service.objectStore }}

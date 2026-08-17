@@ -11,6 +11,6 @@ metadata:
   namespace: {{ include "namespace.spaces" . }}
 spec:
   hard:
-    requests.nvidia.com/gpu: "2"
-    limits.nvidia.com/gpu: "2"
+    requests.nvidia.com/gpu: {{ .Values.resourceQuota.gpu | quote }}
+    limits.nvidia.com/gpu: {{ .Values.resourceQuota.gpu | quote }}
 {{- end }}
