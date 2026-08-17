@@ -54,7 +54,7 @@
           "type": "object",
           "description": "Image management",
           "properties": {
-            "registry": { "type": "string", "description": "Custom image registry (overrides local registry)" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$", "description": "Custom image registry (overrides local registry)" },
             "tag": { "type": "string", "description": "Image tag format: {{version}}-{{edition}}" },
             "pullPolicy": { "type": "string", "description": "Image pull policy: Always, IfNotPresent, Never" },
             "pullSecrets": { "type": "array", "description": "Private registry authentication secrets", "items": { "type": "string" } }
@@ -78,12 +78,13 @@
               "type": "object",
               "description": "External PostgreSQL connection",
               "properties": {
-                "host": { "type": "string", "description": "PostgreSQL host address" },
-                "port": { "type": "integer", "description": "PostgreSQL port" },
+                "host": { "type": "string", "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-\\.]*[a-zA-Z0-9])?$", "description": "PostgreSQL host address" },
+                "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "PostgreSQL port" },
                 "user": { "type": "string", "description": "Database username" },
                 "password": { "type": "string", "description": "Database password" },
                 "timezone": { "type": "string", "description": "Database timezone" },
-                "sslmode": { "type": "string", "description": "SSL mode" }
+                "sslmode": { "type": "string", "description": "SSL mode" },
+                "database": { "type": "string", "description": "Database name" }
               },
               "additionalProperties": false
             }
@@ -98,7 +99,12 @@
         }
       }
     },
-    "externalUrl": { "type": "string", "description": "External CSGHub URL for accessing the hub interface" },
+    "externalUrl": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$", "description": "External CSGHub URL for accessing the hub interface. Optional when global.chartContext.isBuiltIn=true." }
+      ]
+    },
     "gateway": {
       "type": "object",
       "description": "Gateway API enablement",
@@ -124,7 +130,7 @@
           "type": "object",
           "description": "Image settings (overrides global.image)",
           "properties": {
-            "registry": { "type": "string", "description": "Image registry" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$", "description": "Image registry" },
             "repository": { "type": "string", "description": "Image repository" },
             "tag": { "type": "string", "description": "Image version tag" },
             "pullPolicy": { "type": "string", "description": "Image pull policy" },
@@ -135,7 +141,7 @@
           "type": "object",
           "description": "PostgreSQL configuration",
           "properties": {
-            "host": { "type": "string", "description": "PostgreSQL host address" },
+            "host": { "type": "string", "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-\\.]*[a-zA-Z0-9])?$", "description": "PostgreSQL host address" },
             "port": { "type": "integer", "description": "PostgreSQL port" },
             "database": { "type": "string", "description": "Database name" },
             "user": { "type": "string", "description": "Database username" },
@@ -158,6 +164,68 @@
           "description": "Table rename migration job",
           "properties": {
             "enabled": { "type": "boolean", "description": "Enable or disable rename-tables migration Job" }
+          }
+        }
+      }
+    },
+    "labelStudio": {
+      "type": "object",
+      "description": "Label Studio Configuration",
+      "properties": {
+        "image": {
+          "type": "object",
+          "description": "Image settings (overrides global.image)",
+          "properties": {
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$", "description": "Image registry" },
+            "repository": { "type": "string", "description": "Image repository" },
+            "tag": { "type": "string", "description": "Image version tag" },
+            "pullPolicy": { "type": "string", "description": "Image pull policy" },
+            "pullSecrets": { "type": "array", "description": "Docker registry secrets", "items": { "type": "string" } }
+          }
+        },
+        "gateway": {
+          "type": "object",
+          "description": "Gateway configuration",
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Enable or disable gateway" },
+            "tls": {
+              "type": "object",
+              "description": "TLS settings for gateway",
+              "properties": {
+                "enabled": { "type": "boolean", "description": "Enable or disable TLS" },
+                "secretName": { "type": "string", "description": "TLS secret name" }
+              }
+            }
+          }
+        },
+        "postgresql": {
+          "type": "object",
+          "description": "Database configuration",
+          "properties": {
+            "host": { "type": "string", "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-\\.]*[a-zA-Z0-9])?$", "description": "PostgreSQL host address" },
+            "port": { "type": "integer", "description": "PostgreSQL port" },
+            "database": { "type": "string", "description": "Database name" },
+            "user": { "type": "string", "description": "Database username" },
+            "password": { "type": "string", "description": "Database password" },
+            "timezone": { "type": "string", "description": "Database timezone" },
+            "sslmode": { "type": "string", "description": "SSL mode" }
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "description": "Persistent volume configuration",
+          "properties": {
+            "storageClass": { "type": "string", "description": "StorageClass for dynamic provisioning" },
+            "accessModes": { "type": "array", "description": "Volume access permissions", "items": { "type": "string" } },
+            "size": { "type": "string", "description": "Disk space allocation" }
+          }
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Pod security context",
+          "properties": {
+            "runAsUser": { "type": "integer", "description": "User ID" },
+            "runAsGroup": { "type": "integer", "description": "Group ID" }
           }
         }
       }
