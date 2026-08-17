@@ -217,7 +217,7 @@ tests:
     asserts:
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.example.com,csghub.example.com,docker.io"
+          value: "csghub.example.com,docker.io"
 
   - it: composes the tag resolving list from domain, externalUrl and registry
     template: knativeserving.yaml
@@ -304,7 +304,7 @@ tests:
           value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/webhook:v1.22.0"
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.example.com,csghub.example.com,opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          value: "csghub.example.com,opencsg-registry.cn-beijing.cr.aliyuncs.com"
       - equal:
           path: spec.config.deployment.queue-sidecar-image
           value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/queue:v1.22.0"
