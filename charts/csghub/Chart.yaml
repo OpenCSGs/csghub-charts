@@ -52,15 +52,15 @@ dependencies:
     repository: https://charts.opencsg.com/infra
     condition: prometheus.enabled
   - name: runner
-    version: 2.4.0
+    version: 2.4.1
     repository: https://charts.opencsg.com/csghub
     condition: runner.enabled
   - name: dataflow
-    version: 2.4.0
+    version: 2.4.1
     repository: https://charts.opencsg.com/csghub
     condition: dataflow.enabled
   - name: csgship
-    version: 0.4.3
+    version: 0.4.4
     repository: https://charts.opencsg.com/csghub
     condition: csgship.enabled
   - name: memmachine
@@ -73,7 +73,7 @@ dependencies:
     repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
   - name: agentichub
-    version: 0.6.7
+    version: 0.6.8
     repository: https://charts.opencsg.com/csghub
     condition: agentichub.enabled
   - name: superset
