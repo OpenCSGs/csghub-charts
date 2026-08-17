@@ -50,3 +50,17 @@ tests:
       - equal:
           path: metadata.name
           value: "csghub-gpu-quota"
+
+  - it: overrides the gpu quota when resourceQuota.gpu is set
+    template: resource-quota.yaml
+    set:
+      resourceQuota:
+        enabled: true
+        gpu: 8
+    asserts:
+      - equal:
+          path: spec.hard["requests.nvidia.com/gpu"]
+          value: "8"
+      - equal:
+          path: spec.hard["limits.nvidia.com/gpu"]
+          value: "8"

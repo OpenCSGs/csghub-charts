@@ -126,7 +126,7 @@ runner:
   # imageBuilderStatusTTL: 300           # TTL for kaniko build pod status
   # imageBuilderKanikoArgs: []             # Extra Kaniko build arguments
 
-  # hearBeatIntervalInSec: 120           # Runner heartbeat interval (seconds)
+  # hearbeatIntervalInSec: 120           # Runner heartbeat interval (seconds)
 
   ## Knative networking configuration
   ## e.g. http://<load balancer ip> or http://kourier-internal.kourier-system.svc.cluster.local
@@ -260,6 +260,8 @@ annotations: {}
 ## Resource Quota enabled
 resourceQuota:
   enabled: false
+  ## GPU quota applied to both requests and limits
+  gpu: 2
 
 ## Resource Requests and Limits
 resources: {}
