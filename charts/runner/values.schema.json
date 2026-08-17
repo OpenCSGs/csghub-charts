@@ -46,9 +46,9 @@
                   "type": "object",
                   "description": "NodePort mapping (required when type is NodePort)",
                   "properties": {
-                    "http": { "type": "integer", "description": "NodePort for HTTP" },
-                    "https": { "type": "integer", "description": "NodePort for HTTPS" },
-                    "gitssh": { "type": "integer", "description": "NodePort for Git SSH" }
+                    "http": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "NodePort for HTTP" },
+                    "https": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "NodePort for HTTPS" },
+                    "gitssh": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "NodePort for Git SSH" }
                   }
                 }
               }
@@ -67,10 +67,10 @@
           "type": "object",
           "description": "Global image configuration",
           "properties": {
-            "registry": { "type": "string" },
-            "registryPolicy": { "type": "string", "description": "Registry policy: default or force" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
+            "registryPolicy": { "type": "string", "enum": ["default", "force"], "description": "Registry policy: default or force" },
             "tag": { "type": "string" },
-            "pullPolicy": { "type": "string" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
             "pullSecrets": { "type": "array", "items": { "type": "string" } }
           }
         },
@@ -96,14 +96,19 @@
         }
       }
     },
-    "externalUrl": { "type": "string", "description": "External CSGHub URL for accessing the hub interface" },
+    "externalUrl": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$", "description": "External CSGHub URL for accessing the hub interface. Optional when global.chartContext.isBuiltIn=true." }
+      ]
+    },
     "image": {
       "type": "object",
       "properties": {
-        "registry": { "type": "string" },
+        "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
         "repository": { "type": "string" },
         "tag": { "type": "string" },
-        "pullPolicy": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
         "pullSecrets": { "type": "array", "items": { "type": "string" } }
       }
     },
@@ -133,8 +138,8 @@
     "service": {
       "type": "object",
       "properties": {
-        "type": { "type": "string" },
-        "port": { "type": "integer" },
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
         "protocol": { "type": "string" }
       }
     },
@@ -146,14 +151,14 @@
           "description": "Runner operation configuration",
           "properties": {
             "region": { "type": "string", "description": "Region the runner belongs to" },
-            "interval": { "type": "integer", "description": "Communication interval with server (seconds)" },
+            "interval": { "type": "integer", "minimum": 1, "description": "Communication interval with server (seconds)" },
             "namespace": { "type": "string", "description": "Namespace for user-deployed workloads" },
             "mergingNamespace": { "type": "string", "enum": ["multi", "single", "disable"], "description": "Namespace merging strategy" },
             "imageBuilderGitImage": { "type": "string", "description": "Override image builder Git image" },
             "imageBuilderKanikoImage": { "type": "string", "description": "Override image builder Kaniko image" },
             "imageBuilderStatusTTL": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "TTL for kaniko build pod status" },
             "imageBuilderKanikoArgs": { "type": "array", "items": { "type": "string" }, "description": "Extra Kaniko build arguments" },
-            "hearbeatIntervalInSec": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Runner heartbeat interval (seconds)" },
+            "heartbeatIntervalInSec": { "oneOf": [{ "type": "string" }, { "type": "integer" }], "description": "Runner heartbeat interval (seconds)" },
             "applicationEndpoint": { "type": "string", "description": "Knative endpoint override (auto-detected if empty)" },
             "networkInterface": { "type": "string", "description": "Host network interface for distributed inference" },
             "storageClassName": { "type": "string", "description": "StorageClass for space persistent volumes" }
@@ -257,7 +262,12 @@
       "type": "object",
       "description": "External registry configuration",
       "properties": {
-        "registry": { "type": "string", "description": "External registry URL" },
+        "registry": {
+          "oneOf": [
+            { "type": "string", "maxLength": 0 },
+            { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$", "description": "External registry URL" }
+          ]
+        },
         "repository": { "type": "string", "description": "Repository namespace" },
         "username": { "type": "string", "description": "Registry username" },
         "password": { "type": "string", "description": "Registry password" },

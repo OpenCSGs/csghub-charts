@@ -9,18 +9,30 @@
       "properties": {
         "edition": {
           "type": "string",
-          "description": "Deployment edition: \"ce\" (Community) or \"ee\" (Enterprise)"
+          "enum": ["ce", "ee", "saas"],
+          "description": "Deployment edition"
         },
         "gateway": {
           "type": "object",
           "description": "Gateway configuration",
           "properties": {
-            "controllerName": {"type": "string"},
+            "controllerName": { "type": "string" },
             "service": {
               "type": "object",
               "properties": {
-                "type": {"type": "string"},
-                "nodePorts": {"type": "object", "additionalProperties": {"type": "integer"}}
+                "type": {
+                  "type": "string",
+                  "enum": ["LoadBalancer", "NodePort", "ClusterIP"]
+                },
+                "nodePorts": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer" },
+                  "properties": {
+                    "http": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                    "https": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                    "gitssh": { "type": "integer", "minimum": 1, "maximum": 65535 }
+                  }
+                }
               }
             },
             "external": {
@@ -49,11 +61,11 @@
         "image": {
           "type": "object",
           "properties": {
-            "registry": {"type": "string"},
-            "registryPolicy": {"type": "string"},
-            "tag": {"type": "string"},
-            "pullPolicy": {"type": "string"},
-            "pullSecrets": {"type": "array", "items": {"type": "string"}}
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
+            "registryPolicy": { "type": "string", "enum": ["default", "force"] },
+            "tag": { "type": "string" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+            "pullSecrets": { "type": "array", "items": { "type": "string" } }
           }
         },
         "persistence": {
@@ -117,11 +129,11 @@
     "image": {
       "type": "object",
       "properties": {
-        "registry": {"type": "string"},
-        "repository": {"type": "string"},
-        "tag": {"type": "string"},
-        "pullPolicy": {"type": "string"},
-        "pullSecrets": {"type": "array", "items": {"type": "string"}}
+        "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
+        "repository": { "type": "string" },
+        "tag": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+        "pullSecrets": { "type": "array", "items": { "type": "string" } }
       }
     },
     "logging": {"type": "object", "additionalProperties": true},
@@ -139,32 +151,28 @@
     "server": {
       "type": "object",
       "properties": {
-        "image": {"type": "object", "additionalProperties": true},
-        "gitlabShell": {"type": "object", "additionalProperties": true},
-        "multiSync": {"type": "object", "additionalProperties": true},
-        "swaggerAPI": {"type": "object", "additionalProperties": true},
-        "agent": {"type": "object", "additionalProperties": true},
-        "csgbot": {"type": "object", "additionalProperties": true},
-        "memory": {"type": "object", "additionalProperties": true},
-        "postgresql": {"type": "object", "additionalProperties": true},
-        "redis": {"type": "object", "additionalProperties": true},
-        "objectStore": {"type": "object", "additionalProperties": true},
-        "xnet": {"type": "object", "additionalProperties": true}
+        "image": { "type": "object", "additionalProperties": true },
+        "postgresql": { "type": "object", "additionalProperties": true },
+        "redis": { "type": "object", "additionalProperties": true },
+        "xnet": { "type": "object", "additionalProperties": true }
       }
     },
     "rproxy": {
       "type": "object",
       "properties": {
-        "coredns": {"type": "object", "additionalProperties": true},
-        "nginx": {"type": "object", "additionalProperties": true}
+        "coredns": { "type": "object", "additionalProperties": true },
+        "nginx": { "type": "object", "additionalProperties": true }
       }
     },
-    "notifier": {"type": "object", "additionalProperties": true},
-    "payment": {"type": "object", "additionalProperties": true},
-    "gateway": {
+    "notifier": { "type": "object", "additionalProperties": true },
+    "payment": { "type": "object", "additionalProperties": true },
+    "aigateway": {
       "type": "object",
       "properties": {
-        "moderation": {"type": "object", "additionalProperties": true}
+        "image": { "type": "object", "additionalProperties": true },
+        "service": { "type": "object", "additionalProperties": true },
+        "moderation": { "type": "object", "additionalProperties": true },
+        "llm": { "type": "object", "additionalProperties": true }
       }
     },
     "xnet": {
@@ -186,9 +194,12 @@
           "type": "object",
           "properties": {
             "region": {"type": "string"},
-            "interval": {"type": "integer"},
+            "interval": { "type": "integer", "minimum": 1 },
             "namespace": {"type": "string"},
-            "mergingNamespace": {"type": "string"},
+            "mergingNamespace": {
+              "type": "string",
+              "enum": ["multi", "single", "disable"]
+            },
             "applicationEndpoint": {"type": "string"},
             "networkInterface": {"type": "string"},
             "storageClassName": {"type": "string"}

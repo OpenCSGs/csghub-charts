@@ -31,7 +31,7 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": ["LoadBalancer", "NodePort"],
+                  "enum": ["LoadBalancer", "NodePort", "ClusterIP"],
                   "description": "Service type for Gateway"
                 }
               }
@@ -50,9 +50,10 @@
           "type": "object",
           "description": "Image management",
           "properties": {
-            "registry": { "type": "string", "description": "Custom image registry (overrides local registry)" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$", "description": "Custom image registry (overrides local registry)" },
+            "registryPolicy": { "type": "string", "enum": ["default", "force"], "description": "Registry policy" },
             "tag": { "type": "string", "description": "Image tag format: {{version}}-{{edition}}" },
-            "pullPolicy": { "type": "string", "description": "Image pull policy: Always, IfNotPresent, Never" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"], "description": "Image pull policy" },
             "pullSecrets": { "type": "array", "items": { "type": "string" }, "description": "Private registry authentication secrets" }
           }
         },
@@ -74,12 +75,13 @@
               "type": "object",
               "description": "External PostgreSQL connection",
               "properties": {
-                "host": { "type": "string", "description": "PostgreSQL host address" },
-                "port": { "type": "integer", "description": "PostgreSQL port" },
+                "host": { "type": "string", "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-\\.]*[a-zA-Z0-9])?$", "description": "PostgreSQL host address" },
+                "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "PostgreSQL port" },
                 "user": { "type": "string", "description": "Database username" },
                 "password": { "type": "string", "description": "Database password" },
                 "timezone": { "type": "string", "description": "Database timezone" },
-                "sslmode": { "type": "string", "description": "SSL mode" }
+                "sslmode": { "type": "string", "description": "SSL mode" },
+                "database": { "type": "string", "description": "Database name" }
               }
             }
           }
@@ -93,8 +95,8 @@
               "type": "object",
               "description": "External Redis configuration",
               "properties": {
-                "host": { "type": "string", "description": "Redis server hostname or IP" },
-                "port": { "type": "integer", "description": "Redis port number" },
+                "host": { "type": "string", "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9-\\.]*[a-zA-Z0-9])?$", "description": "Redis server hostname or IP" },
+                "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Redis port number" },
                 "password": { "type": "string", "description": "Redis authentication password" }
               }
             }
@@ -109,7 +111,12 @@
         }
       }
     },
-    "externalUrl": { "type": "string", "description": "External CSGHub URL for accessing the hub interface" },
+    "externalUrl": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$", "description": "External CSGHub URL for accessing the hub interface. Optional when global.chartContext.isBuiltIn=true." }
+      ]
+    },
     "gateway": {
       "type": "object",
       "description": "Gateway API enablement",
@@ -132,10 +139,10 @@
       "type": "object",
       "description": "Global image configuration",
       "properties": {
-        "registry": { "type": "string", "description": "Docker registry" },
+        "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$", "description": "Docker registry" },
         "repository": { "type": "string", "description": "Image repository" },
         "tag": { "type": "string", "description": "Image version tag" },
-        "pullPolicy": { "type": "string", "description": "Image pull policy: Always, IfNotPresent, Never" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"], "description": "Image pull policy" },
         "pullSecrets": { "type": "array", "items": { "type": "string" }, "description": "Docker registry secrets" }
       }
     },
@@ -238,18 +245,18 @@
         "image": {
           "type": "object",
           "properties": {
-            "registry": { "type": "string" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
             "repository": { "type": "string" },
             "tag": { "type": "string" },
-            "pullPolicy": { "type": "string" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
             "pullSecrets": { "type": "array", "items": { "type": "string" } }
           }
         },
         "service": {
           "type": "object",
           "properties": {
-            "type": { "type": "string" },
-            "port": { "type": "integer" },
+            "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
             "protocol": { "type": "string" }
           }
         },
@@ -264,18 +271,18 @@
         "image": {
           "type": "object",
           "properties": {
-            "registry": { "type": "string" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
             "repository": { "type": "string" },
             "tag": { "type": "string" },
-            "pullPolicy": { "type": "string" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
             "pullSecrets": { "type": "array", "items": { "type": "string" } }
           }
         },
         "service": {
           "type": "object",
           "properties": {
-            "type": { "type": "string" },
-            "port": { "type": "integer" },
+            "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
             "protocol": { "type": "string" }
           }
         },
@@ -290,18 +297,18 @@
         "image": {
           "type": "object",
           "properties": {
-            "registry": { "type": "string" },
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
             "repository": { "type": "string" },
             "tag": { "type": "string" },
-            "pullPolicy": { "type": "string" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
             "pullSecrets": { "type": "array", "items": { "type": "string" } }
           }
         },
         "service": {
           "type": "object",
           "properties": {
-            "type": { "type": "string" },
-            "port": { "type": "integer" },
+            "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
             "protocol": { "type": "string" }
           }
         },
