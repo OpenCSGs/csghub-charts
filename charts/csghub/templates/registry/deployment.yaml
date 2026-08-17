@@ -103,10 +103,6 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 10
             failureThreshold: 5
-          {{- if $service.readinessProbe }}
-          readinessProbe:
-            {{- toYaml $service.readinessProbe | nindent 12 }}
-          {{- end }}
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}
