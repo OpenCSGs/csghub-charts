@@ -52,7 +52,7 @@ tests:
           pattern: 'postgresql://csghub:[A-Za-z0-9+/=]{32}@csghub-postgresql:5432/csghub_xnet\?sslmode=disable'
       - equal:
           path: data.STARHUB_DATABASE_TIMEZONE
-          value: "Asia/Shanghai"
+          value: "Etc/UTC"
 
   - it: encodes the internal minio object store settings
     template: xnet/configmap.yaml
