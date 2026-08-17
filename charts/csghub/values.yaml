@@ -590,7 +590,7 @@ postgresql:
     - "csghub_superset"
 
   parameters: {}                             # PostgreSQL runtime parameters
-    # max_connections: 400                   # Dynamic parameters (triggers recreate)
+    # max_connections: 300                   # Dynamic parameters (triggers recreate)
     # shared_buffers: "128MB"                # Shared memory buffers
 
   persistence:
