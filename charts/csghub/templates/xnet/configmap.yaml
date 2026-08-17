@@ -26,7 +26,7 @@ data:
   {{- $pgConfig := include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml }}
   STARHUB_DATABASE_DRIVER: "pg"
   STARHUB_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "ctx" . "service" $service) | quote }}
-  STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timzone | default "Asia/Shanghai" | quote }}
+  STARHUB_DATABASE_TIMEZONE: {{ $pgConfig.timezone | quote }}
 
   ## XNet configuration for ObjectStore
   {{- $s3Config := include "common.s3.config" (dict "ctx" . "service" $service) | fromYaml }}
