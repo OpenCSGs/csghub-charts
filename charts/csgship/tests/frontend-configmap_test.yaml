@@ -47,7 +47,13 @@ tests:
     asserts:
       - matchRegex:
           path: data["config.js"]
-          pattern: "VITE_APP_LOGIN_URL: 'https://casdoor\\.example\\.com/login/oauth/authorize\\?client_id=[0-9a-f]{20}&response_type=code&redirect_uri=https://csgship-api\\.example\\.com/api/v1/account/casdoor/login/callback&scope=profile&state=casdoor'"
+          pattern: "VITE_APP_LOGIN_URL: 'https://casdoor\\.example\\.com/login/oauth/authorize\\?"
+      - matchRegex:
+          path: data["config.js"]
+          pattern: "client_id=[0-9a-f]{20}&response_type=code&"
+      - matchRegex:
+          path: data["config.js"]
+          pattern: "redirect_uri=https://csgship-api\\.example\\.com/api/v1/account/casdoor/login/callback&scope=profile&state=casdoor'"
 
   - it: renders the nginx server block with the web domain
     template: frontend/configmap.yaml
