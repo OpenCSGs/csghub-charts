@@ -392,3 +392,22 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  ## ------------------------------------------------------------------
+  ## Required-value validation
+  ## ------------------------------------------------------------------
+  - it: fails to render when hubAPIToken is empty in standalone mode
+    template: csgbot/configmap.yaml
+    set:
+      hubAPIToken: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "hubAPIToken is required"
+
+  - it: fails to render when externalUrl is empty in standalone mode
+    template: csgbot/configmap.yaml
+    set:
+      externalUrl: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "externalUrl is required"

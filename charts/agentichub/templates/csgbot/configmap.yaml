@@ -28,6 +28,8 @@ data:
       {{- $csghubSvc := include "common.names.custom" (list . "core") }}
       {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
       {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
+    {{- else }}
+      {{- $apiToken = required "hubAPIToken is required when global.chartContext.isBuiltIn=false" .Values.hubAPIToken }}
     {{- end }}
     hub-access-token = {{ $apiToken | quote }}
     {{- $agenticSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
@@ -40,6 +42,8 @@ data:
     {{- $csghubEndpoint := .Values.externalUrl }}
     {{- if $isBuiltIn }}
       {{- $csghubEndpoint = include "common.endpoint.csghub" . }}
+    {{- else }}
+      {{- $csghubEndpoint = required "externalUrl is required when global.chartContext.isBuiltIn=false" .Values.externalUrl }}
     {{- end }}
     endpoint = {{ $csghubEndpoint | quote }}
     portal-endpoint = {{ $csghubEndpoint | quote }}
