@@ -37,10 +37,18 @@ pre-commit:
             chart_name=$(basename "${chart_dir}")
             echo "Testing template rendering for ${chart_name}"
 
+            # Use tests/values.yaml as the rendering input when available, so that
+            # standalone-only fields (e.g. agentichub.hubAPIToken, dataflow.externalUrl,
+            # runner.originClusterID) are populated for the render check.
+            values_args=()
+            if [ -f "${chart_dir}tests/values.yaml" ]; then
+              values_args=(-f "${chart_dir}tests/values.yaml")
+            fi
+
             echo "🔧 Testing template rendering for ${chart_name}"
-            if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run=client > /dev/null 2>&1; then
+            if ! helm template "test-${chart_name}" "${chart_dir}" --dry-run=client "${values_args[@]}" > /dev/null 2>&1; then
               echo "❌ Template rendering failed for ${chart_name}"
-              helm template "test-${chart_name}" "${chart_dir}" --dry-run=client
+              helm template "test-${chart_name}" "${chart_dir}" --dry-run=client "${values_args[@]}"
               exit 1
             fi
 
