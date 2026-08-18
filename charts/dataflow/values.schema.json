@@ -100,10 +100,10 @@
       }
     },
     "externalUrl": {
-      "oneOf": [
-        { "type": "null" },
-        { "type": "string", "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$", "description": "External CSGHub URL for accessing the hub interface. Optional when global.chartContext.isBuiltIn=true." }
-      ]
+      "type": ["string", "null"],
+      "description": "External CSGHub URL for accessing the hub interface. Required when global.chartContext.isBuiltIn=false (template enforces via fail).",
+      "if": { "type": "string", "minLength": 1 },
+      "then": { "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$" }
     },
     "gateway": {
       "type": "object",

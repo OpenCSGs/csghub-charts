@@ -180,3 +180,14 @@ tests:
       - equal:
           path: data.LABEL_STUDIO_HOST
           value: "http://csghub.example.com/-/label-studio"
+
+  ## ------------------------------------------------------------------
+  ## Required-value validation
+  ## ------------------------------------------------------------------
+  - it: fails to render when externalUrl is empty in standalone mode
+    template: label-studio/configmap.yaml
+    set:
+      externalUrl: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "externalUrl is required"

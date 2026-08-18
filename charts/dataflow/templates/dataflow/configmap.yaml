@@ -20,7 +20,8 @@ data:
   CSGHUB_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   STUDIO_JUMP_URL: {{ printf "%s/-/label-studio" (include "common.endpoint.csghub" .) | quote }}
   {{- else }}
-  CSGHUB_ENDPOINT: {{ .Values.externalUrl | quote }}
+  {{- $externalUrl := required "externalUrl is required when global.chartContext.isBuiltIn=false" .Values.externalUrl }}
+  CSGHUB_ENDPOINT: {{ $externalUrl | quote }}
   STUDIO_JUMP_URL: {{ include "common.endpoint.labelstudio" . | quote }}
   {{- end }}
   DATA_DIR: "/data/dataflow"
