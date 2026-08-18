@@ -107,9 +107,9 @@ global:
       # accessKey: ""               # Access key for authentication
       # secretKey: ""               # Secret key for authentication
       # region: "cn-north-1"        # Storage region
-      # encrypt: "false"            # Enable server-side encryption
-      # secure: "false"             # Use HTTPS for connections
-      # pathStyle: "true"           # Use path-style addressing
+      # encrypt: false            # Enable server-side encryption
+      # secure: false             # Use HTTPS for connections
+      # pathStyle: true           # Use path-style addressing
 
   ## Container Registry configuration
   registry:
@@ -121,7 +121,7 @@ global:
       # repository: "csghub"        # Repository namespace
       # username: ""                # Registry username
       # password: ""                # Registry password
-      # insecure: "false"           # Disable TLS/SSL encryption
+      # insecure: false           # Disable TLS/SSL encryption
 
   ## Gitaly configuration
   gitaly:
@@ -209,9 +209,9 @@ portal:
     # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-portal-public"       # Bucket name
     # region: ""                           # Storage region
-    # secure: "false"                      # Use secure TLS certificates
-    # encrypt: "false"                     # Enable TLS encryption
-    # pathStyle: "true"                    # Use path-style addressing
+    # secure: false                      # Use secure TLS certificates
+    # encrypt: false                     # Enable TLS encryption
+    # pathStyle: true                    # Use path-style addressing
 
 ## Main service logic and API interface
 server:
@@ -293,9 +293,9 @@ server:
     # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-server"              # Bucket name
     # region: ""                           # Storage region
-    # secure: "false"                      # Use secure TLS certificates
-    # encrypt: "false"                     # Enable TLS encryption
-    # pathStyle: "true"                    # Use path-style addressing
+    # secure: false                      # Use secure TLS certificates
+    # encrypt: false                     # Enable TLS encryption
+    # pathStyle: true                    # Use path-style addressing
 
   ## XNet storage configuration
   xnet: {}
@@ -423,9 +423,9 @@ xnet:
     # secretKey: ""                        # Secret key for authentication
     # bucket: "csghub-xnet"                # Bucket name
     # region: ""                           # Storage region
-    # secure: "false"                      # Use secure TLS certificates
-    # encrypt: "false"                     # Enable TLS encryption
-    # pathStyle: "true"                    # Use path-style addressing
+    # secure: false                      # Use secure TLS certificates
+    # encrypt: false                     # Enable TLS encryption
+    # pathStyle: true                    # Use path-style addressing
 
 ## Runner configuration
 runner:
@@ -699,9 +699,9 @@ registry:
     # secretKey: ""                          # Secret key for authentication
     # bucket: "csghub-registry"              # Bucket name
     # region: ""                             # Storage region
-    # secure: "false"                        # Use secure TLS certificates
-    # encrypt: "false"                       # Enable TLS encryption
-    # pathStyle: "true"                      # Use path-style addressing
+    # secure: false                        # Use secure TLS certificates
+    # encrypt: false                       # Enable TLS encryption
+    # pathStyle: true                      # Use path-style addressing
 
 ## Embedded Gitaly configuration
 gitaly:

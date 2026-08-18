@@ -281,7 +281,7 @@
         "repository": { "type": "string", "description": "Repository namespace" },
         "username": { "type": "string", "description": "Registry username" },
         "password": { "type": "string", "description": "Registry password" },
-        "insecure": { "type": "string", "description": "Disable TLS/SSL encryption" }
+        "insecure": { "type": "boolean", "description": "Disable TLS/SSL encryption" }
       }
     },
     "objectStore": {
@@ -293,9 +293,9 @@
         "secretKey": { "type": "string", "description": "Secret key for authentication" },
         "bucket": { "type": "string", "description": "Bucket name" },
         "region": { "type": "string", "description": "Storage region" },
-        "secure": { "type": "string", "description": "Use secure TLS certificates" },
-        "encrypt": { "type": "string", "description": "Enable TLS encryption" },
-        "pathStyle": { "type": "string", "description": "Use path-style addressing" }
+        "secure": { "type": "boolean", "description": "Use secure TLS certificates" },
+        "encrypt": { "type": "boolean", "description": "Enable TLS encryption" },
+        "pathStyle": { "type": "boolean", "description": "Use path-style addressing" }
       }
     },
     "podAnnotations": { "type": "object", "additionalProperties": { "type": "string" } },

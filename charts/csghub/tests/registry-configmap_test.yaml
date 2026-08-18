@@ -96,9 +96,9 @@ tests:
             accessKey: "testUser"
             secretKey: "testPassword"
             region: "es-west-1"
-            encrypt: "false"
-            secure: "true"
-            pathStyle: "true"
+            encrypt: false
+            secure: true
+            pathStyle: true
     asserts:
       - equal:
           path: data.REGISTRY_STORAGE

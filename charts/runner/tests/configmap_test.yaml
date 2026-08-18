@@ -200,7 +200,7 @@ tests:
   - it: appends skip-tls and extra args when registry insecure and extra args are set
     set:
       registry:
-        insecure: "true"
+        insecure: true
       runner:
         imageBuilderKanikoArgs:
           - "--custom-arg=x"
@@ -324,7 +324,7 @@ tests:
   - it: uses auto bucket lookup when pathStyle is not true
     set:
       objectStore:
-        pathStyle: "false"
+        pathStyle: false
     asserts:
       - equal:
           path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP

@@ -145,7 +145,7 @@ registry:
   repository: "csghub"
   username: "test-user"
   password: "test-pass"
-  insecure: ""
+  insecure: false
 
 ## External object store configuration
 objectStore:
@@ -154,8 +154,8 @@ objectStore:
   secretKey: "test-secret"
   bucket: "test-bucket"
   region: "cn-north-1"
-  secure: "true"
-  pathStyle: "true"
+  secure: true
+  pathStyle: true
 
 ## Pod metadata (empty by default; overridden per test)
 podAnnotations: {}

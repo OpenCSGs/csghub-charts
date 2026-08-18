@@ -217,7 +217,7 @@ registry: {}
   # repository: "csghub"                   # Repository namespace
   # username: ""                           # Registry username
   # password: ""                           # Registry password
-  # insecure: "false"                      # Disable TLS/SSL encryption
+  # insecure: false                        # Disable TLS/SSL encryption
 
 ## ObjectStore Configuration
 objectStore: {}                            # External object storage
@@ -226,9 +226,9 @@ objectStore: {}                            # External object storage
   # secretKey: ""                          # Secret key for authentication
   # bucket: "csghub-runner"                # Bucket name
   # region: ""                             # Storage region
-  # secure: "false"                        # Use secure TLS certificates
-  # encrypt: "false"                       # Enable TLS encryption
-  # pathStyle: "true"                      # Use path-style addressing
+  # secure: false                          # Use secure TLS certificates
+  # encrypt: false                         # Enable TLS encryption
+  # pathStyle: true                        # Use path-style addressing
 
 ## Pod Metadata
 podAnnotations: {}
