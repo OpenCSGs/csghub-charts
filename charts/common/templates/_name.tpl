@@ -52,7 +52,7 @@ The name will be truncated to 63 characters to comply with Kubernetes DNS naming
     {{- /* Handle slice input (context with optional override) */}}
     {{- if gt (len .) 0 }}
       {{- $ctx := index . 0 }}
-      {{- $defaultName := printf "%s-%s" $ctx.Release.Name $ctx.Chart.Name -}}
+      {{- $defaultName := printf "%s-%s" $ctx.Release.Name $ctx.Chart.Name | trimSuffix "-" -}}
       {{- if gt (len .) 1 }}
         {{- /* Use override name if provided */}}
         {{- $overrideName := printf "%s-%s" $ctx.Release.Name (index . 1) }}
