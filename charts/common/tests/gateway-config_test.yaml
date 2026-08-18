@@ -1,0 +1,64 @@
+# Test suite for the common.gateway.config template.
+#
+# Renders the gateway config through templates/fixtures/gateway-config.yaml.
+# Baseline values come from tests/values.yaml (global.gateway with
+# enabled=true, tls.enabled=false). These tests pin the boolean type of
+# enabled so it cannot regress to a string, and lock in the service-level
+# override behavior of explicit false.
+
+suite: Test common.gateway.config
+templates:
+  - templates/fixtures/gateway-config.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the global gateway with boolean enabled
+    asserts:
+      - equal:
+          path: enabled
+          value: true
+      - equal:
+          path: controllerName
+          value: nginx
+      - equal:
+          path: tls.enabled
+          value: false
+
+  - it: applies service-level gateway.enabled=false override
+    set:
+      gateway:
+        enabled: false
+    asserts:
+      - equal:
+          path: enabled
+          value: false
+      - equal:
+          path: controllerName
+          value: nginx
+
+  - it: applies service-level gateway.controllerName override
+    set:
+      gateway:
+        controllerName: traefik
+    asserts:
+      - equal:
+          path: controllerName
+          value: traefik
+
+  - it: applies service-level tls.enabled=false override when global is true
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "csghub-tls"
+      gateway:
+        tls:
+          enabled: false
+    asserts:
+      - equal:
+          path: tls.enabled
+          value: false

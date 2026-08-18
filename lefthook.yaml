@@ -74,6 +74,15 @@ pre-commit:
         exit_code=0
         for chart_dir in charts/*/; do
           if [ "$(basename "${chart_dir}")" = "common" ]; then
+            # common is a library chart (type: library); helm-unittest cannot
+            # render it directly. The script temporarily switches to application
+            # type, runs the tests, then restores the original type.
+            if [ -d "${chart_dir}tests" ]; then
+              echo "Running tests for common (library chart)"
+              if ! bash scripts/test-common.sh; then
+                exit_code=1
+              fi
+            fi
             continue
           fi
           if [ -f "${chart_dir}Chart.yaml" ] && [ -d "${chart_dir}tests" ]; then

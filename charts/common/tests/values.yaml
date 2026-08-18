@@ -1,0 +1,46 @@
+# Shared baseline values for common library chart unit tests.
+#
+# The library chart is not installable, so tests render its defines through
+# fixture templates in templates/fixtures/ that stub the cross-chart endpoint
+# templates (common.endpoint.minio / common.endpoint.csghub) defined only in
+# the csghub umbrella chart.
+#
+# The chart is type: library, which helm-unittest cannot render directly. The
+# test-common.sh script temporarily switches Chart.yaml to type: application,
+# runs helm unittest, then restores it.
+
+## Minimal context consumed by common.gateway.config
+global:
+  gateway:
+    enabled: true
+    controllerName: nginx
+    tls:
+      enabled: false
+
+## Global external object store consumed by common.s3.config
+  objectStore:
+    enabled: false
+    external:
+      endpoint: "https://s3.example.com"
+      accessKey: "test-key"
+      secretKey: "test-secret"
+      bucket: "test-bucket"
+      region: "us-east-1"
+      secure: true
+      pathStyle: true
+      encrypt: false
+
+## Global external registry consumed by common.registry.config
+  registry:
+    enabled: false
+    external:
+      registry: "registry.example.com"
+      repository: "csghub"
+      username: "reg-user"
+      password: "reg-pass"
+      insecure: true
+
+## Service-level overrides (merged into the s3/registry config with highest priority)
+name: "app"
+objectStore: {}
+registry: {}

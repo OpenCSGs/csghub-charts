@@ -1,0 +1,75 @@
+# Test suite for the common.registry.config template.
+#
+# Renders the registry config through templates/fixtures/registry-config.yaml,
+# which stubs the csghub-only common.endpoint.csghub template. Baseline values
+# come from tests/values.yaml (global external registry). These tests pin the
+# boolean type of insecure so it cannot regress to a string.
+
+suite: Test common.registry.config
+templates:
+  - templates/fixtures/registry-config.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the global external registry with boolean insecure
+    asserts:
+      - equal:
+          path: registry
+          value: "registry.example.com"
+      - equal:
+          path: repository
+          value: "csghub"
+      - equal:
+          path: username
+          value: "reg-user"
+      - equal:
+          path: password
+          value: "reg-pass"
+      - equal:
+          path: insecure
+          value: true
+
+  - it: applies the service-level registry override with highest priority
+    set:
+      registry:
+        insecure: false
+    asserts:
+      - equal:
+          path: insecure
+          value: false
+
+  - it: renders the internal registry defaults with boolean insecure when enabled
+    set:
+      global:
+        registry:
+          enabled: true
+    asserts:
+      - equal:
+          path: registry
+          value: "csghub.example.com"
+      - equal:
+          path: repository
+          value: "csghub"
+      - equal:
+          path: username
+          value: "registry"
+      - matchRegex:
+          path: password
+          pattern: "^.{32}$"
+      - equal:
+          path: insecure
+          value: false
+
+  - it: applies the global external registry override
+    set:
+      global:
+        registry:
+          external:
+            insecure: false
+    asserts:
+      - equal:
+          path: insecure
+          value: false
