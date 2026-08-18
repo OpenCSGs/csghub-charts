@@ -135,7 +135,7 @@ data:
   STARHUB_SERVER_ARGO_S3_PUBLIC_BUCKET: {{ $s3Config.bucket | quote }}
   STARHUB_SERVER_S3_REGION: {{ $s3Config.region | quote }}
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $s3Config.secure | quote }}
-  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq $s3Config.pathStyle "true") | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq ($s3Config.pathStyle | toString) "true") | quote }}
 
   ## Runner Configuration for Tracing logging
   {{- if $isBuiltIn }}

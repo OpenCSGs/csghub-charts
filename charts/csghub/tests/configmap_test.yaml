@@ -456,8 +456,8 @@ tests:
             accessKey: "s3"
             secretKey: "s32025"
             region: "cn-east-1"
-            secure: "true"
-            pathStyle: "true"
+            secure: true
+            pathStyle: true
         registry:
           enabled: false
           external:
