@@ -120,12 +120,17 @@
       }
     },
     "externalUrl": {
-      "oneOf": [
-        { "type": "null" },
-        { "type": "string", "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$", "description": "External CSGHub URL. Optional when global.chartContext.isBuiltIn=true." }
-      ]
+      "type": ["string", "null"],
+      "description": "External CSGHub URL. Required when global.chartContext.isBuiltIn=false (template enforces via fail).",
+      "if": { "type": "string", "minLength": 1 },
+      "then": { "pattern": "^https?://[a-zA-Z0-9._/:\\-]+$" }
     },
-    "hubAPIToken": { "type": "string", "description": "API token for CSGHub API" },
+    "hubAPIToken": {
+      "type": ["string", "null"],
+      "description": "API token for CSGHub API. Required when global.chartContext.isBuiltIn=false (template enforces via fail).",
+      "if": { "type": "string", "minLength": 1 },
+      "then": { "pattern": "^[A-Za-z0-9._\\-+/=]+$" }
+    },
     "aigateway": {
       "oneOf": [
         { "type": "null" },

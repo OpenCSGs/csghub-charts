@@ -22,6 +22,8 @@ data:
   {{- $csghubEndpoint := .Values.externalUrl }}
   {{- if $isBuiltIn }}
     {{- $csghubEndpoint = include "common.endpoint.csghub" . }}
+  {{- else }}
+    {{- $csghubEndpoint = required "externalUrl is required when global.chartContext.isBuiltIn=false" .Values.externalUrl }}
   {{- end }}
 
   {{- $redirectState := printf "%s/api/v1/opencsg/callback/csghub" (include "common.endpoint.agenticflow" .) }}
@@ -46,6 +48,8 @@ data:
     {{- $csghubSvc := include "common.names.custom" (list . "core") }}
     {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
     {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
+  {{- else }}
+    {{- $apiToken = required "hubAPIToken is required when global.chartContext.isBuiltIn=false" .Values.hubAPIToken }}
   {{- end }}
   CSGHUB_API_ACCESS_TOKEN: {{ $apiToken | quote }}
 
