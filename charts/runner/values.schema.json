@@ -126,8 +126,18 @@
         }
       }
     },
-    "hubAPIToken": { "type": "string", "description": "API token for authenticating with CSGHub API" },
-    "originClusterID": { "type": "string", "description": "Unique identifier for the origin cluster" },
+    "hubAPIToken": {
+      "type": ["string", "null"],
+      "description": "API token for authenticating with CSGHub API. Required when global.chartContext.isBuiltIn=false (template enforces via fail).",
+      "if": { "type": "string", "minLength": 1 },
+      "then": { "pattern": "^[A-Za-z0-9._\\-+/=]+$" }
+    },
+    "originClusterID": {
+      "type": ["string", "null"],
+      "description": "Unique identifier for the origin cluster.",
+      "if": { "type": "string", "minLength": 1 },
+      "then": { "pattern": "^[A-Za-z0-9._\\-]+$" }
+    },
     "logging": {
       "type": "object",
       "properties": {

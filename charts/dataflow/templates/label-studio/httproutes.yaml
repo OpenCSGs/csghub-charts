@@ -41,7 +41,7 @@ spec:
               {{- if .Values.global.chartContext.isBuiltIn }}
               - {{ include "common.endpoint.csghub" . | quote }}
               {{- else }}
-              - {{ .Values.externalUrl | quote }}
+              - {{ required "externalUrl is required when global.chartContext.isBuiltIn=false" .Values.externalUrl | quote }}
               {{- end }}
             allowCredentials: true
       backendRefs:

@@ -172,6 +172,15 @@ tests:
           path: data.STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL
           value: "999"
 
+  ## Required-value validation
+  ## ------------------------------------------------------------------
+  - it: fails to render when hubAPIToken is empty in standalone mode
+    set:
+      hubAPIToken: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "hubAPIToken is required"
+
   - it: derives the docker registry base from externalUrl when registry is empty
     set:
       registry:

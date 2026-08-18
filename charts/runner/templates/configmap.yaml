@@ -6,6 +6,12 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" . | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $isBuiltIn := .Values.global.chartContext.isBuiltIn }}
+{{- $externalUrl := $service.externalUrl }}
+{{- if $isBuiltIn }}
+{{- $externalUrl = include "common.endpoint.csghub" . }}
+{{- else }}
+{{- $externalUrl = required "externalUrl is required when global.chartContext.isBuiltIn=false" $service.externalUrl }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -21,7 +27,8 @@ data:
   {{- $apiToken := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $data }}
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
   {{- else }}
-  STARHUB_SERVER_API_TOKEN: {{ $service.hubAPIToken | quote }}
+  {{- $apiToken := required "runner.hubAPIToken is required when global.chartContext.isBuiltIn=false" $service.hubAPIToken }}
+  STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
   {{- end }}
 
   {{- if $isBuiltIn }}
@@ -30,7 +37,7 @@ data:
   {{- $serverSvcPort := dig "service" "port" 8080 $serverSvc }}
   STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ printf "http://%s:%v" $serverSvcName $serverSvcPort | quote }}
   {{- else }}
-  STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ $service.externalUrl | quote }}
+  STARHUB_SERVER_RUNNER_WEBHOOK_ENDPOINT: {{ $externalUrl | quote }}
   {{- end }}
 
   {{- $publicDomain := include "common.endpoint.runner" . }}
@@ -70,7 +77,7 @@ data:
     {{- if $isBuiltIn }}
       {{- $regRegistry = (include "common.registry.config" (dict "ctx" . "service" $service) | fromYaml).registry }}
     {{- else }}
-      {{- $regRegistry = $service.externalUrl | default "" | trimPrefix "https://" | trimPrefix "http://" }}
+      {{- $regRegistry = $externalUrl | default "" | trimPrefix "https://" | trimPrefix "http://" }}
     {{- end }}
   {{- end }}
   {{- if not $regRepository }}
@@ -107,11 +114,7 @@ data:
   STARHUB_SERVER_READINESS_DELAY_SECONDS: {{ $service.space.readinessDelaySeconds | default 120 | quote }}
   STARHUB_SERVER_READINESS_PERIOD_SECONDS: {{ $service.space.readinessPeriodSeconds | default 10 | quote }}
   STARHUB_SERVER_READINESS_FAILURE_THRESHOLD: {{ $service.space.readinessFailureThreshold | default 3 | quote }}
-  {{- if $isBuiltIn }}
-  STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
-  {{- else }}
-  STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ $service.externalUrl | quote }}
-  {{- end }}
+  STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ $externalUrl | quote }}
   {{- $registry := or $service.model.dockerRegBase .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
   STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL: {{ $service.model.deployStatusCheckInterval | default 10 | quote }}

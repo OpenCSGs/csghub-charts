@@ -220,3 +220,14 @@ tests:
       - equal:
           path: data.STUDIO_JUMP_URL
           value: "http://csghub.example.com/-/label-studio"
+
+  ## ------------------------------------------------------------------
+  ## Required-value validation
+  ## ------------------------------------------------------------------
+  - it: fails to render when externalUrl is empty in standalone mode
+    template: dataflow/configmap.yaml
+    set:
+      externalUrl: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "externalUrl is required"
