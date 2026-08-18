@@ -4,6 +4,39 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
+Internal: given a (possibly empty) registry hint and an image/repo string,
+compute the final registry + image with OpenCSG path adjustment.
+
+Behaviour:
+- If registry is empty, parse it from the image string ("host/path" → host).
+- If the resolved registry matches the OpenCSG registry and the image path
+  is not already prefixed with one of the public prefixes
+  (opencsghq/, opencsg_public/, public/), prepend "opencsghq/".
+
+Parameters:
+- registry: registry hint (may be empty)
+- image:    image or repository string (will be mutated when parsed)
+
+Returns: YAML dict {registry: ..., image: ...}.
+*/}}
+{{- define "common.image._resolve" }}
+{{- $registry := .registry }}
+{{- $image := .image }}
+{{- if not $registry }}
+  {{- $registry = regexFind "^[^/]+" $image }}
+  {{- if $registry }}
+    {{- $image = trimPrefix (printf "%s/" $registry) $image }}
+  {{- end }}
+{{- end }}
+{{- if and $registry (regexMatch "^opencsg-registry" $registry) }}
+  {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $image) }}
+    {{- $image = printf "opencsghq/%s" $image }}
+  {{- end }}
+{{- end }}
+{{- dict "registry" $registry "image" $image | toYaml -}}
+{{- end }}
+
+{{/*
 Generate full image path with robust subchart support
 
 Usage:
@@ -29,19 +62,9 @@ Returns: Full image path in format "registry/repository:tag"
     {{- $registry = or $globalImage.registry "opencsg-registry.cn-beijing.cr.aliyuncs.com" }}
   {{- end }}
 
-  {{- if not $registry }}
-    {{- $registry = regexFind "^[^/]+" $repository }}
-    {{- if $registry }}
-      {{- $repository = trimPrefix (printf "%s/" $registry) $repository }}
-    {{- end }}
-  {{- end }}
-
-  {{- /* Adjust repository path for OpenCSG registry */}}
-  {{- if and $registry (regexMatch "^opencsg-registry" $registry) }}
-    {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $repository) }}
-      {{- $repository = printf "opencsghq/%s" $repository }}
-    {{- end }}
-  {{- end }}
+  {{- $resolved := include "common.image._resolve" (dict "registry" $registry "image" $repository) | fromYaml }}
+  {{- $registry = $resolved.registry }}
+  {{- $repository = $resolved.image }}
 
   {{- /* Validate and return full image path */}}
   {{- if and $registry $repository $tag }}
@@ -85,19 +108,9 @@ Returns: Full image path in format "registry/repository"
     {{- $registry = or $globalImage.registry "opencsg-registry.cn-beijing.cr.aliyuncs.com" }}
   {{- end }}
 
-  {{- if not $registry }}
-    {{- $registry = regexFind "^[^/]+" $image }}
-    {{- if $registry }}
-      {{- $image = trimPrefix (printf "%s/" $registry) $image }}
-    {{- end }}
-  {{- end }}
-
-  {{- /* Adjust repository path for OpenCSG registry */}}
-  {{- if and $registry (regexMatch "^opencsg-registry" $registry) }}
-    {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $image) }}
-      {{- $image = printf "opencsghq/%s" $image }}
-    {{- end }}
-  {{- end }}
+  {{- $resolved := include "common.image._resolve" (dict "registry" $registry "image" $image) | fromYaml }}
+  {{- $registry = $resolved.registry }}
+  {{- $image = $resolved.image }}
 
   {{- /* Validate and return full image path */}}
   {{- if and $registry $image }}
