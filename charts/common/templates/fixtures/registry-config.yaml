@@ -1,0 +1,2 @@
+{{- define "common.endpoint.csghub" }}https://csghub.example.com{{- end }}
+{{ include "common.registry.config" (dict "ctx" . "service" .Values) | fromYaml | toYaml }}

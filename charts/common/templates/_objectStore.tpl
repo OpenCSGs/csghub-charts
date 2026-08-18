@@ -27,10 +27,11 @@ Returns: YAML configuration object with S3 connection parameters
     "accessKey" "minio"
     "secretKey" (include "common.randomPassword" $minioSvc.name)
     "bucket" (include "common.names.custom" (list $ctx $service.name))
-    "encrypt" "false"
-    "secure" (dig "tls" "enabled" "false" $gatewayConfig)
-    "pathStyle" "true"
+    "encrypt" false
+    "pathStyle" true
   }}
+  {{- /* secure inherits its type from gateway.tls.enabled; both schemas enforce boolean. */}}
+  {{- $s3Config = set $s3Config "secure" (dig "tls" "enabled" false $gatewayConfig) }}
 
   {{- /* If internal MinIO is enabled and secret exists, use it */}}
   {{- if $ctx.Values.global.objectStore.enabled }}
@@ -52,10 +53,16 @@ Returns: YAML configuration object with S3 connection parameters
         "accessKey" (.accessKey | default $s3Config.accessKey)
         "secretKey" (.secretKey | default $s3Config.secretKey)
         "bucket" (.bucket | default $s3Config.bucket)
-        "encrypt" (.encrypt | default $s3Config.encrypt)
-        "secure" (.secure | default $s3Config.secure)
-        "pathStyle" (.pathStyle | default $s3Config.pathStyle)
       ) $s3Config }}
+      {{- if hasKey . "encrypt" }}
+        {{- $s3Config = set $s3Config "encrypt" .encrypt }}
+      {{- end }}
+      {{- if hasKey . "secure" }}
+        {{- $s3Config = set $s3Config "secure" .secure }}
+      {{- end }}
+      {{- if hasKey . "pathStyle" }}
+        {{- $s3Config = set $s3Config "pathStyle" .pathStyle }}
+      {{- end }}
     {{- end }}
   {{- end }}
 
@@ -68,10 +75,16 @@ Returns: YAML configuration object with S3 connection parameters
       "accessKey" (.accessKey | default $s3Config.accessKey)
       "secretKey" (.secretKey | default $s3Config.secretKey)
       "bucket" (.bucket | default $s3Config.bucket)
-      "encrypt" (.encrypt | default $s3Config.encrypt)
-      "secure" (.secure | default $s3Config.secure)
-      "pathStyle" (.pathStyle | default $s3Config.pathStyle)
     ) $s3Config }}
+    {{- if hasKey . "encrypt" }}
+      {{- $s3Config = set $s3Config "encrypt" .encrypt }}
+    {{- end }}
+    {{- if hasKey . "secure" }}
+      {{- $s3Config = set $s3Config "secure" .secure }}
+    {{- end }}
+    {{- if hasKey . "pathStyle" }}
+      {{- $s3Config = set $s3Config "pathStyle" .pathStyle }}
+    {{- end }}
   {{- end }}
 
   {{- /* Validate required configurations */}}

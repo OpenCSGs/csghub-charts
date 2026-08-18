@@ -33,7 +33,7 @@ Returns: YAML configuration object with registry parameters
     "repository" $ctx.Release.Namespace
     "username" "registry"
     "password" (include "common.randomPassword" $registrySvc.name)
-    "insecure" "false"
+    "insecure" false
   }}
 
   {{- /* If internal registry is enabled and secret exists, use existing credentials */}}
@@ -54,8 +54,10 @@ Returns: YAML configuration object with registry parameters
         "repository" (.repository | default $registryConfig.repository)
         "username" (.username | default $registryConfig.username)
         "password" (.password | default $registryConfig.password)
-        "insecure" (.insecure | default $registryConfig.insecure)
       ) $registryConfig }}
+      {{- if hasKey . "insecure" }}
+        {{- $registryConfig = set $registryConfig "insecure" .insecure }}
+      {{- end }}
     {{- end }}
   {{- end }}
 
@@ -66,8 +68,10 @@ Returns: YAML configuration object with registry parameters
       "repository" (.repository | default $registryConfig.repository)
       "username" (.username | default $registryConfig.username)
       "password" (.password | default $registryConfig.password)
-      "insecure" (.insecure | default $registryConfig.insecure)
     ) $registryConfig }}
+    {{- if hasKey . "insecure" }}
+      {{- $registryConfig = set $registryConfig "insecure" .insecure }}
+    {{- end }}
   {{- end }}
 
   {{- /* Validate required configurations */}}

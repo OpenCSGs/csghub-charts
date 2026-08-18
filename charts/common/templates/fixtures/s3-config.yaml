@@ -1,0 +1,2 @@
+{{- define "common.endpoint.minio" }}http://minio.local{{- end }}
+{{ include "common.s3.config" (dict "ctx" . "service" .Values) | fromYaml | toYaml }}

@@ -1,0 +1,121 @@
+# Test suite for the common.s3.config template.
+#
+# Renders the s3 config through templates/fixtures/s3-config.yaml, which stubs
+# the csghub-only common.endpoint.minio template. Baseline values come from
+# tests/values.yaml (global external object store). These tests pin the boolean
+# types of secure/pathStyle/encrypt so they cannot regress to strings.
+
+suite: Test common.s3.config
+templates:
+  - templates/fixtures/s3-config.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the global external object store with boolean flags
+    asserts:
+      - equal:
+          path: endpoint
+          value: "https://s3.example.com"
+      - equal:
+          path: externalEndpoint
+          value: "https://s3.example.com"
+      - equal:
+          path: region
+          value: "us-east-1"
+      - equal:
+          path: accessKey
+          value: "test-key"
+      - equal:
+          path: secretKey
+          value: "test-secret"
+      - equal:
+          path: bucket
+          value: "test-bucket"
+      - equal:
+          path: encrypt
+          value: false
+      - equal:
+          path: secure
+          value: true
+      - equal:
+          path: pathStyle
+          value: true
+
+  - it: applies the service-level objectStore override with highest priority
+    set:
+      objectStore:
+        secure: false
+        pathStyle: false
+        endpoint: "https://svc.example.com"
+    asserts:
+      - equal:
+          path: endpoint
+          value: "https://svc.example.com"
+      - equal:
+          path: secure
+          value: false
+      - equal:
+          path: pathStyle
+          value: false
+
+  - it: renders the internal minio defaults with boolean flags when enabled
+    set:
+      global:
+        objectStore:
+          enabled: true
+    asserts:
+      - equal:
+          path: endpoint
+          value: "http://csghub-minio:9000"
+      - equal:
+          path: accessKey
+          value: "minio"
+      - matchRegex:
+          path: secretKey
+          pattern: "^.{32}$"
+      - equal:
+          path: bucket
+          value: "csghub-app"
+      - equal:
+          path: encrypt
+          value: false
+      - equal:
+          path: secure
+          value: false
+      - equal:
+          path: pathStyle
+          value: true
+
+  - it: applies the global external objectStore override
+    set:
+      global:
+        objectStore:
+          external:
+            secure: false
+            pathStyle: false
+            encrypt: true
+    asserts:
+      - equal:
+          path: secure
+          value: false
+      - equal:
+          path: pathStyle
+          value: false
+      - equal:
+          path: encrypt
+          value: true
+
+  - it: propagates gateway.tls.enabled=true to s3Config.secure
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "csghub-tls"
+    asserts:
+      - equal:
+          path: secure
+          value: true

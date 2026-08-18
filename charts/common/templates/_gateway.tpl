@@ -47,12 +47,7 @@ Returns: YAML configuration with merged gateway settings
   {{- /* Service-level gateway configuration (higher priority) */}}
   {{- with $service.gateway }}
     {{- $gatewayConfig = merge (dict
-      "enabled" (.enabled | default $gatewayConfig.enabled)
       "controllerName" (.controllerName | default $gatewayConfig.controllerName)
-      "tls" (dict
-        "enabled" (dig "tls" "enabled" $gatewayConfig.tls.enabled .)
-        "secretName" (dig "tls" "secretName" $gatewayConfig.tls.secretName .)
-      )
       "service" (dict
         "type" (dig "service" "type" $gatewayConfig.service.type .)
         "nodePorts" (dict
@@ -66,9 +61,20 @@ Returns: YAML configuration with merged gateway settings
         "password" (dig "basicAuth" "password" $gatewayConfig.basicAuth.password .)
       )
     ) $gatewayConfig }}
+    {{- /* bool fields: merge/mergo drops explicit false, so use set+hasKey. */}}
+    {{- if hasKey . "enabled" }}
+      {{- $gatewayConfig = set $gatewayConfig "enabled" .enabled }}
+    {{- end }}
+    {{- /* tls sub-dict: rebuild rather than merge so bool fields preserve explicit false. */}}
+    {{- with dig "tls" dict . }}
+      {{- $gatewayConfig = set $gatewayConfig "tls" (dict
+        "enabled" (dig "enabled" $gatewayConfig.tls.enabled .)
+        "secretName" (dig "secretName" $gatewayConfig.tls.secretName .)
+      ) }}
+    {{- end }}
   {{- end }}
 
-  {{- if and $gatewayConfig.enabled $gatewayConfig.tls.enabled (not $gatewayConfig.tls.secretName) }}
+  {{- if and $gatewayConfig.tls.enabled (not $gatewayConfig.tls.secretName) }}
     {{ fail "TLS secretName must be set when TLS is enabled" }}
   {{- end }}
 
