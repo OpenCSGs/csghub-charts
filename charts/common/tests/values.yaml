@@ -1,19 +1,22 @@
 # Shared baseline values for common library chart unit tests.
 #
 # The library chart is not installable, so tests render its defines through
-# fixture templates in templates/fixtures/ that stub the cross-chart endpoint
-# templates (common.endpoint.minio / common.endpoint.csghub) defined only in
-# the csghub umbrella chart.
+# fixture templates in templates/fixtures/. The fixtures no longer need to
+# stub the cross-chart endpoint templates (common.endpoint.minio /
+# common.endpoint.csghub) — those defines now live in common and only need
+# global.gateway.external.domain to be set below.
 #
 # The chart is type: library, which helm-unittest cannot render directly. The
 # test-common.sh script temporarily switches Chart.yaml to type: application,
 # runs helm unittest, then restores it.
 
-## Minimal context consumed by common.gateway.config
+## Minimal context consumed by common.gateway.config and common.domain.*
 global:
   gateway:
     enabled: true
     controllerName: nginx
+    external:
+      domain: "csghub.example.com"
     tls:
       enabled: false
 
