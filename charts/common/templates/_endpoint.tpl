@@ -44,3 +44,25 @@ Usage:
     {{- end }}
   {{- end }}
 {{- end -}}
+
+{{/*
+csghub service external endpoint.
+
+Usage: {{ include "common.endpoint.csghub" . }}
+
+Returns: Full URL for the csghub service based on TLS configuration.
+*/}}
+{{- define "common.endpoint.csghub" }}
+{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.csghub" .)) -}}
+{{- end }}
+
+{{/*
+MinIO service external endpoint.
+
+Usage: {{ include "common.endpoint.minio" . }}
+
+Returns: Full URL for the MinIO service based on TLS configuration.
+*/}}
+{{- define "common.endpoint.minio" }}
+{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.minio" .)) -}}
+{{- end }}
