@@ -66,3 +66,14 @@ Returns: Full URL for the MinIO service based on TLS configuration.
 {{- define "common.endpoint.minio" }}
 {{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.minio" .)) -}}
 {{- end }}
+
+{{/*
+Public-facing csghub endpoint.
+
+Usage: {{ include "common.endpoint.public" . }}
+
+Returns: Full URL for the user-facing csghub endpoint based on TLS configuration.
+*/}}
+{{- define "common.endpoint.public" }}
+{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.public" .)) -}}
+{{- end }}
