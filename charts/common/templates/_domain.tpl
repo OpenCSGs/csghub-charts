@@ -81,3 +81,29 @@ depending on configuration.
 {{- $service := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
+
+{{/*
+Resolve the public-facing csghub domain.
+
+If the csghub base domain has 2 or fewer segments, prefixes it with
+"csghub." to give user-facing endpoints a stable subdomain. Allows override
+via global.gateway.external.public.
+
+Usage:
+{{ include "common.domain.public" . }}
+*/}}
+{{- define "common.domain.public" }}
+{{- $publicDomainBase := include "common.domain.csghub" . }}
+{{- $publicDomain := $publicDomainBase }}
+{{- $publicDomainCustom := dig "external" "public" "" .Values.global.gateway }}
+
+{{- $parts := splitList "." $publicDomainBase }}
+{{- if le (len $parts) 2 }}
+  {{- $publicDomain = printf "csghub.%s" $publicDomainBase }}
+{{- end }}
+
+{{- if $publicDomainCustom }}
+  {{- $publicDomain = $publicDomainCustom }}
+{{- end }}
+{{- $publicDomain -}}
+{{- end }}

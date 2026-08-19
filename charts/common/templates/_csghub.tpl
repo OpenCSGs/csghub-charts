@@ -4,38 +4,6 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
-# csghub Public Domain Helper
-# Generates the full domain name for csghub service based on configuration
-# Usage: {{ include "common.domain.public" . }}
-# Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
-*/}}
-{{- define "common.domain.public" }}
-{{- $publicDomainBase := include "common.domain.csghub" . }}
-{{- $publicDomain := $publicDomainBase }}
-{{- $publicDomainCustom := dig "external" "public" "" .Values.global.gateway }}
-
-{{- $parts := splitList "." $publicDomainBase }}
-{{- if le (len $parts) 2 }}
-  {{- $publicDomain = printf "csghub.%s" $publicDomainBase }}
-{{- end }}
-
-{{- if $publicDomainCustom }}
-  {{- $publicDomain = $publicDomainCustom }}
-{{- end }}
-{{- $publicDomain -}}
-{{- end }}
-
-{{/*
-# csghub External Public Endpoint Helper
-# Generates the complete external public access endpoint for csghub service
-# Usage: {{ include "common.endpoint.public" . }}
-# Returns: Full URL (http://*.public.<domain> or https://*.public.<domain>) based on TLS configuration
-*/}}
-{{- define "common.endpoint.public" }}
-{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.public" .)) -}}
-{{- end }}
-
-{{/*
 Generate global unique HUB_SERVER_API_TOKEN
 
 Usage:
