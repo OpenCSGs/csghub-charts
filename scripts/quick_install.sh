@@ -803,6 +803,8 @@ if [[ -z "$K3S_SERVER" ]]; then
   fi
 
   HELM_EXTRA_ARGS+=(--set global.edition='ee')
+  HELM_EXTRA_ARGS+=(--set runner.runner.allowCpuOnGpuNodes='true')
+
   # Set domain parameter based on version: gateway for >= 1.16, ingress for < 1.16
   if [[ "$SHOULD_RUN_CRD" == "true" ]]; then
     HELM_EXTRA_ARGS+=(--set global.gateway.external.domain="${DOMAIN}")
