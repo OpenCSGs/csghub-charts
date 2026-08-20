@@ -34,7 +34,7 @@ check-version-increment: true
 validate-maintainers: false
 
 # Optional: Kubernetes version for testing
-kubernetes-version: "1.28"
+kubernetes-version: "1.32"
 
 # Optional: Namespace for tests
 namespace: ct-csghub
