@@ -25,6 +25,6 @@ dependencies:
   version: 1.14.3
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.1
-digest: sha256:3239dfe2b4e60f909ac2a3de92925158492ee9eee7084074f5cb10465aea299f
-generated: "2026-08-19T16:38:25.178952+08:00"
+  version: 0.5.4
+digest: sha256:80cf4ee353c669015f584372eb0c48f9e547c977a10a39c618fce5ae7fc04053
+generated: "2026-08-27T16:44:59.547016+08:00"
