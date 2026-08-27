@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: agent-sandbox-webhook-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: agent-sandbox-controller
+  ports:
+  - name: webhook
+    port: 443
+    targetPort: 9443
+    protocol: TCP

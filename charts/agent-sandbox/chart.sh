@@ -37,7 +37,7 @@ if ! kubectl slice --help &>/dev/null; then
 fi
 
 # 3. Configuration & Directory Setup
-VERSION="v0.4.6"
+VERSION="v0.5.4"
 BASE_URL="https://ghfast.top/https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}"
 TEMPLATE_DIR="templates"
 EXT_DIR="${TEMPLATE_DIR}/extensions"
@@ -50,7 +50,7 @@ mkdir -p "$EXT_DIR" "$CRD_DIR"
 
 # 4. Fetch and Split manifests
 echo "Fetching and splitting manifests..."
-curl -sfl "${BASE_URL}/manifest.yaml" | kubectl slice \
+curl -sfl "${BASE_URL}/sandbox.yaml" | kubectl slice \
     --template "{{.kind | lower}}-{{.metadata.name}}.yaml" \
     -o "$TEMPLATE_DIR"
 
