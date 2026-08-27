@@ -39,7 +39,7 @@ data:
   STARHUB_SERVER_S3_XORB_BUCKET: {{ $s3Config.bucket | quote }}
   STARHUB_SERVER_S3_REGION: {{ $s3Config.region | quote }}
   STARHUB_SERVER_S3_ENABLE_SSL: {{ $s3Config.secure | quote }}
-  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" $s3Config.pathStyle | quote }}
+  STARHUB_SERVER_S3_BUCKET_LOOKUP: {{ ternary "path" "auto" (eq ($s3Config.pathStyle | toString) "true") | quote }}
 
   {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
   {{- $serverS3Config := include "common.s3.config" (dict "ctx" . "service" $serverSvc) | fromYaml }}
