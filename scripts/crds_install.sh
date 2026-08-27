@@ -64,39 +64,49 @@ if ! tar -xzf "${CHART_FILE}" -C "${EXTRACT_DIR}"; then
   exit 1
 fi
 
-echo "🔍 Locating CRD directory..."
+echo "🔍 Locating CRD directories..."
 
-CRD_DIR=$(find "${EXTRACT_DIR}" -type d -path "*/gateway-helm/crds" | head -n1)
+GATEWAY_CRD_DIR=$(find "${EXTRACT_DIR}" -type d -path "*/gateway-helm/crds" | head -n1)
+AGENT_SANDBOX_CRD_DIR=$(find "${EXTRACT_DIR}" -type d -path "*/runner/charts/agent-sandbox/crds" | head -n1)
 
-if [[ -z "${CRD_DIR}" ]]; then
-  echo "❌ CRD directory not found after extraction"
+if [[ -z "${GATEWAY_CRD_DIR}" ]]; then
+  echo "❌ gateway-helm CRD directory not found after extraction"
   exit 1
 fi
 
-echo "📂 Using CRDs from: ${CRD_DIR}"
-
-if [[ ! -d "${CRD_DIR}" ]]; then
-  echo "❌ CRD directory not found: ${CRD_DIR}"
+if [[ -z "${AGENT_SANDBOX_CRD_DIR}" ]]; then
+  echo "❌ agent-sandbox CRD directory not found after extraction"
   exit 1
 fi
 
+echo "📂 Using CRDs from:"
+echo "  - ${GATEWAY_CRD_DIR}"
+echo "  - ${AGENT_SANDBOX_CRD_DIR}"
 
-echo "🚀 Applying CRDs via server-side apply..."
+apply_crds() {
+  local crd_dir="$1"
+  local label="$2"
 
-CRD_COUNT=$(find "${CRD_DIR}" -type f -name "*.yaml" -o -name "*.yml" | wc -l)
+  echo "🚀 Applying ${label} CRDs via server-side apply..."
 
-if [[ "${CRD_COUNT}" -eq 0 ]]; then
-  echo "❌ No CRD files found in ${CRD_DIR}"
-  exit 1
-fi
+  local crd_count
+  crd_count=$(find "${crd_dir}" -type f \( -name "*.yaml" -o -name "*.yml" \) | wc -l)
 
-echo "📊 Found ${CRD_COUNT} CRD files"
+  if [[ "${crd_count}" -eq 0 ]]; then
+    echo "❌ No CRD files found in ${crd_dir}"
+    exit 1
+  fi
 
-if kubectl apply --server-side --recursive --force-conflicts -f "${CRD_DIR}"; then
+  echo "📊 Found ${crd_count} CRD files in ${crd_dir}"
+
+  if ! kubectl apply --server-side --recursive --force-conflicts -f "${crd_dir}"; then
+    echo
+    echo "❌ Failed to apply ${label} CRDs"
+    exit 1
+  fi
   echo
-  echo "🎉 All CRDs created successfully."
-else
-  echo
-  echo "❌ Failed to apply CRDs"
-  exit 1
-fi
+  echo "🎉 ${label} CRDs created successfully."
+}
+
+apply_crds "${GATEWAY_CRD_DIR}" "gateway-helm"
+apply_crds "${AGENT_SANDBOX_CRD_DIR}" "agent-sandbox"
