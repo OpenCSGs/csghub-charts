@@ -24,6 +24,7 @@ spec:
         args:
         - "--leader-elect=true"
         - "--extensions"
+        - "--webhook-namespace={{ .Release.Namespace }}"
         ports:
         - name: metrics
           containerPort: 8080
