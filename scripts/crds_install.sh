@@ -5,6 +5,9 @@ trap 'rm -rf "${TMP_DIR:-}"' EXIT
 # -----------------------------
 CHART_VERSION="${CHART_VERSION:-latest}"
 CHART_BASE_URL="${CHART_BASE_URL:-https://charts.opencsg.com/csghub}"
+# Comma-separated services whose CRDs should be installed.
+# Supported values: gateway-helm, agent-sandbox. Default: all
+CRD_SERVICES="${CRD_SERVICES:-all}"
 TMP_DIR=$(mktemp -d)
 EXTRACT_DIR="${TMP_DIR}/extract"
 
@@ -69,25 +72,21 @@ echo "🔍 Locating CRD directories..."
 GATEWAY_CRD_DIR=$(find "${EXTRACT_DIR}" -type d -path "*/gateway-helm/crds" | head -n1)
 AGENT_SANDBOX_CRD_DIR=$(find "${EXTRACT_DIR}" -type d -path "*/runner/charts/agent-sandbox/crds" | head -n1)
 
-if [[ -z "${GATEWAY_CRD_DIR}" ]]; then
-  echo "❌ gateway-helm CRD directory not found after extraction"
-  exit 1
-fi
-
-if [[ -z "${AGENT_SANDBOX_CRD_DIR}" ]]; then
-  echo "❌ agent-sandbox CRD directory not found after extraction"
-  exit 1
-fi
-
-echo "📂 Using CRDs from:"
-echo "  - ${GATEWAY_CRD_DIR}"
-echo "  - ${AGENT_SANDBOX_CRD_DIR}"
+# Returns 0 if the given service's CRDs should be installed.
+should_install() {
+  [[ "${CRD_SERVICES}" == "all" || ",${CRD_SERVICES}," == *",$1,"* ]]
+}
 
 apply_crds() {
   local crd_dir="$1"
   local label="$2"
 
-  echo "🚀 Applying ${label} CRDs via server-side apply..."
+  if [[ -z "${crd_dir}" ]]; then
+    echo "❌ ${label} CRD directory not found after extraction"
+    exit 1
+  fi
+
+  echo "📂 Using ${label} CRDs from: ${crd_dir}"
 
   local crd_count
   crd_count=$(find "${crd_dir}" -type f \( -name "*.yaml" -o -name "*.yml" \) | wc -l)
@@ -97,7 +96,9 @@ apply_crds() {
     exit 1
   fi
 
-  echo "📊 Found ${crd_count} CRD files in ${crd_dir}"
+  echo "📊 Found ${crd_count} CRD files"
+
+  echo "🚀 Applying ${label} CRDs via server-side apply..."
 
   if ! kubectl apply --server-side --recursive --force-conflicts -f "${crd_dir}"; then
     echo
@@ -108,5 +109,16 @@ apply_crds() {
   echo "🎉 ${label} CRDs created successfully."
 }
 
-apply_crds "${GATEWAY_CRD_DIR}" "gateway-helm"
-apply_crds "${AGENT_SANDBOX_CRD_DIR}" "agent-sandbox"
+echo "🚀 Applying CRDs via server-side apply..."
+
+for entry in "gateway-helm:${GATEWAY_CRD_DIR}" "agent-sandbox:${AGENT_SANDBOX_CRD_DIR}"; do
+  service="${entry%%:*}"
+  crd_dir="${entry#*:}"
+
+  if ! should_install "${service}"; then
+    echo "⏭️  Skipping ${service} CRDs (not in CRD_SERVICES=${CRD_SERVICES})"
+    continue
+  fi
+
+  apply_crds "${crd_dir}" "${service}"
+done
