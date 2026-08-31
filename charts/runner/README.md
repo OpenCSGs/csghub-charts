@@ -13,7 +13,7 @@ It is responsible for executing deployment tasks for CSGHub.
 
 ## Prerequisites
 
-- Kubernetes 1.28+
+- Kubernetes 1.32+
 - Helm 3.8+
 - Knative Operator 1.22+ (installed as a dependency)
 - Envoy Gateway 1.6+ (if using Gateway API ingress mode)
@@ -98,15 +98,15 @@ helm install my-runner csghub/runner --values values.yaml
 
 | Dependency | Version | Condition |
 |------------|---------|-----------|
-| common | 0.2.2 | always |
-| reloader | 2.2.7 | `reloader.enabled` |
-| prometheus | 28.6.0 | `prometheus.enabled` |
-| envoy (gateway-helm) | 1.6.7 | `envoy.enabled` |
+| common | 0.2.6 | always |
+| reloader | 2.2.14 | `reloader.enabled` |
+| prometheus | 29.14.0 | `prometheus.enabled` |
+| envoy (gateway-helm) | 1.7.5 | `envoy.enabled` |
 | lws | v0.6.1 | `lws.enabled` |
-| argo-workflows | 0.47.4 | `argo.enabled` |
+| argo-workflows | 0.47.5 | `argo.enabled` |
 | knative-operator | 1.22.1 | `knative.enabled` |
-| volcano | 1.14.1 | `volcano.enabled` |
-| agent-sandbox | 0.2.1 | `agent-sandbox.enabled` |
+| volcano | 1.14.3 | `volcano.enabled` |
+| agent-sandbox | 0.5.4 | `agent-sandbox.enabled` |
 
 ## Support
 

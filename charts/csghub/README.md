@@ -18,6 +18,7 @@ For detailed installation and configuration instructions, please refer to the of
 | **[csgship](https://opencsg.com/docs/en/csghub/101/install/kubernetes/csgship)** | Backend service for the IDE coding assistant **CodeSouler**, responsible for handling data shipping and task management. |
 | **[dataflow](https://opencsg.com/docs/en/csghub/101/install/kubernetes/dataflow)** | A dataset processing chart, mainly for data preprocessing, cleaning, and transformation; integrates with **Label Studio** for labeling tasks. |
 | **[runner](https://opencsg.com/docs/en/csghub/101/install/kubernetes/runner)** | Acts as a proxy deployed in the Kubernetes cluster, responsible for executing deployment tasks. |
+| **agentichub** | Bundled agent orchestration hub. Provides **agenticflow**, **csgbot** and other agent components. |
 
 ---
 
@@ -25,6 +26,8 @@ For detailed installation and configuration instructions, please refer to the of
 
 - The runner is now an agent, supporting both integrated and standalone deployments.
 - Dataflow charts have been refactored to the latest version.
+- Agent-sandbox upgraded to `0.5.4` with `v1beta1` storage-version CRDs; `crds_install.sh` now installs both gateway and agent-sandbox CRDs.
+- Cross-chart `domain.*` and `endpoint.*` defines (csghub / minio / casdoor / aigateway) consolidated into the **common** library chart.
 
 ## Support
 
