@@ -48,10 +48,10 @@ data:
     endpoint = {{ $csghubEndpoint | quote }}
     portal-endpoint = {{ $csghubEndpoint | quote }}
     starship-endpoint = {{ dig "config" "starship" "endpoint" "" .Values.csgbot | quote }}
-    mcp-gateway-endpoint = {{ printf "%s/v1/gateway/mcp" (include "endpoint.aigateway" .) | quote }}
+    mcp-gateway-endpoint = {{ printf "%s/v1/gateway/mcp" (include "common.endpoint.aigateway.override" .) | quote }}
 
     [aigateway]
-    endpoint = {{ include "endpoint.aigateway" . | quote }}
+    endpoint = {{ include "common.endpoint.aigateway.override" . | quote }}
     model-id = {{ dig "config" "aigateway" "model" "qwen3.6-plus" .Values.csgbot | quote }}
     temperature = {{ dig "config" "aigateway" "temperature" 0.1 .Values.csgbot }}
 
