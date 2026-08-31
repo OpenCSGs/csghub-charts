@@ -48,33 +48,3 @@ Usage:
 
 {{- $mergedImage | toYaml -}}
 {{- end }}
-
-{{- /*
-# CSGHub Server Readiness Check Template
-# Creates a Kubernetes init container that waits for Server service to become ready
-# Verifies health endpoint before proceeding with pod startup
-#
-# Usage: {{ include "wait-for-server" . }}
-#
-# Dependencies:
-#   - common.names.custom template (naming)
-#   - common.image.fixed template (image reference helper)
-*/}}
-{{- define "wait-for-server" }}
-{{- $service := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
-{{- $serviceName := include "common.names.custom" (list . $service.name) }}
-{{- $serverPort := dig "service" "port" 8080 $service | toString }}
-- name: wait-for-server
-  image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
-  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
-  command:
-    - /bin/sh
-    - -c
-    - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName $serverPort }}/healthz";
-      do
-        echo 'Waiting for CSGHub Server to be ready...';
-        sleep 5;
-      done
-      echo 'CSGHub Server is ready!'
-{{- end }}

@@ -32,32 +32,3 @@ Returns: Dictionary with keys "clientId" and "clientSecret"
 clientId: {{ $clientId }}
 clientSecret: {{ $clientSecret }}
 {{- end -}}
-
-{{- /*
-# Casdoor Readiness Check Template
-# Creates a Kubernetes init container that waits for Casdoor service to become ready
-# Verifies health endpoint before proceeding with pod startup
-#
-# Usage: {{ include "wait-for-casdoor" . }}
-#
-# Dependencies:
-#   - common.names.custom template (naming)
-#   - common.image.fixed template (image reference helper)
-*/}}
-{{- define "wait-for-casdoor" }}
-{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
-{{- $serviceName := include "common.names.custom" (list . $service.name) -}}
-- name: wait-for-casdoor
-  image: {{ include "common.image.fixed" (dict "ctx" . "service" "" "image" "busybox:latest") }}
-  imagePullPolicy: {{ or .Values.image.pullPolicy .Values.global.image.pullPolicy | quote }}
-  command:
-    - /bin/sh
-    - -c
-    - |
-      until wget --spider --timeout=5 --tries=1 "{{ printf "http://%s:%s" $serviceName ($service.service.port | toString) }}/api/health";
-      do
-        echo 'Waiting for Casdoor to be ready...';
-        sleep 5;
-      done;
-      echo 'Casdoor is ready!'
-{{- end }}
