@@ -4,7 +4,7 @@
 # built-in PostgreSQL and Redis enabled). The agenticflow ConfigMap only
 # renders when global.edition is not "ce".
 #
-# NOTE: The isBuiltIn=true branch calls endpoint.aigateway which calls
+# NOTE: The isBuiltIn=true branch calls common.endpoint.aigateway.override which calls
 # common.endpoint.aigateway. That define now lives in the common library
 # chart, but the built-in branch is only meaningful when rendered inside
 # the csghub umbrella; standalone behaviour is fully covered below.

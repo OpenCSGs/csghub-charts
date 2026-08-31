@@ -4,7 +4,7 @@
 # The csgbot.toml ConfigMap is fully rendered with explicit dig defaults.
 # Tokens and connection credentials are matched by regex (non-deterministic).
 #
-# NOTE: The isBuiltIn=true branch calls endpoint.aigateway which calls
+# NOTE: The isBuiltIn=true branch calls common.endpoint.aigateway.override which calls
 # common.endpoint.aigateway. That define now lives in the common library
 # chart, but the built-in branch is only meaningful when rendered inside
 # the csghub umbrella; standalone behaviour is fully covered below.

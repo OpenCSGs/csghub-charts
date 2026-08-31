@@ -41,7 +41,7 @@ data:
   CSGHUB_INTERNAL_BASE_URL: {{ $csghubEndpoint | quote }}
   {{- end }}
   CSGHUB_API_BASE_URL: {{ $csghubEndpoint | quote }}
-  CSGHUB_AIGATEWAY_URL: {{ include "endpoint.aigateway" . | quote }}
+  CSGHUB_AIGATEWAY_URL: {{ include "common.endpoint.aigateway.override" . | quote }}
 
   {{- $apiToken := .Values.hubAPIToken }}
   {{- if $isBuiltIn }}
