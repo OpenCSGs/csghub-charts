@@ -48,3 +48,33 @@ Usage:
 
 {{- $mergedImage | toYaml -}}
 {{- end }}
+
+{{/*
+Generate clientId and clientSecret for a Casdoor application.
+
+Usage:
+{{- $creds := include "csghub.casdoor.client" "YourAppName" | fromYaml -}}
+clientId: {{ $creds.clientId }}
+clientSecret: {{ $creds.clientSecret }}
+
+Parameters:
+- appName: Application name (string)
+
+Returns: Dictionary with keys "clientId" and "clientSecret"
+*/}}
+{{- define "csghub.casdoor.client" -}}
+{{- $appName := . -}}
+
+{{- /* Generate seed based on timestamp */ -}}
+{{- $seed := now | date "2006010215" -}}
+
+{{- /* Generate clientId: 20 characters */ -}}
+{{- $clientId := (printf "%s-clientId-%s" $appName $seed | sha256sum | replace " " "" | trunc 20) -}}
+
+{{- /* Generate clientSecret: 40 characters */ -}}
+{{- $clientSecret := (printf "%s-clientSecret-%s" $appName $seed | sha256sum | replace " " "" | trunc 40) -}}
+
+{{- /* Output as YAML so it can be parsed into dict */ -}}
+clientId: {{ $clientId }}
+clientSecret: {{ $clientSecret }}
+{{- end -}}
