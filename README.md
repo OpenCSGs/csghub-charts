@@ -1,6 +1,6 @@
 # Repository Purpose Update
 
-Effective immediately, from version `v1.9.0` this repository will be dedicated exclusively to managing **CSGHub Helm Charts**.
+Effective immediately, this repository is dedicated exclusively to managing **CSGHub Helm Charts**.
 
 For the latest installation guide, please refer to:
 
@@ -8,11 +8,11 @@ For the latest installation guide, please refer to:
 
 ## Key Changes
 
-### The runner has been converted to a agent
+### The runner has been converted to an agent
 
- Allowing for integrated or standalone deployment.
+Now deployable as an integrated sub-chart of `csghub`, or as a standalone chart in a remote cluster.
 
-### Dataflow charts have been refactored.
+### Dataflow charts have been refactored
 
 Switch to the new version of dataflow.
 
