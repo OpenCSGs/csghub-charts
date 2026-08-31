@@ -94,14 +94,35 @@
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
-            "external": {"type": "object", "additionalProperties": true}
+            "external": {
+              "type": "object",
+              "properties": {
+                "endpoint": {"type": "string"},
+                "region": {"type": "string"},
+                "accessKey": {"type": "string"},
+                "secretKey": {"type": "string"},
+                "bucket": {"type": "string"},
+                "pathStyle": {"type": "boolean"},
+                "secure": {"type": "boolean"},
+                "encrypt": {"type": "boolean"}
+              }
+            }
           }
         },
         "registry": {
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
-            "external": {"type": "object", "additionalProperties": true}
+            "external": {
+              "type": "object",
+              "properties": {
+                "registry": {"type": "string"},
+                "repository": {"type": "string"},
+                "username": {"type": "string"},
+                "password": {"type": "string"},
+                "insecure": {"type": "boolean"}
+              }
+            }
           }
         },
         "gitaly": {
@@ -145,7 +166,19 @@
         "gateway": {"type": "object", "additionalProperties": true},
         "docs": {"type": "object", "additionalProperties": true},
         "postgresql": {"type": "object", "additionalProperties": true},
-        "objectStore": {"type": "object", "additionalProperties": true}
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "endpoint": {"type": "string"},
+            "region": {"type": "string"},
+            "accessKey": {"type": "string"},
+            "secretKey": {"type": "string"},
+            "bucket": {"type": "string"},
+            "pathStyle": {"type": "boolean"},
+            "secure": {"type": "boolean"},
+            "encrypt": {"type": "boolean"}
+          }
+        }
       }
     },
     "server": {
@@ -154,7 +187,20 @@
         "image": { "type": "object", "additionalProperties": true },
         "postgresql": { "type": "object", "additionalProperties": true },
         "redis": { "type": "object", "additionalProperties": true },
-        "xnet": { "type": "object", "additionalProperties": true }
+        "xnet": { "type": "object", "additionalProperties": true },
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "endpoint": {"type": "string"},
+            "region": {"type": "string"},
+            "accessKey": {"type": "string"},
+            "secretKey": {"type": "string"},
+            "bucket": {"type": "string"},
+            "pathStyle": {"type": "boolean"},
+            "secure": {"type": "boolean"},
+            "encrypt": {"type": "boolean"}
+          }
+        }
       }
     },
     "rproxy": {
@@ -182,7 +228,37 @@
         "service": {"type": "object", "additionalProperties": true},
         "postgresql": {"type": "object", "additionalProperties": true},
         "redis": {"type": "object", "additionalProperties": true},
-        "objectStore": {"type": "object", "additionalProperties": true}
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "endpoint": {"type": "string"},
+            "region": {"type": "string"},
+            "accessKey": {"type": "string"},
+            "secretKey": {"type": "string"},
+            "bucket": {"type": "string"},
+            "pathStyle": {"type": "boolean"},
+            "secure": {"type": "boolean"},
+            "encrypt": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "properties": {
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "endpoint": {"type": "string"},
+            "region": {"type": "string"},
+            "accessKey": {"type": "string"},
+            "secretKey": {"type": "string"},
+            "bucket": {"type": "string"},
+            "pathStyle": {"type": "boolean"},
+            "secure": {"type": "boolean"},
+            "encrypt": {"type": "boolean"}
+          }
+        }
       }
     },
     "runner": {
