@@ -4,33 +4,6 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
-Common domain helper for Runner.
-
-Usage:
-  {{ include "common.domain.runner" . }}
-
-Returns:
-  <subdomain>.<base-domain> or <base-domain> depending on useTop setting
-*/}}
-{{- define "common.domain.runner" }}
-  {{- $service := include "common.service" . | fromYaml }}
-  {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
-{{- end }}
-
-{{/*
-Common endpoint helper for Runner.
-
-Usage:
-  {{ include "common.endpoint.runner" . }}
-
-Returns:
-  Full URL (http://<domain> or https://<domain>) based on TLS configuration
-*/}}
-{{- define "common.endpoint.runner" }}
-  {{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.runner" .)) -}}
-{{- end }}
-
-{{/*
 Kaniko build arguments for runner.
 
 Usage:

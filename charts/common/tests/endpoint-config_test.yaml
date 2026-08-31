@@ -1,0 +1,66 @@
+# Test suite for the common.endpoint.aigateway template.
+#
+# Renders the aigateway endpoint through templates/fixtures/endpoint-config.yaml.
+# Baseline values come from tests/values.yaml (global.gateway.external.domain
+# = "csghub.example.com"). These tests pin the three configuration branches:
+# default path-based, useDomain, and a custom domain.
+
+suite: Test common.endpoint.aigateway
+templates:
+  - templates/fixtures/endpoint-config.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the path-based endpoint by default
+    asserts:
+      - equal:
+          path: aigateway_endpoint
+          value: "http://csghub.example.com/aigateway"
+      - equal:
+          path: aigateway_domain
+          value: "aigateway.example.com"
+
+  - it: renders the dedicated subdomain when useDomain is set
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              useDomain: true
+    asserts:
+      - equal:
+          path: aigateway_endpoint
+          value: "http://aigateway.example.com"
+      - equal:
+          path: aigateway_domain
+          value: "aigateway.example.com"
+
+  - it: renders the custom domain when aigateway.domain is set
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              domain: "ai.example.com"
+    asserts:
+      - equal:
+          path: aigateway_endpoint
+          value: "http://ai.example.com"
+      - equal:
+          path: aigateway_domain
+          value: "aigateway.example.com"
+
+  - it: renders https when TLS is enabled
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: "csghub-tls"
+    asserts:
+      - equal:
+          path: aigateway_endpoint
+          value: "https://csghub.example.com/aigateway"

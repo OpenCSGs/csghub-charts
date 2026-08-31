@@ -3,27 +3,6 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{/*
-# Temporal Domain Helper
-# Generates the full domain name for Temporal service based on configuration
-# Usage: {{ include "common.domain.temporal" . }}
-# Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
-*/}}
-{{- define "common.domain.temporal" -}}
-{{- $service := include "common.service" (dict "ctx" . "service" "temporal") | fromYaml }}
-{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
-{{- end }}
-
-{{/*
-# Temporal External Endpoint Helper
-# Generates the complete external access endpoint for Temporal service
-# Usage: {{ include "common.endpoint.temporal" . }}
-# Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
-*/}}
-{{- define "common.endpoint.temporal" }}
-{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.temporal" .)) -}}
-{{- end }}
-
 {{- /*
 # Temporal Readiness Check Template
 # Creates a Kubernetes init container that waits for Temporal service to become ready
