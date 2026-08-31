@@ -50,6 +50,83 @@ Usage: {{ include "common.domain" (dict "ctx" . "sub" "api") }}
 {{- end -}}
 
 {{/*
+Resolve the subdomain for any service via common.service.
+
+Parameters:
+  - ctx: Helm context
+  - service: Service name (resolved through common.service)
+  - suffix: Optional suffix appended to the service name (e.g. "-api" for webAPI)
+
+Usage:
+{{ include "common.domain.service" (dict "ctx" . "service" "casdoor") }}
+{{ include "common.domain.service" (dict "ctx" . "service" "web" "suffix" "-api") }}
+*/}}
+{{- define "common.domain.service" }}
+{{- $ctx := .ctx }}
+{{- $service := include "common.service" (dict "ctx" $ctx "service" .service) | fromYaml }}
+{{- $sub := printf "%s%s" $service.name (.suffix | default "") }}
+{{- include "common.domain" (dict "ctx" $ctx "sub" $sub) -}}
+{{- end }}
+
+{{/*
+Service-level domain helpers. Each resolves the service name via common.service
+and composes it onto the base domain.
+
+Usage: {{ include "common.domain.<svc>" . }}
+*/}}
+{{- define "common.domain.casdoor" -}}
+{{- include "common.domain.service" (dict "ctx" . "service" "casdoor") -}}
+{{- end }}
+
+{{- define "common.domain.loki" -}}
+{{- include "common.domain.service" (dict "ctx" . "service" "loki") -}}
+{{- end }}
+
+{{- define "common.domain.prometheus" -}}
+{{- include "common.domain.service" (dict "ctx" . "service" "prometheus") -}}
+{{- end }}
+
+{{- define "common.domain.temporal" -}}
+{{- include "common.domain.service" (dict "ctx" . "service" "temporal") -}}
+{{- end }}
+
+{{- define "common.domain.agenticflow" }}
+{{- include "common.domain.service" (dict "ctx" . "service" "agenticflow") -}}
+{{- end }}
+
+{{- define "common.domain.csgbot" }}
+{{- include "common.domain.service" (dict "ctx" . "service" "csgbot") -}}
+{{- end }}
+
+{{- define "common.domain.web" }}
+{{- include "common.domain.service" (dict "ctx" . "service" "web") -}}
+{{- end }}
+
+{{- define "common.domain.webAPI" }}
+{{- include "common.domain.service" (dict "ctx" . "service" "web" "suffix" "-api") -}}
+{{- end }}
+
+{{- define "common.domain.dataflow" -}}
+{{- include "common.domain.service" (dict "ctx" . "service" "dataflow") -}}
+{{- end }}
+
+{{- define "common.domain.labelstudio" }}
+{{- include "common.domain.service" (dict "ctx" . "service" "labelStudio") -}}
+{{- end }}
+
+{{/*
+Runner service domain. Runner is a standalone chart where the top-level values
+are the service itself, so it resolves via common.service (Mode 2) instead of a
+named service.
+
+Usage: {{ include "common.domain.runner" . }}
+*/}}
+{{- define "common.domain.runner" }}
+  {{- $service := include "common.service" . | fromYaml }}
+  {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
+{{- end }}
+
+{{/*
 Resolve the csghub service domain from the gateway external configuration.
 
 Usage:
@@ -79,6 +156,18 @@ depending on configuration.
 */}}
 {{- define "common.domain.minio" -}}
 {{- $service := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
+{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
+{{- end }}
+
+{{/*
+AI Gateway service domain.
+
+Usage: {{ include "common.domain.aigateway" . }}
+
+Returns: <aigateway-service-name>.<base-domain>.
+*/}}
+{{- define "common.domain.aigateway" -}}
+{{- $service := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
 {{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
 {{- end }}
 

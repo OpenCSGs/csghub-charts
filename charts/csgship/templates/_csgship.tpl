@@ -4,48 +4,6 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
-# CSGShip Domain Helper
-# Generates the full domain name for CSGShip service based on configuration
-# Usage: {{ include "common.domain.web" . }}
-# Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
-*/}}
-{{- define "common.domain.web" }}
-{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
-{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
-{{- end }}
-
-{{/*
-# CSGShip External Endpoint Helper
-# Generates the complete external access endpoint for CSGShip service
-# Usage: {{ include "common.endpoint.web" . }}
-# Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
-*/}}
-{{- define "common.endpoint.web" }}
-{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.web" .)) -}}
-{{- end }}
-
-{{/*
-# CSGShip API Domain Helper
-# Generates the full domain name for CSGShip API service based on configuration
-# Usage: {{ include "common.domain.webAPI" . }}
-# Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
-*/}}
-{{- define "common.domain.webAPI" }}
-{{- $service := include "common.service" (dict "ctx" . "service" "web") | fromYaml }}
-{{- include "common.domain" (dict "ctx" . "sub" (printf "%s-api" $service.name)) -}}
-{{- end }}
-
-{{/*
-# CSGShip API External Endpoint Helper
-# Generates the complete external access endpoint for CSGShip API service
-# Usage: {{ include "common.endpoint.webAPI" . }}
-# Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
-*/}}
-{{- define "common.endpoint.webAPI" }}
-{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.webAPI" .)) -}}
-{{- end }}
-
-{{/*
 Resolve service image with proper tag
 Usage:
   {{ include "csgship.service.image" (dict "ctx" . "service" .Values.rproxy) }}

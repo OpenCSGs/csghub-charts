@@ -1,0 +1,3 @@
+{{- /* Render the aigateway endpoint resolves across all configuration branches. */}}
+aigateway_endpoint: {{ include "common.endpoint.aigateway" . | quote }}
+aigateway_domain: {{ include "common.domain.aigateway" . | quote }}

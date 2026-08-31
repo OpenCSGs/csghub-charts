@@ -5,9 +5,9 @@
 # renders when global.edition is not "ce".
 #
 # NOTE: The isBuiltIn=true branch calls endpoint.aigateway which calls
-# common.endpoint.aigateway defined only in the csghub umbrella chart.
-# The isBuiltIn branch cannot be tested standalone; standalone behaviour
-# is fully covered below.
+# common.endpoint.aigateway. That define now lives in the common library
+# chart, but the built-in branch is only meaningful when rendered inside
+# the csghub umbrella; standalone behaviour is fully covered below.
 #
 # All connection credentials and tokens are non-deterministic; they are
 # matched by structure (length, presence) rather than exact value.

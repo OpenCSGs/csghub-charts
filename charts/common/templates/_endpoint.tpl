@@ -77,3 +77,93 @@ Returns: Full URL for the user-facing csghub endpoint based on TLS configuration
 {{- define "common.endpoint.public" }}
 {{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.public" .)) -}}
 {{- end }}
+
+{{/*
+AI Gateway external endpoint.
+
+Usage: {{ include "common.endpoint.aigateway" . }}
+
+Configuration (in global.gateway.external.aigateway):
+- domain: Custom domain (e.g., "ai.example.com") - takes precedence if set
+- useDomain: true to use dedicated domain (aigateway.<base-domain>)
+
+Returns:
+- Custom domain set: Full URL to custom domain (http://ai.example.com)
+- useDomain=true:    Full URL to dedicated domain (http://aigateway.<domain>)
+- default:           Path-based URL under main domain (http://<csghub-domain>/aigateway)
+*/}}
+{{- define "common.endpoint.aigateway" }}
+{{- $external := .Values.global.gateway.external | default dict }}
+{{- $aigatewayConfig := $external.aigateway | default dict }}
+{{- $customDomain := $aigatewayConfig.domain | default "" }}
+{{- $useDomain := $aigatewayConfig.useDomain | default false }}
+
+{{- if $customDomain }}
+{{-   include "common.endpoint" (dict "ctx" . "domain" $customDomain) -}}
+{{- else if $useDomain }}
+{{-   include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.aigateway" .)) -}}
+{{- else }}
+{{-   printf "%s/aigateway" (include "common.endpoint.csghub" .) -}}
+{{- end }}
+{{- end }}
+
+{{/*
+Resolve the external endpoint for any service.
+
+Parameters: same as common.domain.service.
+
+Usage: {{ include "common.endpoint.service" (dict "ctx" . "service" "casdoor") }}
+*/}}
+{{- define "common.endpoint.service" }}
+{{- include "common.endpoint" (dict "ctx" .ctx "domain" (include "common.domain.service" .)) -}}
+{{- end }}
+
+{{/*
+Service-level endpoint helpers. Each delegates to common.endpoint.service with
+the matching domain helper.
+
+Usage: {{ include "common.endpoint.<svc>" . }}
+*/}}
+{{- define "common.endpoint.casdoor" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "casdoor") -}}
+{{- end }}
+
+{{- define "common.endpoint.loki" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "loki") -}}
+{{- end }}
+
+{{- define "common.endpoint.prometheus" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "prometheus") -}}
+{{- end }}
+
+{{- define "common.endpoint.temporal" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "temporal") -}}
+{{- end }}
+
+{{- define "common.endpoint.agenticflow" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "agenticflow") -}}
+{{- end }}
+
+{{- define "common.endpoint.csgbot" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "csgbot") -}}
+{{- end }}
+
+{{- define "common.endpoint.web" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "web") -}}
+{{- end }}
+
+{{- define "common.endpoint.webAPI" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "web" "suffix" "-api") -}}
+{{- end }}
+
+{{- define "common.endpoint.dataflow" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "dataflow") -}}
+{{- end }}
+
+{{- define "common.endpoint.labelstudio" }}
+{{- include "common.endpoint.service" (dict "ctx" . "service" "labelStudio") -}}
+{{- end }}
+
+{{- define "common.endpoint.runner" }}
+  {{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.runner" .)) -}}
+{{- end }}

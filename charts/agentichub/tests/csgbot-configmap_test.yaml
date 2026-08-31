@@ -5,9 +5,9 @@
 # Tokens and connection credentials are matched by regex (non-deterministic).
 #
 # NOTE: The isBuiltIn=true branch calls endpoint.aigateway which calls
-# common.endpoint.aigateway defined only in the csghub umbrella chart.
-# The isBuiltIn branch cannot be tested standalone; standalone behaviour
-# is fully covered below.
+# common.endpoint.aigateway. That define now lives in the common library
+# chart, but the built-in branch is only meaningful when rendered inside
+# the csghub umbrella; standalone behaviour is fully covered below.
 
 suite: Test CSGBot ConfigMap
 templates:

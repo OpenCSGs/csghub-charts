@@ -4,27 +4,6 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
-# Casdoor Domain Helper
-# Generates the full domain name for Casdoor service based on configuration
-# Usage: {{ include "common.domain.casdoor" . }}
-# Returns: <subdomain>.<base-domain> or <base-domain> depending on useTop setting
-*/}}
-{{- define "common.domain.casdoor" -}}
-{{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
-{{- include "common.domain" (dict "ctx" . "sub" $service.name) -}}
-{{- end }}
-
-{{/*
-# Casdoor External Endpoint Helper
-# Generates the complete external access endpoint for Casdoor service
-# Usage: {{ include "common.endpoint.casdoor" . }}
-# Returns: Full URL (http://<domain> or https://<domain>) based on TLS configuration
-*/}}
-{{- define "common.endpoint.casdoor" }}
-{{- include "common.endpoint" (dict "ctx" . "domain" (include "common.domain.casdoor" .)) -}}
-{{- end }}
-
-{{/*
 Generate clientId and clientSecret for Casdoor application
 
 Usage:
