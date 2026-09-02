@@ -106,11 +106,20 @@ spec:
           volumeMounts:
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 8083
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
+          {{- if $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $service.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: /healthz
@@ -118,6 +127,7 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}
@@ -160,11 +170,19 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/nginx/conf.d
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 80
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $service.readinessProbe }}
           readinessProbe:
             {{- toYaml $service.readinessProbe | nindent 12 }}

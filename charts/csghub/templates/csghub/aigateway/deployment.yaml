@@ -95,11 +95,20 @@ spec:
           volumeMounts:
             {{- toYaml $moderation.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $moderation.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $moderation.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 8089
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
+          {{- if $moderation.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $moderation.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: /healthz
@@ -107,6 +116,7 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $moderation.startupProbe }}
           startupProbe:
             {{- toYaml $moderation.startupProbe | nindent 12 }}
@@ -162,11 +172,16 @@ spec:
           volumeMounts:
             {{- toYaml $aigateway.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $aigateway.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $aigateway.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 8094
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $aigateway.readinessProbe }}
           readinessProbe:
             {{- toYaml $aigateway.readinessProbe | nindent 12 }}

@@ -93,11 +93,16 @@ spec:
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 7233
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $service.readinessProbe }}
           readinessProbe:
             {{- toYaml $service.readinessProbe | nindent 12 }}
@@ -110,10 +115,15 @@ spec:
           securityContext:
             {{- toYaml $service.securityContext | nindent 12 }}
           {{- end }}
+          {{- if $service.lifecycle }}
+          lifecycle:
+            {{- toYaml $service.lifecycle | nindent 12 }}
+          {{- else }}
           lifecycle:
             postStart:
               exec:
                 command: [ "/bin/sh", "-c", "sleep 8" ]
+          {{- end }}
           {{- if $service.stdin }}
           stdin: {{ $service.stdin }}
           {{- end }}

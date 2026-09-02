@@ -90,11 +90,19 @@ spec:
           volumeMounts:
             - name: corefile
               mountPath: /etc/coredns
+          {{- if $service.volumeMounts }}
+            {{- toYaml $service.volumeMounts | nindent 12 }}
+          {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 53
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $service.readinessProbe }}
           readinessProbe:
             {{- toYaml $service.readinessProbe | nindent 12 }}

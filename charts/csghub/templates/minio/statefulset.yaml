@@ -98,17 +98,27 @@ spec:
           resources:
             {{- toYaml $service.resources | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 9000
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
+          {{- if $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $service.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: /minio/health/live
               port: 9000
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}

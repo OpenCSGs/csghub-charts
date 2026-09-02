@@ -89,11 +89,20 @@ spec:
           {{- if $service.volumeMounts }}
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 5000
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
+          {{- if $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $service.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: /
@@ -103,6 +112,7 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 10
             failureThreshold: 5
+          {{- end }}
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}
