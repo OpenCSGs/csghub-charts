@@ -111,6 +111,10 @@ spec:
           resources:
             {{- toYaml $service.resources | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 5432
@@ -118,6 +122,11 @@ spec:
             periodSeconds: 7
             timeoutSeconds: 5
             failureThreshold: 10
+          {{- end }}
+          {{- if $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $service.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             exec:
               command:
@@ -133,6 +142,7 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 7
             timeoutSeconds: 5
+          {{- end }}
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}

@@ -68,6 +68,10 @@ spec:
             - containerPort: 8000
               name: {{ dig "service" "name" $service.name $service }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
+          {{- if $service.envFrom }}
+          envFrom:
+            {{- toYaml $service.envFrom | nindent 12 }}
+          {{- end }}
           {{- with $service.environments }}
           env:
           {{- range $key, $value := . }}
@@ -85,17 +89,27 @@ spec:
           {{- if $service.volumeMounts }}
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- else }}
           livenessProbe:
             tcpSocket:
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
+          {{- if $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $service.readinessProbe | nindent 12 }}
+          {{- else }}
           readinessProbe:
             httpGet:
               path: /api/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5
+          {{- end }}
           {{- if $service.startupProbe }}
           startupProbe:
             {{- toYaml $service.startupProbe | nindent 12 }}
