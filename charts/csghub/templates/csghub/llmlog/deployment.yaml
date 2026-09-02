@@ -92,6 +92,10 @@ spec:
           volumeMounts:
             {{- toYaml $service.volumeMounts | nindent 12 }}
           {{- end }}
+          {{- if $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $service.livenessProbe | nindent 12 }}
+          {{- end }}
           {{- if $service.readinessProbe }}
           readinessProbe:
             {{- toYaml $service.readinessProbe | nindent 12 }}
