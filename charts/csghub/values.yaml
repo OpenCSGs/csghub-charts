@@ -86,6 +86,11 @@ global:
       # password: ""                # Database password
       # timezone: "Etc/UTC"         # Database timezone
       # sslmode: "prefer"           # SSL mode
+    ## Reference an existing Secret containing POSTGRES_HOST/POSTGRES_PORT/
+    ## POSTGRES_USER/POSTGRES_PASSWORD/[POSTGRES_SSLMODE]. Only honored when
+    ## enabled=false. The Secret must be provisioned in the release namespace
+    ## before helm install/upgrade runs.
+    existingSecret: ""
 
   ## Redis configuration
   redis:
@@ -96,6 +101,9 @@ global:
       # host: "<redis_host>"        # Redis server hostname or IP
       # port: 6379                  # Redis port number
       # password: ""                # Redis authentication password
+    ## Reference an existing Secret containing REDIS_HOST/REDIS_PORT/REDIS_PASSWORD/
+    ## [REDIS_USER]/[REDIS_DATABASE]. Only honored when enabled=false.
+    existingSecret: ""
 
   ## Object storage configuration
   objectStore:
@@ -110,6 +118,10 @@ global:
       # encrypt: false            # Enable server-side encryption
       # secure: false             # Use HTTPS for connections
       # pathStyle: true           # Use path-style addressing
+    ## Reference an existing Secret containing OBJECT_STORE_ENDPOINT/
+    ## OBJECT_STORE_ACCESS_KEY/OBJECT_STORE_SECRET_KEY/[OBJECT_STORE_REGION]/
+    ## [OBJECT_STORE_BUCKET]. Only honored when enabled=false.
+    existingSecret: ""
 
   ## Container Registry configuration
   registry:
@@ -134,6 +146,9 @@ global:
       # port: 8075                  # Gitaly port number
       # token: ""                   # Authentication token
       # storage: "default"          # Storage name for repositories
+    ## Reference an existing Secret containing GITALY_HOST/GITALY_PORT/GITALY_TOKEN/
+    ## [GITALY_STORAGE]/[GITALY_SCHEME]. Only honored when enabled=false.
+    existingSecret: ""
 
   ## Dataflow configuration
   dataflow:

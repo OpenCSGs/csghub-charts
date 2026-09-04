@@ -4,6 +4,38 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
+Resolve the name of the Secret that supplies the Redis connection.
+
+Resolution order: service-level redis.existingSecret > global.redis.existingSecret.
+Only honored when global.redis.enabled=false. When set, the connection is resolved
+from the Secret's REDIS_* keys (REDIS_HOST/REDIS_PORT/REDIS_PASSWORD, optional
+REDIS_USER/REDIS_DATABASE) via lookup.
+
+Usage:
+{{ include "common.redis.existingSecret" (dict "ctx" . "service" .Values.servicename) }}
+*/}}
+{{- define "common.redis.existingSecret" }}
+  {{- $service := .service }}
+  {{- $ctx := .ctx }}
+  {{- if not $ctx.Values.global.redis.enabled }}
+    {{- $existingSecret := "" }}
+    {{- with $service.redis }}
+      {{- if .existingSecret }}
+        {{- $existingSecret = .existingSecret }}
+      {{- end }}
+    {{- end }}
+    {{- if not $existingSecret }}
+      {{- with $ctx.Values.global.redis }}
+        {{- if .existingSecret }}
+          {{- $existingSecret = .existingSecret }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- $existingSecret -}}
+  {{- end }}
+{{- end }}
+
+{{/*
 Generate Redis Connection Configuration
 
 Usage:
@@ -63,6 +95,31 @@ Returns: YAML configuration object with Redis connection parameters
       "user" (.user | default $redisConfig.user)
       "password" (.password | default $redisConfig.password)
     ) $redisConfig }}
+  {{- end }}
+
+  {{- /* existingSecret: pull real connection values from the referenced Secret. */}}
+  {{- $existingSecret := include "common.redis.existingSecret" (dict "ctx" $ctx "service" $service) }}
+  {{- if $existingSecret }}
+    {{- $secretData := (lookup "v1" "Secret" $ctx.Release.Namespace $existingSecret).data | default dict }}
+    {{- $realHost := dig "REDIS_HOST" "" $secretData | b64dec }}
+    {{- $realPort := dig "REDIS_PORT" "" $secretData | b64dec }}
+    {{- $realPass := dig "REDIS_PASSWORD" "" $secretData | b64dec }}
+    {{- $realUser := dig "REDIS_USER" "" $secretData | b64dec }}
+    {{- $realDB := dig "REDIS_DATABASE" "" $secretData | b64dec }}
+    {{- if $realHost }}
+      {{- $portValue := $redisConfig.port }}
+      {{- if $realPort }}
+        {{- $parsed := $realPort | atoi }}
+        {{- if $parsed }}{{ $portValue = $parsed }}{{ end }}
+      {{- end }}
+      {{- $redisConfig = dict
+        "host" $realHost
+        "port" $portValue
+        "database" (or $realDB $redisConfig.database)
+        "user" (or $realUser $redisConfig.user)
+        "password" (or $realPass $redisConfig.password)
+      }}
+    {{- end }}
   {{- end }}
 
   {{- /* Validate required configurations */}}

@@ -1,4 +1,36 @@
 {{/*
+Resolve the name of the Secret that supplies the object store connection.
+
+Resolution order: service-level objectStore.existingSecret > global.objectStore.existingSecret.
+Only honored when global.objectStore.enabled=false. When set, the connection is resolved
+from the Secret's OBJECT_STORE_* keys (OBJECT_STORE_ENDPOINT/OBJECT_STORE_ACCESS_KEY/
+OBJECT_STORE_SECRET_KEY, optional OBJECT_STORE_REGION/OBJECT_STORE_BUCKET) via lookup.
+
+Usage:
+{{ include "common.objectStore.existingSecret" (dict "ctx" . "service" .Values.servicename) }}
+*/}}
+{{- define "common.objectStore.existingSecret" }}
+  {{- $service := .service }}
+  {{- $ctx := .ctx }}
+  {{- if not $ctx.Values.global.objectStore.enabled }}
+    {{- $existingSecret := "" }}
+    {{- with $service.objectStore }}
+      {{- if .existingSecret }}
+        {{- $existingSecret = .existingSecret }}
+      {{- end }}
+    {{- end }}
+    {{- if not $existingSecret }}
+      {{- with $ctx.Values.global.objectStore }}
+        {{- if .existingSecret }}
+          {{- $existingSecret = .existingSecret }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- $existingSecret -}}
+  {{- end }}
+{{- end }}
+
+{{/*
 Generate S3/MinIO Connection Configuration
 
 Usage:
@@ -84,6 +116,30 @@ Returns: YAML configuration object with S3 connection parameters
     {{- end }}
     {{- if hasKey . "pathStyle" }}
       {{- $s3Config = set $s3Config "pathStyle" .pathStyle }}
+    {{- end }}
+  {{- end }}
+
+  {{- /* existingSecret: pull real connection values from the referenced Secret. */}}
+  {{- $existingSecret := include "common.objectStore.existingSecret" (dict "ctx" $ctx "service" $service) }}
+  {{- if $existingSecret }}
+    {{- $secretData := (lookup "v1" "Secret" $ctx.Release.Namespace $existingSecret).data | default dict }}
+    {{- $realEndpoint := dig "OBJECT_STORE_ENDPOINT" "" $secretData | b64dec }}
+    {{- $realAccessKey := dig "OBJECT_STORE_ACCESS_KEY" "" $secretData | b64dec }}
+    {{- $realSecretKey := dig "OBJECT_STORE_SECRET_KEY" "" $secretData | b64dec }}
+    {{- $realRegion := dig "OBJECT_STORE_REGION" "" $secretData | b64dec }}
+    {{- $realBucket := dig "OBJECT_STORE_BUCKET" "" $secretData | b64dec }}
+    {{- if $realEndpoint }}
+      {{- $s3Config = dict
+        "endpoint" $realEndpoint
+        "externalEndpoint" $realEndpoint
+        "region" (or $realRegion $s3Config.region)
+        "accessKey" (or $realAccessKey $s3Config.accessKey)
+        "secretKey" (or $realSecretKey $s3Config.secretKey)
+        "bucket" (or $realBucket $s3Config.bucket)
+        "encrypt" $s3Config.encrypt
+        "secure" $s3Config.secure
+        "pathStyle" $s3Config.pathStyle
+      }}
     {{- end }}
   {{- end }}
 
