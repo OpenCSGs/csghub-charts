@@ -285,7 +285,7 @@ data:
   STARHUB_SERVER_GITALY_STORAGE: {{ $serverGitConfig.storage | quote }}
   {{- $domain := include "common.domain.csghub" . }}
   {{- $defaultPort := ternary "30022" "22" (eq (dig "service" "type" "LoadBalancer" .Values.global.gateway) "NodePort") }}
-  {{- $port := $serverSvc.gitlabShell.sshPort | default $defaultPort }}
+  {{- $port := toString ($serverSvc.gitlabShell.sshPort | default $defaultPort) }}
   STARHUB_SERVER_SSH_DOMAIN: {{ ternary (printf "git@%s" $domain) (printf "ssh://git@%s:%s" $domain $port) (eq $port "22") | quote }}
 
   ## Server Configuration for Space Application
