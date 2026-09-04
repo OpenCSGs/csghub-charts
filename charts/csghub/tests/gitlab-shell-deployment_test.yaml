@@ -44,7 +44,7 @@ tests:
           value: "gitlab-shell"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/gitlab-shell:v17.5.0"
+          value: "docker.io/opencsghq/gitlab-shell:v19.2.5"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -90,7 +90,7 @@ tests:
           value: "ssh-key-pairs"
       - equal:
           path: spec.template.spec.volumes[0].secret.secretName
-          value: "csghub-gitlab-shell"
+          value: "csghub-ssh-keys"
       - equal:
           path: spec.template.spec.volumes[1].name
           value: "config"
@@ -108,4 +108,4 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/gitlab-shell:v17.5.0"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/gitlab-shell:v19.2.5"

@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "gitlabShell") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $secretName := include "common.names.custom" (list . "ssh-keys") }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -128,7 +129,7 @@ spec:
       volumes:
         - name: ssh-key-pairs
           secret:
-            secretName: {{ $serviceName }}
+            secretName: {{ $secretName }}
         - name: config
           configMap:
             name: {{ $serviceName }}
