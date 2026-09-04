@@ -332,15 +332,13 @@ gitaly:
 gitlabShell:
   image:
     repository: "opencsghq/gitlab-shell"
-    tag: "v17.5.0"
+    tag: "v19.2.5"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
   service:
     type: "ClusterIP"
     port: 22
     protocol: "TCP"
-  rbac:
-    create: true
   securityContext:
     runAsUser: 0
 
