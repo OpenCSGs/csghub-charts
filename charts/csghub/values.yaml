@@ -751,7 +751,7 @@ gitlabShell:
   image:
     # registry: "docker.io"
     repository: "opencsghq/gitlab-shell"
-    tag: "v17.5.0"
+    tag: "v19.2.5"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 

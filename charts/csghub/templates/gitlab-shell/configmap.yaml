@@ -126,6 +126,9 @@ data:
         - ecdh-sha2-nistp521
         - diffie-hellman-group14-sha256
         - diffie-hellman-group14-sha1
+        - mlkem768x25519-sha256
+        - diffie-hellman-group16-sha512
+        - diffie-hellman-group-exchange-sha256
       # Specified the ciphers allowed
       ciphers:
         - aes128-gcm@openssh.com
@@ -151,10 +154,7 @@ data:
         - /srv/gitlab-shell/keys/ssh_host_rsa_key
         - /srv/gitlab-shell/keys/ssh_host_ecdsa_key
         - /srv/gitlab-shell/keys/ssh_host_ed25519_key
-      host_key_certs:
-        - /srv/gitlab-shell/keys/ssh_host_rsa_key.pub
-        - /srv/gitlab-shell/keys/ssh_host_ecdsa_key.pub
-        - /srv/gitlab-shell/keys/ssh_host_ed25519_key.pub
+      host_key_certs: []
       # GSSAPI-related settings
       gssapi:
         # Enable the gssapi-with-mic authentication method. Defaults to false.
