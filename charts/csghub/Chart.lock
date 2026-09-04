@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.7
+  version: 0.2.8
 - name: reloader
   repository: https://charts.opencsg.com/infra
   version: 2.2.14
@@ -16,13 +16,13 @@ dependencies:
   version: 29.14.0
 - name: runner
   repository: https://charts.opencsg.com/csghub
-  version: 2.4.2
+  version: 2.4.3
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
-  version: 2.4.1
+  version: 2.4.2
 - name: csgship
   repository: https://charts.opencsg.com/csghub
-  version: 0.4.4
+  version: 0.4.5
 - name: memmachine
   repository: https://charts.opencsg.com/infra
   version: 0.1.0
@@ -31,9 +31,9 @@ dependencies:
   version: 1.7.5
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
-  version: 0.6.8
+  version: 0.6.9
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:4267e059a959bb79018a809c6321fa677aa24be9656aba4a824a8991bc7ebaf0
-generated: "2026-08-31T14:18:45.662995+08:00"
+digest: sha256:faebcea935f4c38e781b6968b5f5c65d95e300134c506f11c203c20dccde4cdf
+generated: "2026-09-04T11:11:03.365712+08:00"

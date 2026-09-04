@@ -22,7 +22,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 2.4.2
+version: 2.4.3
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -33,7 +33,7 @@ appVersion: v2.4.0
 # Defined dependencies for subChart
 dependencies:
   - name: common
-    version: 0.2.7
+    version: 0.2.8
     repository: https://charts.opencsg.com/csghub
   - name: reloader
     version: 2.2.14
@@ -52,15 +52,15 @@ dependencies:
     repository: https://charts.opencsg.com/infra
     condition: prometheus.enabled
   - name: runner
-    version: 2.4.2
+    version: 2.4.3
     repository: https://charts.opencsg.com/csghub
     condition: runner.enabled
   - name: dataflow
-    version: 2.4.1
+    version: 2.4.2
     repository: https://charts.opencsg.com/csghub
     condition: dataflow.enabled
   - name: csgship
-    version: 0.4.4
+    version: 0.4.5
     repository: https://charts.opencsg.com/csghub
     condition: csgship.enabled
   - name: memmachine
@@ -73,7 +73,7 @@ dependencies:
     repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
   - name: agentichub
-    version: 0.6.8
+    version: 0.6.9
     repository: https://charts.opencsg.com/csghub
     condition: agentichub.enabled
   - name: superset
