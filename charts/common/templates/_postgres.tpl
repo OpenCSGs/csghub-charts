@@ -4,6 +4,42 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
+Resolve the name of the Secret that supplies the PostgreSQL connection.
+
+Resolution order: service-level postgresql.existingSecret > global.postgresql.existingSecret.
+Only honored when global.postgresql.enabled=false; in internal mode the chart deploys its
+own PostgreSQL with a chart-generated password and this helper returns empty so every
+consumer (Deployment/Job/ConfigMap/wait-for-postgresql) falls back to the internal
+connection. When set, common.postgresql.config resolves the connection from the Secret's
+POSTGRES_* keys (POSTGRES_HOST/POSTGRES_PORT/POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_SSLMODE)
+via lookup. The database name stays chart-known per service, so a single shared Secret can
+serve every service while each keeps its own database.
+
+Usage:
+{{ include "common.postgresql.existingSecret" (dict "ctx" . "service" .Values.servicename) }}
+*/}}
+{{- define "common.postgresql.existingSecret" }}
+  {{- $service := .service }}
+  {{- $ctx := .ctx }}
+  {{- if not $ctx.Values.global.postgresql.enabled }}
+    {{- $existingSecret := "" }}
+    {{- with $service.postgresql }}
+      {{- if .existingSecret }}
+        {{- $existingSecret = .existingSecret }}
+      {{- end }}
+    {{- end }}
+    {{- if not $existingSecret }}
+      {{- with $ctx.Values.global.postgresql }}
+        {{- if .existingSecret }}
+          {{- $existingSecret = .existingSecret }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- $existingSecret -}}
+  {{- end }}
+{{- end }}
+
+{{/*
 Generate PostgreSQL Connection Configuration
 
 Usage:
@@ -70,6 +106,34 @@ Returns: YAML configuration object with PostgreSQL connection parameters
       "timezone" (.timezone | default $postgresqlConfig.timezone)
       "sslmode" (.sslmode | default $postgresqlConfig.sslmode)
     ) $postgresqlConfig }}
+  {{- end }}
+
+  {{- /* existingSecret: pull real connection values from the referenced Secret so probes
+       hit the right DB instead of whatever global.postgresql.external.* is set to. */}}
+  {{- $existingSecret := include "common.postgresql.existingSecret" (dict "ctx" $ctx "service" $service) }}
+  {{- if $existingSecret }}
+    {{- $secretData := (lookup "v1" "Secret" $ctx.Release.Namespace $existingSecret).data | default dict }}
+    {{- $realHost := dig "POSTGRES_HOST" "" $secretData | b64dec }}
+    {{- $realPort := dig "POSTGRES_PORT" "" $secretData | b64dec }}
+    {{- $realUser := dig "POSTGRES_USER" "" $secretData | b64dec }}
+    {{- $realPass := dig "POSTGRES_PASSWORD" "" $secretData | b64dec }}
+    {{- $realSSL := dig "POSTGRES_SSLMODE" "" $secretData | b64dec }}
+    {{- if $realHost }}
+      {{- $portValue := $postgresqlConfig.port }}
+      {{- if $realPort }}
+        {{- $parsed := $realPort | atoi }}
+        {{- if $parsed }}{{ $portValue = $parsed }}{{ end }}
+      {{- end }}
+      {{- $postgresqlConfig = dict
+        "host" $realHost
+        "port" $portValue
+        "user" (or $realUser $postgresqlConfig.user)
+        "password" (or $realPass $postgresqlConfig.password)
+        "database" $postgresqlConfig.database
+        "timezone" $postgresqlConfig.timezone
+        "sslmode" (or $realSSL $postgresqlConfig.sslmode)
+      }}
+    {{- end }}
   {{- end }}
 
   {{- /* Validate required configurations */}}

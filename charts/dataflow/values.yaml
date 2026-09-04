@@ -70,6 +70,10 @@ global:
       # password: ""                # Database password
       # timezone: "Etc/UTC"         # Database timezone
       # sslmode: "prefer"           # SSL mode
+    ## Reference an existing Secret containing POSTGRES_HOST/POSTGRES_PORT/
+    ## POSTGRES_USER/POSTGRES_PASSWORD/[POSTGRES_SSLMODE]. Only honored when
+    ## enabled=false. The Secret must be provisioned in the release namespace.
+    existingSecret: ""
 
   ## SubChart deployment context
   chartContext:
