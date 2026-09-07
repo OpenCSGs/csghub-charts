@@ -1,6 +1,6 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.8
-digest: sha256:b864f10f2fafedab204630c51de109480e0743ae4df3f424ef43f1fd56a39530
-generated: "2026-09-04T10:48:50.738946+08:00"
+  version: 0.3.0
+digest: sha256:63a642522e19243ec48ee124ae5163aa102a6b234cc0767ea2f44ade37ac503b
+generated: "2026-09-07T11:50:32.757436+08:00"

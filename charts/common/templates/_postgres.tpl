@@ -65,7 +65,7 @@ Returns: YAML configuration object with PostgreSQL connection parameters
     "host" $postgresqlName
     "port" (dig "service" "port" 5432 $postgresSvc)
     "user" "csghub"
-    "password" (include "common.randomPassword" "csghub")
+    "password" (include "common.secret.password" (list $ctx (printf "%s.password" $postgresSvc.name) 32))
     "database" (dig "postgresql" "database" ($serviceName | replace "-" "_") $service)
     "timezone" "Etc/UTC"
     "sslmode" "disable"

@@ -32,7 +32,7 @@ Returns: YAML configuration object with registry parameters
     "registry" (include "common.endpoint.csghub" $ctx | trimPrefix "http://" | trimPrefix  "https://")
     "repository" $ctx.Release.Namespace
     "username" "registry"
-    "password" (include "common.randomPassword" $registrySvc.name)
+    "password" (include "common.secret.password" (list $ctx (printf "%s.password" $registrySvc.name) 32))
     "insecure" false
   }}
 
