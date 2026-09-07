@@ -4,28 +4,11 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
-Generate global unique HUB_SERVER_API_TOKEN
-
-Usage:
-{{ include "csghub.api.token" . }}
-
-Parameters:
-- ctx: Global context (e.g., .)
-
-Returns: Unique API token string that changes on every installation
+csghub hub API token (128 hex), persisted in the master Secret under
+"csghub-token" so it survives upgrades.
 */}}
 {{- define "csghub.api.token" }}
-  {{- $ctx := . }}
-
-  {{- /* Generate random seed for uniqueness across installations */}}
-  {{- $seed := now | date "200601021504" }}
-
-  {{- /* Create unique hashes combining release info with random seed */}}
-  {{- $namespaceHash := (printf "%s-%s" $ctx.Release.Namespace $seed | sha256sum) }}
-  {{- $nameHash := (printf "%s-%s" $ctx.Release.Name $seed | sha256sum) }}
-
-  {{- /* Combine hashes to form final token */}}
-  {{- printf "%s%s" $namespaceHash $nameHash }}
+  {{- include "common.secret.value" (list . "csghub-token" 128) -}}
 {{- end }}
 
 {{/*

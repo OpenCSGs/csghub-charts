@@ -42,12 +42,15 @@ Deterministic value from the master key. The second argument is the credential
 identifier (e.g. "nats.password"): same key + same context = same output, and
 distinct credentials must use distinct contexts. Cross-chart shared credentials
 omit the chart name prefix so subcharts agree with the parent.
+
+sha512sum yields 128 hex, so a single derivation covers any requested length;
+shorter outputs are just truncations.
 */}}
 {{- define "common.secret.derive" }}
   {{- $ctx := index . 0 }}
   {{- $context := index . 1 }}
   {{- $masterKey := include "common.secret.masterKey" $ctx }}
-  {{- printf "%s:%s" $masterKey $context | sha256sum -}}
+  {{- printf "%s:%s" $masterKey $context | sha512sum -}}
 {{- end }}
 
 {{/*
@@ -58,4 +61,23 @@ Deterministic password of a given length (hex string, safe for any field).
   {{- $context := index . 1 }}
   {{- $length := index . 2 }}
   {{- include "common.secret.derive" (list $ctx $context) | trunc (int $length) -}}
+{{- end }}
+
+{{/*
+Resolve a master-key-derived credential that is persisted in the master Secret:
+return the stored value (kept stable across upgrades) when present, otherwise
+derive it. The context doubles as the Secret data key and the derivation seed.
+*/}}
+{{- define "common.secret.value" }}
+  {{- $ctx := index . 0 }}
+  {{- $context := index . 1 }}
+  {{- $length := index . 2 }}
+  {{- $secretName := include "common.secret.secretName" $ctx }}
+  {{- $existing := lookup "v1" "Secret" $ctx.Release.Namespace $secretName }}
+  {{- $stored := dig $context "" (dig "data" (dict) $existing) | b64dec }}
+  {{- if $stored }}
+    {{- $stored -}}
+  {{- else }}
+    {{- include "common.secret.password" (list $ctx $context $length) -}}
+  {{- end }}
 {{- end }}
