@@ -66,10 +66,10 @@ tests:
     asserts:
       - matchRegex:
           path: data.FLOWS_ACCESS_TOKEN
-          pattern: "^[A-Za-z0-9+/]{43}=$"
+          pattern: "^[0-9a-f]{44}$"
       - matchRegex:
           path: data.LANGFLOW_SECRET_KEY
-          pattern: "^[A-Za-z0-9+/]{43}=$"
+          pattern: "^[0-9a-f]{44}$"
       - matchRegex:
           path: data.LANGFLOW_DATABASE_URL
           pattern: '^postgresql://csghub:[A-Za-z0-9+/]{32}@csghub-postgresql:5432/csghub_agenticflow\?sslmode=disable$'

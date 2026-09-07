@@ -37,7 +37,7 @@ tests:
           pattern: 'hub-access-token = "[0-9a-f]{128}"'
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: 'langflow-access-token = "[A-Za-z0-9+/]{43}="'
+          pattern: 'langflow-access-token = "[0-9a-f]{44}"'
 
   - it: points the csghub and aigateway endpoints at the CSGHub console
     template: charts/agentichub/templates/csgbot/configmap.yaml

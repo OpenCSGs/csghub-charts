@@ -50,6 +50,25 @@ tests:
           path: data.CSGHUB_PORTAL_LOGIN_URL
           pattern: "https://casdoor.example.com/.*\\?client_id=[0-9a-f]{20}&response_type=code&redirect_uri=https://csghub.example.com/.*"
 
+  - it: renders the master-key-derived tokens and signing keys
+    template: csghub/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data.STARHUB_SERVER_API_TOKEN
+          pattern: "^[0-9a-f]{128}$"
+      - matchRegex:
+          path: data.STARHUB_JWT_SIGNING_KEY
+          pattern: "^[0-9a-f]{40}$"
+      - matchRegex:
+          path: data.STARHUB_SERVER_SPACE_SESSION_SECRET_KEY
+          pattern: "^[0-9a-f]{40}$"
+      - matchRegex:
+          path: data.STARHUB_SERVER_XNET_API_KEY
+          pattern: "^[0-9a-f]{128}$"
+      - matchRegex:
+          path: data.OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN
+          pattern: "^[0-9a-f]{44}$"
+
   - it: renders the portal database, object storage and redis endpoints
     template: csghub/configmap.yaml
     asserts:
