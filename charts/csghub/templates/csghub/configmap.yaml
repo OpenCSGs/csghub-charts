@@ -25,7 +25,7 @@ data:
   CSGHUB_PORTAL_ON_PREMISE: {{ ternary "false" "true" (eq .Values.global.edition "saas") | quote }}
   CSGHUB_PORTAL_STARHUB_BASE_URL: {{ include "common.endpoint.csghub" . | quote }}
   {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
-  {{- $apiToken := dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $data }}
+  {{- $apiToken := include "csghub.api.token" . }}
   CSGHUB_PORTAL_STARHUB_API_KEY: {{ $apiToken | quote }}
   ## Portal Configuration for Casdoor
   {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
@@ -233,8 +233,7 @@ data:
   STARHUB_SERVER_MIRROR_MAX_DATASET_REPO_SIZE: {{ $serverSvc.mirrorSync.maxDatasetRepoSize | quote }}
   {{- end }}
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
-  {{- $jwtToken := dig "STARHUB_JWT_SIGNING_KEY" (randNumeric 8 | sha1sum) $data }}
-  STARHUB_JWT_SIGNING_KEY: {{ $jwtToken | quote }}
+  STARHUB_JWT_SIGNING_KEY: {{ include "common.secret.value" (list . "jwt-signing-key" 40) | quote }}
   STARHUB_SERVER_GIT_MAX_UN_LFS_FILE_SIZE: {{ $serverSvc.maxUnLFileSize | quote }}
 
   ## Server Configuration for Model
@@ -301,8 +300,7 @@ data:
   {{- $typeLabel := $runnerSvc.space.gpuModelLabel.typeLabel }}
   {{- $capacityLabel := $runnerSvc.space.gpuModelLabel.capacityLabel }}
   STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
-  {{- $sessionToken := dig "STARHUB_SERVER_SPACE_SESSION_SECRET_KEY" (randNumeric 8 | sha1sum) $data }}
-  STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ $sessionToken | quote }}
+  STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ include "common.secret.value" (list . "space-session-secret-key" 40) | quote }}
 
   ## Server Configuration for Casdoor
   STARHUB_SERVER_CASDOOR_CERTIFICATE: "/starhub-bin/casdoor/tls.crt"
@@ -351,8 +349,7 @@ data:
   {{- $agenticflowHost := or $serverSvc.agenticflow.host (include "common.endpoint.agenticflow" .) }}
   CSGHUB_PORTAL_LANGFLOW_HOST: {{ $agenticflowHost | quote }}
   OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ $agenticflowHost | quote }}
-  {{- $agenticflowData := (lookup "v1" "ConfigMap" .Release.Namespace $agenticflowSvcName).data | default dict }}
-  {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" "" $agenticflowData | default (include "agenticflow.api.token" .) }}
+  {{- $agenticflowToken := include "agenticflow.api.token" . }}
   OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ or $serverSvc.agenticflow.token $agenticflowToken | quote }}
   STARHUB_SERVER_AGENT_CODE_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agenticflow.codeInstanceQuotaPerUser | default 5 | quote }}
   STARHUB_SERVER_AGENT_LANGFLOW_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agenticflow.instanceQuotaPerUser | default 5 | quote }}
@@ -369,8 +366,7 @@ data:
   {{- $xnetSvc := include "common.service" (dict "ctx" . "service" "xnet") | fromYaml }}
   {{- $xnetSvcName := include "common.names.custom" (list . $xnetSvc.name) }}
   {{- $xnetSvcPort := dig "service" "port" 8097 $xnetSvc }}
-  {{- $XNetData := (lookup "v1" "ConfigMap" .Release.Namespace $xnetSvcName).data | default dict }}
-  {{- $xnetApiKey := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $XNetData }}
+  {{- $xnetApiKey := include "csghub.api.token" . }}
   STARHUB_SERVER_XNET_ENDPOINT: {{ $serverSvc.xnet.endpoint | default (printf "%s/xnet" (include "common.endpoint.csghub" .)) | quote }}
   STARHUB_SERVER_XNET_API_KEY: {{ $serverSvc.xnet.apiKey | default $xnetApiKey | quote }}
 
