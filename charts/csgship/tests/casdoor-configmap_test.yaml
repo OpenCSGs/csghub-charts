@@ -1,12 +1,11 @@
 # Test suite for the CSGShip casdoor ConfigMap.
 #
-# The ConfigMap embeds app.conf (with the postgres DSN), init_data.json
-# (organizations/applications/certs/users/providers) and a casdoor database
-# update SQL file. It renders only in standalone mode (isBuiltIn=false).
+# The ConfigMap holds only app.conf (with the postgres DSN) and a casdoor
+# database update SQL file. The init_data.json bootstrap moved into the
+# csghub-casdoor-init Secret and is mounted at /conf-secrets. It renders only
+# in standalone mode (isBuiltIn=false).
 #
-# The postgres password and the bcrypt admin password hash are
-# non-deterministic and matched by regex. The clientId/clientSecret of the
-# CSGShip casdoor application are also generated per render.
+# The postgres password is non-deterministic and matched by regex.
 
 suite: Test Casdoor ConfigMap
 templates:
@@ -46,54 +45,18 @@ tests:
           path: data["app.conf"]
           pattern: "origin\\s*=\\s*\"https://casdoor\\.example\\.com\""
 
-  - it: renders the init_data organization and application web endpoints
+  - it: points initDataFile at the mounted init Secret
     template: casdoor/configmap.yaml
     asserts:
       - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"websiteUrl\":\\s*\"https://csgship\\.example\\.com\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"homepageUrl\":\\s*\"https://csgship\\.example\\.com\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"redirectUris\":\\s*\\[\\s*\"https://csgship-api\\.example\\.com/api/v1/account/casdoor/login/callback\""
+          path: data["app.conf"]
+          pattern: "initDataFile\\s*=\\s*\"/conf-secrets/init_data\\.json\""
 
-  - it: renders the CSGShip application credentials
+  - it: does not embed init_data.json in the ConfigMap
     template: casdoor/configmap.yaml
     asserts:
-      - matchRegex:
+      - notExists:
           path: data["init_data.json"]
-          pattern: "\"clientId\":\\s*\"[0-9a-f]{20}\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"clientSecret\":\\s*\"[0-9a-f]{40}\""
-
-  - it: renders the admin user with a bcrypt password hash and domain email
-    template: casdoor/configmap.yaml
-    asserts:
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"name\":\\s*\"root\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"password\":\\s*\"\\$2[aby]\\$10\\$[A-Za-z0-9./]{53}\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"email\":\\s*\"root@example\\.com\""
-
-  - it: renders the GitLab provider from the web oauth issuer
-    template: casdoor/configmap.yaml
-    asserts:
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"customAuthUrl\":\\s*\"https://gitlab\\.example\\.com/oauth/authorize\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"customTokenUrl\":\\s*\"https://gitlab\\.example\\.com/oauth/token\""
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: "\"clientId\":\\s*\"gitlab-client-id\""
 
   - it: embeds the casdoor database update SQL file
     template: casdoor/configmap.yaml
