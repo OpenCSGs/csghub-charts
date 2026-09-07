@@ -3,7 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
-{{- $service := include "common.service" (dict "ctx" . "service" "temporalWorker") | fromYaml }}
+{{- $service := include "common.service" (dict "ctx" . "service" "executor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -62,7 +62,7 @@ spec:
       initContainers:
         {{- include "wait-for-server" . | nindent 8 }}
       containers:
-        - name: {{ $service.name }}
+        - name: temporal-worker
           image: {{ include "common.image" (list . $serverImage) }}
           imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
           command:
@@ -117,6 +117,16 @@ spec:
           {{- if $service.tty }}
           tty: {{ $service.tty }}
           {{- end }}
+        - name: deletion-worker
+          image: {{ include "common.image" (list . $serverImage) }}
+          imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
+          command:
+            - "/starhub-bin/starhub"
+            - "repository"
+            - "deletion-worker"
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.names.custom" (list . "core") }}
       volumes:
         {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
         - name: casdoor-init-certs

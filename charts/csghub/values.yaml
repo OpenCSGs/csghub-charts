@@ -568,8 +568,8 @@ trustregistry: {}
 ## Mirror service configuration
 mirror: {}
 
-## temporalWorker configuration
-temporalWorker: {}
+## Executor service configuration
+executor: {}
 
 ## Helm tags to control sub-chart dependencies
 ## Set dependencies: false to disable reloader, prometheus, gateway-helm subcharts

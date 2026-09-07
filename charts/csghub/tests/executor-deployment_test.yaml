@@ -1,12 +1,13 @@
-# Test suite for the CSGHub Temporal Worker Deployment.
+# Test suite for the CSGHub Executor Deployment.
 #
-# The Deployment runs the temporal-worker module of the server image, mounting
-# the casdoor certs Secret. It always renders because the built-in temporal
-# worker has no enable switch.
+# The Deployment runs the temporal-worker launch module plus a repository
+# deletion-worker sidecar, both from the ee server image and reading the core
+# ConfigMap. The main container mounts the casdoor certs Secret. It always
+# renders because the built-in executor has no enable switch.
 
-suite: Test Temporal Worker Deployment
+suite: Test Executor Deployment
 templates:
-  - csghub/temporal/deployment.yaml
+  - csghub/executor/deployment.yaml
 release:
   name: csghub
   namespace: csghub
@@ -14,19 +15,19 @@ values:
   - values.yaml
 tests:
   - it: renders the Deployment metadata and spec defaults
-    template: csghub/temporal/deployment.yaml
+    template: csghub/executor/deployment.yaml
     asserts:
       - isKind:
           of: Deployment
       - equal:
           path: metadata.name
-          value: "csghub-temporal-worker"
+          value: "csghub-executor"
       - equal:
           path: metadata.namespace
           value: "csghub"
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
-          value: "temporal-worker"
+          value: "executor"
       - equal:
           path: metadata.annotations["reloader.stakater.com/auto"]
           value: "true"
@@ -35,10 +36,10 @@ tests:
           value: 1
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/service"]
-          value: "temporal-worker"
+          value: "executor"
 
   - it: runs the temporal-worker launch command from the ee server image
-    template: csghub/temporal/deployment.yaml
+    template: csghub/executor/deployment.yaml
     asserts:
       - equal:
           path: spec.template.spec.containers[0].name
@@ -57,8 +58,31 @@ tests:
       - notExists:
           path: spec.template.spec.containers[0].ports
 
+  - it: runs the repository deletion-worker as a second container
+    template: csghub/executor/deployment.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 2
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: "deletion-worker"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+      - equal:
+          path: spec.template.spec.containers[1].command
+          value: ["/starhub-bin/starhub", "repository", "deletion-worker"]
+      - contains:
+          path: spec.template.spec.containers[1].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - notExists:
+          path: spec.template.spec.containers[1].volumeMounts
+
   - it: mounts the casdoor certs Secret for JWT signing
-    template: csghub/temporal/deployment.yaml
+    template: csghub/executor/deployment.yaml
     asserts:
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].name
@@ -86,14 +110,14 @@ tests:
           value: "tls.key"
 
   - it: waits for the server in the init container
-    template: csghub/temporal/deployment.yaml
+    template: csghub/executor/deployment.yaml
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: "wait-for-server"
 
   - it: overrides the image registry when registryPolicy is force
-    template: csghub/temporal/deployment.yaml
+    template: csghub/executor/deployment.yaml
     set:
       global:
         image:
