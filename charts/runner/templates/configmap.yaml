@@ -23,8 +23,7 @@ metadata:
 data:
   ## Runner Configuration for Server
   {{- if $isBuiltIn }}
-  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
-  {{- $apiToken := dig "STARHUB_SERVER_API_TOKEN" (include "csghub.api.token" .) $data }}
+  {{- $apiToken := include "csghub.api.token" . }}
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
   {{- else }}
   {{- $apiToken := required "runner.hubAPIToken is required when global.chartContext.isBuiltIn=false" $service.hubAPIToken }}
