@@ -73,7 +73,7 @@ dependencies:
     repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
   - name: agentichub
-    version: 0.6.9
+    version: 0.6.10
     repository: https://charts.opencsg.com/csghub
     condition: agentichub.enabled
   - name: superset
