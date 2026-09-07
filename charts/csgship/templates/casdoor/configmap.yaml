@@ -213,7 +213,7 @@ data:
           "logo": "https://cdn.jsdelivr.net/gh/OpenCSGs/images/logo.png",
           "homepageUrl": {{ include "common.endpoint.web" . | quote }},
           "organization": "OpenCSG",
-          "cert": "csgship-cert",
+          "cert": "csghub-cert",
           "enablePassword": true,
           "enableSignUp": true,
           "enableSigninSession": false,
@@ -226,9 +226,8 @@ data:
           "enableLinkWithEmail": true,
           "orgChoiceMode": "Select",
           "samlReplyUrl": "",
-          {{- $appCsgship := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
-          "clientId": {{ $csgshipApp.clientId | default $appCsgship.clientId | quote }},
-          "clientSecret": {{ $csgshipApp.clientSecret | default  $appCsgship.clientSecret | quote }},
+          "clientId": {{ $csgshipApp.clientId | default (include "common.secret.password" (list . "casdoor.CSGShip.clientId" 20)) | quote }},
+          "clientSecret": {{ $csgshipApp.clientSecret | default (include "common.secret.password" (list . "casdoor.CSGShip.clientSecret" 40)) | quote }},
           "providers": [
             {
               "owner": "",
@@ -456,20 +455,7 @@ data:
           "failedSigninFrozenTime": 15
         }
       ],
-      "certs": [
-        {
-          "owner": "admin",
-          "name": "csgship-cert",
-          "displayName": "CSGShip Cert",
-          "scope": "JWT",
-          "type": "x509",
-          "cryptoAlgorithm": "RS256",
-          "bitSize": 4096,
-          "expireInYears": 20,
-          "certificate": "-----BEGIN CERTIFICATE-----\nMIIE2TCCAsGgAwIBAgIDAeJAMA0GCSqGSIb3DQEBCwUAMCYxDjAMBgNVBAoTBWFk\nbWluMRQwEgYDVQQDDAtjZXJ0X3Vpd3RhaDAeFw0yNTA0MjIwMjQ1NDNaFw00NTA0\nMjIwMjQ1NDNaMCYxDjAMBgNVBAoTBWFkbWluMRQwEgYDVQQDDAtjZXJ0X3Vpd3Rh\naDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMbtx+W+pW5PbB99BbQt\nWX0laH9OQ72Hz9P19bDW9L96UlXBniPdePcJKFb6bbJ+TL1GdTOE/bjW71QGc8P3\nwNgqsLk01mrkgh0okbov6UR+C4hOVP+t9S6DIWN0etzyODTlpkWEd9/FU2gVhIRb\nxaHNX0qQXTotzAjs80AFuZnqG3jpF/7SOByE7fFNHXBB7UTPSjVm3EJX3jsGNS6D\n7YtXBZgYDb0Y85pBHAZxbaVp2W49bMBWaUCKLDOiTjKmipJ96N0FKbB5Q0D+vv2e\nNlpdaUQXY9sHtYt8j+Pk4x+61OKfSKYF1nWqO3u33qaMNGiV/L37IBXYeAmceKt6\nVhMG2l50+nG6jVnsLM0j4YnXR3Ry5+K4R8FXeBjcF/fXxbHFulfWUjZg8gz6mPeZ\n0WCMgAXPy7Lk922EMyFV3z6kceO01IbXZj/TSQRfvI7jKrmgO15TGyKJZTgfId3c\nSfCrSDfr2ITu/vPr4AHzF394Mzhy6s35NziYUG49NDBtFigLumQtZoa83h+TX+rD\n4YrBmi5ctFwtcdXfPqtXuVGuqe2X3r+qqk9hUbX0gL000wqD9ZPFNXTAPkAn1J1f\nljqv7Q8fwnmtcBeMMCHcJ6JTt4j5RwPhy4rowdU54pY3xqVLUYvrYXgvDT8Xky7t\nOhaAeL2HIM6rD+wSXKqa9Wp3AgMBAAGjEDAOMAwGA1UdEwEB/wQCMAAwDQYJKoZI\nhvcNAQELBQADggIBAKlrL66aClTcWGvBu/oRTMYRqhUPSNZZ+scoRM0xI/msc8o/\nb4m09kb7O03kgH3TU5elBqEDXPuMqo9JZJkTQoCVSWKEGoWDmz//EH8FyHrM25jr\naOLJE2klHlYTEfYqem4T1TIbyb5Ho5L+ikRdhux+IXb0PrGD9SqRTMfPUnNEs8ws\nSOty+HCStAmEvAI3JRfuu0mEsDGkeiRdq1jQrQs72elVXNAa4ffD3vJOuXQJFTiI\nreEgczTxUgQ2vE0u77/2hB7UPfDGJGx3bOFtQjn59gZ21C6/e4t1DXqnDLaU/so+\n4VuankSYVtTQ+a5Av4c0RP4DJlNpUx4kOEQyJYfSeJ7P8qticHzVVHeHDGl03nMZ\n5pdYrnKnXZOSgRLYp9hANGVdvzx6SMtx0naunUBjdsaKiaCt6q8aHCCCdRsS46gh\nOhDx2dIqHvqHeaiksAHM1+L6gSw7GJ6xFNslG3bAk54vCiDbhYTvmLqyB0ZCXfND\nxueoD47543zpAUfnpn2Dl35vEkV5COh7XIoj766rpHCSef0RBTS/atZn3umjJYoG\ndS+cCRxtXll9qmvND32nl9nE7MIAUndu7daF1Tzd6f11XukRBl34nwxx9/JWfHB3\nLEq+6UmBri7mQdOZd/mwbSAkTlp8J1b4RZ1h+pr1EgaJ0R4YAtYJ6NX7OUnS\n-----END CERTIFICATE-----\n",
-          "privateKey": "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----\n"
-        }
-      ],
+      "certs": [],
       {{- $existingSecret := lookup "v1" "Secret" .Release.Namespace (printf "%s-init" $serviceName) }}
       {{- $defaultUser := $service.admin.name | default "root" }}
       {{- $defaultPass := $service.admin.password | default (include "common.secret.password" (list . (printf "%s.password" $service.name) 32)) }}
