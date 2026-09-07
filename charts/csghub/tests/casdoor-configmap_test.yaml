@@ -1,9 +1,9 @@
 # Test suite for the CSGHub casdoor ConfigMap.
 #
 # The ConfigMap holds casdoor's app.conf pointing at the built-in PostgreSQL
-# and the init_data.json bootstrap (organization, CSGHub application with
-# client credentials and the root admin). The DSN and client credentials are
-# non-deterministic and matched by regex.
+# and the casdoor update SQL script. The init_data.json bootstrap, TLS cert,
+# and admin credentials live in the casdoor-init Secret (see
+# casdoor-secret_test.yaml).
 
 suite: Test Casdoor ConfigMap
 templates:
@@ -38,42 +38,15 @@ tests:
       - matchRegex:
           path: data["app.conf"]
           pattern: "origin\\s*=\\s*\"https://casdoor.example.com\""
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "initDataFile\\s*=\\s*\"/conf-secrets/init_data.json\""
 
-  - it: embeds the CSGHub application with client credentials in init_data
+  - it: does not embed init_data.json in the ConfigMap
     template: casdoor/configmap.yaml
     asserts:
-      - matchRegex:
+      - notExists:
           path: data["init_data.json"]
-          pattern: |-
-            "websiteUrl":\s*"https://csghub\.example\.com"
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "homepageUrl":\s*"https://csghub\.example\.com"
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "clientId":\s*"[0-9a-f]{20}"
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "clientSecret":\s*"[0-9a-f]{40}"
-
-  - it: embeds the root admin with a bcrypt password hash
-    template: casdoor/configmap.yaml
-    asserts:
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "name":\s*"root"
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "password":\s*"[^\"]{60}"
-      - matchRegex:
-          path: data["init_data.json"]
-          pattern: |-
-            "email":\s*"root@example\.com"
 
   - it: embeds the casdoor update SQL script
     template: casdoor/configmap.yaml
