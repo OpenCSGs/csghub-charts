@@ -45,7 +45,7 @@ tests:
           value: "xnet"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/csghub-xnet:v2.4.0-ee"
+          value: "docker.io/opencsghq/csghub-xnet:v2.5.0-ee"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -88,4 +88,4 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-xnet:v2.4.0-ee"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-xnet:v2.5.0-ee"

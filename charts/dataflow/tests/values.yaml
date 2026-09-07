@@ -30,7 +30,7 @@ global:
   image:
     registry: docker.io
     registryPolicy: default
-    tag: v2.4.0
+    tag: v2.5.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## Persistent volume configuration
@@ -45,7 +45,7 @@ global:
   ## SubChart deployment context (standalone)
   chartContext:
     isBuiltIn: false
-  ## Image edition suffix (v2.4.0 -> v2.4.0-ee)
+  ## Image edition suffix (v2.5.0 -> v2.5.0-ee)
   edition: ee
 
 ## External CSGHub URL for accessing the hub interface
@@ -56,7 +56,7 @@ dataflow:
   ## Image settings (overrides global.image)
   image:
     repository: opencsghq/dataflow
-    tag: v2.4.0-api
+    tag: v2.5.0-api
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## Gateway enablement (service-level override for common.gateway.config)
@@ -79,7 +79,7 @@ labelStudio:
   ## Image settings (overrides global.image)
   image:
     repository: opencsghq/label-studio
-    tag: v2.4.0
+    tag: v2.5.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## Gateway enablement
@@ -99,7 +99,7 @@ labelStudio:
 postgresql:
   image:
     repository: opencsghq/postgres
-    tag: "15.18"
+    tag: "15.19"
     pullPolicy: IfNotPresent
     pullSecrets: []
   service:

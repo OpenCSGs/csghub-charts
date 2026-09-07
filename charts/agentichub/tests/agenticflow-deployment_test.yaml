@@ -99,7 +99,7 @@ tests:
           value: "wait-for-redis"
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: "docker.io/redis:7.4.9"
+          value: "docker.io/redis:7.4.11"
       - equal:
           path: spec.template.spec.initContainers[1].name
           value: "wait-for-postgresql"
@@ -118,7 +118,7 @@ tests:
           value: "agenticflow"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/agenticflow:ee-v0.6-5"
+          value: "docker.io/opencsghq/agenticflow:ee-v0.6.5-1"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -186,7 +186,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agenticflow:ee-v0.6-5"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agenticflow:ee-v0.6.5-1"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: agenticflow/deployment.yaml

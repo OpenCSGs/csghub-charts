@@ -59,4 +59,4 @@ tests:
           pattern: "^[A-Za-z0-9+/]{32}$"
       - equal:
           path: data.CSGHUB_DATAFLOW_TEMPLATE_IMAGE
-          value: "opencsghq/dataflow:v2.4.0-argo"
+          value: "opencsghq/dataflow:v2.5.0-argo"
