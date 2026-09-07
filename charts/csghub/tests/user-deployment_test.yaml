@@ -69,16 +69,28 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].name
-          value: "jwt-token-cert"
+          value: "casdoor-init-certs"
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].mountPath
           value: "/starhub-bin/casdoor"
       - equal:
           path: spec.template.spec.volumes[0].name
-          value: "jwt-token-cert"
+          value: "casdoor-init-certs"
       - equal:
           path: spec.template.spec.volumes[0].secret.secretName
-          value: "csghub-casdoor-certs"
+          value: "csghub-casdoor-init"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[0].key
+          value: "tls.crt"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[0].path
+          value: "tls.crt"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[1].key
+          value: "tls.key"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[1].path
+          value: "tls.key"
 
   - it: waits for the server in the init container
     template: csghub/user/deployment.yaml

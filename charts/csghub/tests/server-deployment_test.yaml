@@ -72,7 +72,7 @@ tests:
           value: "csghub-core"
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].name
-          value: "jwt-token-cert"
+          value: "casdoor-init-certs"
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].mountPath
           value: "/starhub-bin/casdoor"
@@ -127,15 +127,27 @@ tests:
           path: spec.template.spec.containers[0].readinessProbe.failureThreshold
           value: 5
 
-  - it: mounts the casdoor JWT token cert secret
+  - it: mounts the casdoor JWT token cert secret and projects only tls.crt/tls.key
     template: csghub/server/deployment.yaml
     asserts:
       - equal:
           path: spec.template.spec.volumes[0].name
-          value: "jwt-token-cert"
+          value: "casdoor-init-certs"
       - equal:
           path: spec.template.spec.volumes[0].secret.secretName
-          value: "csghub-casdoor-certs"
+          value: "csghub-casdoor-init"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[0].key
+          value: "tls.crt"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[0].path
+          value: "tls.crt"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[1].key
+          value: "tls.key"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items[1].path
+          value: "tls.key"
 
   - it: renders optional fields when set
     template: csghub/server/deployment.yaml
