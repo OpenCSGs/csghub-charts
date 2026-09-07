@@ -47,7 +47,7 @@ tests:
           value: "fedap"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/csghub-server:v2.4.0"
+          value: "docker.io/opencsghq/csghub-server:v2.5.0"
       - equal:
           path: spec.template.spec.containers[0].command
           value: ["/starhub-bin/starhub", "fedap", "launch", "-l", "info"]

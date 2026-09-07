@@ -46,7 +46,7 @@ tests:
           value: "temporal-worker"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+          value: "docker.io/opencsghq/csghub-server:v2.5.0-ee"
       - equal:
           path: spec.template.spec.containers[0].command
           value: ["/starhub-bin/starhub", "temporal-worker", "launch", "-l", "info"]
@@ -69,7 +69,7 @@ tests:
           value: "deletion-worker"
       - equal:
           path: spec.template.spec.containers[1].image
-          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+          value: "docker.io/opencsghq/csghub-server:v2.5.0-ee"
       - equal:
           path: spec.template.spec.containers[1].command
           value: ["/starhub-bin/starhub", "repository", "deletion-worker"]
@@ -126,4 +126,4 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.5.0-ee"

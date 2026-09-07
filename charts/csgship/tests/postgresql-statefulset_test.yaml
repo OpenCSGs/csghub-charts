@@ -60,7 +60,7 @@ tests:
           value: "postgresql"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/postgres:15.18"
+          value: "docker.io/opencsghq/postgres:15.19"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -150,7 +150,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:15.18"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:15.19"
 
   - it: renders node selector, environments and persistence overrides when set
     template: postgresql/statefulset.yaml

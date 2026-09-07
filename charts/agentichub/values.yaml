@@ -130,7 +130,7 @@ agenticflow:
   image:
     # registry: "docker.io"
     repository: "opencsghq/agenticflow"
-    tag: "ee-v0.6-5"
+    tag: "ee-v0.6.5-1"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -268,7 +268,7 @@ postgresql:
   image:
     # registry: "docker.io"
     repository: "opencsghq/postgres"
-    tag: "15.18"                             # Image version tag
+    tag: "15.19"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -294,7 +294,7 @@ redis:
   image:
     # registry: "docker.io"
     repository: "redis"
-    tag: "7.4.9"                             # Image version tag
+    tag: "7.4.11"                             # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 

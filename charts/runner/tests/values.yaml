@@ -30,7 +30,7 @@ global:
   image:
     registry: docker.io
     registryPolicy: default
-    tag: v2.4.0
+    tag: v2.5.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## Internal registry flag (standalone mode uses external registry)
@@ -42,7 +42,7 @@ global:
   ## SubChart deployment context (standalone)
   chartContext:
     isBuiltIn: false
-  ## Image edition suffix (v2.4.0 -> v2.4.0-ee)
+  ## Image edition suffix (v2.5.0 -> v2.5.0-ee)
   edition: ee
 
 ## CSGHub Configuration
@@ -51,7 +51,7 @@ externalUrl: "https://csghub.example.com"
 ## Global image configuration (used by the runner deployment)
 image:
   repository: opencsghq/csghub-server
-  tag: v2.4.0
+  tag: v2.5.0
   pullPolicy: IfNotPresent
   pullSecrets: []
 

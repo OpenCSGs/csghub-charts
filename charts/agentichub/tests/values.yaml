@@ -70,7 +70,7 @@ aigateway:
 agenticflow:
   image:
     repository: opencsghq/agenticflow
-    tag: ee-v0.6-5
+    tag: ee-v0.6.5-1
     pullPolicy: IfNotPresent
     pullSecrets: []
   workers: 2
@@ -135,7 +135,7 @@ csgbot:
 postgresql:
   image:
     repository: opencsghq/postgres
-    tag: "15.18"
+    tag: "15.19"
     pullPolicy: IfNotPresent
     pullSecrets: []
   service:
@@ -152,7 +152,7 @@ postgresql:
 redis:
   image:
     repository: redis
-    tag: "7.4.9"
+    tag: "7.4.11"
     pullPolicy: IfNotPresent
     pullSecrets: []
   service:

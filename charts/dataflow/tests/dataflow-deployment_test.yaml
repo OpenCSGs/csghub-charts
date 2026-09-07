@@ -132,7 +132,7 @@ tests:
           value: "dataflow"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/dataflow:v2.4.0-api"
+          value: "docker.io/opencsghq/dataflow:v2.5.0-api"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -187,7 +187,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/dataflow:v2.4.0-api"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/dataflow:v2.5.0-api"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: dataflow/deployment.yaml

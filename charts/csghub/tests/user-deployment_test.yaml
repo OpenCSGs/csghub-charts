@@ -45,7 +45,7 @@ tests:
           value: "user"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/csghub-server:v2.4.0-ee"
+          value: "docker.io/opencsghq/csghub-server:v2.5.0-ee"
       - equal:
           path: spec.template.spec.containers[0].command
           value: ["/starhub-bin/starhub", "user", "launch", "-l", "info"]
@@ -109,4 +109,4 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.4.0-ee"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csghub-server:v2.5.0-ee"

@@ -128,7 +128,7 @@ tests:
           value: "label-studio"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/label-studio:v2.4.0"
+          value: "docker.io/opencsghq/label-studio:v2.5.0"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -187,7 +187,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/label-studio:v2.4.0"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/label-studio:v2.5.0"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: label-studio/statefulset.yaml

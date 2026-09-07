@@ -48,7 +48,7 @@ tests:
           value: "redis"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/redis:7.4.9"
+          value: "docker.io/redis:7.4.11"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -106,7 +106,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/redis:7.4.9"
+          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/redis:7.4.11"
       - equal:
           path: spec.volumeClaimTemplates[0].spec.storageClassName
           value: "hostPath"
