@@ -30,9 +30,10 @@ data:
   ## Portal Configuration for Casdoor
   {{- $authorizeAPI := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
   {{- $redirectURI := printf "redirect_uri=%s/api/v1/callback/casdoor&scope=read&state=casdoor" (include "common.endpoint.csghub" .) }}
-  {{- $app := include "csghub.casdoor.client" "CSGHub" | fromYaml }}
-  {{- $casdoorClientID := dig "STARHUB_SERVER_CASDOOR_CLIENT_ID" $app.clientId $data }}
-  {{- $casdoorClientSecret := dig "STARHUB_SERVER_CASDOOR_CLIENT_SECRET" $app.clientSecret $data }}
+  {{- $defaultClientID := include "common.secret.password" (list . "casdoor.CSGHub.clientId" 20) }}
+  {{- $defaultClientSecret := include "common.secret.password" (list . "casdoor.CSGHub.clientSecret" 40) }}
+  {{- $casdoorClientID := dig "STARHUB_SERVER_CASDOOR_CLIENT_ID" $defaultClientID $data }}
+  {{- $casdoorClientSecret := dig "STARHUB_SERVER_CASDOOR_CLIENT_SECRET" $defaultClientSecret $data }}
   CSGHUB_PORTAL_LOGIN_URL: {{ printf "%s?client_id=%s&response_type=code&%s" $authorizeAPI $casdoorClientID $redirectURI | quote }}
   ## Portal Configuration for PostgreSQL
   CSGHUB_PORTAL_DATABASE_DSN: {{ include "csghub.postgresql.dsn" (dict "ctx" . "service" $portalSvc) | quote }}

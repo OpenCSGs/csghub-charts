@@ -17,8 +17,8 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $webSvcName).data | default dict }}
-  {{- $app := include "csghub.casdoor.client" "CSGShip" | fromYaml }}
-  {{- $casdoorClientID := dig "CASDOOR_CLIENT_ID" $app.clientId $data }}
+  {{- $defaultClientID := include "common.secret.password" (list . "casdoor.CSGShip.clientId" 20) }}
+  {{- $casdoorClientID := dig "CASDOOR_CLIENT_ID" $defaultClientID $data }}
   {{- $authorize := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
   {{- $client := printf "client_id=%s" $casdoorClientID }}
   {{- $redirectUri := printf "redirect_uri=%s/api/v1/account/casdoor/login/callback" (include "common.endpoint.webAPI" .) }}

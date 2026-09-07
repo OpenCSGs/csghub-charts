@@ -2,7 +2,9 @@
 #
 # The ConfigMap embeds config.js (web/API endpoints plus the Casdoor login URL)
 # and default.conf (nginx server block). The client_id in the login URL comes
-# from csghub.casdoor.client and is non-deterministic, so it is matched by regex.
+# The client_id in the login URL comes from common.secret.password derived
+# from the cluster master key. It is matched by length since the literal value
+# depends on the deployment's master key.
 
 suite: Test Frontend ConfigMap
 templates:
