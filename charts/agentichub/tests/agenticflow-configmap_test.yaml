@@ -208,10 +208,10 @@ tests:
     asserts:
       - matchRegex:
           path: data.FLOWS_ACCESS_TOKEN
-          pattern: "^[A-Za-z0-9+/=]+$"
+          pattern: "^[0-9a-f]{44}$"
       - matchRegex:
           path: data.LANGFLOW_SECRET_KEY
-          pattern: "^[A-Za-z0-9+/=]+$"
+          pattern: "^[0-9a-f]{44}$"
 
   ## ------------------------------------------------------------------
   ## Conditional rendering

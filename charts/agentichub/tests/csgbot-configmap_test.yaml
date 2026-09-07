@@ -69,7 +69,7 @@ tests:
           pattern: "hub-access-token = \"test-hub-api-token\""
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "langflow-access-token = \"[A-Za-z0-9+/=]+\""
+          pattern: "langflow-access-token = \"[0-9a-f]{44}\""
 
   ## ------------------------------------------------------------------
   ## CSGHub section
@@ -116,23 +116,23 @@ tests:
           pattern: "endpoint = \"http://csghub.example.com/aigateway\""
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "model-id = \"qwen3.6-plus\""
+          pattern: "api-key = \"\""
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "temperature = 0.1"
 
-  - it: overrides the aigateway model id and temperature
+  - it: overrides the aigateway api key and temperature
     template: csgbot/configmap.yaml
     set:
       csgbot:
         config:
           aigateway:
-            model: "custom-model"
+            apiKey: "custom-key"
             temperature: 0.5
     asserts:
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "model-id = \"custom-model\""
+          pattern: "api-key = \"custom-key\""
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "temperature = 0.5"

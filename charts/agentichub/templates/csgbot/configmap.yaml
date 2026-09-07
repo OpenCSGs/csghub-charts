@@ -25,17 +25,14 @@ data:
     [credentials]
     {{- $apiToken := .Values.hubAPIToken }}
     {{- if $isBuiltIn }}
-      {{- $csghubSvc := include "common.names.custom" (list . "core") }}
-      {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
-      {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
+      {{- $apiToken = include "csghub.api.token" . }}
     {{- else }}
       {{- $apiToken = required "hubAPIToken is required when global.chartContext.isBuiltIn=false" .Values.hubAPIToken }}
     {{- end }}
     hub-access-token = {{ $apiToken | quote }}
     {{- $agenticSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
     {{- $agenticSvcName := include "common.names.custom" (list . $agenticSvc.name) }}
-    {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $agenticSvcName).data | default dict }}
-    {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $data }}
+    {{- $agenticflowToken := include "agenticflow.api.token" . }}
     langflow-access-token = {{ $agenticflowToken | quote }}
 
     [csghub]
@@ -52,7 +49,7 @@ data:
 
     [aigateway]
     endpoint = {{ include "common.endpoint.aigateway.override" . | quote }}
-    model-id = {{ dig "config" "aigateway" "model" "qwen3.6-plus" .Values.csgbot | quote }}
+    api-key = {{ dig "config" "aigateway" "apiKey" "" .Values.csgbot | quote }}
     temperature = {{ dig "config" "aigateway" "temperature" 0.1 .Values.csgbot }}
 
     [speech-to-text]

@@ -45,9 +45,7 @@ data:
 
   {{- $apiToken := .Values.hubAPIToken }}
   {{- if $isBuiltIn }}
-    {{- $csghubSvc := include "common.names.custom" (list . "core") }}
-    {{- $csghubData := (lookup "v1" "ConfigMap" .Release.Namespace $csghubSvc).data | default dict }}
-    {{- $apiToken = dig "CSGHUB_PORTAL_STARHUB_API_KEY" (include "csghub.api.token" .) $csghubData }}
+    {{- $apiToken = include "csghub.api.token" . }}
   {{- else }}
     {{- $apiToken = required "hubAPIToken is required when global.chartContext.isBuiltIn=false" .Values.hubAPIToken }}
   {{- end }}
@@ -62,8 +60,7 @@ data:
   {{- end }}
 
   ## AgenticHub Token Custom
-  {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
-  {{- $agenticflowToken := dig "FLOWS_ACCESS_TOKEN" (include "agenticflow.api.token" .) $data }}
+  {{- $agenticflowToken := include "agenticflow.api.token" . }}
   FLOWS_ACCESS_TOKEN: {{ $agenticflowToken | quote }}
 
   ## AgenticHub Configuration for Langflow
