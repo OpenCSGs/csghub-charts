@@ -23,9 +23,10 @@ data:
   {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
   {{- $casdoorInitName := printf "%s-init" (include "common.names.custom" (list . $casdoorSvc.name)) }}
   {{- $casdoorInitData := (lookup "v1" "Secret" .Release.Namespace $casdoorInitName).data | default dict }}
-  {{- $adminApp := include "csghub.casdoor.client" "Admin" | fromYaml }}
-  {{- $adminClientID := or (dig "CASDOOR_ADMIN_CLIENT_ID" "" $casdoorInitData | b64dec) $adminApp.clientId }}
-  {{- $adminClientSecret := or (dig "CASDOOR_ADMIN_CLIENT_SECRET" "" $casdoorInitData | b64dec) $adminApp.clientSecret }}
+  {{- $adminAppClientID := include "common.secret.password" (list . "casdoor.Admin.clientId" 20) }}
+  {{- $adminAppClientSecret := include "common.secret.password" (list . "casdoor.Admin.clientSecret" 40) }}
+  {{- $adminClientID := or (dig "CASDOOR_ADMIN_CLIENT_ID" "" $casdoorInitData | b64dec) $adminAppClientID }}
+  {{- $adminClientSecret := or (dig "CASDOOR_ADMIN_CLIENT_SECRET" "" $casdoorInitData | b64dec) $adminAppClientSecret }}
   TEMPORAL_AUTH_ENABLED: "true"
   TEMPORAL_AUTH_TYPE: "oidc"
   TEMPORAL_AUTH_PROVIDER_URL: {{ include "common.endpoint.casdoor" . | quote }}
