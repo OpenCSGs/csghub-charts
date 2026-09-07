@@ -57,7 +57,7 @@ Returns: YAML configuration object with S3 connection parameters
     "externalEndpoint" (include "common.endpoint.minio" $ctx)
     "region" (dig "region" "cn-north-1" $minioSvc)
     "accessKey" "minio"
-    "secretKey" (include "common.randomPassword" $minioSvc.name)
+    "secretKey" (include "common.secret.password" (list $ctx (printf "%s.password" $minioSvc.name) 32))
     "bucket" (include "common.names.custom" (list $ctx $service.name))
     "encrypt" false
     "pathStyle" true

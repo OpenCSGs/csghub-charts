@@ -61,7 +61,7 @@ Returns: YAML configuration object with Redis connection parameters
     "port" (dig "service" "port" 6379 $redisSvc)
     "database" (dig "redis" "database" "0" $service)
     "user" "default"
-    "password" (include "common.randomPassword" $redisSvc.name)
+    "password" (include "common.secret.password" (list $ctx (printf "%s.password" $redisSvc.name) 32))
   }}
 
   {{- /* If internal Redis is enabled and secret exists, use existing password */}}

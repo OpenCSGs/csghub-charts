@@ -26,7 +26,7 @@ Returns: YAML configuration object with NATS connection parameters
     "host" $natsName
     "port" (dig "service" "port" 4222 $natsSvc)
     "user" "natsadmin"
-    "password" (include "common.randomPassword" $natsSvc.name)
+    "password" (include "common.secret.password" (list $ctx (printf "%s.password" $natsSvc.name) 32))
   }}
 
   {{- /* If secret exists, use existing credentials */}}

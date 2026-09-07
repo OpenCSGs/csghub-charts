@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.2.8
+  version: 0.3.0
 - name: reloader
   repository: https://charts.opencsg.com/infra
   version: 2.2.14
@@ -26,5 +26,5 @@ dependencies:
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
   version: 0.5.4
-digest: sha256:5d7b64dfcd868d75fb4dbc2a7f50ab20164deb811d859c0fff5f56a67f17eaab
-generated: "2026-09-04T10:53:01.649738+08:00"
+digest: sha256:78df46b7e329d9dbaf861c6cdf1b53c378253cb1312ab6e51b6e478b858547a8
+generated: "2026-09-07T11:50:42.201216+08:00"

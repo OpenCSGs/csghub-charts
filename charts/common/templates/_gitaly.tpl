@@ -60,7 +60,7 @@ Returns: YAML configuration object with Gitaly connection parameters
     "host" $gitalyName
     "port" (dig "service" "port" 8075 $gitalySvc)
     "storage" (dig "storage" "default" $gitalySvc)
-    "token" (include "common.randomPassword" $gitalySvc.name)
+    "token" (include "common.secret.password" (list $ctx (printf "%s.password" $gitalySvc.name) 32))
     "scheme" "tcp"
   }}
 
