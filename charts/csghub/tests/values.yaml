@@ -210,7 +210,7 @@ dataviewer: {}
 fedap: {}
 trustregistry: {}
 mirror: {}
-temporalWorker: {}
+executor: {}
 
 tags:
   dependencies: false
