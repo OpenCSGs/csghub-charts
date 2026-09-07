@@ -194,7 +194,7 @@ csgbot:
   ## ConfigMap Configuration
   config:
     aigateway: {}
-      # model: "qwen3.6-plus"       # AI model ID for csgbot
+      # apiKey: ""                   # AIGateway access key for csgbot
       # temperature: 0.1            # Model temperature
 
     starship: {}
@@ -222,7 +222,7 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/genius-sandbox"
-          tag: "2026070902"
+          tag: "2026081102"
       doc:
         image:
           # registry: "docker.io"
@@ -237,7 +237,7 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/csgclaw-server-sandbox"
-          tag: "2026080703"
+          tag: "2026090405"
       csgclawAgent:
         image:
           # registry: "docker.io"
