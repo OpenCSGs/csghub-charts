@@ -89,6 +89,22 @@ tests:
           path: spec.template.spec.volumes[0].configMap.name
           value: "csghub-casdoor"
 
+  - it: mounts the casdoor-init Secret at /conf-secrets
+    template: casdoor/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "casdoor-secrets"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/conf-secrets"
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: "casdoor-secrets"
+      - equal:
+          path: spec.template.spec.volumes[1].secret.secretName
+          value: "csghub-casdoor-init"
+
   - it: renders nothing in built-in mode
     template: casdoor/deployment.yaml
     set:

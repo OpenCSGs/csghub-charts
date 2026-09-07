@@ -83,6 +83,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /conf
+            - name: casdoor-secrets
+              mountPath: /conf-secrets
           livenessProbe:
             tcpSocket:
               port: 8000
@@ -120,6 +122,9 @@ spec:
         - name: config
           configMap:
             name: {{ $serviceName }}
+        - name: casdoor-secrets
+          secret:
+            secretName: {{ printf "%s-init" $serviceName }}
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}
