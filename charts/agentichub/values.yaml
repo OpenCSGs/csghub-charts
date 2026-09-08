@@ -130,7 +130,7 @@ agenticflow:
   image:
     # registry: "docker.io"
     repository: "opencsghq/agenticflow"
-    tag: "ee-v0.6.5-1"
+    tag: "ee-v0.6.5-2"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
