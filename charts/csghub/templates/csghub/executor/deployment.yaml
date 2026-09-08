@@ -117,6 +117,11 @@ spec:
           {{- if $service.tty }}
           tty: {{ $service.tty }}
           {{- end }}
+        {{- /*
+TODO: temporarily disabled; restore the deletion-worker sidecar below in
+the next release by removing this `if false` guard.
+*/}}
+        {{- if false }}
         - name: deletion-worker
           image: {{ include "common.image" (list . $serverImage) }}
           imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
@@ -127,6 +132,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
+        {{- end }}
       volumes:
         {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
         - name: casdoor-init-certs
