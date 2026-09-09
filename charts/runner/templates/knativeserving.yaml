@@ -6,10 +6,9 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $service := include "common.service" . | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $knativeNamespace := include "namespace.knative" . }}
-{{- $isOpencsgRegistry := regexMatch "^opencsg-registry" .Values.global.image.registry }}
+{{- $isOpencsgRegistry := include "common.registry.isopencsg" .Values.global.image.registry }}
 {{- $knativeRegistry := "" }}
-{{- $knativeVersion := "v1.22.0" }}
-{{- $kourierVersion := "v1.22.0" }}
+{{- $knativeVersion := "v1.22.3" }}
 {{- $ingressType := $service.knative.serving.ingress | default "gateway-api" }}
 {{- $gatewayAPI := eq $ingressType "gateway-api" }}
 {{- if $isOpencsgRegistry }}
@@ -69,7 +68,7 @@ spec:
       net-gateway-api-controller/controller: {{ $knativeRegistry }}/net-gateway-api/cmd/controller:{{ $knativeVersion }}
       net-gateway-api-webhook/webhook: {{ $knativeRegistry }}/net-gateway-api/cmd/webhook:{{ $knativeVersion }}
       {{- else }}
-      net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:{{ $kourierVersion }}
+      net-kourier-controller/controller: {{ $knativeRegistry }}/net-kourier/cmd/kourier:{{ $knativeVersion }}
       3scale-kourier-gateway/kourier-gateway: {{ .Values.global.image.registry }}/opencsghq/envoyproxy/envoy:v1.37-latest
       {{- end }}
   {{- end }}

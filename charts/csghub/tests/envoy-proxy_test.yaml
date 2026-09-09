@@ -38,11 +38,11 @@ tests:
     set:
       global:
         image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+          value: "registry.opencsg.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
 
   - it: patches the envoyService with the default node ports
     template: envoy-proxy.yaml

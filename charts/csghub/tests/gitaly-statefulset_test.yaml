@@ -103,11 +103,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/gitlab-gitaly:v17.5.0"
+          value: "registry.opencsg.com/opencsghq/gitlab-gitaly:v17.5.0"
 
   - it: renders nothing when the built-in gitaly is disabled
     template: gitaly/statefulset.yaml

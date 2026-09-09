@@ -46,7 +46,7 @@ global:
 
   ## Image management
   image:
-    registry: "docker.io"           # Image global registry, opencsg-registry.cn-beijing.cr.aliyuncs.com for mainland
+    registry: "docker.io"           # Image global registry, registry.opencsg.com for mainland
     registryPolicy: "default"       # default or force, force will overwrite all others registries
     tag: "v1.11.0"                  # Image tag format: {{version}}-{{edition}}
     pullPolicy: "IfNotPresent"      # Image pull policy: Always, IfNotPresent, Never

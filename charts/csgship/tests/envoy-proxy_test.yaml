@@ -1,9 +1,9 @@
 # Test suite for the CSGShip EnvoyProxy resource.
 #
 # The EnvoyProxy renders only when the gateway controller is envoyproxy and the
-# chart is in standalone mode. With a non-opencsg registry the envoyDeployment
+# chart is in standalone mode. With a non-OpenCSG registry the envoyDeployment
 # is an empty object (letting Envoy Gateway use its default image); with the
-# opencsg-registry it pins the envoy image. A NodePort gateway service adds an
+# OpenCSG registry it pins the envoy image. A NodePort gateway service adds an
 # envoyService patch with the configured node ports.
 
 suite: Test EnvoyProxy
@@ -42,11 +42,11 @@ tests:
     set:
       global:
         image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+          value: "registry.opencsg.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
 
   - it: patches the envoy service with node ports for a NodePort gateway
     template: envoy-proxy.yaml

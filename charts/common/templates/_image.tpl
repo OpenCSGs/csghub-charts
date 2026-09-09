@@ -3,6 +3,20 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- /*
+common.registry.isopencsg: renders "true" when the input matches the OpenCSG
+mirror registry (registry.opencsg.com), empty string otherwise. Designed to be
+used inline as `{{- if include "common.registry.isopencsg" <registry> }}` so
+that the empty/false branch is falsy and the "true" branch is truthy.
+
+Centralizing the match here lets callers change the supported mirror list
+without touching every template, and hides the Go-template `\\.` regex
+escaping that has tripped up IDE tooling more than once.
+*/}}
+{{- define "common.registry.isopencsg" -}}
+{{- if regexMatch "^registry\\.opencsg\\.com$" . -}}true{{- end -}}
+{{- end -}}
+
 {{/*
 Internal: given a (possibly empty) registry hint and an image/repo string,
 compute the final registry + image with OpenCSG path adjustment.
@@ -28,7 +42,7 @@ Returns: YAML dict {registry: ..., image: ...}.
     {{- $image = trimPrefix (printf "%s/" $registry) $image }}
   {{- end }}
 {{- end }}
-{{- if and $registry (regexMatch "^opencsg-registry" $registry) }}
+{{- if and $registry (include "common.registry.isopencsg" $registry) }}
   {{- if not (regexMatch "^(opencsghq/|opencsg_public/|public/)" $image) }}
     {{- $image = printf "opencsghq/%s" $image }}
   {{- end }}
@@ -59,7 +73,7 @@ Returns: Full image path in format "registry/repository:tag"
   {{- $tag := or $localImage.tag $globalImage.tag }}
 
   {{- if eq $globalImage.registryPolicy "force" }}
-    {{- $registry = or $globalImage.registry "opencsg-registry.cn-beijing.cr.aliyuncs.com" }}
+    {{- $registry = or $globalImage.registry "registry.opencsg.com" }}
   {{- end }}
 
   {{- $resolved := include "common.image._resolve" (dict "registry" $registry "image" $repository) | fromYaml }}
@@ -105,7 +119,7 @@ Returns: Full image path in format "registry/repository"
 
   {{- $registry := or $localImage.registry $globalImage.registry }}
   {{- if eq $globalImage.registryPolicy "force" }}
-    {{- $registry = or $globalImage.registry "opencsg-registry.cn-beijing.cr.aliyuncs.com" }}
+    {{- $registry = or $globalImage.registry "registry.opencsg.com" }}
   {{- end }}
 
   {{- $resolved := include "common.image._resolve" (dict "registry" $registry "image" $image) | fromYaml }}

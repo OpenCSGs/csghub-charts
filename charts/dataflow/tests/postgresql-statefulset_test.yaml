@@ -200,11 +200,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:15.19"
+          value: "registry.opencsg.com/opencsghq/postgres:15.19"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: postgresql/statefulset.yaml
