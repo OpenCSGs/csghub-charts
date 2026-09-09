@@ -20,6 +20,7 @@ ENABLE_NFS_PV=true
 INSTALL_CN=false
 HOSTS_ALIAS=true
 
+DEVEL=false
 EXTRA_ARGS=()
 
 DRY_RUN=false
@@ -88,12 +89,13 @@ Optional:
   --k3s-server <server_url>        Join an existing K3S cluster as an agent node
   --k3s-token <server_token>       K3S cluster join token (required with --k3s-server)
   --k3s-version <version>          K3S cluster version (e.g. v1.34.3+k3s1)
+  --devel                          Include pre-release (alpha/beta/rc) versions of the csghub chart
   --help                           Show this help message and exit
 EOF
   exit 0
 }
 
-TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token:,k3s-version: -n "$0" -- "$@") || usage
+TEMP=$(getopt -o h --long help,domain:,data:,enable-gpu,install-cn,hosts-alias,enable-nfs-pv,extra-args:,dry-run,verbose,ghproxy:,interface:,timeout:,k3s-server:,k3s-token:,k3s-version:,devel -n "$0" -- "$@") || usage
 eval set -- "$TEMP"
 
 while true; do
@@ -116,6 +118,7 @@ while true; do
     --k3s-server) K3S_SERVER="$2"; shift 2 ;;
     --k3s-token) K3S_TOKEN="$2"; shift 2 ;;
     --k3s-version) K3S_VERSION="$2"; shift 2 ;;
+    --devel) DEVEL=true; shift ;;
     -h|--help) usage ;;
     --) shift; break ;;
     *) log ERRO "Unknown argument: $1"; usage ;;
@@ -847,16 +850,19 @@ if [[ -z "$K3S_SERVER" ]]; then
 
   HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
 
+  if [[ "${DEVEL:-false}" == "true" ]]; then
+    HELM_EXTRA_ARGS+=(--devel)
+  fi
+
   # Helm install/upgrade with proper array handling
   if [[ "${DRY_RUN:-false}" == "true" ]]; then
-    log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace --server-side false \
+    log CMD "Would run helm upgrade --install csghub csghub/csghub --namespace csghub --create-namespace \
       ${HELM_EXTRA_ARGS[*]} | tee ./login.txt"
   else
     retry 2 kubectl delete jobs --all -n csghub
     retry 5 helm upgrade --install csghub csghub/csghub \
       --namespace csghub \
       --create-namespace \
-      --server-side false \
       "${HELM_EXTRA_ARGS[@]}" | tee ./login.txt
   fi
 
