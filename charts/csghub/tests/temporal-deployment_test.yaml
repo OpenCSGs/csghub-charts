@@ -72,11 +72,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/psql:latest"
+          value: "registry.opencsg.com/opencsghq/psql:latest"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/temporalio/auto-setup:1.29.7"
+          value: "registry.opencsg.com/opencsghq/temporalio/auto-setup:1.29.7"

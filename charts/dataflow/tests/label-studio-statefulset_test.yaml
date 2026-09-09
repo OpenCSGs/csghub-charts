@@ -183,11 +183,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/label-studio:v2.5.0"
+          value: "registry.opencsg.com/opencsghq/label-studio:v2.5.0"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: label-studio/statefulset.yaml

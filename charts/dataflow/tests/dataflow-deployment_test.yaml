@@ -183,11 +183,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/dataflow:v2.5.0-api"
+          value: "registry.opencsg.com/opencsghq/dataflow:v2.5.0-api"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: dataflow/deployment.yaml

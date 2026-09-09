@@ -108,11 +108,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nats:2.12.15"
+          value: "registry.opencsg.com/opencsghq/nats:2.12.15"
 
   - it: honors a custom persistence size and storage class
     template: nats/statefulset.yaml

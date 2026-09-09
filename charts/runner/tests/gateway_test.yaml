@@ -332,11 +332,11 @@ tests:
               https: 30443
               gitssh: 30022
         image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+          value: "registry.opencsg.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
 
   - it: omits the https port patch when TLS is disabled on NodePort
     template: envoy-proxy.yaml

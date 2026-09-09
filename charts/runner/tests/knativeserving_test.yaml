@@ -285,29 +285,29 @@ tests:
     set:
       global:
         image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.registry.override.activator
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/activator:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/serving/cmd/activator:v1.22.3"
       - equal:
           path: spec.registry.override.controller
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/controller:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/serving/cmd/controller:v1.22.3"
       - equal:
           path: spec.registry.override.webhook
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/webhook:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/serving/cmd/webhook:v1.22.3"
       - equal:
           path: spec.registry.override["net-gateway-api-controller/controller"]
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/controller:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/controller:v1.22.3"
       - equal:
           path: spec.registry.override["net-gateway-api-webhook/webhook"]
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/webhook:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/webhook:v1.22.3"
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.example.com,opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          value: "csghub.example.com,registry.opencsg.com"
       - equal:
           path: spec.config.deployment.queue-sidecar-image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/serving/cmd/queue:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/serving/cmd/queue:v1.22.3"
 
   - it: overrides the kourier images for the OpenCSG registry in kourier mode
     template: knativeserving.yaml
@@ -317,17 +317,17 @@ tests:
     set:
       global:
         image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
       knative:
         serving:
           ingress: "kourier"
     asserts:
       - equal:
           path: spec.registry.override["net-kourier-controller/controller"]
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.22.0"
+          value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.22.3"
       - equal:
           path: spec.registry.override["3scale-kourier-gateway/kourier-gateway"]
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:v1.37-latest"
+          value: "registry.opencsg.com/opencsghq/envoyproxy/envoy:v1.37-latest"
 
   ## ------------------------------------------------------------------
   ## KnativeServing CR spec: autoscaler and domain overrides

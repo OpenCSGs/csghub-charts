@@ -182,11 +182,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agenticflow:ee-v0.6.5-1"
+          value: "registry.opencsg.com/opencsghq/agenticflow:ee-v0.6.5-1"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: agenticflow/deployment.yaml

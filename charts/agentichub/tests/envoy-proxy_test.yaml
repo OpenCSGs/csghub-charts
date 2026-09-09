@@ -37,11 +37,11 @@ tests:
     set:
       global:
         image:
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.provider.kubernetes.envoyDeployment.container.image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
+          value: "registry.opencsg.com/opencsghq/envoyproxy/envoy:distroless-v1.37.5"
 
   - it: renders NodePort patch ports when the gateway type is NodePort with TLS
     template: envoy-proxy.yaml

@@ -128,6 +128,37 @@ fi
 
 [[ -z "$DOMAIN" ]] && { log ERRO "--domain is required."; exit 1; }
 
+# version_ge: returns 0 if $1 >= $2 (semantic version compare, requires sort -V)
+version_ge() {
+  printf '%s\n%s\n' "$2" "$1" | sort -V -C
+}
+
+# Parse csghub chart version from EXTRA_ARGS (e.g., --version 2.0.0)
+CSGHUB_CHART_VERSION=""
+for i in "${!EXTRA_ARGS[@]}"; do
+  if [[ "${EXTRA_ARGS[$i]}" == "--version" ]] && [[ -n "${EXTRA_ARGS[$i+1]:-}" ]]; then
+    CSGHUB_CHART_VERSION="${EXTRA_ARGS[$i+1]}"
+    break
+  fi
+done
+
+# Charts < 2.5.0 still publish to the legacy Aliyun registry; flip the
+# helm/k3s image registry overrides back to that domain.
+USE_OLD_REGISTRY=false
+if [[ -n "$CSGHUB_CHART_VERSION" ]] && ! version_ge "$CSGHUB_CHART_VERSION" "2.5.0"; then
+  USE_OLD_REGISTRY=true
+fi
+
+if [[ "$USE_OLD_REGISTRY" == "true" ]]; then
+  REGISTRY_HOST="opencsg-registry.cn-beijing.cr.aliyuncs.com"
+  REGISTRY_PATH="opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq"
+  REGISTRY_MIRROR_URL="https://opencsg-registry.cn-beijing.cr.aliyuncs.com"
+else
+  REGISTRY_HOST="registry.opencsg.com"
+  REGISTRY_PATH="registry.opencsg.com/opencsghq"
+  REGISTRY_MIRROR_URL="https://registry.opencsg.com"
+fi
+
 ################################################################################
 # Utility Functions (dry-run aware)
 ################################################################################
@@ -485,7 +516,7 @@ cat <<EOF | safe_write /etc/rancher/k3s/registries.yaml
 mirrors:
   docker.io:
     endpoint:
-      - "https://opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      - "https://${REGISTRY_MIRROR_URL}"
 EOF
 
 K3S_URL="https://get.k3s.io"
@@ -523,7 +554,7 @@ fi
 if [[ "$INSTALL_CN" == "true" ]]; then
   K3S_URL="https://rancher-mirror.rancher.cn/k3s/k3s-install.sh"
   K3S_ENV+=("INSTALL_K3S_MIRROR=cn")
-  K3S_ENV+=("K3S_SYSTEM_DEFAULT_REGISTRY=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq")
+  K3S_ENV+=("K3S_SYSTEM_DEFAULT_REGISTRY=${REGISTRY_PATH}")
 fi
 
 if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
@@ -636,7 +667,7 @@ if [[ "${ENABLE_NFS_PV:-true}" == "true" && -z "$K3S_SERVER" ]]; then
     NFS_EXTRA_ARGS+=()
     NFS_SUBDIR_CHART_URL="https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/"
     if [[ "$INSTALL_CN" == "true" ]]; then
-      NFS_EXTRA_ARGS+=(--set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/sig-storage/nfs-subdir-external-provisioner)
+      NFS_EXTRA_ARGS+=(--set image.repository=${REGISTRY_PATH}/sig-storage/nfs-subdir-external-provisioner)
       NFS_EXTRA_ARGS+=(--set image.tag=v4.0.2)
 
       NFS_SUBDIR_CHART_URL="https://charts.opencsg.com/nfs-subdir-external-provisioner/"
@@ -667,8 +698,8 @@ if [[ "$ENABLE_NVIDIA_GPU" == "true" && $(detect_os) != "alpine" ]]; then
   NVDP_EXTRA_ARGS+=()
   NVDP_CHART_URL="https://nvidia.github.io/k8s-device-plugin/"
   if [[ "$INSTALL_CN" == "true" ]]; then
-    NVDP_EXTRA_ARGS+=(--set image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nvidia/k8s-device-plugin)
-    NVDP_EXTRA_ARGS+=(--set nfd.image.repository=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/nfd/node-feature-discovery)
+    NVDP_EXTRA_ARGS+=(--set image.repository=${REGISTRY_PATH}/nvidia/k8s-device-plugin)
+    NVDP_EXTRA_ARGS+=(--set nfd.image.repository=${REGISTRY_PATH}/nfd/node-feature-discovery)
 
     NVDP_CHART_URL="https://charts.opencsg.com/k8s-device-plugin/"
   fi
@@ -735,19 +766,7 @@ if [[ -z "$K3S_SERVER" ]]; then
     CSGHUB_INSTALLED=true
   fi
 
-  # Parse csghub chart version from EXTRA_ARGS (e.g., --version 2.0.0)
-  CSGHUB_CHART_VERSION=""
-  for i in "${!EXTRA_ARGS[@]}"; do
-    if [[ "${EXTRA_ARGS[$i]}" == "--version" ]] && [[ -n "${EXTRA_ARGS[$i+1]:-}" ]]; then
-      CSGHUB_CHART_VERSION="${EXTRA_ARGS[$i+1]}"
-      break
-    fi
-  done
-
-  # Helper function to compare versions (returns 0 if $1 >= $2)
-  version_ge() {
-    printf '%s\n%s\n' "$2" "$1" | sort -V -C
-  }
+  # version_ge and CSGHUB_CHART_VERSION are resolved at the top of the script
 
   # Only run CRD scripts if version is not specified (latest > 1.16) or >= 1.16
   SHOULD_RUN_CRD=true
@@ -822,8 +841,8 @@ if [[ -z "$K3S_SERVER" ]]; then
   fi
 
   if [[ "$INSTALL_CN" == "true" ]]; then
-    HELM_EXTRA_ARGS+=(--set global.image.registry=opencsg-registry.cn-beijing.cr.aliyuncs.com)
-    HELM_EXTRA_ARGS+=(--set global.imageRegistry=opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq)
+    HELM_EXTRA_ARGS+=(--set global.image.registry=${REGISTRY_HOST})
+    HELM_EXTRA_ARGS+=(--set global.imageRegistry=${REGISTRY_PATH})
   fi
 
   HELM_EXTRA_ARGS+=("${EXTRA_ARGS[@]}")
@@ -1056,7 +1075,7 @@ else
 mirrors:
   docker.io:
     endpoint:
-      - "https://opencsg-registry.cn-beijing.cr.aliyuncs.com"
+      - "https://${REGISTRY_MIRROR_URL}"
   ${REGISTRY}:
     endpoint:
       - "http://${REGISTRY}"

@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.3.0
+  version: 0.3.1
 - name: reloader
   repository: https://charts.opencsg.com/infra
   version: 2.2.14
@@ -19,12 +19,12 @@ dependencies:
   version: 0.47.5
 - name: knative-operator
   repository: https://charts.opencsg.com/infra
-  version: 1.22.1
+  version: 1.22.3
 - name: volcano
   repository: https://charts.opencsg.com/infra
   version: 1.14.3
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
   version: 0.5.4
-digest: sha256:78df46b7e329d9dbaf861c6cdf1b53c378253cb1312ab6e51b6e478b858547a8
-generated: "2026-09-07T11:50:42.201216+08:00"
+digest: sha256:58fbd4da84fea169818ff35ca4214cee5e07bea88acf5af34ee8be9f206e8b59
+generated: "2026-09-10T03:50:49.525372+08:00"

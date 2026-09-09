@@ -76,11 +76,11 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/minio/minio:RELEASE.2025-09-07T16-13-09Z"
+          value: "registry.opencsg.com/opencsghq/minio/minio:RELEASE.2025-09-07T16-13-09Z"
 
   - it: exposes the minio console address and port when the console is enabled
     template: minio/statefulset.yaml

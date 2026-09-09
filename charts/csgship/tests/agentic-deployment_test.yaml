@@ -132,8 +132,8 @@ tests:
       global:
         image:
           registryPolicy: force
-          registry: "opencsg-registry.cn-beijing.cr.aliyuncs.com"
+          registry: "registry.opencsg.com"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/csgship-agentic:v0.4.0"
+          value: "registry.opencsg.com/opencsghq/csgship-agentic:v0.4.0"
