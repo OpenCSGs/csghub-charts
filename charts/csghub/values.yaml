@@ -462,6 +462,7 @@ runner:
       typeLabel: "nvidia.com/gpu.product"  # GPU type label
       capacityLabel: "nvidia.com/gpu"      # GPU capacity label
       memLabel: "nvidia.com/gpu.memory"    # GPU memory label
+      xpuType: "GPU"                       # XPU type identifier
 
     # applicationEndpoint: ""            # Knative endpoint override (auto-detected if empty)
     # networkInterface: ""               # Host network interface for distributed inference
