@@ -98,12 +98,14 @@ data:
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_JOB_TTL: "300"
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_STATUS_TTL: {{ $statusTTL | quote }}
   STARHUB_SERVER_RUNNER_IMAGE_BUILDER_KANIKO_ARGS: {{ include "runner.kaniko.args" (dict "ctx" . "service" $service) | quote }}
+  {{- $gpuLabels := dict }}
+  {{- range $key, $value := $service.runner.gpuModelLabel }}
+    {{- $gpuLabels = set $gpuLabels ($key | snakecase) $value }}
+  {{- end }}
+  STARHUB_SERVER_RUNNER_GPU_MODEL_LABEL: '[{{ $gpuLabels | mustToJson }}]'
 
   ## Runner Configuration for Argo
   STARHUB_SERVER_ARGO_SERVICE_ACCOUNT: {{ printf "%s-argo-workflow-executor" .Release.Name | quote }}
-  {{- $typeLabel := $service.space.gpuModelLabel.typeLabel }}
-  {{- $capacityLabel := $service.space.gpuModelLabel.capacityLabel }}
-  STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
   STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.model.deployTimeoutInMin | default 60 | quote }}
   ## Runner Configuration for Space Timeouts
   STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES: {{ $service.space.deployTimeoutInMin | default 30 | quote }}

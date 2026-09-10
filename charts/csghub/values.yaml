@@ -457,6 +457,12 @@ runner:
     namespace: "spaces"                  # Namespace for user-deployed workloads
     mergingNamespace: "disable"          # Namespace merging: multi, single, disable
 
+    ## GPU resource configuration
+    gpuModelLabel:
+      typeLabel: "nvidia.com/gpu.product"  # GPU type label
+      capacityLabel: "nvidia.com/gpu"      # GPU capacity label
+      memLabel: "nvidia.com/gpu.memory"    # GPU memory label
+
     # applicationEndpoint: ""            # Knative endpoint override (auto-detected if empty)
     # networkInterface: ""               # Host network interface for distributed inference
     # storageClassName: ""               # StorageClass for space persistent volumes
@@ -475,11 +481,6 @@ runner:
 
     # deployTimeoutInMin: 30           # Timeout (in minutes) for space deployment operations
     # buildTimeoutInMin: 30            # Timeout (in minutes) for space build operations
-
-    ## GPU resource configuration
-    gpuModelLabel:
-      typeLabel: "nvidia.com/gpu.product"  # GPU type label
-      capacityLabel: "nvidia.com/gpu"      # GPU capacity label
 
     # readinessDelaySeconds: 120       # Initial delay before readiness probe starts
     # readinessPeriodSeconds: 10       # Interval between readiness probe checks

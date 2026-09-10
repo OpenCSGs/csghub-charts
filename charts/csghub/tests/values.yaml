@@ -162,14 +162,15 @@ runner:
     interval: 60
     namespace: "spaces"
     mergingNamespace: "disable"
+    gpuModelLabel:
+      typeLabel: "nvidia.com/gpu.product"
+      capacityLabel: "nvidia.com/gpu"
+      memLabel: "nvidia.com/gpu.memory"
   model:
     deployTimeoutInMin: 60
   space:
     usePublicDomain: true
     pipIndexUrl: "https://pypi.tuna.tsinghua.edu.cn/simple/"
-    gpuModelLabel:
-      typeLabel: "nvidia.com/gpu.product"
-      capacityLabel: "nvidia.com/gpu"
   knative:
     serving:
       domain: "example.com"

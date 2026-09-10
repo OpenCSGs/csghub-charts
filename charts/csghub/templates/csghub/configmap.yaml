@@ -298,9 +298,6 @@ data:
   STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.space.pipIndexUrl | quote }}
   STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.space.deployTimeoutInMin | default 30 | quote }}
   STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL: {{ $runnerSvc.space.statusCheckInterval | default 10 | quote }}
-  {{- $typeLabel := $runnerSvc.space.gpuModelLabel.typeLabel }}
-  {{- $capacityLabel := $runnerSvc.space.gpuModelLabel.capacityLabel }}
-  STARHUB_SERVER_GPU_MODEL_LABEL: '[{"type_label": {{ $typeLabel | quote }}, "capacity_label": {{ $capacityLabel | quote }}}]'
   STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ include "common.secret.value" (list . "space-session-secret-key" 40) | quote }}
 
   ## Server Configuration for Casdoor
