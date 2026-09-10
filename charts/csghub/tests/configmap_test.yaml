@@ -155,9 +155,6 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES
           value: "30"
-      - equal:
-          path: data.STARHUB_SERVER_GPU_MODEL_LABEL
-          value: '[{"type_label": "nvidia.com/gpu.product", "capacity_label": "nvidia.com/gpu"}]'
       - matchRegex:
           path: data.OPENCSG_ACCOUNTING_NATS_URL
           pattern: "nats://natsadmin:.*@csghub-nats:4222"

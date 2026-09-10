@@ -120,6 +120,12 @@ runner:
   ## Allow CPU resource requests to be scheduled on GPU nodes
   allowCpuOnGpuNodes: false
 
+  ## GPU resource configuration
+  gpuModelLabel:
+    typeLabel: "nvidia.com/gpu.product"  # Kubernetes node label for GPU product type
+    capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
+    memLabel: "nvidia.com/gpu.memory"    # Kubernetes node label for GPU memory
+
   # Image builder management
   # imageBuilderGitImage: ""               # Override image builder Git image
   # imageBuilderKanikoImage: ""            # Override image builder Kaniko image
@@ -160,11 +166,6 @@ space:
 
   ## Timeout (in minutes) for space image build operations
   # buildTimeoutInMin: 30
-
-  ## GPU resource configuration
-  gpuModelLabel:
-    typeLabel: "nvidia.com/gpu.product"  # Kubernetes node label for GPU product type
-    capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
 
   ## Kubernetes readiness probe configuration for space pods (in seconds)
   # readinessDelaySeconds: 120              # Initial delay before readiness probe starts

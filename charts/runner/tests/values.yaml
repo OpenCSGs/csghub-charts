@@ -94,6 +94,10 @@ runner:
   imageBuilderKanikoImage: ""
   imageBuilderStatusTTL: 300
   imageBuilderKanikoArgs: []
+  gpuModelLabel:
+    typeLabel: nvidia.com/gpu.product
+    capacityLabel: nvidia.com/gpu
+    memLabel: nvidia.com/gpu.memory
 
 ## Model deploy configuration
 model:
@@ -111,9 +115,6 @@ space:
   readinessDelaySeconds: 120
   readinessPeriodSeconds: 10
   readinessFailureThreshold: 3
-  gpuModelLabel:
-    typeLabel: nvidia.com/gpu.product
-    capacityLabel: nvidia.com/gpu
 
 ## Knative Serving configuration
 knative:
