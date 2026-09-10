@@ -125,6 +125,7 @@ runner:
     typeLabel: "nvidia.com/gpu.product"  # Kubernetes node label for GPU product type
     capacityLabel: "nvidia.com/gpu"      # Kubernetes node label for GPU capacity
     memLabel: "nvidia.com/gpu.memory"    # Kubernetes node label for GPU memory
+    xpuType: "GPU"                       # XPU type identifier
 
   # Image builder management
   # imageBuilderGitImage: ""               # Override image builder Git image

@@ -232,7 +232,7 @@ tests:
           value: "csghub-argo-workflow-executor"
       - equal:
           path: data.STARHUB_SERVER_RUNNER_GPU_MODEL_LABEL
-          value: '[{"capacity_label":"nvidia.com/gpu","mem_label":"nvidia.com/gpu.memory","type_label":"nvidia.com/gpu.product"}]'
+          value: '[{"capacity_label":"nvidia.com/gpu","mem_label":"nvidia.com/gpu.memory","type_label":"nvidia.com/gpu.product","xpu_type":"GPU"}]'
 
   ## ------------------------------------------------------------------
   ## Timeouts and readiness probes

@@ -166,6 +166,7 @@ runner:
       typeLabel: "nvidia.com/gpu.product"
       capacityLabel: "nvidia.com/gpu"
       memLabel: "nvidia.com/gpu.memory"
+      xpuType: "GPU"
   model:
     deployTimeoutInMin: 60
   space:
