@@ -213,6 +213,7 @@ portal:
 
   ## Database configuration
   postgresql: {}
+    # existingSecret: ""                   # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
     # database: "csghub_portal"            # Database name
@@ -223,6 +224,7 @@ portal:
 
   ## Object storage configuration
   objectStore: {}
+    # existingSecret: ""                   # Overrides the global objectStore.existingSecret when set
     # endpoint: ""                         # Object storage endpoint URL
     # accessKey: ""                        # Access key for authentication
     # secretKey: ""                        # Secret key for authentication
@@ -291,6 +293,7 @@ server:
 
   ## Database configuration
   postgresql: {}
+    # existingSecret: ""                   # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
     # database: "csghub_server"            # Database name
@@ -301,12 +304,14 @@ server:
 
   ## Redis configuration
   redis: {}
+    # existingSecret: ""                   # Overrides the global redis.existingSecret when set
     # host: "<redis_host>"                 # Redis server hostname or IP
     # port: 6379                           # Redis port number
     # password: ""                         # Redis authentication password
 
   ## Object storage configuration
   objectStore: {}
+    # existingSecret: ""                   # Overrides the global objectStore.existingSecret when set
     # endpoint: ""                         # Object storage endpoint URL
     # accessKey: ""                        # Access key for authentication
     # secretKey: ""                        # Secret key for authentication
@@ -421,6 +426,7 @@ xnet:
 
   ## Database configuration
   postgresql: {}
+    # existingSecret: ""                   # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
     # database: "csghub_xnet"              # Database name
@@ -431,12 +437,14 @@ xnet:
 
   ## Redis configuration
   redis: {}
+    # existingSecret: ""                   # Overrides the global redis.existingSecret when set
     # host: "<redis_host>"                 # Redis server hostname or IP
     # port: 6379                           # Redis port number
     # password: ""                         # Redis authentication password
 
   ## Object storage configuration
   objectStore: {}
+    # existingSecret: ""                   # Overrides the global objectStore.existingSecret when set
     # endpoint: ""                         # Object storage endpoint URL
     # accessKey: ""                        # Access key for authentication
     # secretKey: ""                        # Secret key for authentication
@@ -714,7 +722,8 @@ registry:
     formatter: "json"                        # Log format: json, text, logstash
     accesslog: true                          # Enable access log
 
-  objectStore: {}                            # External object storage
+  objectStore: {}
+    # existingSecret: ""                     # Overrides the global objectStore.existingSecret when set
     # endpoint: ""                           # Object storage endpoint URL
     # accessKey: ""                          # Access key for authentication
     # secretKey: ""                          # Secret key for authentication
@@ -812,7 +821,8 @@ casdoor:
       # enabled: false                       # Enable or disable TLS
       # secretName: ""                       # TLS secret name
 
-  postgresql: {}                             # Database configuration
+  postgresql: {}
+    # existingSecret: ""                     # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                      # PostgreSQL host address
     # port: 5432                             # PostgreSQL port
     # database: "csghub_casdoor"             # Database name
@@ -850,7 +860,8 @@ temporal:
       # enabled: false                       # Enable or disable TLS
       # secretName: ""                       # TLS secret name
 
-  postgresql: {}                             # Database configuration
+  postgresql: {}
+    # existingSecret: ""                     # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                      # PostgreSQL host address
     # port: 5432                             # PostgreSQL port
     # database: "csghub_temporal"            # Database name
