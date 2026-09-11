@@ -24,6 +24,7 @@ tests:
       loki:
         gatewayAuth:
           enabled: true
+          htpasswd: "loki:$2y$10$abcdefghijklmnopqrstuvwx"
     asserts:
       - isKind:
           of: SecurityPolicy
@@ -52,12 +53,23 @@ tests:
           path: spec.basicAuth.forwardUsernameHeader
           value: "X-Forwarded-User"
 
+  - it: renders nothing when no htpasswd is configured
+    template: loki/securitypolicy.yaml
+    set:
+      loki:
+        gatewayAuth:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: renders nothing for a non-envoyproxy controller
     template: loki/securitypolicy.yaml
     set:
       loki:
         gatewayAuth:
           enabled: true
+          htpasswd: "loki:$2y$10$abcdefghijklmnopqrstuvwx"
       global:
         gateway:
           controllerName: istio.io/gateway-controller

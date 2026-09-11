@@ -885,7 +885,7 @@ reloader:
 loki:
   gatewayAuth:
     enabled: false                         # Enable Gateway BasicAuth for Loki
-    # htpasswd: ""                         # Generate with: htpasswd -nbs <username> <password>
+    # htpasswd: ""                         # Optional; omit to expose without auth. Generate: htpasswd -nbs <username> <password>
 
   gateway:
     enabled: false                         # Disable loki internal gateway default
