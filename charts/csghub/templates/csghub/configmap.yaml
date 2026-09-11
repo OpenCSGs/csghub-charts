@@ -283,6 +283,7 @@ data:
   STARHUB_SERVER_GITALY_SERVER_SOCKET: {{ printf "%s://%s:%v" $serverGitConfig.scheme $serverGitConfig.host $serverGitConfig.port | quote }}
   STARHUB_SERVER_GITALY_TOKEN: {{ $serverGitConfig.token | quote }}
   STARHUB_SERVER_GITALY_STORAGE: {{ $serverGitConfig.storage | quote }}
+  STARHUB_SERVER_GITALY_JWT_SECRET: {{ $serverGitConfig.jwtSecret | quote }}
   {{- $domain := include "common.domain.csghub" . }}
   {{- $defaultPort := ternary "30022" "22" (eq (dig "service" "type" "LoadBalancer" .Values.global.gateway) "NodePort") }}
   {{- $port := toString ($serverSvc.gitlabShell.sshPort | default $defaultPort) }}

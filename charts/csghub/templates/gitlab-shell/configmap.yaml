@@ -63,7 +63,7 @@ data:
 
     # The secret field supersedes the secret_file, and if set that
     # file will not be read.
-    secret: "signing-key"
+    secret: {{ $gitalyConfig.jwtSecret | quote }}
 
     # Log file.
     # Default is gitlab-shell.log in the root directory.

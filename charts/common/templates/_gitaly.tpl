@@ -9,7 +9,7 @@ Resolve the name of the Secret that supplies the Gitaly connection.
 Resolution order: service-level gitaly.existingSecret > global.gitaly.existingSecret.
 Only honored when global.gitaly.enabled=false. When set, the connection is resolved
 from the Secret's GITALY_* keys (GITALY_HOST/GITALY_PORT/GITALY_TOKEN, optional
-GITALY_STORAGE/GITALY_SCHEME) via lookup.
+GITALY_STORAGE/GITALY_SCHEME/GITALY_JWT_SECRET) via lookup.
 
 Usage:
 {{ include "common.gitaly.existingSecret" (dict "ctx" . "service" .Values.servicename) }}
@@ -62,6 +62,7 @@ Returns: YAML configuration object with Gitaly connection parameters
     "storage" (dig "storage" "default" $gitalySvc)
     "token" (include "common.secret.password" (list $ctx (printf "%s.password" $gitalySvc.name) 32))
     "scheme" "tcp"
+    "jwtSecret" "signing-key"
   }}
 
   {{- /* If internal Gitaly is enabled and secret exists, use existing token */}}
@@ -82,6 +83,7 @@ Returns: YAML configuration object with Gitaly connection parameters
         "storage" (.storage | default $gitalyConfig.storage)
         "token" (.token | default $gitalyConfig.token)
         "scheme" (.scheme | default $gitalyConfig.scheme)
+        "jwtSecret" (.jwtSecret | default $gitalyConfig.jwtSecret)
       ) $gitalyConfig }}
     {{- end }}
   {{- end }}
@@ -94,6 +96,7 @@ Returns: YAML configuration object with Gitaly connection parameters
       "storage" (.storage | default $gitalyConfig.storage)
       "token" (.token | default $gitalyConfig.token)
       "scheme" (.scheme | default $gitalyConfig.scheme)
+      "jwtSecret" (.jwtSecret | default $gitalyConfig.jwtSecret)
     ) $gitalyConfig }}
   {{- end }}
 
@@ -106,6 +109,7 @@ Returns: YAML configuration object with Gitaly connection parameters
     {{- $realToken := dig "GITALY_TOKEN" "" $secretData | b64dec }}
     {{- $realStorage := dig "GITALY_STORAGE" "" $secretData | b64dec }}
     {{- $realScheme := dig "GITALY_SCHEME" "" $secretData | b64dec }}
+    {{- $realJwtSecret := dig "GITALY_JWT_SECRET" "" $secretData | b64dec }}
     {{- if $realHost }}
       {{- $portValue := $gitalyConfig.port }}
       {{- if $realPort }}
@@ -118,6 +122,7 @@ Returns: YAML configuration object with Gitaly connection parameters
         "storage" (or $realStorage $gitalyConfig.storage)
         "token" (or $realToken $gitalyConfig.token)
         "scheme" (or $realScheme $gitalyConfig.scheme)
+        "jwtSecret" (or $realJwtSecret $gitalyConfig.jwtSecret)
       }}
     {{- end }}
   {{- end }}

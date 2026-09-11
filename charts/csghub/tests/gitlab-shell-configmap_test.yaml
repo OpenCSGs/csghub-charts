@@ -40,3 +40,24 @@ tests:
       - matchRegex:
           path: data["config.yml"]
           pattern: 'listen: "\[::\]:22"'
+      - matchRegex:
+          path: data["config.yml"]
+          pattern: 'secret: "signing-key"'
+
+  - it: uses the external gitaly jwt secret when built-in gitaly is disabled
+    template: gitlab-shell/configmap.yaml
+    documentIndex: 0
+    set:
+      global:
+        gitaly:
+          enabled: false
+          external:
+            host: "10.6.0.13"
+            port: 8076
+            token: "Gitaly2025"
+            storage: "gitaly"
+            jwtSecret: "GitalyJWT2025"
+    asserts:
+      - matchRegex:
+          path: data["config.yml"]
+          pattern: 'secret: "GitalyJWT2025"'

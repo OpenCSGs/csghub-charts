@@ -128,6 +128,9 @@ tests:
           path: data.STARHUB_SERVER_GITALY_SERVER_SOCKET
           pattern: "tcp://csghub-gitaly:8075"
       - equal:
+          path: data.STARHUB_SERVER_GITALY_JWT_SECRET
+          value: "signing-key"
+      - equal:
           path: data.STARHUB_SERVER_SSH_DOMAIN
           value: "git@csghub.example.com"
       - equal:
@@ -486,6 +489,7 @@ tests:
             port: 8076
             token: "Gitaly2025"
             storage: "gitaly"
+            jwtSecret: "GitalyJWT2025"
         dataflow:
           enabled: false
           external:
@@ -561,6 +565,9 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_GITALY_STORAGE
           value: "gitaly"
+      - equal:
+          path: data.STARHUB_SERVER_GITALY_JWT_SECRET
+          value: "GitalyJWT2025"
       - equal:
           path: data.OPENCSG_DATAFLOW_SERVER_HOST
           value: "http://10.6.0.14"
