@@ -146,8 +146,9 @@ global:
       # port: 8075                  # Gitaly port number
       # token: ""                   # Authentication token
       # storage: "default"          # Storage name for repositories
+      # jwtSecret: "signing-key"    # Shared secret for gitlab-shell <-> server JWT auth
     ## Reference an existing Secret containing GITALY_HOST/GITALY_PORT/GITALY_TOKEN/
-    ## [GITALY_STORAGE]/[GITALY_SCHEME]. Only honored when enabled=false.
+    ## [GITALY_STORAGE]/[GITALY_SCHEME]/[GITALY_JWT_SECRET]. Only honored when enabled=false.
     existingSecret: ""
 
   ## Dataflow configuration
