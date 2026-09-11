@@ -134,6 +134,9 @@ global:
       # username: ""                # Registry username
       # password: ""                # Registry password
       # insecure: false           # Disable TLS/SSL encryption
+    ## Reference an existing Secret containing REGISTRY_HOST/[REGISTRY_REPOSITORY]/
+    ## [REGISTRY_USERNAME]/[REGISTRY_PASSWORD]. Only honored when enabled=false.
+    existingSecret: ""
 
   ## Gitaly configuration
   gitaly:

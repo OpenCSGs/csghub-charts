@@ -73,3 +73,25 @@ tests:
       - equal:
           path: insecure
           value: false
+
+  - it: keeps the external registry values when the referenced secret is absent
+    set:
+      global:
+        registry:
+          existingSecret: "global-reg-secret"
+    asserts:
+      - equal:
+          path: registry
+          value: "registry.example.com"
+      - equal:
+          path: repository
+          value: "csghub"
+      - equal:
+          path: username
+          value: "reg-user"
+      - equal:
+          path: password
+          value: "reg-pass"
+      - equal:
+          path: insecure
+          value: true
