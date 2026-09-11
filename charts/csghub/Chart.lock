@@ -16,7 +16,7 @@ dependencies:
   version: 29.14.0
 - name: runner
   repository: https://charts.opencsg.com/csghub
-  version: 2.5.0-rc.2
+  version: 2.5.0-rc.3
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
   version: 2.5.0-rc.1
@@ -35,5 +35,5 @@ dependencies:
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:aae86f94b78398ee5c91a580e4d71163e0585762efb949997f9f734dbd7ef6b1
-generated: "2026-09-11T12:29:52.642959+08:00"
+digest: sha256:df57a86accba1fe4fb0b4e048ac72c11f73b1f23f68911d7a65cd8fbf02639c9
+generated: "2026-09-11T14:17:03.456986+08:00"

@@ -220,6 +220,8 @@ registry: {}
   # username: ""                           # Registry username
   # password: ""                           # Registry password
   # insecure: false                        # Disable TLS/SSL encryption
+  # existingSecret: ""                     # Secret with REGISTRY_HOST/[REGISTRY_USERNAME]/[REGISTRY_PASSWORD];
+                                           # It overrides global.registry.existingSecret
 
 ## ObjectStore Configuration
 objectStore: {}                            # External object storage

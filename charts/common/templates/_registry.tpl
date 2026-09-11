@@ -5,6 +5,38 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{/*
+Resolve the name of the Secret that supplies the container registry connection.
+
+Resolution order: service-level registry.existingSecret > global.registry.existingSecret.
+Only honored when global.registry.enabled=false. When set, the connection is resolved
+from the Secret's REGISTRY_* keys (REGISTRY_HOST, optional REGISTRY_REPOSITORY/
+REGISTRY_USERNAME/REGISTRY_PASSWORD) via lookup.
+
+Usage:
+{{ include "common.registry.existingSecret" (dict "ctx" . "service" .Values.servicename) }}
+*/}}
+{{- define "common.registry.existingSecret" }}
+  {{- $service := .service }}
+  {{- $ctx := .ctx }}
+  {{- if not $ctx.Values.global.registry.enabled }}
+    {{- $existingSecret := "" }}
+    {{- with $service.registry }}
+      {{- if .existingSecret }}
+        {{- $existingSecret = .existingSecret }}
+      {{- end }}
+    {{- end }}
+    {{- if not $existingSecret }}
+      {{- with $ctx.Values.global.registry }}
+        {{- if .existingSecret }}
+          {{- $existingSecret = .existingSecret }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- $existingSecret -}}
+  {{- end }}
+{{- end }}
+
+{{/*
 Generate Registry Configuration
 
 Usage:
@@ -18,6 +50,10 @@ Configuration priority:
 1. Internal registry (if enabled)
 2. Service-level external registry (override global)
 3. Global external registry
+
+When global.registry.enabled=false and a registry.existingSecret is configured
+(service-level > global), the connection is taken from that Secret's REGISTRY_*
+keys, overriding the values above.
 
 Returns: YAML configuration object with registry parameters
 */}}
@@ -71,6 +107,25 @@ Returns: YAML configuration object with registry parameters
     ) $registryConfig }}
     {{- if hasKey . "insecure" }}
       {{- $registryConfig = set $registryConfig "insecure" .insecure }}
+    {{- end }}
+  {{- end }}
+
+  {{- /* existingSecret: pull real connection values from the referenced Secret. */}}
+  {{- $existingSecret := include "common.registry.existingSecret" (dict "ctx" $ctx "service" $service) }}
+  {{- if $existingSecret }}
+    {{- $secretData := (lookup "v1" "Secret" $ctx.Release.Namespace $existingSecret).data | default dict }}
+    {{- $realRegistry := dig "REGISTRY_HOST" "" $secretData | b64dec }}
+    {{- $realRepository := dig "REGISTRY_REPOSITORY" "" $secretData | b64dec }}
+    {{- $realUsername := dig "REGISTRY_USERNAME" "" $secretData | b64dec }}
+    {{- $realPassword := dig "REGISTRY_PASSWORD" "" $secretData | b64dec }}
+    {{- if $realRegistry }}
+      {{- $registryConfig = dict
+        "registry" $realRegistry
+        "repository" (or $realRepository $registryConfig.repository)
+        "username" (or $realUsername $registryConfig.username)
+        "password" (or $realPassword $registryConfig.password)
+        "insecure" $registryConfig.insecure
+      }}
     {{- end }}
   {{- end }}
 
