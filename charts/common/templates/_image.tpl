@@ -117,7 +117,7 @@ Returns: Full image path in format "registry/repository"
     {{- $localImage = $ctx.Values.image }}
   {{- end }}
 
-  {{- $registry := or $localImage.registry $globalImage.registry }}
+  {{- $registry := or $globalImage.registry $localImage.registry }}
   {{- if eq $globalImage.registryPolicy "force" }}
     {{- $registry = or $globalImage.registry "registry.opencsg.com" }}
   {{- end }}
