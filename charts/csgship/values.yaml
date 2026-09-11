@@ -135,6 +135,7 @@ web:
 
   ## Database configuration
   postgresql: {}
+    # existingSecret: ""                   # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
     # database: "csgship_csgship"          # Database name
@@ -145,6 +146,7 @@ web:
 
   ## Redis configuration
   redis: {}
+    # existingSecret: ""                   # Overrides the global redis.existingSecret when set
     # host: "<redis_host>"                 # Redis server hostname or IP
     # port: 6379                           # Redis port number
     # password: ""                         # Redis authentication password
@@ -276,7 +278,8 @@ casdoor:
       # enabled: false                       # Enable or disable TLS
       # secretName: ""                       # TLS secret name
 
-  postgresql: {}                             # Database configuration
+  postgresql: {}
+    # existingSecret: ""                     # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                      # PostgreSQL host address
     # port: 5432                             # PostgreSQL port
     # database: "csghub_casdoor"             # Database name

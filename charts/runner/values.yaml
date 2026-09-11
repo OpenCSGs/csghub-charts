@@ -55,10 +55,17 @@ global:
   ## Disable internal Registry (It's Only a flag)
   registry:
     enabled: false
+    ## Reference an existing Secret containing REGISTRY_HOST/[REGISTRY_REPOSITORY]/
+    ## [REGISTRY_USERNAME]/[REGISTRY_PASSWORD]. Only honored when enabled=false.
+    existingSecret: ""
 
   ## Disable internal ObjectStore (It's Only a flag)
   objectStore:
     enabled: false
+    ## Reference an existing Secret containing OBJECT_STORE_ENDPOINT/
+    ## OBJECT_STORE_ACCESS_KEY/OBJECT_STORE_SECRET_KEY/[OBJECT_STORE_REGION]/
+    ## [OBJECT_STORE_BUCKET]. Only honored when enabled=false.
+    existingSecret: ""
 
   ## SubChart deployment context
   chartContext:
@@ -215,16 +222,22 @@ tempo:
 
 ## Registry Configuration
 registry: {}
+  ## Reference an existing Secret containing REGISTRY_HOST/[REGISTRY_REPOSITORY]/
+  ## [REGISTRY_USERNAME]/[REGISTRY_PASSWORD]. Overrides the global
+  ## registry.existingSecret when set. Only honored when enabled=false.
+  # existingSecret: ""
   # registry: ""                           # External registry URL
   # repository: "csghub"                   # Repository namespace
   # username: ""                           # Registry username
   # password: ""                           # Registry password
   # insecure: false                        # Disable TLS/SSL encryption
-  # existingSecret: ""                     # Secret with REGISTRY_HOST/[REGISTRY_USERNAME]/[REGISTRY_PASSWORD];
-                                           # It overrides global.registry.existingSecret
 
 ## ObjectStore Configuration
-objectStore: {}                            # External object storage
+objectStore: {}
+  ## Reference an existing Secret containing OBJECT_STORE_ENDPOINT/OBJECT_STORE_ACCESS_KEY/
+  ## OBJECT_STORE_SECRET_KEY/[OBJECT_STORE_REGION]/[OBJECT_STORE_BUCKET]. Overrides the
+  ## global objectStore.existingSecret when set. Only honored when enabled=false.
+  # existingSecret: ""
   # endpoint: ""                           # Object storage endpoint URL
   # accessKey: ""                          # Access key for authentication
   # secretKey: ""                          # Secret key for authentication

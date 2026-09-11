@@ -104,6 +104,7 @@ dataflow:
 
   ## Database configuration
   postgresql: {}
+    # existingSecret: ""                   # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
     # database: "csghub_dataflow"          # Database name
@@ -140,6 +141,7 @@ labelStudio:
 
   ## Database configuration
   postgresql: {}
+    # existingSecret: ""                   # Overrides the global postgresql.existingSecret when set
     # host: "<pg_host>"                    # PostgreSQL host address
     # port: 5432                           # PostgreSQL port
     # database: "csghub_label_studio"      # Database name
