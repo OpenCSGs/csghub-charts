@@ -164,6 +164,10 @@ agenticflow:
     accessModes: ["ReadWriteOnce"]         # Volume access permissions
     size: "20Gi"                           # Disk space allocation
 
+  ## Deployment strategy
+  strategy:
+    type: Recreate                         # Recreate avoids RWO PVC conflicts
+
   resources:
     requests:
       cpu: "500m"
@@ -178,6 +182,10 @@ csgbot:
     # storageClass: ""                     # StorageClass for dynamic provisioning
     # accessModes: ["ReadWriteOnce"]       # Volume access permissions
     size: "20Gi"                           # Disk space allocation
+
+  ## Deployment strategy
+  strategy:
+    type: Recreate                         # Recreate avoids RWO PVC conflicts
 
   image:
     # registry: "docker.io"

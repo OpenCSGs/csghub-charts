@@ -118,6 +118,10 @@ dataflow:
     accessModes: ["ReadWriteOnce"]           # Volume access permissions
     size: "50Gi"                             # Disk space allocation
 
+  ## Deployment strategy
+  strategy:
+    type: Recreate                           # Recreate avoids RWO PVC conflicts
+
   ## Table rename migration
   migrations:
     enabled: true
