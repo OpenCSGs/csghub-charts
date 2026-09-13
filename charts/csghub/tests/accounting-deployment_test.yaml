@@ -98,7 +98,7 @@ tests:
           value: ["/starhub-bin/starhub", "payment", "launch", "-l", "info"]
       - equal:
           path: spec.template.spec.containers[1].ports[0].containerPort
-          value: 8094
+          value: 8090
 
   - it: overrides the image registry when registryPolicy is force
     template: csghub/accounting/deployment.yaml

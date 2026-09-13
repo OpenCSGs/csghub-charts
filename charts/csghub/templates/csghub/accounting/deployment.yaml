@@ -137,7 +137,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8094
+            - containerPort: 8090
               name: {{ dig "service" "name" $paymentSvc.name $paymentSvc }}
               protocol: {{ dig "service" "protocol" "TCP" $paymentSvc }}
           envFrom:
