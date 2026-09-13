@@ -57,10 +57,10 @@ tests:
     asserts:
       - equal:
           path: spec.ports[1].port
-          value: 8094
+          value: 8090
       - equal:
           path: spec.ports[1].targetPort
-          value: 8094
+          value: 8090
       - equal:
           path: spec.ports[1].name
           value: "payment"
