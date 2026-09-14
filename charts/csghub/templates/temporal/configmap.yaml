@@ -4,7 +4,6 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "ctx" . "service" "temporal") | fromYaml }}
-{{- if $service.console.enabled }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: ConfigMap
@@ -15,6 +14,8 @@ metadata:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels" . | nindent 4 }}
 data:
+  dynamicconfig-docker.yaml: {{ .Values.temporal.dynamicConfig.content | default "" | quote }}
+  {{- if $service.console.enabled }}
   TEMPORAL_UI_ENABLED: "true"
   TEMPORAL_ADDRESS: {{ printf "%s:%v" $serviceName $service.service.port | quote }}
   TEMPORAL_CORS_ORIGINS: {{ include "common.endpoint.csghub" . | quote }}
@@ -35,4 +36,4 @@ data:
   TEMPORAL_AUTH_CLIENT_SECRET: {{ $adminClientSecret | quote }}
   TEMPORAL_AUTH_CALLBACK_URL: {{ printf "%s/-/temporal/auth/sso/callback" (include "common.endpoint.csghub" .) | quote }}
   TEMPORAL_AUTH_SCOPES: "openid,email,profile"
-{{- end }}
+  {{- end }}

@@ -376,8 +376,8 @@ casdoor:
 
 temporal:
   image:
-    repository: "temporalio/auto-setup"
-    tag: "1.29.7"
+    repository: "temporalio/server"
+    tag: "1.32.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
   service:
