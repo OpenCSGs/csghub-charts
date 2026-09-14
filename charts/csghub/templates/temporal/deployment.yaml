@@ -61,6 +61,7 @@ spec:
       {{- end }}
       initContainers:
         {{- include "wait-for-postgresql" (dict "ctx" . "service" $service) | nindent 8 }}
+        {{- include "temporal-schema-setup" (dict "ctx" . "service" $service) | nindent 8 }}
       containers:
         - name: {{ $service.name }}
           image: {{ include "common.image" (list . $service.image) }}
@@ -83,16 +84,16 @@ spec:
           resources:
             {{- toYaml $service.resources | nindent 12 }}
           {{- end }}
-          {{- if or $service.volumeMounts (ne $pgConfig.sslmode "disable") }}
           volumeMounts:
-          {{- if ne $pgConfig.sslmode "disable" }}
+            - name: dynamic-config
+              mountPath: "/etc/temporal/config"
+            {{- if ne $pgConfig.sslmode "disable" }}
             - name: certs
               mountPath: "/etc/certs"
-          {{- end }}
-          {{- if $service.volumeMounts }}
+            {{- end }}
+            {{- if $service.volumeMounts }}
             {{- toYaml $service.volumeMounts | nindent 12 }}
-          {{- end }}
-          {{- end }}
+            {{- end }}
           {{- if $service.livenessProbe }}
           livenessProbe:
             {{- toYaml $service.livenessProbe | nindent 12 }}
@@ -122,7 +123,23 @@ spec:
           lifecycle:
             postStart:
               exec:
-                command: [ "/bin/sh", "-c", "sleep 8" ]
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    register_default_namespace() {
+                      local endpoint="http://$(hostname -i):7243/api/v1/namespaces"
+                      local payload='{"namespace":"default","workflow_execution_retention_period":"604800s"}'
+                      wget -qO- "$endpoint" | grep -q '"name":"default"' \
+                        && return 0
+                      wget -qO- --post-data="$payload" \
+                        --header='Content-Type: application/json' "$endpoint" \
+                        || echo "register_default_namespace: non-2xx, ignoring"
+                    }
+                    until wget -qO- --timeout=2 "http://$(hostname -i):7243/api/v1/namespaces" >/dev/null 2>&1; do
+                      sleep 2
+                    done
+                    register_default_namespace
           {{- end }}
           {{- if $service.stdin }}
           stdin: {{ $service.stdin }}
@@ -183,17 +200,21 @@ spec:
           tty: {{ $service.tty }}
           {{- end }}
           {{- end }}
-      {{- if or $service.volumes (ne $pgConfig.sslmode "disable") }}
       volumes:
-      {{- if ne $pgConfig.sslmode "disable" }}
+        - name: dynamic-config
+          configMap:
+            name: {{ $serviceName }}
+            items:
+              - key: dynamicconfig-docker.yaml
+                path: dynamicconfig/docker.yaml
+        {{- if ne $pgConfig.sslmode "disable" }}
         - name: certs
           secret:
             secretName: {{ printf "%s-certs" $serviceName }}
-      {{- end }}
-      {{- if $service.volumes }}
+        {{- end }}
+        {{- if $service.volumes }}
         {{- toYaml $service.volumes | nindent 8 }}
-      {{- end }}
-      {{- end }}
+        {{- end }}
       {{- if $service.nodeSelector }}
       nodeSelector:
         {{- toYaml $service.nodeSelector | nindent 8 }}

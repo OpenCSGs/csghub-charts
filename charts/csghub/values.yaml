@@ -835,8 +835,8 @@ casdoor:
 temporal:
   image:
     # registry: "docker.io"
-    repository: "temporalio/auto-setup"
-    tag: "1.29.7"                            # Image version tag
+    repository: "temporalio/server"
+    tag: "1.32.0"                            # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
 
@@ -869,6 +869,13 @@ temporal:
     # password: ""                           # Database password
     # timezone: "Etc/UTC"                    # Database timezone
     # sslmode: "prefer"                      # SSL mode
+
+  ## Dynamic config rendered into /etc/temporal/config/dynamicconfig/docker.yaml.
+  ## Empty (default) means the server uses all built-in dynamic config defaults.
+  dynamicConfig: {}
+    # content: |                             # Temporal dynamic config overrides
+    #   system.workflow.startWorkflowDelay:
+    #     - value: 1s
 
 #################################################################
 ##  Dependent SubCharts                                        ##

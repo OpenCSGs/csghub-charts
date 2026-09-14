@@ -1,7 +1,12 @@
 # Test suite for the CSGHub Temporal ConfigMap.
 #
-# The ConfigMap configures the temporal UI console with OIDC auth against the
-# casdoor admin client. It renders only when the console is enabled.
+# The ConfigMap carries two unrelated payloads:
+#   - dynamicconfig/docker.yaml: always rendered. The minimal temporalio/server
+#     image does not ship this file, and the server process requires it at
+#     startup, so the chart materialises an empty one by default. Operators
+#     override it via temporal.dynamicConfig.content.
+#   - TEMPORAL_* env vars for the console container: rendered only when
+#     console.enabled is true.
 
 suite: Test Temporal ConfigMap
 templates:
@@ -12,12 +17,8 @@ release:
 values:
   - values.yaml
 tests:
-  - it: renders the ConfigMap with the temporal UI and OIDC auth config
+  - it: always renders the ConfigMap with the dynamic config file
     template: temporal/configmap.yaml
-    set:
-      temporal:
-        console:
-          enabled: true
     asserts:
       - isKind:
           of: ConfigMap
@@ -30,6 +31,32 @@ tests:
       - equal:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "temporal"
+      - equal:
+          path: data["dynamicconfig-docker.yaml"]
+          value: ""
+
+  - it: writes the user-provided dynamic config content verbatim
+    template: temporal/configmap.yaml
+    set:
+      temporal:
+        dynamicConfig:
+          content: |
+            system.workflow.startWorkflowDelay:
+              - value: 1s
+    asserts:
+      - equal:
+          path: data["dynamicconfig-docker.yaml"]
+          value: |
+            system.workflow.startWorkflowDelay:
+              - value: 1s
+
+  - it: renders the temporal UI and OIDC auth config when the console is enabled
+    template: temporal/configmap.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+    asserts:
       - equal:
           path: data.TEMPORAL_UI_ENABLED
           value: "true"
@@ -78,8 +105,10 @@ tests:
           path: data.TEMPORAL_AUTH_SCOPES
           value: "openid,email,profile"
 
-  - it: renders nothing when the console is disabled
+  - it: omits the console env vars when the console is disabled
     template: temporal/configmap.yaml
     asserts:
-      - hasDocuments:
-          count: 0
+      - isNull:
+          path: data.TEMPORAL_UI_ENABLED
+      - isNull:
+          path: data.TEMPORAL_AUTH_ENABLED

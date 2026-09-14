@@ -1,8 +1,8 @@
 # Test suite for the CSGHub Temporal Deployment.
 #
-# The Deployment runs the temporal auto-setup image with an init container that
-# waits for postgresql. It always renders because the built-in temporal has no
-# enable switch.
+# The Deployment runs the temporal server image with an init container that
+# waits for postgresql and a second one that sets up the temporal schema. It
+# always renders because the built-in temporal has no enable switch.
 
 suite: Test Temporal Deployment
 templates:
@@ -47,7 +47,23 @@ tests:
           path: spec.template.spec.initContainers[0].image
           value: "docker.io/opencsghq/psql:latest"
 
-  - it: runs the auto-setup container from the temporal Secret
+  - it: sets up the temporal schema with the admin-tools image tag
+    template: temporal/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: "temporal-schema-setup"
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: "docker.io/temporalio/admin-tools:1.32.0"
+      - equal:
+          path: spec.template.spec.initContainers[1].env[0].value
+          value: "postgres12"
+      - equal:
+          path: spec.template.spec.initContainers[1].env[1].value
+          value: "csghub-postgresql"
+
+  - it: runs the server container from the temporal Secret
     template: temporal/deployment.yaml
     asserts:
       - equal:
@@ -55,7 +71,7 @@ tests:
           value: "temporal"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/temporalio/auto-setup:1.29.7"
+          value: "docker.io/temporalio/server:1.32.0"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -65,6 +81,70 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].envFrom[0].secretRef.name
           value: "csghub-temporal"
+
+  - it: mounts the dynamic-config ConfigMap into the server container
+    template: temporal/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "dynamic-config"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/etc/temporal/config"
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "dynamic-config"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "csghub-temporal"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.items[0].key
+          value: "dynamicconfig-docker.yaml"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.items[0].path
+          value: "dynamicconfig/docker.yaml"
+
+  - it: omits the certs volumeMount when sslmode is disable
+    template: temporal/deployment.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 1
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: "dynamic-config"
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 1
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "dynamic-config"
+
+  - it: mounts the certs volume when sslmode requires TLS
+    template: temporal/deployment.yaml
+    set:
+      temporal:
+        postgresql:
+          sslmode: "require"
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 2
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: "certs"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/etc/certs"
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 2
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: "certs"
+      - equal:
+          path: spec.template.spec.volumes[1].secret.secretName
+          value: "csghub-temporal-certs"
 
   - it: overrides the image registry when registryPolicy is force
     template: temporal/deployment.yaml
@@ -78,5 +158,8 @@ tests:
           path: spec.template.spec.initContainers[0].image
           value: "registry.opencsg.com/opencsghq/psql:latest"
       - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: "registry.opencsg.com/opencsghq/temporalio/admin-tools:1.32.0"
+      - equal:
           path: spec.template.spec.containers[0].image
-          value: "registry.opencsg.com/opencsghq/temporalio/auto-setup:1.29.7"
+          value: "registry.opencsg.com/opencsghq/temporalio/server:1.32.0"
