@@ -190,7 +190,7 @@ csgbot:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgbot"
-    tag: "v0.6.7-ee"
+    tag: "v0.6.9-ee"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
