@@ -37,7 +37,7 @@ if ! kubectl slice --help &>/dev/null; then
 fi
 
 # 3. Configuration & Directory Setup
-VERSION="v0.5.4"
+VERSION="v0.5.5"
 BASE_URL="https://ghfast.top/https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}"
 TEMPLATE_DIR="templates"
 EXT_DIR="${TEMPLATE_DIR}/extensions"
@@ -126,5 +126,12 @@ find "$TEMPLATE_DIR" -type f -name "*.yaml" -exec "$SED_BIN" -i \
 
 # E. Final cleanup: Remove any trailing whitespace created by the script
 find "$TEMPLATE_DIR" -type f -name "*.yaml" -exec "$SED_BIN" -i 's/[[:space:]]*$//' {} +
+
+# F. Sync Chart.yaml version and appVersion with the downloaded VERSION (strip leading 'v' if present)
+"$SED_BIN" -i \
+    -e "s/^version:.*/version: ${VERSION#v}/" \
+    -e "s/^appVersion:.*/appVersion: \"${VERSION#v}\"/" \
+    Chart.yaml
+echo "Synced Chart.yaml version to ${VERSION#v}"
 
 echo "Success: Managed manifests in ./templates and ./crds"
