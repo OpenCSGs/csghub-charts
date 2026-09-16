@@ -25,3 +25,4 @@
 .claude/
 tmpcharts-*
 tests/
+chart.sh
