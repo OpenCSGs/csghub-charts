@@ -1,0 +1,41 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "labelStudioLlmBackend") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  ## Required: without this the backend imports torch, absent from the image.
+  USE_THIRD_PARTY_MODELS: {{ $service.thirdPartyModels | default true | quote }}
+  ## gunicorn binds $PORT (Dockerfile CMD); keep it aligned with service.port.
+  PORT: {{ dig "service" "port" 9090 $service | quote }}
+  LOG_LEVEL: {{ $service.logLevel | default "INFO" | quote }}
+  WORKERS: {{ $service.workers | default 1 | quote }}
+  THREADS: {{ $service.threads | default 8 | quote }}
+  MODEL_DIR: {{ $service.modelDir | default "/data/models" | quote }}
+  DEVICE: {{ $service.device | default "cuda" | quote }}
+  MODEL_CONFIG: {{ $service.modelConfig | default "configs/sam2.1/sam2.1_hiera_l.yaml" | quote }}
+  MODEL_CHECKPOINT: {{ $service.modelCheckpoint | default "sam2.1_hiera_large.pt" | quote }}
+  {{- with $service.basicAuth }}
+  {{- if and .user .pass }}
+  BASIC_AUTH_USER: {{ .user | quote }}
+  BASIC_AUTH_PASS: {{ .pass | quote }}
+  {{- end }}
+  {{- end }}
+  VOLCENGINE_ENTITY_SEGMENT_MODEL: {{ $service.volcengineEntitySegmentModel | default "entity_seg" | quote }}
+  VOLCENGINE_ENTITY_SEGMENT_MAX_ENTITY: {{ $service.volcengineEntitySegmentMaxEntity | default 10 | quote }}
+  VOLCENGINE_ENTITY_SEGMENT_REFINE_MASK: {{ $service.volcengineEntitySegmentRefineMask | default 1 | quote }}
+  VOLCENGINE_ENTITY_SEGMENT_RETURN_FORMAT: {{ $service.volcengineEntitySegmentReturnFormat | default 3 | quote }}
+  DOUBAO_MODEL: {{ $service.doubaoModel | default "doubao-seed-2-1-turbo-260628" | quote }}
+  ARK_BASE_URL: {{ $service.arkBaseUrl | default "https://ark.cn-beijing.volces.com/api/v3" | quote }}
+  DOUBAO_TIMEOUT: {{ $service.doubaoTimeout | default 360 | quote }}
+  DOUBAO_MAX_IMAGE_SIZE: {{ $service.doubaoMaxImageSize | default 640 | quote }}
