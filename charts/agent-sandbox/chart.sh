@@ -96,9 +96,17 @@ echo "Applying Helm template logic..."
 find "$TEMPLATE_DIR" -type f -name "*.yaml" -exec "$SED_BIN" -i \
     's|image: .*|image: {{ include "common.image" (list . .Values.image) \| replace "docker.io" "registry.k8s.io" }}|g' {} +
 
-# B. Replace hardcoded Namespace
+# B. Replace hardcoded Namespace in templates (release namespace, CRDs aren't template-rendered)
 find "$TEMPLATE_DIR" -type f -name "*.yaml" -exec "$SED_BIN" -i \
     's/namespace: agent-sandbox-system/namespace: {{ .Release.Namespace }}/g' {} +
+
+# B1. Replace hardcoded Namespace in CRDs with csghub (controller's --webhook-namespace patches CRD webhook ref at runtime if release ns differs)
+find "$CRD_DIR" -type f -name "*.yaml" -exec "$SED_BIN" -i \
+    's/namespace: agent-sandbox-system/namespace: csghub/g' {} +
+
+# B2. Inject --webhook-namespace arg so controller webhooks install into the release namespace
+"$SED_BIN" -i $'/- "--extensions"/a\\\n        - "--webhook-namespace={{ .Release.Namespace }}"' \
+    "$EXT_DIR/deployment-agent-sandbox-controller.yaml"
 
 # C. Append labels to metadata.labels (Indentation: 4 spaces for the helper)
 # Use [[:space:]]* to handle any number of spaces before 'labels:'

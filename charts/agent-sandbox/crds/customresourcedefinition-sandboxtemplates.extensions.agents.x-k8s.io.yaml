@@ -8282,5 +8282,5 @@ spec:
       clientConfig:
         service:
           name: agent-sandbox-webhook-service
-          namespace: agent-sandbox-system
+          namespace: csghub
           path: /convert
