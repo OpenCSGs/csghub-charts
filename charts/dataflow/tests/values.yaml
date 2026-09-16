@@ -95,6 +95,18 @@ labelStudio:
     runAsUser: 0
     runAsGroup: 0
 
+## Label Studio LLM Backend
+labelStudioLlmBackend:
+  image:
+    repository: opencsghq/label-studio
+    tag: v2.5.0-llm-back
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    port: 9090
+    name: http
+  basicAuth: {}
+
 ## Embedded PostgreSQL configuration
 postgresql:
   image:

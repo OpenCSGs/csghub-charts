@@ -163,6 +163,31 @@ labelStudio:
     runAsUser: 0
     runAsGroup: 0
 
+## Label Studio LLM Backend
+## Aggregated ML backend for label-studio; serves inference through third-party
+## APIs instead of local models (see USE_THIRD_PARTY_MODELS in the ConfigMap).
+labelStudioLlmBackend:
+  ## Image settings (overrides global.image)
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/label-studio"
+    tag: "v2.5.0-llm-back"                   # Image version tag
+    pullPolicy: "IfNotPresent"               # Image pull policy
+    pullSecrets: []                          # Docker registry secrets
+
+  ## Service Configuration
+  service: {}
+    # port: 9090
+    # name: http
+
+  ## Optional HTTP basic auth for the ML server (both fields must be set together)
+  basicAuth: {}
+    # user: ""
+    # pass: ""
+
+  ## gunicorn log level
+  # logLevel: "INFO"
+
 #################################################################
 ##  Built-in Third-party Components                            ##
 #################################################################

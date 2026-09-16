@@ -19,7 +19,7 @@ dependencies:
   version: 2.5.0
 - name: dataflow
   repository: https://charts.opencsg.com/csghub
-  version: 2.5.0
+  version: 2.5.1-rc.1
 - name: csgship
   repository: https://charts.opencsg.com/csghub
   version: 0.4.6
@@ -35,5 +35,5 @@ dependencies:
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:cf79e3a36c85ae5a9da2174d6ffe5e4bb92e40ebfaaf9902300d21da3a4c2af2
-generated: "2026-09-15T17:47:51.344909+08:00"
+digest: sha256:3922e32920d61f6470f521874952c7ce5586b8453cf92681d780c7e12795a3f5
+generated: "2026-09-16T19:36:53.280848+08:00"

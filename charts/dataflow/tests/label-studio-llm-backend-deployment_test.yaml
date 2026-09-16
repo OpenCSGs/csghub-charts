@@ -1,0 +1,240 @@
+# Test suite for the label-studio-llm-backend Deployment.
+#
+# The Deployment runs the aggregated ML backend on port 9090 with HTTP
+# /health probes and consumes its configuration via envFrom on the
+# matching ConfigMap.
+
+suite: Test Label Studio LLM Backend Deployment
+templates:
+  - label-studio/llm-backend/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  ## ------------------------------------------------------------------
+  ## Metadata and labels
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment metadata with standard labels
+    template: label-studio/llm-backend/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio-llm-backend"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio-llm-backend"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "dataflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  ## ------------------------------------------------------------------
+  ## Spec defaults
+  ## ------------------------------------------------------------------
+  - it: renders the Deployment spec defaults
+    template: label-studio/llm-backend/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "label-studio-llm-backend"
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  - it: omits the service account block when serviceAccountName is not set
+    template: label-studio/llm-backend/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.serviceAccountName
+
+  ## ------------------------------------------------------------------
+  ## Container image, ports, envFrom and probes
+  ## ------------------------------------------------------------------
+  - it: renders the llm-backend container with image, ports, envFrom and probes
+    template: label-studio/llm-backend/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "label-studio-llm-backend"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/label-studio:v2.5.0-llm-back"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 9090
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "http"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: "csghub-label-studio-llm-backend"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: "/health"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 9090
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/health"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 9090
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 5
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+
+  ## ------------------------------------------------------------------
+  ## Image configuration
+  ## ------------------------------------------------------------------
+  - it: overrides the image registry when registryPolicy is force
+    template: label-studio/llm-backend/deployment.yaml
+    set:
+      global:
+        image:
+          registryPolicy: force
+          registry: "registry.opencsg.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.opencsg.com/opencsghq/label-studio:v2.5.0-llm-back"
+
+  - it: prefers service-level pullSecrets over global pullSecrets
+    template: label-studio/llm-backend/deployment.yaml
+    set:
+      labelStudioLlmBackend:
+        image:
+          pullSecrets:
+            - "svc-secret"
+      global:
+        image:
+          pullSecrets:
+            - "global-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "svc-secret"
+
+  - it: prefers the service-level pull policy over the global pull policy
+    template: label-studio/llm-backend/deployment.yaml
+    set:
+      labelStudioLlmBackend:
+        image:
+          pullPolicy: "Always"
+      global:
+        image:
+          pullPolicy: "Never"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Always"
+
+  ## ------------------------------------------------------------------
+  ## Environment variables and resources
+  ## ------------------------------------------------------------------
+  - it: renders extra container environments when set
+    template: label-studio/llm-backend/deployment.yaml
+    set:
+      labelStudioLlmBackend:
+        environments:
+          DEBUG: "false"
+          LOG_LEVEL: "info"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "DEBUG"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "false"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: "LOG_LEVEL"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "info"
+
+  - it: renders container resources when set
+    template: label-studio/llm-backend/deployment.yaml
+    set:
+      labelStudioLlmBackend:
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "500m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "512Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "2000m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "2Gi"
+
+  ## ------------------------------------------------------------------
+  ## Spec overrides
+  ## ------------------------------------------------------------------
+  - it: renders overridden spec scalars when provided
+    template: label-studio/llm-backend/deployment.yaml
+    set:
+      labelStudioLlmBackend:
+        replicas: 2
+        minReadySeconds: 10
+        terminationGracePeriodSeconds: 60
+        revisionHistoryLimit: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+      - equal:
+          path: spec.minReadySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 5

@@ -1,0 +1,141 @@
+# Test suite for the label-studio-llm-backend ConfigMap.
+#
+# The ConfigMap carries the runtime mode switch and the gunicorn listen port,
+# both consumed by the backend via envFrom. PORT is derived from service.port
+# so the application and the Service cannot drift apart.
+
+suite: Test Label Studio LLM Backend ConfigMap
+templates:
+  - label-studio/llm-backend/configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata with standard labels
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "csghub-label-studio-llm-backend"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "label-studio-llm-backend"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "dataflow"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: enables the third-party model mode
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - equal:
+          path: data.USE_THIRD_PARTY_MODELS
+          value: "true"
+
+  - it: renders PORT from service.port
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - equal:
+          path: data.PORT
+          value: "9090"
+
+  - it: honors a custom service.port for PORT
+    template: label-studio/llm-backend/configmap.yaml
+    set:
+      labelStudioLlmBackend:
+        service:
+          port: 9191
+    asserts:
+      - equal:
+          path: data.PORT
+          value: "9191"
+
+  - it: renders the gunicorn runtime settings
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - equal:
+          path: data.LOG_LEVEL
+          value: "INFO"
+      - equal:
+          path: data.WORKERS
+          value: "1"
+      - equal:
+          path: data.THREADS
+          value: "8"
+
+  - it: renders the local-model defaults (no-op under third-party mode)
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - equal:
+          path: data.MODEL_DIR
+          value: "/data/models"
+      - equal:
+          path: data.DEVICE
+          value: "cuda"
+      - equal:
+          path: data.MODEL_CHECKPOINT
+          value: "sam2.1_hiera_large.pt"
+
+  - it: renders the third-party provider settings
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - equal:
+          path: data.VOLCENGINE_ENTITY_SEGMENT_MODEL
+          value: "entity_seg"
+      - equal:
+          path: data.VOLCENGINE_ENTITY_SEGMENT_MAX_ENTITY
+          value: "10"
+      - equal:
+          path: data.DOUBAO_MODEL
+          value: "doubao-seed-2-1-turbo-260628"
+      - equal:
+          path: data.ARK_BASE_URL
+          value: "https://ark.cn-beijing.volces.com/api/v3"
+      - equal:
+          path: data.DOUBAO_TIMEOUT
+          value: "360"
+
+  - it: omits basic auth when not configured
+    template: label-studio/llm-backend/configmap.yaml
+    asserts:
+      - notExists:
+          path: data.BASIC_AUTH_USER
+      - notExists:
+          path: data.BASIC_AUTH_PASS
+
+  - it: sets basic auth only when both fields are provided
+    template: label-studio/llm-backend/configmap.yaml
+    set:
+      labelStudioLlmBackend:
+        basicAuth:
+          user: mluser
+          pass: mlpass
+    asserts:
+      - equal:
+          path: data.BASIC_AUTH_USER
+          value: "mluser"
+      - equal:
+          path: data.BASIC_AUTH_PASS
+          value: "mlpass"
+
+  - it: ignores basic auth when only one field is provided
+    template: label-studio/llm-backend/configmap.yaml
+    set:
+      labelStudioLlmBackend:
+        basicAuth:
+          user: mluser
+    asserts:
+      - notExists:
+          path: data.BASIC_AUTH_USER
+      - notExists:
+          path: data.BASIC_AUTH_PASS
