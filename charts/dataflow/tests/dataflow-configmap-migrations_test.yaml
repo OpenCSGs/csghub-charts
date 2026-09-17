@@ -41,11 +41,11 @@ tests:
     template: dataflow/configmap-migrations.yaml
     asserts:
       - exists:
-          path: data["20260609_dataflow_migrations_init.sql"]
+          path: data["20260609_migrations_init.sql"]
       - exists:
-          path: data["20260609_dataflow_rename_tables.sql"]
+          path: data["20260609_rename_tables.sql"]
       - matchRegex:
-          path: data["20260609_dataflow_migrations_init.sql"]
+          path: data["20260609_migrations_init.sql"]
           pattern: "Copyright OpenCSG"
 
   - it: renders nothing when migrations are disabled
