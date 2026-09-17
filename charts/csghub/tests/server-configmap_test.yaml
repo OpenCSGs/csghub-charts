@@ -33,4 +33,4 @@ tests:
       - isNotNullOrEmpty:
           path: data
       - exists:
-          path: data["1768547229_server_promote_root.sql"]
+          path: data["1768547229_promote_root.sql"]

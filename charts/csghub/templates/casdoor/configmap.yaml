@@ -47,7 +47,7 @@ data:
     initDataNewOnly = true
     frontendBaseDir = "../cc_0"
     enableErrorMask = true
-  {{- range $path, $_ := .Files.Glob "scripts/*_casdoor_*.sql" }}
+  {{- range $path, $_ := .Files.Glob "scripts/casdoor/*.sql" }}
   {{ base $path }}: |
   {{- $.Files.Get $path | nindent 4 }}
   {{- end }}

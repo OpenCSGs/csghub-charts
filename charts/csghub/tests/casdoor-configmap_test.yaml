@@ -52,7 +52,7 @@ tests:
     template: casdoor/configmap.yaml
     asserts:
       - isNotNullOrEmpty:
-          path: data["1768547229_casdoor_update_conf.sql"]
+          path: data["1768547229_update_conf.sql"]
 
   - it: points app.conf at an external PostgreSQL when configured
     template: casdoor/configmap.yaml
