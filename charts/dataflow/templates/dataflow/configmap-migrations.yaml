@@ -21,7 +21,7 @@ metadata:
 data:
   ## Migration scripts
   {{- $currentScope := . }}
-  {{- range $path, $_ := .Files.Glob "scripts/*_dataflow_*.sql" }}
+  {{- range $path, $_ := .Files.Glob "scripts/dataflow/*.sql" }}
   {{- with $currentScope }}
   {{- base $path | nindent 2 }}: |
   {{- .Files.Get $path | nindent 4 }}

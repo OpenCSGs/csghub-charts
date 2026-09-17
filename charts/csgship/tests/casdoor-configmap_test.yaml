@@ -62,7 +62,7 @@ tests:
     template: casdoor/configmap.yaml
     asserts:
       - isNotNullOrEmpty:
-          path: data["1768547229_casdoor_update_conf.sql"]
+          path: data["1768547229_update_conf.sql"]
 
   - it: renders nothing in built-in mode
     template: casdoor/configmap.yaml
