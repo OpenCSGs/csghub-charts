@@ -1,6 +1,6 @@
 # Test suite for the CSGHub MinIO ConfigMap.
 #
-# The ConfigMap embeds the scripts/*_minio_*.sh init scripts. It renders only
+# The ConfigMap embeds the scripts/minio/*.sh init scripts. It renders only
 # when the built-in object storage is enabled.
 
 suite: Test MinIO ConfigMap
