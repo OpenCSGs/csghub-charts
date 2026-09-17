@@ -1,6 +1,6 @@
 # Test suite for the CSGHub server init-scripts ConfigMap.
 #
-# The ConfigMap embeds the scripts/*_server_*.sql files so the migration Job can
+# The ConfigMap embeds the scripts/server/*.sql files so the migration Job can
 # apply them against the server database.
 
 suite: Test Server ConfigMap

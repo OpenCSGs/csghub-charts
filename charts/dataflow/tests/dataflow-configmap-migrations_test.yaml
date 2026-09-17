@@ -1,7 +1,7 @@
 # Test suite for the dataflow migrations ConfigMap.
 #
 # The ConfigMap renders only when dataflow.migrations.enabled is true. It
-# bundles the SQL migration scripts from the chart scripts/ directory.
+# bundles the SQL migration scripts from the chart scripts/dataflow/ directory.
 
 suite: Test Dataflow Migrations ConfigMap
 templates:
