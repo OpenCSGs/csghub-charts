@@ -40,6 +40,8 @@ helm install csghub csghub/csghub \
 
 `custom-values.yaml` is where you override image tags, dependencies, and per-component toggles. See each chart's `values.yaml` for the full set of options.
 
+For the full walkthrough see the [Quick install overview](https://opencsg.com/docs/csghub/101/install/quick-start/overview).
+
 ## Sub-chart selection
 
 Each component under `csghub` can be turned on or off independently via top-level flags. Out of the box the chart enables runner, dataflow, agentichub, prometheus, and envoy; toggle off what you don't need:
@@ -79,7 +81,9 @@ Before opening a PR, make sure the chart `version` in `Chart.yaml` is bumped whe
 
 ## Docs
 
-- [CSGHub](https://opencsg.com/docs/csghub/101/install/summary)
+- [Install overview](https://opencsg.com/docs/csghub/101/install/summary)
+- [Quick install (Helm)](https://opencsg.com/docs/csghub/101/install/quick-start/overview)
+- [Docker install](https://opencsg.com/docs/csghub/101/install/docker/overview)
 
 ## Issues
 
