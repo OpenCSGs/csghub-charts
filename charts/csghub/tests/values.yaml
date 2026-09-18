@@ -97,7 +97,6 @@ server:
   swaggerAPI:
     enabled: false
   enablePresignedUrlProxy: true
-  allowCpuOnGpuNodes: false
   agenticflow: {}
   csgbot: {}
   memory:
