@@ -1,9 +1,9 @@
 # Test suite for the CSGHub Executor Deployment.
 #
-# The Deployment runs the temporal-worker launch module. The repository
-# deletion-worker sidecar is currently wrapped in `{{- if false }}` and does
-# not render; re-enable the block and restore the deletion-worker assertions
-# in the next release.
+# The Deployment runs the temporal-worker launch module plus a repository
+# deletion-worker sidecar, both from the ee server image and reading the core
+# ConfigMap. The main container mounts the casdoor certs Secret. It always
+# renders because the built-in executor has no enable switch.
 
 suite: Test Executor Deployment
 templates:
@@ -58,15 +58,28 @@ tests:
       - notExists:
           path: spec.template.spec.containers[0].ports
 
-  - it: omits the deletion-worker sidecar (temporarily disabled)
+  - it: runs the repository deletion-worker as a second container
     template: csghub/executor/deployment.yaml
     asserts:
       - lengthEqual:
           path: spec.template.spec.containers
-          count: 1
+          count: 2
       - equal:
-          path: spec.template.spec.containers[0].name
-          value: "temporal-worker"
+          path: spec.template.spec.containers[1].name
+          value: "deletion-worker"
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "docker.io/opencsghq/csghub-server:v2.5.0-ee"
+      - equal:
+          path: spec.template.spec.containers[1].command
+          value: ["/starhub-bin/starhub", "repository", "deletion-worker"]
+      - contains:
+          path: spec.template.spec.containers[1].envFrom
+          content:
+            configMapRef:
+              name: csghub-core
+      - notExists:
+          path: spec.template.spec.containers[1].volumeMounts
 
   - it: mounts the casdoor certs Secret for JWT signing
     template: csghub/executor/deployment.yaml
