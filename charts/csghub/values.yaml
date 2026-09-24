@@ -648,7 +648,7 @@ redis:
 minio:
   image:
     # registry: "docker.io"
-    repository: "minio/minio"
+    repository: "opencsghq/minio"
     tag: "RELEASE.2025-09-07T16-13-09Z"      # Image version tag
     pullPolicy: "IfNotPresent"               # Image pull policy
     pullSecrets: []                          # Docker registry secrets
