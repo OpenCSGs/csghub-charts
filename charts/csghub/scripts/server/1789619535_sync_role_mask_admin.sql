@@ -1,8 +1,9 @@
 --
--- Sync csghub_server.public.users.role_mask to csghub_casdoor.public."user".is_admin
+-- Sync the server database's public.users.role_mask to the casdoor database's
+-- public."user".is_admin
 --
--- Sets up postgres_fdw in csghub_server, maps public."user" via a foreign table,
--- and installs an AFTER INSERT/UPDATE OF role_mask trigger on public.users.
+-- Sets up postgres_fdw in the server database, maps public."user" via a foreign
+-- table, and installs an AFTER INSERT/UPDATE OF role_mask trigger on public.users.
 --
 -- Mapping rule (matches csghub-server User.CanAdmin()):
 --   role_mask is varchar(255), comma-separated.
@@ -11,6 +12,11 @@
 --
 -- The companion casdoor script is expected to create csghub_server_fdw and grant
 -- access before the backfill runs.
+--
+-- The casdoor database name and the server role name derive from chart config
+-- (casdoor.name / casdoor.postgresql.database, server.postgresql.user). The
+-- configmap substitutes the __CASDOOR_DB__ / __SERVER_USER__ placeholders below
+-- with the rendered values before mounting this file.
 --
 
 -- Record Timestamp
@@ -32,7 +38,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_foreign_server WHERE srvname = 'csghub_casdoor_fdw') THEN
         CREATE SERVER csghub_casdoor_fdw
             FOREIGN DATA WRAPPER postgres_fdw
-            OPTIONS (host '127.0.0.1', port '5432', dbname 'csghub_casdoor');
+            OPTIONS (host '127.0.0.1', port '5432', dbname '__CASDOOR_DB__');
         RAISE NOTICE 'Created foreign server csghub_casdoor_fdw';
     ELSE
         RAISE NOTICE 'Foreign server csghub_casdoor_fdw already exists, skipping';
@@ -41,8 +47,8 @@ END
 $$;
 
 -- User Mapping
--- FOR csghub: trigger function runs with privileges of public.users owner; the
--- mapping must reference the same role or FDW raises "no user mapping found".
+-- FOR the server role: trigger function runs with privileges of public.users owner;
+-- the mapping must reference the same role or FDW raises "no user mapping found".
 
 DO $$
 BEGIN
@@ -50,14 +56,14 @@ BEGIN
         SELECT 1 FROM pg_user_mappings um
         JOIN pg_foreign_server s ON s.oid = um.srvid
         WHERE s.srvname = 'csghub_casdoor_fdw'
-          AND um.umuser::regrole::text = 'csghub'
+          AND um.umuser::regrole::text = '__SERVER_USER__'
     ) THEN
-        CREATE USER MAPPING FOR csghub
+        CREATE USER MAPPING FOR __SERVER_USER__
             SERVER csghub_casdoor_fdw
             OPTIONS (user 'csghub_server_fdw');
-        RAISE NOTICE 'Created user mapping csghub -> csghub_casdoor_fdw';
+        RAISE NOTICE 'Created user mapping __SERVER_USER__ -> csghub_casdoor_fdw';
     ELSE
-        RAISE NOTICE 'User mapping csghub -> csghub_casdoor_fdw already exists, skipping';
+        RAISE NOTICE 'User mapping __SERVER_USER__ -> csghub_casdoor_fdw already exists, skipping';
     END IF;
 END
 $$;
