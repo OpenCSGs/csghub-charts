@@ -5,6 +5,9 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
+{{- $casdoorDb := (include "common.postgresql.config" (dict "ctx" . "service" $casdoorSvc) | fromYaml).database }}
+{{- $serverUser := (include "common.postgresql.config" (dict "ctx" . "service" $service) | fromYaml).user }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -18,6 +21,6 @@ data:
 {{- range $path, $_ := .Files.Glob "scripts/server/*.sql" }}
 {{- with $currentScope }}
 {{- base $path | nindent 2 }}: |
-{{- .Files.Get $path | nindent 4 }}
+{{- .Files.Get $path | replace "__CASDOOR_DB__" $casdoorDb | replace "__SERVER_USER__" $serverUser | nindent 4 }}
 {{- end }}
 {{- end }}

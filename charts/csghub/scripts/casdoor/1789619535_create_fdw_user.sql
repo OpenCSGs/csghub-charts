@@ -32,7 +32,14 @@ END
 $$;
 
 -- Grants
+--
+-- The database name is not fixed: it derives from casdoor.name / casdoor.postgresql.database.
+-- This job connects to that database, so use current_database() instead of a literal.
 
-GRANT CONNECT ON DATABASE csghub_casdoor TO csghub_server_fdw;
+DO $$
+BEGIN
+    EXECUTE format('GRANT CONNECT ON DATABASE %I TO csghub_server_fdw', current_database());
+END
+$$;
 GRANT USAGE   ON SCHEMA   public       TO csghub_server_fdw;
 GRANT SELECT, UPDATE ON public."user" TO csghub_server_fdw;
