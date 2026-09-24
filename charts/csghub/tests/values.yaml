@@ -31,7 +31,7 @@ global:
   image:
     registry: "docker.io"
     registryPolicy: "default"
-    tag: "v2.5.0"
+    tag: "v2.6.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -63,7 +63,7 @@ global:
 
 image:
   repository: "opencsghq/csghub-server"
-  tag: "v2.5.0"
+  tag: "v2.6.0"
   pullPolicy: "IfNotPresent"
   pullSecrets: []
 
@@ -144,7 +144,7 @@ aigateway:
 xnet:
   image:
     repository: "opencsghq/csghub-xnet"
-    tag: "v2.5.0-ee"
+    tag: "v2.6.0-ee"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
   service: {}
