@@ -80,7 +80,7 @@ tests:
           value: "label-studio-llm-backend"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/label-studio:v2.5.0-llm-back"
+          value: "docker.io/opencsghq/label-studio:v2.6.0-llm-back"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -133,7 +133,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "registry.opencsg.com/opencsghq/label-studio:v2.5.0-llm-back"
+          value: "registry.opencsg.com/opencsghq/label-studio:v2.6.0-llm-back"
 
   - it: prefers service-level pullSecrets over global pullSecrets
     template: label-studio/llm-backend/deployment.yaml

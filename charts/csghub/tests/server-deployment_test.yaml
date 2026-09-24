@@ -52,7 +52,7 @@ tests:
           value: "server"
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/opencsghq/csghub-server:v2.5.0-ee"
+          value: "docker.io/opencsghq/csghub-server:v2.6.0-ee"
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: "IfNotPresent"
@@ -204,7 +204,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "registry.opencsg.com/opencsghq/csghub-server:v2.5.0-ee"
+          value: "registry.opencsg.com/opencsghq/csghub-server:v2.6.0-ee"
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: "registry.opencsg.com/opencsghq/redis:7.4.11"
