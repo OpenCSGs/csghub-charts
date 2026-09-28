@@ -234,6 +234,7 @@ data:
   STARHUB_SERVER_MIRROR_MAX_DATASET_REPO_SIZE: {{ $serverSvc.mirrorSync.maxDatasetRepoSize | quote }}
   {{- end }}
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
+  STARHUB_SERVER_FRONTEND_URL: {{ include "common.endpoint.csghub" . | quote }}
   STARHUB_JWT_SIGNING_KEY: {{ include "common.secret.value" (list . "jwt-signing-key" 40) | quote }}
   STARHUB_SERVER_GIT_MAX_UN_LFS_FILE_SIZE: {{ $serverSvc.maxUnLFileSize | quote }}
 
