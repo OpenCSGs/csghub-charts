@@ -96,7 +96,7 @@ server:
     buildTimeout: "30"
   swaggerAPI:
     enabled: false
-  enablePresignedUrlProxy: true
+  enablePresignedUrlProxy: false
   agenticflow: {}
   csgbot: {}
   memory:

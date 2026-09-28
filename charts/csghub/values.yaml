@@ -264,7 +264,7 @@ server:
     enabled: false                         # Enable Swagger API assistants
 
   ## S3 Proxy
-  enablePresignedUrlProxy: true            # Enable S3 proxy
+  enablePresignedUrlProxy: false           # Enable S3 proxy
 
   ## Agentichub configuration
   agenticflow: {}
