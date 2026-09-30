@@ -122,6 +122,9 @@ tests:
           path: data.STARHUB_SERVER_S3_BUCKET_LOOKUP
           value: "path"
       - equal:
+          path: data.STARHUB_SERVER_ARGO_S3_PUBLIC_BUCKET
+          value: "csghub-runner"
+      - equal:
           path: data.STARHUB_SERVER_GITSERVER_TYPE
           value: "gitaly"
       - matchRegex:
