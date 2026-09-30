@@ -209,7 +209,7 @@ tests:
           path: spec.config.features["tag-header-based-routing"]
           value: "enabled"
 
-  - it: renders the tag resolving list from externalUrl
+  - it: renders the tag resolving list from externalUrl and global registry
     template: knativeserving.yaml
     documentSelector:
       path: kind
@@ -217,19 +217,22 @@ tests:
     asserts:
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.example.com"
+          value: "csghub.example.com,docker.io"
 
-  - it: composes the tag resolving list from domain and externalUrl
+  - it: composes the tag resolving list from domain, externalUrl and registry
     template: knativeserving.yaml
     documentSelector:
       path: kind
       value: KnativeServing
     set:
       externalUrl: "https://hub.other.com"
+      global:
+        image:
+          registry: "myreg.io"
     asserts:
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.example.com,hub.other.com"
+          value: "csghub.example.com,hub.other.com,myreg.io"
 
   - it: renders the observability configuration
     template: knativeserving.yaml
@@ -301,7 +304,7 @@ tests:
           value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/net-gateway-api/cmd/webhook:v1.22.3"
       - equal:
           path: spec.config.deployment.registries-skipping-tag-resolving
-          value: "csghub.example.com"
+          value: "csghub.example.com,registry.opencsg.com"
       - equal:
           path: spec.config.deployment.queue-sidecar-image
           value: "registry.opencsg.com/opencsghq/knative-releases/knative.dev/serving/cmd/queue:v1.22.3"
