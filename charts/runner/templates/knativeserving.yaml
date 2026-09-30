@@ -127,9 +127,8 @@ spec:
       multi-container: "enabled"
       tag-header-based-routing: "enabled"
     deployment:
-      {{- $globalRegistry := .Values.global.image.registry | default "" }}
       {{- $privateRegistry := .Values.externalUrl | trimPrefix "https://" | trimPrefix "http://" }}
-      {{- $registryList := list (include "common.domain.csghub" .) $privateRegistry $globalRegistry | sortAlpha | uniq }}
+      {{- $registryList := list (include "common.domain.csghub" .) $privateRegistry | sortAlpha | uniq }}
       registries-skipping-tag-resolving: {{ join "," $registryList | trimSuffix "," | quote }}
       {{- if $isOpencsgRegistry }}
       queue-sidecar-image: {{ $knativeRegistry }}/serving/cmd/queue:{{ $knativeVersion }}
