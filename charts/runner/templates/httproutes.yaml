@@ -37,4 +37,6 @@ spec:
       backendRefs:
         - name: {{ $serviceName }}
           port: {{ dig "service" "port" 8082 $service }}
+      timeouts:
+        request: 0s
   {{- end }}

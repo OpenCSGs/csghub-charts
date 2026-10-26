@@ -38,5 +38,5 @@ spec:
         - name: {{ $serviceName }}
           port: {{ dig "service" "port" 8083 $service }}
       timeouts:
-        request: 60s
+        request: 0s
 {{- end }}
