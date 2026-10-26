@@ -43,7 +43,7 @@ tests:
               - name: csghub-rproxy
                 port: 8083
             timeouts:
-              request: 60s
+              request: 0s
 
   - it: targets the http parent section when TLS is disabled
     template: csghub/httproutes-wildcard.yaml
