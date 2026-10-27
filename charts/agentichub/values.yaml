@@ -207,7 +207,6 @@ csgbot:
       # gitlabToken: ""              # GitLab token used by CSGBot integrations
 
     aigateway: {}
-      # apiKey: ""                   # AIGateway access key for csgbot
       # temperature: 0.1            # Model temperature
 
     starship: {}
