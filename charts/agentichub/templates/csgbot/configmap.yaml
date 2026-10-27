@@ -53,7 +53,6 @@ data:
 
     [aigateway]
     endpoint = {{ include "common.endpoint.aigateway.override" . | quote }}
-    api-key = {{ dig "config" "aigateway" "apiKey" "" .Values.csgbot | quote }}
     temperature = {{ dig "config" "aigateway" "temperature" 0.1 .Values.csgbot }}
 
     [speech-to-text]

@@ -135,23 +135,16 @@ tests:
           pattern: "endpoint = \"http://csghub.example.com/aigateway\""
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "api-key = \"\""
-      - matchRegex:
-          path: data["csgbot.toml"]
           pattern: "temperature = 0.1"
 
-  - it: overrides the aigateway api key and temperature
+  - it: overrides the aigateway temperature
     template: csgbot/configmap.yaml
     set:
       csgbot:
         config:
           aigateway:
-            apiKey: "custom-key"
             temperature: 0.5
     asserts:
-      - matchRegex:
-          path: data["csgbot.toml"]
-          pattern: "api-key = \"custom-key\""
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "temperature = 0.5"
