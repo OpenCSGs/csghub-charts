@@ -97,7 +97,7 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ $moderationSvc.enableSSL | quote }}
   OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $aiGatewaySvc.name)) | quote }}
   OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" 8089 | quote }}
-  OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "true"
+  OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "false"
   STARHUB_SERVER_SENSITIVE_CHECK_CHECK_CHAIN: {{ $moderationSvc.checkChain | default "ac_automaton,mutable_ac_automaton,aliyun_green" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_STREAM_CHECK_MODE: {{ $moderationSvc.streamCheckMode | default "async" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ASYNC_BUFFER_MAX_CHARS: {{ $moderationSvc.asyncBufferMaxChars | default "50" | quote }}
@@ -113,7 +113,7 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_HEADERS: {{ dig "llm" "guardStream" "headers" "" $moderationSvc | quote }}
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
-  OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "false"
+  OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "true"
   {{- end }}
 
   ## Server Configuration for Workflow
