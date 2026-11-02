@@ -208,7 +208,8 @@ knative:
       certmanager: {}
 
       ## config-defaults: default values applied to services/revisions
-      defaults: {}
+      defaults:
+        max-revision-timeout-seconds: "3600"
 
       ## config-deployment: deployment overrides (image registries, queue sidecar)
       ## registries-skipping-tag-resolving / queue-sidecar-image are injected by
