@@ -15,6 +15,88 @@ env:
   CHARTS: "charts/common charts/runner charts/dataflow charts/csgship charts/agent-sandbox charts/agentichub charts/csghub"
 
 jobs:
+  verify-engine-images:
+    if: startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      CSGHUB_SERVER_REPO: OpenCSGs/csghub-server
+
+    steps:
+      - name: Resolve csghub-server release branch
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          chart_version="${GITHUB_REF_NAME#v}"
+          chart_version="${chart_version%%-*}"
+          echo "chart version: ${chart_version}"
+          python3 - "${chart_version}" "${CSGHUB_SERVER_REPO}" <<'PY' >> "$GITHUB_OUTPUT"
+          import re, subprocess, sys
+
+          target, repo = sys.argv[1], sys.argv[2]
+          branches = subprocess.run(
+              ["gh", "api", f"repos/{repo}/branches", "--paginate", "--jq", ".[].name"],
+              capture_output=True, text=True, check=True,
+          ).stdout.split()
+
+          def version(text):
+              return tuple(int(part) for part in re.findall(r"\d+", text))
+
+          candidates = []
+          for name in branches:
+              match = re.fullmatch(r"release-v(\d+(?:\.\d+)*)(?:-.*)?", name)
+              if match:
+                  candidates.append((version(match.group(1)), name))
+          candidates.sort(key=lambda candidate: candidate[0], reverse=True)
+
+          want = version(target)
+          for release, name in candidates:
+              if release <= want:
+                  print(f"ref={name}")
+                  break
+          else:
+              sys.exit(f"no csghub-server release-v* branch at or below {target}")
+          PY
+
+      - name: Collect engine images from configs
+        env:
+          SERVER_REF: ${{ steps.resolve.outputs.ref }}
+        run: |
+          set -euo pipefail
+          echo "csghub-server branch: ${SERVER_REF}"
+          curl -fsSL "https://codeload.github.com/${CSGHUB_SERVER_REPO}/tar.gz/refs/heads/${SERVER_REF}" -o server.tar.gz
+          mkdir -p server
+          tar xzf server.tar.gz -C server
+          configs=$(find server -mindepth 2 -maxdepth 2 -type d -name configs -print -quit)
+          if [ -z "$configs" ]; then
+            echo "::error::configs directory not found in ${SERVER_REF}"
+            exit 1
+          fi
+          {
+            find "$configs" -name '*.json' -print0 \
+              | xargs -0 -r jq -r '.. | objects | select(has("image")) | .image | select(type=="string")'
+            find "$configs" -name '*.toml' -print0 \
+              | xargs -0 -r grep -hoE '^[[:space:]]*image[[:space:]]*=[[:space:]]*"[^"]+"' \
+              | sed -E 's/.*"([^"]+)"/\1/' || true
+          } | sed '/^$/d' | sort -u > engine-images.txt
+          echo "collected $(wc -l < engine-images.txt) images"
+          cat engine-images.txt
+
+      - name: Verify engine images (OpenCSG mirror)
+        uses: MasonXon/helm-inspect@v1.0.3
+        with:
+          args: verify -f engine-images.txt --mode exists --default-registry=registry.opencsg.com
+
+      - name: Verify engine images (Docker Hub)
+        uses: MasonXon/helm-inspect@v1.0.3
+        with:
+          args: verify -f engine-images.txt --mode exists
+
   package:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -37,6 +119,20 @@ jobs:
 
             helm package "$CHART_PATH" -d ./
           done
+
+      - name: Verify images (default registry)
+        uses: MasonXon/helm-inspect@v1.0.3
+        with:
+          args: local ./charts/csghub --verify --images-all --mode arch
+
+      - name: Verify images (OpenCSG mirror registry)
+        uses: MasonXon/helm-inspect@v1.0.3
+        with:
+          args: >-
+            local ./charts/csghub --verify --images-all --mode arch
+            --set=global.imageRegistry=registry.opencsg.com/opencsghq
+            --set=global.image.registry=registry.opencsg.com
+            --default-registry=registry.opencsg.com
 
       - name: Upload charts to repo
         env:
