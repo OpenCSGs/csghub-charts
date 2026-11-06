@@ -150,6 +150,9 @@ tests:
       - contains:
           path: rules[2].resources
           content: "sandboxes"
+      - equal:
+          path: rules[2].verbs
+          value: ["get", "list", "watch", "patch"]
 
   - it: renders the runner RoleBinding in the spaces namespace
     template: rbac.yaml
@@ -216,6 +219,9 @@ tests:
       - contains:
           path: rules[3].resources
           content: "sandboxes"
+      - equal:
+          path: rules[3].verbs
+          value: ["get", "list", "watch", "create", "delete", "patch"]
       - contains:
           path: rules[4].resources
           content: "persistentvolumeclaims"
