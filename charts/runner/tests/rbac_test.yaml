@@ -153,6 +153,12 @@ tests:
       - equal:
           path: rules[2].verbs
           value: ["get", "list", "watch", "patch"]
+      - equal:
+          path: rules[3]
+          value:
+            apiGroups: ["batch"]
+            resources: ["jobs"]
+            verbs: ["create"]
 
   - it: renders the runner RoleBinding in the spaces namespace
     template: rbac.yaml
