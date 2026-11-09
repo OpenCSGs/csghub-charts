@@ -36,7 +36,11 @@ preserves the built-in behavior for charts using older values.
       {{- else if $password }}
         {{- fail "global.nats.external.user must be set when global.nats.external.password is provided" }}
       {{- end }}
-      {{- $url = printf "nats://%s%s:%v" $auth $host $port }}
+      {{- $urlHost := $host }}
+      {{- if and (contains ":" $host) (not (hasPrefix "[" $host)) }}
+        {{- $urlHost = printf "[%s]" $host }}
+      {{- end }}
+      {{- $url = printf "nats://%s%s:%v" $auth $urlHost $port }}
     {{- end }}
     {{- dict "host" $host "port" $port "user" $user "password" $password "url" $url | toYaml }}
   {{- else }}

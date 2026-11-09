@@ -53,6 +53,24 @@ tests:
           path: url
           value: nats://user%40team:a%3Ab%2Fc%2B%20d%25@nats.example.com:14222
 
+  - it: brackets a bare IPv6 host when generating the connection URL
+    set:
+      global.nats.enabled: false
+      global.nats.external.host: "2001:db8::1"
+    asserts:
+      - equal:
+          path: url
+          value: "nats://[2001:db8::1]:4222"
+
+  - it: preserves an already bracketed IPv6 host
+    set:
+      global.nats.enabled: false
+      global.nats.external.host: "[2001:db8::1]"
+    asserts:
+      - equal:
+          path: url
+          value: "nats://[2001:db8::1]:4222"
+
   - it: passes a complete URL through unchanged ahead of individual fields
     set:
       global.nats.enabled: false
