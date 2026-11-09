@@ -77,7 +77,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ $serviceName }}
-            {{- if .Values.global.chartContext.isBuiltIn }}
+            {{- if and .Values.global.chartContext.isBuiltIn (dig "nats" "enabled" true .Values.global) }}
             - secretRef:
                 name: {{ include "common.names.custom" (list . "nats") }}
             {{- end }}

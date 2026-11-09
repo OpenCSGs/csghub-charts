@@ -1,0 +1,92 @@
+# Verify the full external-NATS wiring, including bundled CSGShip consumers.
+suite: Test external NATS
+templates:
+  - nats/statefulset.yaml
+  - nats/service.yaml
+  - nats/configmap.yaml
+  - nats/secret.yaml
+  - csghub/configmap.yaml
+  - xnet/configmap.yaml
+  - csghub/server/deployment.yaml
+  - charts/csgship/templates/configmap.yaml
+  - charts/csgship/templates/web/statefulset.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+set:
+  csgship.enabled: true
+  global.nats.enabled: false
+  global.nats.external.url: "nats://user:password@nats.example.com:4222"
+tests:
+  - it: does not deploy the built-in NATS resources
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: nats/statefulset.yaml
+      - hasDocuments:
+          count: 0
+        template: nats/service.yaml
+      - hasDocuments:
+          count: 0
+        template: nats/configmap.yaml
+      - hasDocuments:
+          count: 0
+        template: nats/secret.yaml
+
+  - it: sends the same external URL to core services, XNet and bundled CSGShip
+    asserts:
+      - equal:
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          value: "nats://user:password@nats.example.com:4222"
+        template: csghub/configmap.yaml
+      - equal:
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          value: "nats://user:password@nats.example.com:4222"
+        template: xnet/configmap.yaml
+      - equal:
+          path: data.NATS_URL
+          value: "nats://user:password@nats.example.com:4222"
+        template: charts/csgship/templates/configmap.yaml
+
+  - it: propagates host mode to every NATS connection
+    set:
+      global.nats.external:
+        url: ""
+        host: external-nats.messaging.svc
+        port: 14222
+        user: test-user
+        password: test-password
+    asserts:
+      - equal:
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          value: "nats://test-user:test-password@external-nats.messaging.svc:14222"
+        template: csghub/configmap.yaml
+      - equal:
+          path: data.OPENCSG_ACCOUNTING_NATS_URL
+          value: "nats://test-user:test-password@external-nats.messaging.svc:14222"
+        template: xnet/configmap.yaml
+      - equal:
+          path: data.NATS_URL
+          value: "nats://test-user:test-password@external-nats.messaging.svc:14222"
+        template: charts/csgship/templates/configmap.yaml
+
+  - it: starts the server without waiting for the built-in NATS monitoring endpoint
+    template: csghub/server/deployment.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 4
+      - equal:
+          path: spec.template.spec.initContainers[3].name
+          value: wait-for-temporal
+
+  - it: starts bundled CSGShip without the built-in NATS secret
+    template: charts/csgship/templates/web/statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom
+          value:
+            - configMapRef:
+                name: csghub-csgship

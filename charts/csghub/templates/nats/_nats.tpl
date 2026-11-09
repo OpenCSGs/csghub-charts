@@ -15,6 +15,9 @@ SPDX-License-Identifier: APACHE-2.0
 #   - common.image.fixed template (image reference helper)
 */}}
 {{- define "wait-for-nats" }}
+{{- /* External NATS need not expose the HTTP monitoring port. The client
+      establishes its own connection; only wait for a server managed here. */}}
+{{- if dig "nats" "enabled" true .Values.global }}
 {{- $service := include "common.service" (dict "ctx" . "service" "nats") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) -}}
 - name: wait-for-nats
@@ -30,4 +33,5 @@ SPDX-License-Identifier: APACHE-2.0
         sleep 5;
       done;
       echo 'Nats is ready!'
+{{- end }}
 {{- end }}

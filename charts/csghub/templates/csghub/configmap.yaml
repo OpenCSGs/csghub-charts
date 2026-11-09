@@ -73,7 +73,7 @@ data:
   OPENCSG_ACCOUNTING_CHARGING_ENABLE: "true"
   OPENCSG_ACCOUNTING_MSG_FETCH_TIMEOUTINSEC: "5"
   {{- $natsConfig := include "common.nats.config" . | fromYaml }}
-  OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
+  OPENCSG_ACCOUNTING_NATS_URL: {{ $natsConfig.url | quote }}
 
   ## User Configuration
   {{- $userSvc := include "common.service" (dict "ctx" . "service" "user") | fromYaml }}
