@@ -3,6 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- if dig "nats" "enabled" true .Values.global }}
 {{- $service := include "common.service" (dict "ctx" . "service" "nats") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
@@ -198,3 +199,4 @@ spec:
   {{- if $service.revisionHistoryLimit }}
   revisionHistoryLimit: {{ $service.revisionHistoryLimit }}
   {{- end }}
+{{- end }}

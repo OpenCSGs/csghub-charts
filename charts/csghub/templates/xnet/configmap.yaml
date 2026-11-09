@@ -57,7 +57,7 @@ data:
 
   ## XNet configuration for NATS
   {{- $natsConfig := include "common.nats.config" . | fromYaml }}
-  OPENCSG_ACCOUNTING_NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
+  OPENCSG_ACCOUNTING_NATS_URL: {{ $natsConfig.url | quote }}
 
   ## XNet configuration for Prometheus
   {{- $promeSvc := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}

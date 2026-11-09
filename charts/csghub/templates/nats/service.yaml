@@ -3,6 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- if dig "nats" "enabled" true .Values.global }}
 {{- $service := include "common.service" (dict "ctx" . "service" "nats") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
@@ -28,3 +29,4 @@ spec:
   selector:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}

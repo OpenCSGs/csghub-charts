@@ -100,7 +100,7 @@ data:
   ## Web Configuration for Nats
   {{- if .Values.global.chartContext.isBuiltIn }}
   {{- $natsConfig := include "common.nats.config" . | fromYaml }}
-  NATS_URL: "nats://{{ $natsConfig.user }}:{{ $natsConfig.password }}@{{ $natsConfig.host }}:{{ $natsConfig.port }}"
+  NATS_URL: {{ $natsConfig.url | quote }}
   {{- else }}
   {{- with .Values.billing.nats }}
   NATS_URL: "nats://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}"

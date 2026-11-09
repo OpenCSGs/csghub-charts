@@ -105,6 +105,18 @@ global:
     ## [REDIS_USER]/[REDIS_DATABASE]. Only honored when enabled=false.
     existingSecret: ""
 
+  ## NATS configuration
+  nats:
+    ## Use built-in (true) or external (false). External NATS must enable JetStream.
+    enabled: true
+    ## A complete URL takes precedence over host/port/user/password.
+    external: {}
+      # url: "nats://user:password@nats.example.com:4222"
+      # host: "nats.example.com"   # Hostname or IP; required if url is not set
+      # port: 4222                 # Defaults to 4222
+      # user: ""                   # Omit user/password for unauthenticated NATS
+      # password: ""
+
   ## Object storage configuration
   objectStore:
     ## Use built-in (true) or external (false)

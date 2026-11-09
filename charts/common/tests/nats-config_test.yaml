@@ -1,0 +1,84 @@
+suite: Test common.nats.config
+templates:
+  - templates/fixtures/nats-config.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: preserves the built-in connection when global.nats is absent
+    asserts:
+      - equal:
+          path: host
+          value: csghub-nats
+      - matchRegex:
+          path: url
+          pattern: '^nats://natsadmin:[A-Za-z0-9+/]{32}@csghub-nats:4222$'
+
+  - it: ignores external settings while built-in NATS is enabled
+    set:
+      global.nats.enabled: true
+      global.nats.external.url: nats://external.example.com:4222
+    asserts:
+      - matchRegex:
+          path: url
+          pattern: '@csghub-nats:4222$'
+
+  - it: supports external NATS without authentication and defaults to port 4222
+    set:
+      global.nats.enabled: false
+      global.nats.external.host: nats.example.com
+    asserts:
+      - equal:
+          path: url
+          value: nats://nats.example.com:4222
+      - equal:
+          path: user
+          value: ""
+      - equal:
+          path: password
+          value: ""
+
+  - it: encodes external credentials and uses the configured port
+    set:
+      global.nats.enabled: false
+      global.nats.external:
+        host: nats.example.com
+        port: 14222
+        user: "user@team"
+        password: "a:b/c+ d%"
+    asserts:
+      - equal:
+          path: url
+          value: nats://user%40team:a%3Ab%2Fc%2B%20d%25@nats.example.com:14222
+
+  - it: passes a complete URL through unchanged ahead of individual fields
+    set:
+      global.nats.enabled: false
+      global.nats.external:
+        url: "tls://user:p%40ss@nats.example.com:4222"
+        host: ignored.example.com
+        user: ignored
+        password: ignored
+    asserts:
+      - equal:
+          path: url
+          value: "tls://user:p%40ss@nats.example.com:4222"
+
+  - it: requires an external address instead of falling back to the built-in server
+    set:
+      global.nats.enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: global.nats.external.url or global.nats.external.host must be set when global.nats.enabled=false
+
+  - it: rejects a password without a user in host mode
+    set:
+      global.nats.enabled: false
+      global.nats.external:
+        host: nats.example.com
+        password: test-password
+    asserts:
+      - failedTemplate:
+          errorMessage: global.nats.external.user must be set when global.nats.external.password is provided
