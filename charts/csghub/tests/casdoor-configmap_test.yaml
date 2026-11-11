@@ -40,6 +40,9 @@ tests:
           pattern: "origin\\s*=\\s*\"https://casdoor.example.com\""
       - matchRegex:
           path: data["app.conf"]
+          pattern: "defaultLanguage\\s*=\\s*\"zh\""
+      - matchRegex:
+          path: data["app.conf"]
           pattern: "initDataFile\\s*=\\s*\"/conf-secrets/init_data.json\""
 
   - it: does not embed init_data.json in the ConfigMap

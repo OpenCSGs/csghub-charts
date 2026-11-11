@@ -16,6 +16,7 @@ metadata:
 data:
   app.conf: |
     appname = casdoor
+    defaultLanguage = "zh"
     httpport = 8000
     runmode = prod
     copyrequestbody = true
