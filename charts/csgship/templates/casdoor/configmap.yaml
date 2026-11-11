@@ -17,6 +17,7 @@ metadata:
 data:
   app.conf: |
     appname = casdoor
+    forceLanguage = {{ .Values.casdoor.forceLanguage | quote }}
     httpport = 8000
     runmode = prod
     copyrequestbody = true

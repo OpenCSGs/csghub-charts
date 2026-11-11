@@ -294,6 +294,7 @@
       "type": "object",
       "properties": {
         "admin": { "type": "object", "additionalProperties": true },
+        "forceLanguage": { "type": "string", "default": "en", "description": "Casdoor UI language, e.g. en or zh" },
         "image": {
           "type": "object",
           "properties": {

@@ -227,6 +227,13 @@
       }
     },
     "notifier": { "type": "object", "additionalProperties": true },
+    "casdoor": {
+      "type": "object",
+      "description": "Embedded Casdoor configuration",
+      "properties": {
+        "forceLanguage": { "type": "string", "default": "en", "description": "Casdoor UI language, e.g. en or zh" }
+      }
+    },
     "payment": { "type": "object", "additionalProperties": true },
     "aigateway": {
       "type": "object",
