@@ -285,6 +285,12 @@ server:
   swaggerAPI:
     enabled: false                         # Enable Swagger API assistants
 
+  ## CORS allowlist. Empty derives from frontend/API/space domains; setting it disables derivation.
+  cors:
+    allowedOrigins: []
+      # - "https://hub.example.com"
+      # - "https://*.example.com"
+
   ## S3 Proxy
   enablePresignedUrlProxy: false            # Enable S3 proxy
 
@@ -292,6 +298,11 @@ server:
   agenticflow: {}
     # host: "http://agenticflow.example.io" # AgentHub address
     # token: ""                             # AgentHub Token
+
+  ## Signin callback allowlist (AgenticHub callback is registered automatically)
+  flowRedirects: []
+    # - name: "langflow"
+    #   callbackUrl: "https://agenticflow.example.com/api/v1/opencsg/callback/csghub"
 
   ## CSGBot configuration
   csgbot: {}
@@ -415,6 +426,13 @@ aigateway:
     # streamCheckMode: "async"             # Stream check mode (async/sync)
     # asyncBufferMaxChars: 50              # Max characters for async buffer
     # maxContentLength: 2000               # Max content length for sensitive check
+    # promptMaxChunks: 3                   # Prompt chunks checked synchronously (0 = always synchronous)
+    ## Remote security scanner plugin settings (EE/SaaS)
+    securityScan: {}
+      # fetchBaseUrl: ""                   # HTTPS base URL for scanner plugin files
+      # fetchSigningKey: ""                # HMAC key for plugin file fetches
+      # pluginRegistryUrl: ""              # Plugin package registry
+      # pluginStagingPath: "/starhub-bin/plugin-staging"  # Must be writable in the container
     ## LLM-based sensitive check configuration
     llm:
       # enabled: false                              # Enable LLM-based sensitive check

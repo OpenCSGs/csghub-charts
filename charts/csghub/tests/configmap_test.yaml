@@ -399,6 +399,9 @@ tests:
       - equal:
           path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL
           value: "custom/guard-stream-model"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_PROMPT_MAX_CHUNKS
+          value: "3"
 
   - it: renders the aigateway with a dedicated domain when useDomain is true
     template: csghub/configmap.yaml
@@ -674,3 +677,104 @@ tests:
           value: "false"
       - notExists:
           path: data.OPENCSG_LLMLOG_BUCKET
+
+  - it: registers the bundled agentichub signin callback
+    template: csghub/configmap.yaml
+    asserts:
+      - equal:
+          path: data.OPENCSG_USER_SERVER_FLOW_REDIRECTS
+          value: '[{"callback_url":"https://agenticflow.example.com/api/v1/opencsg/callback/csghub","name":"agenticflow"}]'
+
+  - it: appends operator supplied signin callbacks
+    template: csghub/configmap.yaml
+    set:
+      server:
+        flowRedirects:
+          - name: "langflow"
+            callbackUrl: "https://langflow.example.com/api/v1/callback/csghub"
+    asserts:
+      - matchRegex:
+          path: data.OPENCSG_USER_SERVER_FLOW_REDIRECTS
+          pattern: '"agenticflow".*"langflow"'
+      - matchRegex:
+          path: data.OPENCSG_USER_SERVER_FLOW_REDIRECTS
+          pattern: 'https://langflow\.example\.com/api/v1/callback/csghub'
+
+  - it: omits the signin callback allowlist when agentichub is disabled
+    template: csghub/configmap.yaml
+    set:
+      agentichub:
+        enabled: false
+    asserts:
+      - notExists:
+          path: data.OPENCSG_USER_SERVER_FLOW_REDIRECTS
+
+  - it: omits the signin callback allowlist without TLS
+    template: csghub/configmap.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: false
+    asserts:
+      - notExists:
+          path: data.OPENCSG_USER_SERVER_FLOW_REDIRECTS
+
+  - it: rejects a non-https signin callback
+    template: csghub/configmap.yaml
+    set:
+      server:
+        flowRedirects:
+          - name: "bad"
+            callbackUrl: "http://bad.example.com/cb"
+    asserts:
+      - failedTemplate:
+          errorMessage: 'server.flowRedirects["bad"].callbackUrl must use https'
+
+  - it: omits the CORS allowlist by default
+    template: csghub/configmap.yaml
+    asserts:
+      - notExists:
+          path: data.STARHUB_SERVER_CORS_ALLOWED_ORIGINS
+
+  - it: renders a comma separated CORS allowlist
+    template: csghub/configmap.yaml
+    set:
+      server:
+        cors:
+          allowedOrigins:
+            - "https://hub.example.com"
+            - "https://*.example.com"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_CORS_ALLOWED_ORIGINS
+          value: "https://hub.example.com,https://*.example.com"
+
+  - it: renders the prompt chunk limit and security scanner settings
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+          promptMaxChunks: 0
+          securityScan:
+            fetchBaseUrl: "https://scan.example.com"
+            fetchSigningKey: "signing-key"
+            pluginRegistryUrl: "https://scan.example.com/plugins"
+            pluginStagingPath: "/tmp/plugin-staging"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_PROMPT_MAX_CHUNKS
+          value: "0"
+      - equal:
+          path: data.OPENCSG_SECURITY_SCAN_FETCH_BASE_URL
+          value: "https://scan.example.com"
+      - equal:
+          path: data.OPENCSG_SECURITY_SCAN_FETCH_SIGNING_KEY
+          value: "signing-key"
+      - equal:
+          path: data.OPENCSG_SECURITY_SCAN_PLUGIN_REGISTRY_URL
+          value: "https://scan.example.com/plugins"
+      - equal:
+          path: data.OPENCSG_SECURITY_SCAN_PLUGIN_STAGING_PATH
+          value: "/tmp/plugin-staging"
