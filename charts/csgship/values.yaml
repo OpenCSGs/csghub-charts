@@ -259,6 +259,7 @@ casdoor:
   admin: {}                                  # Initial admin user
     # name: "root"                           # Admin username
     # password: ""                           # Admin password
+  forceLanguage: "zh"                        # Casdoor UI language, e.g. zh or en
 
   image:
     # registry: "docker.io"
