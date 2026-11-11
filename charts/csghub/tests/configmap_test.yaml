@@ -252,6 +252,32 @@ tests:
           path: data.OPENCSG_MEMORY_SERVER_PORT
           value: "8080"
 
+  - it: disables the memory service when memory.enabled is false
+    template: csghub/configmap.yaml
+    set:
+      server:
+        memory:
+          enabled: false
+    asserts:
+      - equal:
+          path: data.OPENCSG_MEMORY_SERVER_ENABLED
+          value: "false"
+
+  - it: tolerates a null moderation llm block
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+          llm: null
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE
+          value: "false"
+      - equal:
+          path: data.STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL
+          value: "Qwen/Qwen3Guard-Gen-0.6B"
+
   - it: renders the aigateway port and llmlog config
     template: csghub/configmap.yaml
     asserts:
@@ -275,10 +301,10 @@ tests:
           value: "10"
       - equal:
           path: data.OPENCSG_LLMLOG_BATCH_SIZE
-          value: "1000"
+          value: "50"
       - equal:
           path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
-          value: "300"
+          value: "60"
 
   - it: renders the prometheus and loki endpoints
     template: csghub/configmap.yaml
