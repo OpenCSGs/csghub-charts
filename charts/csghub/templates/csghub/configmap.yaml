@@ -102,6 +102,21 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_STREAM_CHECK_MODE: {{ $moderationSvc.streamCheckMode | default "async" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ASYNC_BUFFER_MAX_CHARS: {{ $moderationSvc.asyncBufferMaxChars | default "50" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_MAX_CONTENT_LENGTH: {{ $moderationSvc.maxContentLength | default "2000" | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_PROMPT_MAX_CHUNKS: {{ dig "promptMaxChunks" 3 $moderationSvc | quote }}
+  {{- with $moderationSvc.securityScan }}
+  {{- if .fetchBaseUrl }}
+  OPENCSG_SECURITY_SCAN_FETCH_BASE_URL: {{ .fetchBaseUrl | quote }}
+  {{- end }}
+  {{- if .fetchSigningKey }}
+  OPENCSG_SECURITY_SCAN_FETCH_SIGNING_KEY: {{ .fetchSigningKey | quote }}
+  {{- end }}
+  {{- if .pluginRegistryUrl }}
+  OPENCSG_SECURITY_SCAN_PLUGIN_REGISTRY_URL: {{ .pluginRegistryUrl | quote }}
+  {{- end }}
+  {{- if .pluginStagingPath }}
+  OPENCSG_SECURITY_SCAN_PLUGIN_STAGING_PATH: {{ .pluginStagingPath | quote }}
+  {{- end }}
+  {{- end }}
   STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE: {{ dig "llm" "enabled" "false" $moderationSvc | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT: {{ dig "llm" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY: {{ dig "llm" "apiKey" "" $moderationSvc | quote }}
@@ -234,6 +249,10 @@ data:
   {{- $serverGitConfig := include "common.gitaly.config" (dict "ctx" . "service" $serverSvc) | fromYaml }}
   STARHUB_SERVER_SAAS: {{ eq .Values.global.edition "saas" | quote }}
   STARHUB_SERVER_ENABLE_HTTPS: {{ dig "tls" "enabled" "false" $IngressConfig | quote }}
+  {{- $corsOrigins := dig "cors" "allowedOrigins" list $serverSvc }}
+  {{- if $corsOrigins }}
+  STARHUB_SERVER_CORS_ALLOWED_ORIGINS: {{ join "," $corsOrigins | quote }}
+  {{- end }}
   STARHUB_SERVER_MIRRORSERVER_ENABLE: "false"
   STARHUB_SERVER_MIRROR_REMOTE: "false"
   {{- if $serverSvc.mirrorSync }}
@@ -349,6 +368,26 @@ data:
   {{- $lokiSvcName := include "common.names.custom" (list . $lokiSvc.name) }}
   {{- $lokiSvcPort := dig "service" "port" 3100 $lokiSvc }}
   STARHUB_SERVER_LOGCOLLECTOR_LOKI_URL: {{ printf "http://%s:%v" $lokiSvcName $lokiSvcPort | quote }}
+
+  ## Signin callback allowlist
+  {{- $flowRedirects := list }}
+  {{- if dig "enabled" true .Values.agentichub }}
+  {{- $agenticflowCallback := printf "%s/api/v1/opencsg/callback/csghub" (include "common.endpoint.agenticflow" .) }}
+  {{- if hasPrefix "https://" $agenticflowCallback }}
+  {{- $flowRedirects = append $flowRedirects (dict "name" "agenticflow" "callback_url" $agenticflowCallback) }}
+  {{- else }}
+  ## agenticflow callback not registered: csghub-server requires https (enable global.gateway.tls.enabled)
+  {{- end }}
+  {{- end }}
+  {{- range $entry := $serverSvc.flowRedirects }}
+  {{- if not (hasPrefix "https://" $entry.callbackUrl) }}
+  {{- fail (printf "server.flowRedirects[%q].callbackUrl must use https" $entry.name) }}
+  {{- end }}
+  {{- $flowRedirects = append $flowRedirects (dict "name" $entry.name "callback_url" $entry.callbackUrl) }}
+  {{- end }}
+  {{- if $flowRedirects }}
+  OPENCSG_USER_SERVER_FLOW_REDIRECTS: {{ $flowRedirects | toJson | quote }}
+  {{- end }}
 
   ## Server Configuration for Agent
   {{- if (dig "enabled" true .Values.agentichub) }}
