@@ -190,7 +190,7 @@ csgbot:
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgbot"
-    tag: "v0.6.9-ee"
+    tag: "v0.10.0"
     pullPolicy: "IfNotPresent"
     pullSecrets: []
 
@@ -252,7 +252,7 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/doc-sandbox"
-          tag: "03c2897c"
+          tag: "20260416.20260416.2"
       code:
         image:
           # registry: "docker.io"
@@ -262,13 +262,13 @@ csgbot:
         image:
           # registry: "docker.io"
           repository: "opencsghq/openclaw-sandbox"
-          tag: "03c2897c"
+          tag: "20260423v1"
       # Ref: /product/starhub/starhub-server/-/blob/main/configs/agent_runtime/csgclaw.json?ref_type=heads
       csgclawServer:
         image:
           # registry: "docker.io"
           repository: "opencsghq/csgclaw-server-sandbox"
-          tag: "2026101201"
+          tag: "2026110605"
       csgclawAgent:
         image:
           # registry: "docker.io"
