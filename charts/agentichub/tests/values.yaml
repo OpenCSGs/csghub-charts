@@ -101,11 +101,22 @@ csgbot:
   service: {}
   environments: {}
   config:
+    environment: {}
+    credentials: {}
     aigateway: {}
+    csghub: {}
     starship: {}
     speechToText: {}
     integrations: {}
     fileServer: {}
+    claudeCode: {}
+    codesouler: {}
+    dataset: {}
+    search: {}
+    deepResearch: {}
+    planner: {}
+    externalDocs: {}
+    notificationRelay: {}
     sandbox:
       genius:
         image:
@@ -115,6 +126,10 @@ csgbot:
         image:
           repository: opencsghq/doc-sandbox
           tag: "03c2897c"
+      code:
+        image:
+          repository: opencsghq/csg-sandbox-python-runner
+          tag: "0.0.11"
       openclaw:
         image:
           repository: opencsghq/openclaw-sandbox

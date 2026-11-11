@@ -233,10 +233,21 @@
         "config": {
           "type": "object",
           "properties": {
+            "environment": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" }
+              }
+            },
             "credentials": {
               "type": "object",
               "properties": {
-                "gitlabToken": { "type": "string" }
+                "gitlabToken": { "type": "string" },
+                "serperApiKey": { "type": "string" },
+                "serpapiApiKey": { "type": "string" },
+                "jinaApiKey": { "type": "string" },
+                "datasetUserToken": { "type": "string" },
+                "webSearchApiKey": { "type": "string" }
               }
             },
             "aigateway": {
@@ -244,6 +255,12 @@
               "properties": {
                 "model": { "type": "string" },
                 "temperature": { "type": "number", "minimum": 0, "maximum": 2 }
+              }
+            },
+            "csghub": {
+              "type": "object",
+              "properties": {
+                "portalEndpoint": { "type": "string" }
               }
             },
             "starship": {
@@ -259,11 +276,32 @@
                 "apiMode": { "type": "string" },
                 "prompt": { "type": "string" },
                 "responseFormat": { "type": "string" },
-                "maxFileBytes": { "type": "string" },
+                "maxFileBytes": {
+                  "oneOf": [
+                    { "type": "string" },
+                    { "type": "integer", "minimum": 0 }
+                  ]
+                },
                 "forwardTimeoutSeconds": { "type": "number" }
               }
             },
-            "integrations": { "type": "object" },
+            "integrations": {
+              "type": "object",
+              "properties": {
+                "notification": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "oneOf": [
+                        { "type": "boolean" },
+                        { "type": "string", "enum": ["true", "false"] }
+                      ]
+                    }
+                  }
+                },
+                "memmachineEndpoint": { "type": "string" }
+              }
+            },
             "fileServer": {
               "type": "object",
               "properties": {
@@ -275,6 +313,7 @@
               "properties": {
                 "timeoutSeconds": { "type": "integer", "minimum": 0 },
                 "maxUploadFileBytes": { "type": "integer", "minimum": 0 },
+                "legacyEndpoint": { "type": "string" },
                 "genius": {
                   "type": "object",
                   "properties": {
@@ -289,6 +328,19 @@
                   }
                 },
                 "doc": {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "type": "object",
+                      "properties": {
+                        "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
+                        "repository": { "type": "string" },
+                        "tag": { "type": "string" }
+                      }
+                    }
+                  }
+                },
+                "code": {
                   "type": "object",
                   "properties": {
                     "image": {
@@ -342,8 +394,72 @@
                 }
               }
             },
+            "claudeCode": {
+              "type": "object",
+              "properties": {
+                "cmdTemplate": { "type": "string" },
+                "defaultModel": { "type": "string" },
+                "streamMode": { "type": "string" }
+              }
+            },
+            "codesouler": {
+              "type": "object",
+              "properties": {
+                "cmdTemplate": { "type": "string" },
+                "useAgentTemplate": { "type": "string" },
+                "useMcpTemplate": { "type": "string" },
+                "dataDir": { "type": "string" },
+                "remoteRepoDir": { "type": "string" }
+              }
+            },
+            "dataset": {
+              "type": "object",
+              "properties": {
+                "repoId": { "type": "string" },
+                "userName": { "type": "string" }
+              }
+            },
+            "search": {
+              "type": "object",
+              "properties": {
+                "engine": { "type": "string" },
+                "useJdGateway": { "type": "boolean" },
+                "count": { "type": "integer", "minimum": 0 },
+                "timeout": { "type": "integer", "minimum": 0 },
+                "threadNum": { "type": "integer", "minimum": 0 },
+                "webApiEndpoint": { "type": "string" }
+              }
+            },
+            "deepResearch": {
+              "type": "object",
+              "properties": {
+                "queryDecomposeMaxSize": { "type": "integer", "minimum": 0 },
+                "reportLength": { "type": "integer", "minimum": 0 },
+                "answerLength": { "type": "integer", "minimum": 0 },
+                "singlePageMaxSize": { "type": "integer", "minimum": 0 },
+                "reportModel": { "type": "string" }
+              }
+            },
             "logging": { "type": "object" },
             "observability": { "type": "object" },
+            "planner": {
+              "type": "object",
+              "properties": {
+                "requirePlanConfirmation": { "type": "boolean" }
+              }
+            },
+            "externalDocs": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" }
+              }
+            },
+            "notificationRelay": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" }
+              }
+            },
             "userFacingErrors": { "type": "object" },
             "userFeedback": {
               "type": "object",
