@@ -203,11 +203,22 @@ csgbot:
 
   ## ConfigMap Configuration
   config:
+    environment: {}
+      # name: "ee"
+
     credentials: {}
       # gitlabToken: ""              # GitLab token used by CSGBot integrations
+      # serperApiKey: ""
+      # serpapiApiKey: ""
+      # jinaApiKey: ""
+      # datasetUserToken: ""
+      # webSearchApiKey: ""
 
     aigateway: {}
       # temperature: 0.1            # Model temperature
+
+    csghub: {}
+      # portalEndpoint: ""
 
     starship: {}
       # endpoint: ""                # Starship endpoint URL
@@ -217,12 +228,13 @@ csgbot:
       # apiMode: "chat-completions"
       # prompt: ""
       # responseFormat: "json"
-      # maxFileBytes: "26214400"
+      # maxFileBytes: 26214400
       # forwardTimeoutSeconds: 120.0
 
     integrations: {}
       # notification:
         # enabled: false
+      # memmachineEndpoint: ""
 
     fileServer: {}
       # endpoint: ""                # File server endpoint URL
@@ -230,6 +242,7 @@ csgbot:
     sandbox:
       # timeoutSeconds: 600
       # maxUploadFileBytes: 52428800
+      # legacyEndpoint: ""
       genius:
         image:
           # registry: "docker.io"
@@ -240,6 +253,11 @@ csgbot:
           # registry: "docker.io"
           repository: "opencsghq/doc-sandbox"
           tag: "03c2897c"
+      code:
+        image:
+          # registry: "docker.io"
+          repository: "opencsghq/csg-sandbox-python-runner"
+          tag: "0.0.11"
       openclaw:
         image:
           # registry: "docker.io"
@@ -257,6 +275,37 @@ csgbot:
           repository: "opencsghq/csgclaw-agent-sandbox"
           tag: "2026060301"
 
+    claudeCode: {}
+      # cmdTemplate: "ccr code --model {model} -p '{query}'{stream_mode}"
+      # defaultModel: "claude-sonnet-4"
+      # streamMode: " --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions"
+
+    codesouler: {}
+      # cmdTemplate: "codesouler chat '{query}'{api_key}{api_base}{model}{mcp_headers_part}{history_part} -o stream-json"
+      # useAgentTemplate: "codesouler agent use {agent_file_path}"
+      # useMcpTemplate: ""
+      # dataDir: "codesouler_data"
+      # remoteRepoDir: "codesouler_data/repos"
+
+    dataset: {}
+      # repoId: ""
+      # userName: ""
+
+    search: {}
+      # engine: "serper"
+      # useJdGateway: false
+      # count: 10
+      # timeout: 10
+      # threadNum: 4
+      # webApiEndpoint: ""
+
+    deepResearch: {}
+      # queryDecomposeMaxSize: 8
+      # reportLength: 20000
+      # answerLength: 15000
+      # singlePageMaxSize: 10000
+      # reportModel: ""
+
     logging: {}
       # logPath: "logs/server.log"
       # logLevel: "INFO"
@@ -269,6 +318,15 @@ csgbot:
       # otlpTracesEndpoint: ""
       # otlpInsecure: true
       # otlpProtocol: "grpc"
+
+    planner: {}
+      # requirePlanConfirmation: true
+
+    externalDocs: {}
+      # enabled: false
+
+    notificationRelay: {}
+      # enabled: false
 
     userFacingErrors: {}
       # platformQuotaMaintenanceContact: ""   # Contact info shown on 403 quota errors

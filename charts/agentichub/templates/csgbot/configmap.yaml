@@ -18,7 +18,7 @@ metadata:
 data:
   csgbot.toml: |
     [environment]
-    name = "ee"
+    name = {{ dig "config" "environment" "name" "ee" .Values.csgbot | quote }}
     project-path = "/root/csgbot"
     base-path = "/data/"
 
@@ -38,6 +38,11 @@ data:
     {{- if $gitlabToken }}
     gitlab-token = {{ $gitlabToken | quote }}
     {{- end }}
+    serper-api-key = {{ dig "config" "credentials" "serperApiKey" "" .Values.csgbot | quote }}
+    serpapi-api-key = {{ dig "config" "credentials" "serpapiApiKey" "" .Values.csgbot | quote }}
+    jina-api-key = {{ dig "config" "credentials" "jinaApiKey" "" .Values.csgbot | quote }}
+    dataset-user-token = {{ dig "config" "credentials" "datasetUserToken" "" .Values.csgbot | quote }}
+    web-search-api-key = {{ dig "config" "credentials" "webSearchApiKey" "" .Values.csgbot | quote }}
 
     [csghub]
     {{- $csghubEndpoint := .Values.externalUrl }}
@@ -47,12 +52,13 @@ data:
       {{- $csghubEndpoint = required "externalUrl is required when global.chartContext.isBuiltIn=false" .Values.externalUrl }}
     {{- end }}
     endpoint = {{ $csghubEndpoint | quote }}
-    portal-endpoint = {{ $csghubEndpoint | quote }}
+    portal-endpoint = {{ dig "config" "csghub" "portalEndpoint" $csghubEndpoint .Values.csgbot | quote }}
     starship-endpoint = {{ dig "config" "starship" "endpoint" "" .Values.csgbot | quote }}
     mcp-gateway-endpoint = {{ printf "%s/v1/gateway/mcp" (include "common.endpoint.aigateway.override" .) | quote }}
 
     [aigateway]
     endpoint = {{ include "common.endpoint.aigateway.override" . | quote }}
+    api-key = ""
     temperature = {{ dig "config" "aigateway" "temperature" 0.1 .Values.csgbot }}
 
     [speech-to-text]
@@ -60,22 +66,22 @@ data:
     api-mode = {{ dig "config" "speechToText" "apiMode" "chat-completions" .Values.csgbot | quote }}
     prompt = {{ dig "config" "speechToText" "prompt" "" .Values.csgbot | quote }}
     response-format = {{ dig "config" "speechToText" "responseFormat" "json" .Values.csgbot | quote }}
-    max-file-bytes = {{ dig "config" "speechToText" "maxFileBytes" "26214400" .Values.csgbot | quote }}
-    forward-timeout-seconds = {{ dig "config" "speechToText" "forwardTimeoutSeconds" 120.0 .Values.csgbot }}
+    max-file-bytes = {{ dig "config" "speechToText" "maxFileBytes" 26214400 .Values.csgbot | int }}
+    forward-timeout-seconds = {{ dig "config" "speechToText" "forwardTimeoutSeconds" 120.0 .Values.csgbot | float64 | printf "%.1f" }}
 
     [langflow]
     endpoint = {{ include "common.endpoint.agenticflow" . | quote }}
 
     [sandbox]
     backend = "csghub"
-    legacy-endpoint = ""
+    legacy-endpoint = {{ dig "config" "sandbox" "legacyEndpoint" "" .Values.csgbot | quote }}
     workspace-volume-prefix = "/genius"
     timeout-seconds = {{ dig "config" "sandbox" "timeoutSeconds" 600 .Values.csgbot }}
     max-upload-file-bytes = {{ dig "config" "sandbox" "maxUploadFileBytes" 52428800 .Values.csgbot }}
 
     [sandbox.genius]
     backend = "csghub"
-    legacy-endpoint = ""
+    legacy-endpoint = {{ dig "config" "sandbox" "legacyEndpoint" "" .Values.csgbot | quote }}
     workspace-volume-prefix = "/genius"
     timeout-seconds = {{ dig "config" "sandbox" "timeoutSeconds" 600 .Values.csgbot }}
     max-upload-file-bytes = {{ dig "config" "sandbox" "maxUploadFileBytes" 52428800 .Values.csgbot }}
@@ -88,6 +94,10 @@ data:
     timeout-seconds = {{ dig "config" "sandbox" "timeoutSeconds" 600 .Values.csgbot }}
     image = {{ include "common.image" (list . (dig "config" "sandbox" "doc" "image" dict .Values.csgbot)) | quote }}
 
+    [sandbox.code]
+    legacy-endpoint = {{ dig "config" "sandbox" "legacyEndpoint" "" .Values.csgbot | quote }}
+    image = {{ include "common.image" (list . (dig "config" "sandbox" "code" "image" dict .Values.csgbot)) | quote }}
+
     [sandbox.openclaw]
     image = {{ include "common.image" (list . (dig "config" "sandbox" "openclaw" "image" dict .Values.csgbot)) | quote }}
 
@@ -97,10 +107,53 @@ data:
     [sandbox.csgclaw-agent]
     image = {{ include "common.image" (list . (dig "config" "sandbox" "csgclawAgent" "image" dict .Values.csgbot)) | quote }}
 
+    [claude-code]
+    cmd-template = {{ dig "config" "claudeCode" "cmdTemplate" "ccr code --model {model} -p '{query}'{stream_mode}" .Values.csgbot | quote }}
+    default-model = {{ dig "config" "claudeCode" "defaultModel" "claude-sonnet-4" .Values.csgbot | quote }}
+    stream-mode = {{ dig "config" "claudeCode" "streamMode" (printf "%s%s%s"
+      " --output-format stream-json"
+      " --verbose --include-partial-messages"
+      " --dangerously-skip-permissions") .Values.csgbot | quote }}
+
+    [codesouler]
+    cmd-template = {{ dig "config" "codesouler" "cmdTemplate" (printf "%s%s%s"
+      "codesouler chat '{query}'"
+      "{api_key}{api_base}{model}"
+      "{mcp_headers_part}{history_part} -o stream-json") .Values.csgbot | quote }}
+    use-agent-template = {{ dig "config" "codesouler" "useAgentTemplate" "codesouler agent use {agent_file_path}" .Values.csgbot | quote }}
+    use-mcp-template = {{ dig "config" "codesouler" "useMcpTemplate" (printf "%s%s%s"
+      "codesouler mcp add '{\"get_available_tools\":"
+      "{\"url\":\"{domain}/api/v1/csgbot/mcp/"
+      "get_available_tools/mcp\"}}'") .Values.csgbot | quote }}
+    data-dir = {{ dig "config" "codesouler" "dataDir" "codesouler_data" .Values.csgbot | quote }}
+    remote-repo-dir = {{ dig "config" "codesouler" "remoteRepoDir" "codesouler_data/repos" .Values.csgbot | quote }}
+
+    [dataset]
+    repo-id = {{ dig "config" "dataset" "repoId" "" .Values.csgbot | quote }}
+    user-name = {{ dig "config" "dataset" "userName" "" .Values.csgbot | quote }}
+
+    [search]
+    engine = {{ dig "config" "search" "engine" "serper" .Values.csgbot | quote }}
+    use-jd-gateway = {{ dig "config" "search" "useJdGateway" false .Values.csgbot }}
+    count = {{ dig "config" "search" "count" 10 .Values.csgbot }}
+    timeout = {{ dig "config" "search" "timeout" 10 .Values.csgbot }}
+    thread-num = {{ dig "config" "search" "threadNum" 4 .Values.csgbot }}
+    web-api-endpoint = {{ dig "config" "search" "webApiEndpoint" "" .Values.csgbot | quote }}
+
+    [deep-research]
+    query-decompose-max-size = {{ dig "config" "deepResearch" "queryDecomposeMaxSize" 8 .Values.csgbot }}
+    report-length = {{ dig "config" "deepResearch" "reportLength" 20000 .Values.csgbot }}
+    answer-length = {{ dig "config" "deepResearch" "answerLength" 15000 .Values.csgbot }}
+    single-page-max-size = {{ dig "config" "deepResearch" "singlePageMaxSize" 10000 .Values.csgbot }}
+    report-model = {{ dig "config" "deepResearch" "reportModel" "" .Values.csgbot | quote }}
+
     [integrations]
-    notifications-enabled = {{ dig "config" "integrations" "notification" "enabled" false .Values.csgbot | quote }}
+    notifications-enabled = {{ dig "config" "integrations" "notification" "enabled" false .Values.csgbot }}
     notification-endpoint = {{ printf "%s/api/v1/notifications?current_user=csgbot" $csghubEndpoint | quote }}
-    {{- if .Values.memmachine.enabled }}
+    {{- $memEndpoint := dig "config" "integrations" "memmachineEndpoint" "" .Values.csgbot }}
+    {{- if $memEndpoint }}
+    memmachine-endpoint = {{ $memEndpoint | quote }}
+    {{- else if .Values.memmachine.enabled }}
     {{- $memSvc := include "common.service" (dict "ctx" . "service" "memmachine") | fromYaml }}
     {{- $memsSvcName := include "common.names.custom" (list . $memSvc.name) }}
     memmachine-endpoint = {{ printf "http://%s:8080/mcp/" $memsSvcName | quote }}
@@ -119,6 +172,15 @@ data:
     log-level = {{ dig "config" "logging" "logLevel" "INFO" .Values.csgbot | quote }}
     disable-genius-chat = {{ dig "config" "logging" "disableGeniusChat" false .Values.csgbot }}
     disable-planner-chat = {{ dig "config" "logging" "disablePlannerChat" false .Values.csgbot }}
+
+    [planner]
+    require-plan-confirmation = {{ dig "config" "planner" "requirePlanConfirmation" true .Values.csgbot }}
+
+    [external-docs]
+    enabled = {{ dig "config" "externalDocs" "enabled" false .Values.csgbot }}
+
+    [notification-relay]
+    enabled = {{ dig "config" "notificationRelay" "enabled" false .Values.csgbot }}
 
     [user-facing-errors]
     # Shown when AI Gateway returns platform quota exhausted (403). Replace with customer IT contact.

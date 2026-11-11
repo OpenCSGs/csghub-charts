@@ -136,6 +136,9 @@ tests:
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "temperature = 0.1"
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^api-key = ""$'
 
   - it: overrides the aigateway temperature
     template: csgbot/configmap.yaml
@@ -179,10 +182,10 @@ tests:
           pattern: "response-format = \"json\""
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "max-file-bytes = \"26214400\""
+          pattern: "max-file-bytes = 26214400"
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "forward-timeout-seconds = 120"
+          pattern: "forward-timeout-seconds = 120\\.0"
 
   - it: overrides the speech-to-text config
     template: csgbot/configmap.yaml
@@ -211,10 +214,10 @@ tests:
           pattern: "response-format = \"text\""
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "max-file-bytes = \"1000000\""
+          pattern: "max-file-bytes = 1000000"
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "forward-timeout-seconds = 60"
+          pattern: "forward-timeout-seconds = 60\\.0"
 
   ## ------------------------------------------------------------------
   ## Sandbox section
@@ -240,6 +243,9 @@ tests:
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "image = \"docker.io/opencsghq/doc-sandbox:03c2897c\""
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: "image = \"docker.io/opencsghq/csg-sandbox-python-runner:0.0.11\""
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "image = \"docker.io/opencsghq/openclaw-sandbox:03c2897c\""
@@ -319,7 +325,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["csgbot.toml"]
-          pattern: "notifications-enabled = \"false\""
+          pattern: "notifications-enabled = false"
       - matchRegex:
           path: data["csgbot.toml"]
           pattern: "notification-endpoint = \"https://csghub.example.com/api/v1/notifications\\?current_user=csgbot\""
@@ -460,3 +466,211 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "externalUrl is required"
+
+  ## ------------------------------------------------------------------
+  ## Service configuration
+  ## ------------------------------------------------------------------
+  - it: renders the service configuration defaults
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[sandbox\.code\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[claude-code\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[codesouler\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[dataset\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[search\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[deep-research\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[planner\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[external-docs\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^\[notification-relay\]$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^default-model = "claude-sonnet-4"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^data-dir = "codesouler_data"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^use-mcp-template = "codesouler mcp add .*get_available_tools/mcp.*"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '\\"get_available_tools\\"'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^engine = "serper"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^use-jd-gateway = false$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^query-decompose-max-size = 8$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^require-plan-confirmation = true$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^report-model = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^repo-id = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^user-name = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^web-api-endpoint = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^remote-repo-dir = "codesouler_data/repos"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '\[external-docs\]\nenabled = false'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '\[notification-relay\]\nenabled = false'
+
+  - it: keeps search and dataset credentials empty in the ConfigMap
+    template: csgbot/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^serper-api-key = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^serpapi-api-key = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^jina-api-key = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^dataset-user-token = ""$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^web-search-api-key = ""$'
+
+  - it: overrides the environment name and the portal endpoint
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          environment:
+            name: "prod"
+          csghub:
+            portalEndpoint: "https://portal.example.com"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^name = "prod"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^portal-endpoint = "https://portal\.example\.com"$'
+
+  - it: overrides the sandbox legacy endpoint
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          sandbox:
+            legacyEndpoint: "http://sandbox.internal:9090"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: 'legacy-endpoint = "http://sandbox\.internal:9090"'
+
+  - it: overrides the search, deep-research, planner and relay settings
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          search:
+            engine: "jina"
+            useJdGateway: true
+            count: 20
+            webApiEndpoint: "https://search.example.com/api"
+          deepResearch:
+            reportLength: 30000
+            reportModel: "gpt-5"
+          planner:
+            requirePlanConfirmation: false
+          notificationRelay:
+            enabled: true
+          externalDocs:
+            enabled: true
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^engine = "jina"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^use-jd-gateway = true$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^count = 20$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^web-api-endpoint = "https://search\.example\.com/api"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^report-length = 30000$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^report-model = "gpt-5"$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^require-plan-confirmation = false$'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '\[external-docs\]\nenabled = true'
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '\[notification-relay\]\nenabled = true'
+
+  - it: renders boolean flags without quotes
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          integrations:
+            notification:
+              enabled: true
+          notificationRelay:
+            enabled: true
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^notifications-enabled = true$'
+      - notMatchRegex:
+          path: data["csgbot.toml"]
+          pattern: 'notifications-enabled = "true"'
+
+  - it: overrides the memmachine endpoint with an external URL
+    template: csgbot/configmap.yaml
+    set:
+      csgbot:
+        config:
+          integrations:
+            memmachineEndpoint: "https://mem.example.com/mcp/"
+    asserts:
+      - matchRegex:
+          path: data["csgbot.toml"]
+          pattern: '(?m)^memmachine-endpoint = "https://mem\.example\.com/mcp/"$'
+      - notMatchRegex:
+          path: data["csgbot.toml"]
+          pattern: 'agentichub-memmachine:8080'
