@@ -31,9 +31,9 @@ dependencies:
   version: 1.7.5
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
-  version: 0.6.11-rc.1
+  version: 0.10.0-rc.1
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:a171b1999e9c773b7993bb5628ad77a40ed4028e96b0ed801951417a1026cc85
-generated: "2026-11-09T03:27:45.448887+00:00"
+digest: sha256:e341d4bcdb7461e953166d170dd565955c881957c3ffc838b429bb499c6d7240
+generated: "2026-11-11T14:55:30.463295+08:00"
