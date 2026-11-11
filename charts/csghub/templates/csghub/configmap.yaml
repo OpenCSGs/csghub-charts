@@ -54,10 +54,11 @@ data:
   CSGHUB_PORTAL_PRIVATE_S3_ENABLE_SSL: {{ $portalS3Config.secure | quote }}
   CSGHUB_PORTAL_REGION: {{ $portalSvc.region | default "" | quote }}
   ## Portal Configuration for Direct Email
-  CSGHUB_PORTAL_DIRECT_EMAIL_ACCESS_KEY: {{ $portalSvc.email.accessKey | default "" | quote }}
-  CSGHUB_PORTAL_DIRECT_EMAIL_ACCESS_SECRET: {{ $portalSvc.email.accessSecret | default "" | quote }}
-  CSGHUB_PORTAL_DIRECT_EMAIL_ENDPOINT: {{ $portalSvc.email.endpoint | default "" | quote }}
-  CSGHUB_PORTAL_DIRECT_EMAIL_REGION: {{ $portalSvc.email.region | default "" | quote }}
+  {{- $portalEmail := $portalSvc.email | default dict }}
+  CSGHUB_PORTAL_DIRECT_EMAIL_ACCESS_KEY: {{ $portalEmail.accessKey | default "" | quote }}
+  CSGHUB_PORTAL_DIRECT_EMAIL_ACCESS_SECRET: {{ $portalEmail.accessSecret | default "" | quote }}
+  CSGHUB_PORTAL_DIRECT_EMAIL_ENDPOINT: {{ $portalEmail.endpoint | default "" | quote }}
+  CSGHUB_PORTAL_DIRECT_EMAIL_REGION: {{ $portalEmail.region | default "" | quote }}
   ## Portal Configuration for Redis
   CSGHUB_PORTAL_REDIS_ADDR: {{ printf "%s:%v" $portalRedisConfig.host $portalRedisConfig.port | quote }}
   {{- if or (and .Values.global.redis.enabled .Values.redis.requirePass) (and (not .Values.global.redis.enabled) $portalRedisConfig.password) }}
@@ -69,7 +70,7 @@ data:
   ## Accounting Configuration
   {{- $accountingSvc := include "common.service" (dict "ctx" . "service" "accounting") | fromYaml }}
   OPENCSG_ACCOUNTING_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $accountingSvc.name)) | quote }}
-  OPENCSG_ACCOUNTING_SERVER_PORT: {{ $accountingSvc | dig "service" "port" 8086 | quote }}
+  OPENCSG_ACCOUNTING_SERVER_PORT: {{ dig "service" "port" 8086 $accountingSvc | quote }}
   OPENCSG_ACCOUNTING_CHARGING_ENABLE: "true"
   OPENCSG_ACCOUNTING_MSG_FETCH_TIMEOUTINSEC: "5"
   {{- $natsConfig := include "common.nats.config" . | fromYaml }}
@@ -78,12 +79,15 @@ data:
   ## User Configuration
   {{- $userSvc := include "common.service" (dict "ctx" . "service" "user") | fromYaml }}
   OPENCSG_USER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $userSvc.name)) | quote }}
-  OPENCSG_USER_SERVER_PORT: {{ $userSvc | dig "service" "port" 8080 | quote }}
+  OPENCSG_USER_SERVER_PORT: {{ dig "service" "port" 8080 $userSvc | quote }}
   OPENCSG_USER_SERVER_SIGNIN_SUCCESS_REDIRECT_URL: {{ printf "%s/server/callback" (include "common.endpoint.csghub" .) | quote }}
 
   ## Moderation Configuration
   {{- $aiGatewaySvc := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
-  {{- $moderationSvc := $aiGatewaySvc.moderation }}
+  {{- $moderationSvc := $aiGatewaySvc.moderation | default dict }}
+  {{- $moderationLLM := $moderationSvc.llm | default dict }}
+  {{- $moderationGuard := $moderationLLM.guard | default dict }}
+  {{- $moderationGuardStream := $moderationLLM.guardStream | default dict }}
   {{- $aiGatewayEndpoint := include "common.endpoint.aigateway" . }}
   {{- $guardModel := "Qwen/Qwen3Guard-Gen-0.6B" }}
   {{- $guardStreamModel := "Qwen/Qwen3Guard-Gen-Stream-0.6B" }}
@@ -96,7 +100,7 @@ data:
   STARHUB_SERVER_SENSITIVE_CHECK_REGION: {{ $moderationSvc.region | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE_SSL: {{ $moderationSvc.enableSSL | quote }}
   OPENCSG_MODERATION_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $aiGatewaySvc.name)) | quote }}
-  OPENCSG_MODERATION_SERVER_PORT: {{ $moderationSvc | dig "service" "port" 8089 | quote }}
+  OPENCSG_MODERATION_SERVER_PORT: {{ dig "service" "port" 8089 $moderationSvc | quote }}
   OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "false"
   STARHUB_SERVER_SENSITIVE_CHECK_CHECK_CHAIN: {{ $moderationSvc.checkChain | default "ac_automaton,mutable_ac_automaton,aliyun_green" | quote }}
   STARHUB_SERVER_SENSITIVE_CHECK_STREAM_CHECK_MODE: {{ $moderationSvc.streamCheckMode | default "async" | quote }}
@@ -117,15 +121,15 @@ data:
   OPENCSG_SECURITY_SCAN_PLUGIN_STAGING_PATH: {{ .pluginStagingPath | quote }}
   {{- end }}
   {{- end }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE: {{ dig "llm" "enabled" "false" $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT: {{ dig "llm" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY: {{ dig "llm" "apiKey" "" $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL: {{ dig "llm" "guard" "model" $guardModel $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_ENDPOINT: {{ dig "llm" "guard" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_HEADERS: {{ dig "llm" "guard" "headers" "" $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL: {{ dig "llm" "guardStream" "model" $guardStreamModel $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_ENDPOINT: {{ dig "llm" "guardStream" "endpoint" $aiGatewayEndpoint $moderationSvc | quote }}
-  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_HEADERS: {{ dig "llm" "guardStream" "headers" "" $moderationSvc | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENABLE: {{ dig "enabled" "false" $moderationLLM | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_ENDPOINT: {{ dig "endpoint" $aiGatewayEndpoint $moderationLLM | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_API_KEY: {{ dig "apiKey" "" $moderationLLM | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_MODEL: {{ dig "model" $guardModel $moderationGuard | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_ENDPOINT: {{ dig "endpoint" $aiGatewayEndpoint $moderationGuard | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_HEADERS: {{ dig "headers" "" $moderationGuard | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_MODEL: {{ dig "model" $guardStreamModel $moderationGuardStream | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_ENDPOINT: {{ dig "endpoint" $aiGatewayEndpoint $moderationGuardStream | quote }}
+  STARHUB_SERVER_SENSITIVE_CHECK_LLM_GUARD_STREAM_HEADERS: {{ dig "headers" "" $moderationGuardStream | quote }}
   {{- else }}
   STARHUB_SERVER_SENSITIVE_CHECK_ENABLE: "false"
   OPENCSG_AIGATEWAY_MODERATION_BYPASS_SENSITIVE_CHECK: "true"
@@ -134,7 +138,7 @@ data:
   ## Server Configuration for Workflow
   {{- $temporalSvc := include "common.service" (dict "ctx" . "service" "temporal") | fromYaml }}
   {{- $temporalHost := include "common.names.custom" (list . $temporalSvc.name) }}
-  {{- $temporalPort := $temporalSvc | dig "service" "port" 7233 | toString }}
+  {{- $temporalPort := dig "service" "port" 7233 $temporalSvc | toString }}
   OPENCSG_WORKFLOW_SERVER_ENDPOINT: {{ printf "%s:%s" $temporalHost $temporalPort | quote }}
   STARHUB_SERVER_CRON_JOB_SYNC_AS_CLIENT_CRON_EXPRESSION: '*/5 * * * *'
 
@@ -147,7 +151,7 @@ data:
   ## Server Configuration for Dataviewer
   {{- $dataviewerSvc := include "common.service" (dict "ctx" . "service" "dataviewer") | fromYaml }}
   OPENCSG_DATAVIEWER_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $dataviewerSvc.name)) | quote }}
-  OPENCSG_DATAVIEWER_SERVER_PORT: {{ $dataviewerSvc | dig "service" "port" 8093 | quote }}
+  OPENCSG_DATAVIEWER_SERVER_PORT: {{ dig "service" "port" 8093 $dataviewerSvc | quote }}
 
   {{- if eq .Values.global.edition "saas" }}
   {{- if dig "enabled" true .Values.fedap }}
@@ -155,7 +159,7 @@ data:
   {{- $fedapSvc := include "common.service" (dict "ctx" . "service" "fedap") | fromYaml }}
   {{- $fedapSvcName := include "common.names.custom" (list . $fedapSvc.name) }}
   STARHUB_SERVER_FEDERATION_ADAPTER_ENDPOINT: {{ printf "http://%s" $fedapSvcName | quote }}
-  STARHUB_SERVER_FEDERATION_ADAPTER_PORT: {{ $fedapSvc | dig "service" "port" 8099 | quote }}
+  STARHUB_SERVER_FEDERATION_ADAPTER_PORT: {{ dig "service" "port" 8099 $fedapSvc | quote }}
   {{- end }}
 
   {{- if dig "enabled" true .Values.trustregistry }}
@@ -163,14 +167,14 @@ data:
   {{- $trustregistrySvc := include "common.service" (dict "ctx" . "service" "trustregistry") | fromYaml }}
   {{- $trustregistrySvcName := include "common.names.custom" (list . $trustregistrySvc.name) }}
   STARHUB_SERVER_FEDERATION_REGISTRY_HOST: {{ printf "http://%s" $trustregistrySvcName | quote }}
-  STARHUB_SERVER_FEDERATION_REGISTRY_PORT: {{ $trustregistrySvc | dig "service" "port" 8098 | quote }}
+  STARHUB_SERVER_FEDERATION_REGISTRY_PORT: {{ dig "service" "port" 8098 $trustregistrySvc | quote }}
   {{- end }}
   {{- end }}
 
   ## Server Configuration for Notification
   {{- $notifierSvc := include "common.service" (dict "ctx" . "service" "notifier") | fromYaml }}
   STARHUB_SERVER_NOTIFIER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $notifierSvc.name)) | quote }}
-  STARHUB_SERVER_NOTIFIER_PORT: {{ $notifierSvc | dig "service" "port" 8095 | quote }}
+  STARHUB_SERVER_NOTIFIER_PORT: {{ dig "service" "port" 8095 $notifierSvc | quote }}
   {{- with $notifierSvc.smtp }}
   ## Portal configuration for SMTP
   CSGHUB_PORTAL_MAILER_HOST: {{ .host | quote }}
@@ -207,38 +211,43 @@ data:
   OPENCSG_PAYMENT_SERVER_IS_PROD: "true"
   OPENCSG_PAYMENT_BILL_BUCKET: {{ $paymentSvc.billingBucket | quote }}
   OPENCSG_PAYMENT_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $accountingSvc.name)) | quote }}
-  OPENCSG_PAYMENT_SERVER_PORT: {{ $paymentSvc | dig "service" "port" 8090 | quote }}
+  OPENCSG_PAYMENT_SERVER_PORT: {{ dig "service" "port" 8090 $paymentSvc | quote }}
   {{- end }}
 
   ## Server Configuration for AIGateway
-  {{- $aigatewaySvc := $aiGatewaySvc.aigateway }}
-  OPENCSG_AIGATEWAY_PORT: {{ $aigatewaySvc | dig "service" "port" 8094 | quote }}
+  {{- $aigatewaySvc := $aiGatewaySvc.aigateway | default dict }}
+  {{- $aigatewayLLM := $aigatewaySvc.llm | default dict }}
+  {{- $aigatewayLog := $aigatewayLLM.log | default dict }}
+  {{- $aigatewayLogSync := $aigatewayLog.sync | default dict }}
+  {{- $aigatewayLogSyncDataset := $aigatewayLogSync.dataset | default dict }}
+  {{- $aigatewayTrace := $aigatewayLLM.trace | default dict }}
+  OPENCSG_AIGATEWAY_PORT: {{ dig "service" "port" 8094 $aigatewaySvc | quote }}
   OPENCSG_AIGATEWAY_PUBLIC_URL: {{ printf "%s/v1" (include "common.endpoint.aigateway" .) | quote }}
   {{- if ne .Values.global.edition "ce" }}
-  OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "llm" "log" "enabled" true $aigatewaySvc | quote }}
-  OPENCSG_AIGATEWAY_LLM_TRACE_ENABLE: {{ dig "llm" "trace" "enabled" true $aigatewaySvc | quote }}
-  OPENCSG_AIGATEWAY_LLM_TRACE_CONTENT_CAPTURE: {{ dig "llm" "trace" "contentCapture" "metadata_only" $aigatewaySvc | quote }}
-  OPENCSG_AIGATEWAY_LLM_TRACE_MAX_CONTENT_LENGTH: {{ dig "llm" "trace" "contentLength" "256" $aigatewaySvc | quote }}
-  OPENCSG_AIGATEWAY_LLM_TRACE_MAX_INPUT_USER_MESSAGES: {{ dig "llm" "trace" "maxInputUserMessages" "1" $aigatewaySvc | quote }}
-  STARHUB_SERVER_LLMLOG_SYNC_ENABLE: {{ dig "llm" "log" "sync" "enabled" false $aigatewaySvc | quote }}
-  STARHUB_SERVER_LLMLOG_SYNC_USERNAME: {{ dig "llm" "log" "sync" "username" "" $aigatewaySvc | quote }}
-  STARHUB_SERVER_LLMLOG_SYNC_DATASET_NAMESPACE: {{ dig "llm" "log" "sync" "dataset" "namespace" "" $aigatewaySvc | quote }}
-  STARHUB_SERVER_LLMLOG_SYNC_DATASET_NAME: {{ dig "llm" "log" "sync" "dataset" "name" "" $aigatewaySvc | quote }}
-  STARHUB_SERVER_LLMLOG_SYNC_MAX_SHARD_SIZE_BYTES: {{ dig "llm" "log" "sync" "maxShardSizeBytes" "67108864" $aigatewaySvc | quote }}
+  OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "enabled" true $aigatewayLog | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_ENABLE: {{ dig "enabled" true $aigatewayTrace | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_CONTENT_CAPTURE: {{ dig "contentCapture" "metadata_only" $aigatewayTrace | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_MAX_CONTENT_LENGTH: {{ dig "contentLength" "256" $aigatewayTrace | quote }}
+  OPENCSG_AIGATEWAY_LLM_TRACE_MAX_INPUT_USER_MESSAGES: {{ dig "maxInputUserMessages" "1" $aigatewayTrace | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_ENABLE: {{ dig "enabled" false $aigatewayLogSync | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_USERNAME: {{ dig "username" "" $aigatewayLogSync | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_DATASET_NAMESPACE: {{ dig "namespace" "" $aigatewayLogSyncDataset | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_DATASET_NAME: {{ dig "name" "" $aigatewayLogSyncDataset | quote }}
+  STARHUB_SERVER_LLMLOG_SYNC_MAX_SHARD_SIZE_BYTES: {{ dig "maxShardSizeBytes" "67108864" $aigatewayLogSync | quote }}
   {{- else }}
   OPENCSG_AIGATEWAY_LLMLOG_ENABLE: "false"
   OPENCSG_AIGATEWAY_LLM_TRACE_ENABLE: "false"
   STARHUB_SERVER_LLMLOG_SYNC_ENABLE: "false"
   {{- end }}
 
-  {{- if and (ne .Values.global.edition "ce") (dig "llm" "log" "enabled" true $aigatewaySvc) }}
+  {{- if and (ne .Values.global.edition "ce") (dig "enabled" true $aigatewayLog) }}
   ## Server Configuration for LLMLog
   {{- $llmlogSvc := include "common.service" (dict "ctx" . "service" "llmlog") | fromYaml }}
   OPENCSG_LLMLOG_BUCKET: {{ $llmlogSvc.bucket | default "csghub-llmlog" | quote }}
   OPENCSG_LLMLOG_PREFIX: {{ $llmlogSvc.prefix | default "llmlog" | quote }}
   OPENCSG_LLMLOG_WORKER_NUM: {{ $llmlogSvc.workerNum | default 10 | quote }}
-  OPENCSG_LLMLOG_BATCH_SIZE: {{ $llmlogSvc.batchSize | default 1000 | quote }}
-  OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS: {{ $llmlogSvc.flushIntervalSeconds | default 300 | quote }}
+  OPENCSG_LLMLOG_BATCH_SIZE: {{ $llmlogSvc.batchSize | default 50 | quote }}
+  OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS: {{ $llmlogSvc.flushIntervalSeconds | default 60 | quote }}
   {{- end }}
 
   ## Server Configuration
@@ -247,6 +256,14 @@ data:
   {{- $serverRedisConfig := include "common.redis.config" (dict "ctx" . "service" $serverSvc) | fromYaml }}
   {{- $serverPgConfig := include "common.postgresql.config" (dict "ctx" . "service" $serverSvc) | fromYaml }}
   {{- $serverGitConfig := include "common.gitaly.config" (dict "ctx" . "service" $serverSvc) | fromYaml }}
+  {{- $serverMirrorSync := $serverSvc.mirrorSync | default dict }}
+  {{- $serverMultiSync := $serverSvc.multiSync | default dict }}
+  {{- $serverSwagger := $serverSvc.swaggerAPI | default dict }}
+  {{- $serverGitlabShell := $serverSvc.gitlabShell | default dict }}
+  {{- $serverAgenticflow := $serverSvc.agenticflow | default dict }}
+  {{- $serverCsgbot := $serverSvc.csgbot | default dict }}
+  {{- $serverXnet := $serverSvc.xnet | default dict }}
+  {{- $serverMemory := $serverSvc.memory | default dict }}
   STARHUB_SERVER_SAAS: {{ eq .Values.global.edition "saas" | quote }}
   STARHUB_SERVER_ENABLE_HTTPS: {{ dig "tls" "enabled" "false" $IngressConfig | quote }}
   {{- $corsOrigins := dig "cors" "allowedOrigins" list $serverSvc }}
@@ -255,9 +272,9 @@ data:
   {{- end }}
   STARHUB_SERVER_MIRRORSERVER_ENABLE: "false"
   STARHUB_SERVER_MIRROR_REMOTE: "false"
-  {{- if $serverSvc.mirrorSync }}
-  STARHUB_SERVER_MIRROR_MAX_MODEL_REPO_SIZE: {{ $serverSvc.mirrorSync.maxModelRepoSize | quote }}
-  STARHUB_SERVER_MIRROR_MAX_DATASET_REPO_SIZE: {{ $serverSvc.mirrorSync.maxDatasetRepoSize | quote }}
+  {{- if $serverMirrorSync }}
+  STARHUB_SERVER_MIRROR_MAX_MODEL_REPO_SIZE: {{ $serverMirrorSync.maxModelRepoSize | quote }}
+  STARHUB_SERVER_MIRROR_MAX_DATASET_REPO_SIZE: {{ $serverMirrorSync.maxDatasetRepoSize | quote }}
   {{- end }}
   STARHUB_SERVER_API_TOKEN: {{ $apiToken | quote }}
   STARHUB_SERVER_FRONTEND_URL: {{ include "common.endpoint.csghub" . | quote }}
@@ -266,26 +283,28 @@ data:
 
   ## Server Configuration for Model
   {{- $runnerSvc := include "common.service" (dict "ctx" . "service" "runner") | fromYaml }}
-  STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.model.deployTimeoutInMin | default 60 | quote }}
+  {{- $runnerModel := $runnerSvc.model | default dict }}
+  {{- $runnerSpace := $runnerSvc.space | default dict }}
+  STARHUB_SERVER_MODEL_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerModel.deployTimeoutInMin | default 60 | quote }}
   STARHUB_SERVER_MODEL_DOWNLOAD_ENDPOINT: {{ include "common.endpoint.csghub" . | quote }}
   ## Server Configuration for Model
-  {{- $registry := or $runnerSvc.model.dockerRegBase .Values.global.image.registry "docker.io" }}
+  {{- $registry := or $runnerModel.dockerRegBase .Values.global.image.registry "docker.io" }}
   STARHUB_SERVER_MODEL_DOCKER_REG_BASE: {{ $registry | quote }}
-  STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL: {{ $runnerSvc.model.deployStatusCheckInterval | default 10 | quote }}
+  STARHUB_SERVER_MODEL_DEPLOY_STATUS_CHECK_INTERVAL: {{ $runnerModel.deployStatusCheckInterval | default 10 | quote }}
   STARHUB_SERVER_SPACE_BUILD_TIMEOUT_IN_MINUTES: {{ $serverSvc.space.buildTimeout | default 30 | quote }}
 
   ## Server Configuration for Multiple-Sync
-  STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ $serverSvc.multiSync.enabled | quote }}
+  STARHUB_SERVER_MULTI_SYNC_ENABLED: {{ dig "enabled" true $serverMultiSync | quote }}
   ## Server Configuration for Multiple-Sync fetch timeout
   STARHUB_SERVER_GIT_OPERATION_TIMEOUT: "120"
-  {{- if $serverSvc.multiSync.proxy }}
+  {{- if $serverMultiSync.proxy }}
   STARHUB_SERVER_PROXY_ENABLE: "true"
-  STARHUB_SERVER_PROXY_URL: {{ $serverSvc.multiSync.proxy | quote }}
+  STARHUB_SERVER_PROXY_URL: {{ $serverMultiSync.proxy | quote }}
   {{- end }}
   {{- $mirrorSvc := include "common.service" (dict "ctx" . "service" "mirror") | fromYaml }}
   {{- $mirrorSvcName := include "common.names.custom" (list . $mirrorSvc.name) }}
   STARHUB_SERVER_LFS_SYNC_HOST: {{ printf "http://%s" $mirrorSvcName | quote }}
-  STARHUB_SERVER_LFS_SYNC_PORT: {{ $mirrorSvc | dig "service" "port" 8092 | quote }}
+  STARHUB_SERVER_LFS_SYNC_PORT: {{ dig "service" "port" 8092 $mirrorSvc | quote }}
 
   ## Server Configuration for Redis
   STARHUB_SERVER_REDIS_ENDPOINT: {{ printf "%s:%v" $serverRedisConfig.host $serverRedisConfig.port | quote }}
@@ -315,7 +334,7 @@ data:
   STARHUB_SERVER_GITALY_JWT_SECRET: {{ $serverGitConfig.jwtSecret | quote }}
   {{- $domain := include "common.domain.csghub" . }}
   {{- $defaultPort := ternary "30022" "22" (eq (dig "service" "type" "LoadBalancer" .Values.global.gateway) "NodePort") }}
-  {{- $port := toString ($serverSvc.gitlabShell.sshPort | default $defaultPort) }}
+  {{- $port := toString ($serverGitlabShell.sshPort | default $defaultPort) }}
   STARHUB_SERVER_SSH_DOMAIN: {{ ternary (printf "git@%s" $domain) (printf "ssh://git@%s:%s" $domain $port) (eq $port "22") | quote }}
 
   ## Server Configuration for Space Application
@@ -324,10 +343,10 @@ data:
   {{- $rproxyPort := dig "service" "port" 8083 $rproxySvc }}
   STARHUB_SERVER_INTERNAL_ROOT_DOMAIN: {{ printf "%s.app.internal:%v" (include "namespace.spaces" .) $rproxyPort | quote }}
   {{- $endpoint := include "common.endpoint.public" . | trimPrefix "http://" | trimPrefix "https://" }}
-  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSvc.space.usePublicDomain | quote }}
-  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSvc.space.pipIndexUrl | quote }}
-  STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSvc.space.deployTimeoutInMin | default 30 | quote }}
-  STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL: {{ $runnerSvc.space.statusCheckInterval | default 10 | quote }}
+  STARHUB_SERVER_PUBLIC_ROOT_DOMAIN: {{ ternary $endpoint "" $runnerSpace.usePublicDomain | quote }}
+  STARHUB_SERVER_SPACE_PYPI_INDEX_URL: {{ $runnerSpace.pipIndexUrl | quote }}
+  STARHUB_SERVER_SPACE_DEPLOY_TIMEOUT_IN_MINUTES: {{ $runnerSpace.deployTimeoutInMin | default 30 | quote }}
+  STARHUB_SERVER_SPACE_STATUS_CHECK_INTERVAL: {{ $runnerSpace.statusCheckInterval | default 10 | quote }}
   STARHUB_SERVER_SPACE_SESSION_SECRET_KEY: {{ include "common.secret.value" (list . "space-session-secret-key" 40) | quote }}
 
   ## Server Configuration for Casdoor
@@ -347,7 +366,7 @@ data:
   OPENCSG_TRACING_OTLP_LOGGING: {{ $tempoSvc.enabled | quote }}
 
   ## Server Configuration for Swagger API
-  STARHUB_SERVER_ENABLE_SWAGGER: {{ $serverSvc.swaggerAPI.enabled | quote }}
+  STARHUB_SERVER_ENABLE_SWAGGER: {{ dig "enabled" false $serverSwagger | quote }}
 
   ## Server Configuration for Prometheus
   {{- $promeSvc := include "common.service" (dict "ctx" . "service" "prometheus") | fromYaml }}
@@ -394,20 +413,18 @@ data:
   OPENCSG_AGENT_AUTOHUB_SERVICE_HOST: ""
   {{- $agenticflowSvc := include "common.service" (dict "ctx" . "service" "agenticflow") | fromYaml }}
   {{- $agenticflowSvcName := include "common.names.custom" (list . $agenticflowSvc.name) }}
-  {{- $agenticflowHost := or $serverSvc.agenticflow.host (include "common.endpoint.agenticflow" .) }}
+  {{- $agenticflowHost := or $serverAgenticflow.host (include "common.endpoint.agenticflow" .) }}
   CSGHUB_PORTAL_LANGFLOW_HOST: {{ $agenticflowHost | quote }}
   OPENCSG_AGENT_AGENTHUB_SERVICE_HOST: {{ $agenticflowHost | quote }}
   {{- $agenticflowToken := include "agenticflow.api.token" . }}
-  OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ or $serverSvc.agenticflow.token $agenticflowToken | quote }}
-  STARHUB_SERVER_AGENT_CODE_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agenticflow.codeInstanceQuotaPerUser | default 5 | quote }}
-  STARHUB_SERVER_AGENT_LANGFLOW_INSTANCE_QUOTA_PER_USER: {{ $serverSvc.agenticflow.instanceQuotaPerUser | default 5 | quote }}
+  OPENCSG_AGENT_AGENTHUB_SERVICE_TOKEN: {{ or $serverAgenticflow.token $agenticflowToken | quote }}
 
   ## Server Configuration for CSGBot
   {{- $csgbotSvc := include "common.service" (dict "ctx" . "service" "csgbot") | fromYaml }}
   {{- $csgbotSvcName := include "common.names.custom" (list . $csgbotSvc.name) }}
   {{- $csgbotSvcPort := dig "service" "port" 8070 $csgbotSvc }}
-  OPENCSG_CSGBOT_SERVER_HOST: {{ or $serverSvc.csgbot.host (printf "http://%s" $csgbotSvcName) | quote }}
-  OPENCSG_CSGBOT_SERVER_PORT: {{ or $serverSvc.csgbot.port $csgbotSvcPort | quote }}
+  OPENCSG_CSGBOT_SERVER_HOST: {{ or $serverCsgbot.host (printf "http://%s" $csgbotSvcName) | quote }}
+  OPENCSG_CSGBOT_SERVER_PORT: {{ or $serverCsgbot.port $csgbotSvcPort | quote }}
   {{- end }}
 
   ## Server Configuration for XNet
@@ -415,21 +432,20 @@ data:
   {{- $xnetSvcName := include "common.names.custom" (list . $xnetSvc.name) }}
   {{- $xnetSvcPort := dig "service" "port" 8097 $xnetSvc }}
   {{- $xnetApiKey := include "csghub.api.token" . }}
-  STARHUB_SERVER_XNET_ENDPOINT: {{ $serverSvc.xnet.endpoint | default (printf "%s/xnet" (include "common.endpoint.csghub" .)) | quote }}
-  STARHUB_SERVER_XNET_API_KEY: {{ $serverSvc.xnet.apiKey | default $xnetApiKey | quote }}
+  STARHUB_SERVER_XNET_ENDPOINT: {{ $serverXnet.endpoint | default (printf "%s/xnet" (include "common.endpoint.csghub" .)) | quote }}
+  STARHUB_SERVER_XNET_API_KEY: {{ $serverXnet.apiKey | default $xnetApiKey | quote }}
 
   ## Server Configuration for Memory Service
   {{- $memSvc := include "common.service" (dict "ctx" . "service" "memmachine") | fromYaml }}
-  {{- $memConfig := $serverSvc.memory | default dict }}
-  {{- $memEnabled := gt (len $memConfig) 0 }}
-  OPENCSG_MEMORY_SERVER_ENABLED: {{ ternary "true" "false" $memEnabled | quote }}
+  {{- $memEnabled := dig "enabled" true $serverMemory }}
+  OPENCSG_MEMORY_SERVER_ENABLED: {{ $memEnabled | quote }}
   OPENCSG_MEMORY_SERVER_HOST: {{ printf "http://%s" (include "common.names.custom" (list . $memSvc.name)) | quote }}
-  OPENCSG_MEMORY_SERVER_PORT: {{ $memSvc | dig "service" "port" 8080 | quote }}
-  OPENCSG_MEMORY_SERVER_BASE_PATH: {{ $serverSvc.memory.basePath | quote }}
-  OPENCSG_MEMORY_SERVER_API_KEY: {{ $serverSvc.memory.apiKey | quote }}
-  OPENCSG_MEMORY_SERVER_TIMEOUT_SECONDS: {{ $serverSvc.memory.timeoutSeconds | quote }}
-  OPENCSG_MEMORY_SERVER_RETRY_COUNT: {{ $serverSvc.memory.retryCount | quote }}
-  OPENCSG_MEMORY_SERVER_RETRY_DELAY_MILLIS: {{ $serverSvc.memory.retryDelayMillis | quote }}
+  OPENCSG_MEMORY_SERVER_PORT: {{ dig "service" "port" 8080 $memSvc | quote }}
+  OPENCSG_MEMORY_SERVER_BASE_PATH: {{ $serverMemory.basePath | quote }}
+  OPENCSG_MEMORY_SERVER_API_KEY: {{ $serverMemory.apiKey | quote }}
+  OPENCSG_MEMORY_SERVER_TIMEOUT_SECONDS: {{ $serverMemory.timeoutSeconds | quote }}
+  OPENCSG_MEMORY_SERVER_RETRY_COUNT: {{ $serverMemory.retryCount | quote }}
+  OPENCSG_MEMORY_SERVER_RETRY_DELAY_MILLIS: {{ $serverMemory.retryDelayMillis | quote }}
 
   ## Server Configuration for S3 Proxy
   CSGHUB_PORTAL_USE_STORAGE_PROXY: {{ $serverSvc.enablePresignedUrlProxy | quote }}

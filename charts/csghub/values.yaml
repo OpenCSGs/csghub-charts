@@ -600,8 +600,8 @@ agentichub:
 llmlog: {}
   # prefix: "llmlog"
   # workerNum: 10
-  # batchSize: 1000
-  # flushIntervalSeconds: 300
+  # batchSize: 50
+  # flushIntervalSeconds: 60
   # bucket: "csghub-llmlog"
 
 ## Accounting service configuration
