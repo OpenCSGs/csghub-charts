@@ -44,6 +44,19 @@ tests:
       - matchRegex:
           path: data["app.conf"]
           pattern: "origin\\s*=\\s*\"https://casdoor\\.example\\.com\""
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "forceLanguage\\s*=\\s*\"en\""
+
+  - it: renders the configured forceLanguage
+    template: casdoor/configmap.yaml
+    set:
+      casdoor:
+        forceLanguage: "zh"
+    asserts:
+      - matchRegex:
+          path: data["app.conf"]
+          pattern: "forceLanguage\\s*=\\s*\"zh\""
 
   - it: points initDataFile at the mounted init Secret
     template: casdoor/configmap.yaml
