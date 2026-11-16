@@ -23,14 +23,13 @@ This chart is the supported install path for CSGHub staging and other clusters. 
 #    Re-run is safe: existing Secrets are kept.
 ./charts/agent-substrate/scripts/bootstrap-identity.sh ate-system
 
-# 2) Install — object store comes from values (chart creates the Secret when
-#    accessKey/secretKey are set). Prefer existingSecret / External Secrets in prod.
-#    Keep namespace.create=false (default): Helm must not own Namespaces that
-#    bootstrap already created (avoids meta.helm.sh ownership errors).
+# 2) Copy examples/values.yaml, set objectStore.bucket/endpoint/region,
+#    and either create the Secret (below) or set accessKey/secretKey.
+# 3) Install. Keep namespace.create=false (default).
 helm dependency update ./charts/agent-substrate
 helm upgrade --install agent-substrate ./charts/agent-substrate \
   --namespace ate-system --create-namespace \
-  -f charts/agent-substrate/examples/values-stg.yaml \
+  -f path/to/your-values.yaml \
   --wait --timeout 20m
 ```
 
@@ -40,30 +39,51 @@ unless you first adopt those Namespaces with Helm ownership labels.
 
 ### Object store (configure once)
 
-Either put credentials in values (chart creates `<release>-objectstore`):
+`bucket`, `endpoint`, and `region` have **no chart defaults** — set them in
+your values file (copy `examples/values.yaml` and fill them in).
+`snapshotLocation` defaults to `gs://{{ bucket }}/` when omitted (`gs://` is
+required even for S3).
 
-```yaml
-objectStore:
-  backend: s3
-  endpoint: https://oss-cn-beijing.aliyuncs.com
-  region: cn-beijing
-  bucket: opencsg-stg-agent-substrate
-  # snapshotLocation defaults to gs://opencsg-stg-agent-substrate/
-  accessKey: "..."
-  secretKey: "..."
-  pathStyle: true
+**Create a Secret in the release namespace** (preferred; same `OBJECT_STORE_*`
+keys as csghub/runner), then point values at it:
+
+```bash
+# Create the bucket in your S3/OSS console first, then:
+kubectl -n ate-system create secret generic substrate-objectstore \
+  --from-literal=OBJECT_STORE_ENDPOINT=https://oss-cn-beijing.aliyuncs.com \
+  --from-literal=OBJECT_STORE_ACCESS_KEY='...' \
+  --from-literal=OBJECT_STORE_SECRET_KEY='...' \
+  --from-literal=OBJECT_STORE_REGION=cn-beijing \
+  --from-literal=OBJECT_STORE_BUCKET=my-agent-substrate-bucket
 ```
 
-Or reuse a pre-created Secret (`OBJECT_STORE_*` keys, same as csghub/runner):
-
 ```yaml
 objectStore:
   backend: s3
-  bucket: opencsg-stg-agent-substrate
+  bucket: my-agent-substrate-bucket
   endpoint: https://oss-cn-beijing.aliyuncs.com
   region: cn-beijing
+  pathStyle: true
   existingSecret: substrate-objectstore
 ```
+
+**Or** omit `existingSecret` and set `accessKey` / `secretKey` in values so
+the chart creates `<release>-objectstore` (do not commit real credentials):
+
+```yaml
+objectStore:
+  backend: s3
+  bucket: my-agent-substrate-bucket
+  endpoint: https://oss-cn-beijing.aliyuncs.com
+  region: cn-beijing
+  pathStyle: true
+  accessKey: "..."
+  secretKey: "..."
+```
+
+If CSGHub already has an `OBJECT_STORE_*` Secret in another namespace, copy it
+into `ate-system` (Helm cannot mount cross-namespace) and set `existingSecret`
+to that name.
 
 ## Values (high level)
 
@@ -81,7 +101,7 @@ objectStore:
 | `workerPools[].hpa` | Optional HPA on the pool (`enabled: false` by default) |
 | `atenet.dataplane` | `agentgateway` (default) |
 
-See `values.yaml` and `examples/values-stg.yaml`.
+See chart `values.yaml` and `examples/values.yaml`.
 
 ## WorkerPools
 

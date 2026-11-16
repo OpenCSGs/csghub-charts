@@ -107,7 +107,7 @@ objectStore:
   snapshotLocation: ""        # gs://bucket/ (required even for S3)
   bucket: ""
   endpoint: ""
-  region: cn-north-1
+  region: ""                  # required for S3; no chart default
   pathStyle: true
   accessKey: ""
   secretKey: ""
