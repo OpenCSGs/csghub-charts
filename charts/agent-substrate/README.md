@@ -108,7 +108,9 @@ For an external database set `postgres.bundled: false` and
 | `agentgateway.requestTimeout` | Until response headers; size ≥ wakeupProbe + park budget (default `180s`) |
 | `actorDefaults.wakeupProbe.timeoutSeconds` | Suggested ActorTemplate probe timeout (default `120`) |
 | `actorDefaults.egress.allowAll` | Ships allow-all egress policy YAML in ConfigMap (default `true`) |
-| `postgres.bundled` | Bundled Postgres StatefulSet (default `true`); auto DSNs + role setup || `workerPools[]` | `WorkerPool` CRs (name, replicas, labels, resources) |
+| `postgres.bundled` | Bundled Postgres StatefulSet (default `true`); auto DSNs + role setup |
+| `postgres.image.*` | Bundled image (ACR `opencsghq/postgres:18-alpine`, Substrate digest) |
+| `workerPools[]` | `WorkerPool` CRs (name, replicas, labels, resources) |
 | `workerPools[].hpa` | Optional HPA on the pool (`enabled: false` by default) |
 | `atenet.dataplane` | `agentgateway` (default) |
 

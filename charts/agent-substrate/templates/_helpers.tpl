@@ -58,6 +58,15 @@ Usage: {{ include "agent-substrate.image" (dict "root" . "name" "ateapi") }}
 {{- end -}}
 {{- end }}
 
+{{- define "agent-substrate.postgresImage" -}}
+{{- $img := .Values.postgres.image -}}
+{{- if $img.digest -}}
+{{ printf "%s:%s@%s" $img.repository $img.tag $img.digest }}
+{{- else -}}
+{{ printf "%s:%s" $img.repository $img.tag }}
+{{- end -}}
+{{- end }}
+
 {{/*
 Managed object-store Secret name when the chart creates one from values.
 */}}
