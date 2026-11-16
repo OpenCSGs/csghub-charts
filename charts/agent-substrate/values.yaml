@@ -100,7 +100,9 @@ objectStore:
 
 ## PostgreSQL for ate-api-server.
 postgres:
-  ## Deploy the bundled Postgres StatefulSet from upstream (dev/stg only).
+  ## Deploy the bundled Postgres StatefulSet (stg/dev). Chart fills cert-auth
+  ## DSNs and runs role/schema setup in the postgres postStart. Keep
+  ## api.postgres.schema/roles at Substrate defaults (substrate / substrate_*).
   bundled: true
   bundledStorageSize: 10Gi
   ## When bundled=false, point at an existing Secret with connection strings.
@@ -191,4 +193,5 @@ api:
     readWriteRole: substrate_readwrite
     ownerRole: substrate_owner
     poolMaxConns: ""
-    schema: public
+    ## Bundled installs must use Substrate's setup schema (not public).
+    schema: substrate

@@ -196,6 +196,18 @@ Always mounts credentials from a Secret (existing or chart-managed).
 {{- end -}}
 {{- end }}
 
+{{/*
+Bundled Postgres DSN (cert auth), matching ate-setup bundledPostgresDSN.
+Usage: {{ include "agent-substrate.bundledPostgresDSN" (dict "root" . "user" "substrate_readwrite_user") }}
+*/}}
+{{- define "agent-substrate.bundledPostgresDSN" -}}
+{{- $root := .root -}}
+{{- $user := .user -}}
+{{- $host := printf "postgres.%s.svc" $root.Release.Namespace -}}
+{{- $bundle := printf "/run/postgres.podcert.ate.dev/%s.pem" $user -}}
+{{- printf "postgresql://%s@%s:5432/atepg?sslmode=verify-full&sslrootcert=/run/servicedns.podcert.ate.dev/trust-bundle.pem&sslcert=%s&sslkey=%s" $user $host $bundle $bundle -}}
+{{- end }}
+
 {{- define "agent-substrate.workerImage" -}}
 {{- $pool := .pool -}}
 {{- $root := .root -}}

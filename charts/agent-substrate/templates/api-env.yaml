@@ -23,8 +23,8 @@ data:
 {{- if and (not .Values.postgres.bundled) .Values.postgres.external.existingSecret }}
 # External Postgres: reference an existing Secret; do not duplicate keys here.
 {{- else if .Values.postgres.bundled }}
-# Bundled Postgres DSNs are filled by the operator after the StatefulSet is Ready,
-# or by scripts/bootstrap-postgres-env.sh. Placeholder Secret keeps envFrom valid.
+## Bundled Postgres: cert-auth DSNs (same shape as ate-setup). Roles/schema are
+## created by the postgres StatefulSet postStart (setup.sql).
 apiVersion: v1
 kind: Secret
 metadata:
@@ -37,9 +37,8 @@ metadata:
 type: Opaque
 stringData:
   ATE_API_POSTGRES_SCHEMA: {{ .Values.api.postgres.schema | quote }}
-  # Replace after bundled postgres is Ready (see chart README).
-  ATE_API_POSTGRES_READ_WRITE_CONNECTION_STRING: ""
-  ATE_API_POSTGRES_OWNER_CONNECTION_STRING: ""
+  ATE_API_POSTGRES_READ_WRITE_CONNECTION_STRING: {{ include "agent-substrate.bundledPostgresDSN" (dict "root" . "user" "substrate_readwrite_user") | quote }}
+  ATE_API_POSTGRES_OWNER_CONNECTION_STRING: {{ include "agent-substrate.bundledPostgresDSN" (dict "root" . "user" "substrate_owner_user") | quote }}
 {{- else }}
 {{- fail "Set postgres.bundled=true or postgres.external.existingSecret" }}
 {{- end }}

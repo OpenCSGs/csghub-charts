@@ -42,6 +42,7 @@ objectStore:
   ## Or omit existingSecret and set accessKey/secretKey so the chart creates
   ## <release>-objectstore (do not commit real credentials).
 
+## Bundled Postgres (default): chart wires DSNs + role setup. No external PG.
 postgres:
   bundled: true
   bundledStorageSize: 20Gi
@@ -76,4 +77,4 @@ api:
   postgres:
     readWriteRole: substrate_readwrite
     ownerRole: substrate_owner
-    schema: public
+    schema: substrate
