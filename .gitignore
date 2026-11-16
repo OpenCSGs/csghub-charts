@@ -12,5 +12,6 @@ charts/csghub/charts/*/
 **/.debug/
 **/.codesouler
 **/.claude
+**/.workbuddy/
 CLAUDE.md
 charts-*.md
