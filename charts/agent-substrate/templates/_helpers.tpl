@@ -92,7 +92,7 @@ Returns a dict: endpoint, region, pathStyle, accessKey, secretKey, bucket.
 {{- end -}}
 {{- $cfg := dict
   "endpoint" ($os.endpoint | default $ext.endpoint | default "")
-  "region" ($os.region | default $ext.region | default "cn-north-1")
+  "region" ($os.region | default $ext.region | default "")
   "accessKey" ($os.accessKey | default $ext.accessKey | default "")
   "secretKey" ($os.secretKey | default $ext.secretKey | default "")
   "bucket" ($os.bucket | default $ext.bucket | default "")

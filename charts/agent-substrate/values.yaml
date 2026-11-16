@@ -84,11 +84,11 @@ objectStore:
   ## Dummy value required by upstream for non-GCS installs that still pass a transfer GSA name.
   transferServiceAccount: unused
   ## External Object Storage (same shape as global.objectStore.external)
-  endpoint: ""                # Object storage endpoint URL
+  endpoint: ""                # Required for S3 (e.g. https://oss-cn-beijing.aliyuncs.com)
   accessKey: ""               # Access key (creates managed Secret when existingSecret is empty)
   secretKey: ""               # Secret key (creates managed Secret when existingSecret is empty)
-  bucket: ""                  # Bucket name; also drives default snapshotLocation
-  region: cn-north-1          # Storage region
+  bucket: ""                  # Required; also drives default snapshotLocation
+  region: ""                  # Required for S3 (e.g. cn-beijing)
   encrypt: false              # Enable server-side encryption (reserved; unused by plugin)
   secure: true                # Prefer HTTPS endpoints
   pathStyle: true             # Use path-style addressing (MinIO / many OSS endpoints)

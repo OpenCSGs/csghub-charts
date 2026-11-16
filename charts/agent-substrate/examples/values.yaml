@@ -1,5 +1,5 @@
-## Example values for a staging ACK cluster.
-## Copy and fill secrets; do not commit real credentials.
+## Example install values. Copy, fill objectStore.bucket/endpoint/region
+## (and existingSecret or accessKey/secretKey); do not commit real credentials.
 
 images:
   repo: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agent-substrate/substrate
@@ -29,15 +29,16 @@ actorDefaults:
 
 objectStore:
   backend: s3
-  bucket: opencsg-stg-agent-substrate
-  # snapshotLocation omitted → gs://opencsg-stg-agent-substrate/
-  endpoint: https://oss-cn-beijing.aliyuncs.com
-  region: cn-beijing
+  ## Fill before install (no chart defaults).
+  bucket: ""
+  endpoint: ""
+  region: ""
+  # snapshotLocation omitted → gs://{{ bucket }}/
   pathStyle: true
   secure: true
   transferServiceAccount: unused
-  ## Prefer reusing the CSGHub/runner OBJECT_STORE_* Secret (same namespace).
-  existingSecret: substrate-objectstore
+  ## Prefer a pre-created Secret in the release namespace (see chart README).
+  existingSecret: ""
   ## Or omit existingSecret and set accessKey/secretKey so the chart creates
   ## <release>-objectstore (do not commit real credentials).
 
