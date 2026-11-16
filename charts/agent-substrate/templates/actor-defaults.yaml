@@ -1,0 +1,34 @@
+{{- if .Values.controlPlane.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-substrate-actor-defaults
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-substrate.labels" . | nindent 4 }}
+    app.kubernetes.io/component: actor-defaults
+data:
+  ## Recommended ContainerWakeupProbe.timeout_seconds for ActorTemplates.
+  ## Substrate API default is 30; cold restore of large snapshots needs more.
+  wakeupProbe.timeoutSeconds: {{ .Values.actorDefaults.wakeupProbe.timeoutSeconds | quote }}
+{{- if .Values.actorDefaults.egress.allowAll }}
+  ## Apply per actor after create (Substrate API, not a Kubernetes CR):
+  ##   kubectl ate create egress-policy -a <atespace> \
+  ##     -f <(kubectl -n {{ .Release.Namespace }} get cm agent-substrate-actor-defaults \
+  ##            -o jsonpath='{.data.egress-allow-all\.yaml}')
+  egress-allow-all.yaml: |
+    metadata:
+      name: default
+    rules:
+    - http:
+        hostnames:
+        - "*"
+        ports:
+          all: {}
+    - https:
+        hostnames:
+        - "*"
+        ports:
+          all: {}
+{{- end }}
+{{- end }}

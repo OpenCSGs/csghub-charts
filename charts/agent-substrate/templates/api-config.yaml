@@ -1,0 +1,33 @@
+{{- if .Values.identity.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ate-api-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-substrate.labels" . | nindent 4 }}
+data:
+  apiconfig.textproto: |
+    logging {
+      level: {{ .Values.api.logLevel | quote }}
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ate-api-authentication
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-substrate.labels" . | nindent 4 }}
+data:
+  authentication.yaml: |
+    jwtProviders:
+    - name: kubernetes
+      issuer: {{ .Values.identity.expectedJWTIssuer | default "https://kubernetes.default.svc" | quote }}
+      audiences:
+      - {{ include "agent-substrate.apiAudience" . | quote }}
+      {{- if or (eq (.Values.identity.expectedJWTIssuer | default "https://kubernetes.default.svc") "https://kubernetes.default.svc") (eq .Values.identity.expectedJWTIssuer "https://kubernetes.default.svc.cluster.local") }}
+      certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      {{- end }}
+{{- end }}

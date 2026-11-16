@@ -1,0 +1,46 @@
+{{- range $i, $pool := .Values.workerPools }}
+{{- $hpa := default dict $pool.hpa }}
+{{- if $hpa.enabled }}
+{{- $ns := default $.Release.Namespace $pool.namespace }}
+{{- $min := int ($hpa.minReplicas | default 2) }}
+{{- $max := int ($hpa.maxReplicas | default 25) }}
+{{- if lt $max $min }}
+{{- fail (printf "workerPools[%s].hpa.maxReplicas (%d) must be >= minReplicas (%d)" $pool.name $max $min) }}
+{{- end }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $pool.name }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "agent-substrate.labels" $ | nindent 4 }}
+    {{- with $pool.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: ate.dev/v1
+    kind: WorkerPool
+    name: {{ $pool.name }}
+  minReplicas: {{ $min }}
+  maxReplicas: {{ $max }}
+  metrics:
+  - type: External
+    external:
+      metric:
+        name: {{ $hpa.metricName | default "ate_workerpool_workers" | quote }}
+        selector:
+          matchLabels:
+            ate_workerpool_namespace: {{ $ns | quote }}
+            ate_workerpool_name: {{ $pool.name | quote }}
+            ate_worker_state: at_capacity
+      target:
+        type: AverageValue
+        averageValue: {{ $hpa.averageValue | default "0.7" | quote }}
+  {{- with $hpa.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

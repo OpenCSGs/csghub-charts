@@ -1,0 +1,9 @@
+## Snippet for ActorTemplate containers[].wakeupProbe.
+## Full templates are created with kubectl-ate, not Helm.
+## timeoutSeconds must cover cold snapshot restore; pair with
+## agentgateway.requestParking.budget / requestTimeout (default 180s).
+wakeupProbe:
+  httpGet:
+    path: /
+    port: 18080
+  timeoutSeconds: 120

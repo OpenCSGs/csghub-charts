@@ -16,6 +16,7 @@ The `csghub` chart is an umbrella chart that bundles CSGHub and its optional com
 | [dataflow](./charts/dataflow) | OpenCSG dataflow — data processing platform built on large model technology. |
 | [agentichub](./charts/agentichub) | Agent module for developing, configuring, running, and collaborating on AI agents. |
 | [agent-sandbox](./charts/agent-sandbox) | Isolated, stateful singleton workloads for AI agent runtimes. |
+| [agent-substrate](./charts/agent-substrate) | Agent Substrate v1.0.0 control plane, node agents, and WorkerPools. |
 | [runner](./charts/runner) | Deploys and manages application instances inside a Kubernetes cluster. |
 | [common](./charts/common) | Library chart with reusable templates and standardized configurations. |
 

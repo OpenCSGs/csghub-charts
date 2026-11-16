@@ -1,0 +1,49 @@
+{{- range $i, $pool := .Values.workerPools }}
+{{- $ns := default $.Release.Namespace $pool.namespace }}
+{{- $hpa := default dict $pool.hpa }}
+{{- $replicas := int ($pool.replicas | default 1) }}
+{{- if $hpa.enabled }}
+{{- /* Prefer live replicas so helm upgrade does not reset HPA; else warm floor. */}}
+{{- $existing := lookup "ate.dev/v1" "WorkerPool" $ns $pool.name }}
+{{- if and $existing $existing.spec $existing.spec.replicas }}
+{{- $replicas = int $existing.spec.replicas }}
+{{- else }}
+{{- $replicas = int ($hpa.minReplicas | default 2) }}
+{{- end }}
+{{- end }}
+---
+apiVersion: ate.dev/v1
+kind: WorkerPool
+metadata:
+  name: {{ required "workerPools[].name is required" $pool.name }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "agent-substrate.labels" $ | nindent 4 }}
+    {{- with $pool.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- if $hpa.enabled }}
+  annotations:
+    agent-substrate.opencsg.com/hpa: "true"
+  {{- end }}
+spec:
+  replicas: {{ $replicas }}
+  workerImage: {{ include "agent-substrate.workerImage" (dict "root" $ "pool" $pool) | quote }}
+  sandboxClasses:
+  - name: {{ $pool.sandboxClass | default "gvisor" }}
+  template:
+    {{- with $pool.nodeSelector }}
+    nodeSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $pool.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $pool.affinity }}
+    affinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    resources:
+      {{- toYaml (required "workerPools[].resources is required" $pool.resources) | nindent 6 }}
+{{- end }}

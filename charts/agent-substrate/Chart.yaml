@@ -1,0 +1,25 @@
+apiVersion: v2
+name: agent-substrate
+description: |
+  Agent Substrate control plane, node agents, and WorkerPools for CSGHub
+  persistent-agent runtimes. Pins Substrate v1.0.0 images from the OpenCSG ACR.
+type: application
+version: 0.1.0
+appVersion: "v1.0.0"
+home: https://opencsg.com
+icon: https://raw.githubusercontent.com/OpenCSGs/csghub-charts/main/icons/icon.png
+sources:
+  - https://github.com/OpenCSGs/csghub-charts
+  - https://github.com/agent-substrate/substrate
+keywords:
+  - agent
+  - substrate
+  - sandbox
+  - gvisor
+maintainers:
+  - name: OpenCSG
+    email: contact@opencsg.com
+dependencies:
+  - name: common
+    version: 0.3.2
+    repository: https://charts.opencsg.com/csghub

@@ -1,0 +1,194 @@
+## Agent Substrate chart values (appVersion v1.0.0).
+## Do not inherit CSGHub global.image.tag — it is not a Substrate release id.
+
+## Create Namespace resources from the chart (release NS + podcertificate-controller-system).
+## Default false: use bootstrap-identity.sh and/or helm --create-namespace so Helm does
+## not fight pre-existing namespaces (missing meta.helm.sh ownership labels).
+namespace:
+  create: false
+
+## Substrate control-plane + node components (ateapi, atelet, …).
+controlPlane:
+  enabled: true
+
+## Published Substrate images (OpenCSG ACR mirror of ghcr.io/agent-substrate/substrate).
+images:
+  repo: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agent-substrate/substrate
+  tag: v1.0.0
+  pullPolicy: IfNotPresent
+  ## Optional pull secret names in the release namespace.
+  pullSecrets: []
+  ## Per-component overrides: { ateapi: { tag: "…" }, … }
+  overrides: {}
+
+## agentgateway dataplane image (router + egress). Mirrored to OpenCSG ACR
+## (upstream: cr.agentgateway.dev/agentgateway:v1.7.0).
+agentgateway:
+  image:
+    repository: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agentgateway
+    tag: v1.7.0
+    digest: sha256:60216aafb03d37f94e952ff3d51d2f630a65b10ecaebdc0a864882f92610c45b
+  ## substrateIngress.requestParking — Agentgateway / Substrate defaults.
+  ## Park budget bounds capacity retries (ResourceExhausted / FailedPrecondition /
+  ## Unavailable / Aborted), not an in-flight ResumeActor: a committed restore is
+  ## never cancelled when the budget elapses (see learn.agentsubstrate.dev
+  ## request-path + docs/request-parking.md). Schema defaults:
+  ##   budget 5s, max 1024, retryInterval 100ms, retryFactor 1.1
+  ## Raise budget only when clients must wait longer for worker-pool headroom.
+  requestParking:
+    budget: 5s
+    max: 1024
+    retryInterval: 100ms
+    retryFactor: 1.1
+  ## policies.http.requestTimeout on substrateIngress — wall clock until response
+  ## headers (includes parking + ResumeActor + wakeupProbe). Does not cap a
+  ## streamed response body (agentgateway.dev resiliency/timeouts). Size as:
+  ##   >= actorDefaults.wakeupProbe.timeoutSeconds + requestParking.budget
+  requestTimeout: 180s
+
+atenet:
+  ## agentgateway | envoy (envoy manifests not vendored in this chart yet)
+  dataplane: agentgateway
+
+## Defaults for ActorTemplate / Actor / EgressPolicy (Substrate API resources,
+## not Kubernetes CRDs). Written to ConfigMap agent-substrate-actor-defaults
+## for Runner / kubectl-ate; Helm cannot create those API objects itself.
+actorDefaults:
+  ## ContainerWakeupProbe.timeout_seconds. Substrate default is 30; raise for
+  ## actors whose first ready response waits on a large snapshot restore.
+  wakeupProbe:
+    timeoutSeconds: 120
+  ## Suggested EgressPolicy for new actors. Gateway denies by default.
+  egress:
+    ## Ship allow-all http+https (all hosts, all ports). Apply per actor:
+    ##   kubectl ate create egress-policy -a <atespace> -f <policy.yaml>
+    ## (or read egress-allow-all.yaml from the actor-defaults ConfigMap).
+    allowAll: true
+
+## Snapshot object storage for objectstore-plugin sidecars.
+## Field names and existingSecret keys match charts/csghub global.objectStore
+## and charts/runner objectStore so the same Secret can be shared.
+##
+## Configure once in values, then helm install:
+##   - Set endpoint/region/bucket + accessKey/secretKey → chart creates Secret
+##     <release>-objectstore with OBJECT_STORE_* keys (and mounts it).
+##   - Or set existingSecret (or global.objectStore.existingSecret) and leave
+##     accessKey/secretKey empty.
+##   - snapshotLocation optional: defaults to gs://{{ bucket }}/ (gs:// required
+##     even for S3).
+objectStore:
+  ## gcs | s3
+  backend: s3
+  ## Cluster-wide snapshot location. Empty → gs://{{ bucket }}/
+  snapshotLocation: ""
+  ## Dummy value required by upstream for non-GCS installs that still pass a transfer GSA name.
+  transferServiceAccount: unused
+  ## External Object Storage (same shape as global.objectStore.external)
+  endpoint: ""                # Object storage endpoint URL
+  accessKey: ""               # Access key (creates managed Secret when existingSecret is empty)
+  secretKey: ""               # Secret key (creates managed Secret when existingSecret is empty)
+  bucket: ""                  # Bucket name; also drives default snapshotLocation
+  region: cn-north-1          # Storage region
+  encrypt: false              # Enable server-side encryption (reserved; unused by plugin)
+  secure: true                # Prefer HTTPS endpoints
+  pathStyle: true             # Use path-style addressing (MinIO / many OSS endpoints)
+  ## Pre-provisioned Secret with OBJECT_STORE_ENDPOINT / OBJECT_STORE_ACCESS_KEY /
+  ## OBJECT_STORE_SECRET_KEY / [OBJECT_STORE_REGION] / [OBJECT_STORE_BUCKET].
+  ## When set, chart does not create a Secret. Falls back to
+  ## global.objectStore.existingSecret under the csghub umbrella.
+  existingSecret: ""
+
+## PostgreSQL for ate-api-server.
+postgres:
+  ## Deploy the bundled Postgres StatefulSet from upstream (dev/stg only).
+  bundled: true
+  bundledStorageSize: 10Gi
+  ## When bundled=false, point at an existing Secret with connection strings.
+  external:
+    existingSecret: ""
+    ## Keys inside existingSecret (defaults match ate-setup).
+    readWriteKey: ATE_API_POSTGRES_READ_WRITE_CONNECTION_STRING
+    ownerKey: ATE_API_POSTGRES_OWNER_CONNECTION_STRING
+    schemaKey: ATE_API_POSTGRES_SCHEMA
+
+## Identity / signing pools. Substrate pool Secrets cannot be synthesized by Helm.
+## Create them once per cluster with scripts/bootstrap-identity.sh (kubectl-ate),
+## then install/upgrade this chart. Chart fails to render usefully without them
+## at runtime; set createConfigMaps to write API config that mounts them.
+identity:
+  ## Write ate-api-config / authentication ConfigMaps.
+  createConfigMaps: true
+  ## JWT issuer for Kubernetes SA tokens. Empty → https://kubernetes.default.svc
+  expectedJWTIssuer: ""
+  ## Audience for SA tokens presented to ate-api-server.
+  apiAudience: ""  # default api.<release-namespace>.svc
+
+## k8s.io egress credential provider
+credentialProvider:
+  enabled: true
+
+## WorkerPools created by this chart (Kubernetes CRDs).
+workerPools:
+  - name: csghub-default
+    ## Empty → release namespace
+    namespace: ""
+    ## Static replica count when hpa.enabled=false. When HPA is on, this is
+    ## ignored after first create; use hpa.minReplicas as the warm floor.
+    ## Sized for prod-parity stg (~4 slots of 0.5CPU/512Mi per worker × 0.8
+    ## headroom ≈ several concurrent running actors per replica).
+    replicas: 5
+    labels:
+      csghub.opencsg.com/pool: csghub-default
+    sandboxClass: gvisor
+    ## Empty → images.repo/ateworker-gvisor:images.tag
+    workerImage: ""
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    ## Optional HPA on this WorkerPool (/scale). Requires Prometheus scraping
+    ## ate-api-server and prometheus-adapter exposing ate_workerpool_workers
+    ## on external.metrics.k8s.io. Disabled by default.
+    hpa:
+      enabled: false
+      minReplicas: 5
+      maxReplicas: 40
+      ## Target full-workers-per-replica (External AverageValue).
+      ## 0.7 ≈ 70% at_capacity / 30% idle headroom.
+      averageValue: "0.7"
+      ## Metric name and label keys match ate-api-server's ate_workerpool_workers.
+      metricName: ate_workerpool_workers
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          selectPolicy: Max
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+            - type: Pods
+              value: 10
+              periodSeconds: 15
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          selectPolicy: Max
+          policies:
+            - type: Pods
+              value: 2
+              periodSeconds: 60
+
+## API server env (non-secret). Snapshot location and transfer SA are required for installs.
+api:
+  logLevel: info
+  actorJWTIssuer: ""
+  postgres:
+    readWriteRole: substrate_readwrite
+    ownerRole: substrate_owner
+    poolMaxConns: ""
+    schema: public

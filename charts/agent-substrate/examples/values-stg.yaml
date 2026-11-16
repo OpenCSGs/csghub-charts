@@ -1,0 +1,78 @@
+## Example values for a staging ACK cluster.
+## Copy and fill secrets; do not commit real credentials.
+
+images:
+  repo: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/agent-substrate/substrate
+  tag: v1.0.0
+  pullPolicy: IfNotPresent
+  # pullSecrets:
+  #   - name: acr-pull
+
+atenet:
+  dataplane: agentgateway
+
+## Parking uses Agentgateway schema defaults; requestTimeout covers
+## wakeupProbe (120s) + park budget until response headers.
+agentgateway:
+  requestParking:
+    budget: 5s
+    max: 1024
+    retryInterval: 100ms
+    retryFactor: 1.1
+  requestTimeout: 180s
+
+actorDefaults:
+  wakeupProbe:
+    timeoutSeconds: 120
+  egress:
+    allowAll: true
+
+objectStore:
+  backend: s3
+  bucket: opencsg-stg-agent-substrate
+  # snapshotLocation omitted → gs://opencsg-stg-agent-substrate/
+  endpoint: https://oss-cn-beijing.aliyuncs.com
+  region: cn-beijing
+  pathStyle: true
+  secure: true
+  transferServiceAccount: unused
+  ## Prefer reusing the CSGHub/runner OBJECT_STORE_* Secret (same namespace).
+  existingSecret: substrate-objectstore
+  ## Or omit existingSecret and set accessKey/secretKey so the chart creates
+  ## <release>-objectstore (do not commit real credentials).
+
+postgres:
+  bundled: true
+  bundledStorageSize: 20Gi
+
+credentialProvider:
+  enabled: true
+
+workerPools:
+  - name: csghub-default
+    namespace: "ate-system"
+    ## Warm floor when HPA is off. With HPA on, set this ≈ hpa.minReplicas.
+    replicas: 5
+    labels:
+      csghub.opencsg.com/pool: csghub-default
+    sandboxClass: gvisor
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+    ## Requires Prometheus + prometheus-adapter for ate_workerpool_workers.
+    hpa:
+      enabled: false
+      minReplicas: 5
+      maxReplicas: 40
+      averageValue: "0.7"
+
+api:
+  logLevel: info
+  postgres:
+    readWriteRole: substrate_readwrite
+    ownerRole: substrate_owner
+    schema: public

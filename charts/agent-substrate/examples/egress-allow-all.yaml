@@ -1,0 +1,22 @@
+## Allow-all EgressPolicy (http + https, all hosts, all ports).
+## Substrate denies egress by default; apply once per Actor:
+##
+##   kubectl ate create egress-policy -a <atespace> -f examples/egress-allow-all.yaml
+##
+## Fill metadata.atespace (and actor uid/version on update) as required by
+## kubectl-ate. Do not combine http all-ports with tls_passthrough:* — use
+## http+https only (validated on the local cluster).
+metadata:
+  name: default
+  # atespace: <actor-atespace>
+rules:
+- http:
+    hostnames:
+    - "*"
+    ports:
+      all: {}
+- https:
+    hostnames:
+    - "*"
+    ports:
+      all: {}
