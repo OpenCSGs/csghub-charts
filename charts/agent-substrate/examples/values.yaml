@@ -46,6 +46,11 @@ objectStore:
 postgres:
   bundled: true
   bundledStorageSize: 20Gi
+  image:
+    repository: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres
+    tag: "18-alpine"
+    digest: sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+    pullPolicy: IfNotPresent
 
 credentialProvider:
   enabled: true
