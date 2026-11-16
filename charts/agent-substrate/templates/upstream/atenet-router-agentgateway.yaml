@@ -1,0 +1,362 @@
+{{- if and .Values.controlPlane.enabled (eq .Values.atenet.dataplane "agentgateway") }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: atenet-router
+  name: atenet-router
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: atenet-router-endpointslices
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: atenet-router-endpointslices
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: atenet-router-endpointslices
+subjects:
+- kind: ServiceAccount
+  name: atenet-router
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  config.yaml: |
+    # yaml-language-server: $schema=https://agentgateway.dev/schema/config
+    frontendPolicies:
+      connect:
+        mode: tunnel
+      accessLog:
+        add:
+          substrate.connect.authority: 'destination.address + ":" + string(destination.port)'
+      substrateEgressActorResolution:
+        host: api.{{ .Release.Namespace }}.svc:443
+        policies:
+          backendTLS:
+            cert: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+            key: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+            root: /run/servicedns-ca/trust-bundle.pem
+
+    gateways:
+      egress:
+        port: 8443
+        bindAddress: $POD_IP
+        protocol: HTTPS
+        tls:
+          cert: /run/servicedns.podcert.ate.dev/credential-bundle.pem
+          key: /run/servicedns.podcert.ate.dev/credential-bundle.pem
+          root: /run/actor-id-ca-certs/ca.crt
+
+    binds:
+
+    # Route tunneled HTTP and policy-authorized TLS passthrough.
+    - mode: internal
+      protocol: AUTO
+      listeners:
+      - protocol: TLS
+        hostname: "*"
+        tcpRoutes:
+        - backends:
+          - dynamic:
+              target: 'destination.address + ":" + string(destination.port)'
+      - protocol: HTTP
+        routes:
+        - name: reject-websocket-upgrade
+          matches:
+          - headers:
+            - name: Connection
+              value:
+                regex: '(?i)(^|,)\s*upgrade\s*(,|$)'
+            - name: Upgrade
+              value:
+                regex: '(?i)(^|,)\s*websocket\s*(,|$)'
+          policies:
+            directResponse:
+              status: 403
+              body: WebSocket egress is not supported
+        - backends:
+          - dynamic:
+              target: 'destination.address + ":" + string(destination.port)'
+          policies:
+            substrateEgress:
+              host: api.{{ .Release.Namespace }}.svc:443
+              policies:
+                backendTLS:
+                  cert: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+                  key: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+                  root: /run/servicedns-ca/trust-bundle.pem
+kind: ConfigMap
+metadata:
+  name: atenet-egress-agentgateway-substrate-config
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+data:
+  config.yaml: |
+    # yaml-language-server: $schema=https://agentgateway.dev/schema/config
+    config:
+      statsAddr: 0.0.0.0:15020
+      backend:
+        # The dynamic-backend guard checks CONNECT authority before tunneling.
+        # substrateIngress resolves ate-target-actor through ate-api-server to
+        # select the worker's mTLS atunnel endpoint. Atunnel selects that actor's
+        # dialer by ate-target-actor and uses only the authority's port, not its
+        # host, so a loopback authority cannot dial the router's own loopback.
+        # Keep this opt-in ingress-only, with all backends tunneled to atunnel.
+        allowDynamicLoopback: true
+
+    frontendPolicies:
+      tracing:
+        host: $AGENTGATEWAY_OTLP_ADDRESS
+        protocol: grpc
+        # Keep in sync with the router's dataPlaneTraceRatio.
+        randomSampling: 0.01
+
+    gateways:
+      http:
+        port: 8080
+        protocol: HTTP
+      https:
+        port: 8443
+        protocol: HTTPS
+        tls:
+          cert: /run/servicedns.podcert.ate.dev/credential-bundle.pem
+          key: /run/servicedns.podcert.ate.dev/credential-bundle.pem
+
+    backends:
+    - name: dynamic
+      dynamic: {}
+      policies:
+        # Actors use HTTP/1.1 unless the request is gRPC.
+        http:
+          version: HTTP/1.1
+        # All actor traffic reaches atunnel over mTLS CONNECT.
+        backendTunnel:
+          proxy:
+            backend: /dynamic
+          mode: connect
+          policies:
+            backendTLS:
+              cert: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+              key: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+              root: /run/podidentity.podcert.ate.dev/trust-bundle.pem
+              insecureHost: true
+
+    routes:
+    - name: substrate-actors
+      gateways:
+      - http
+      - https
+      matches:
+      - path:
+          pathPrefix: /
+      policies: &substrate-ingress
+        substrateIngress:
+          host: api.{{ .Release.Namespace }}.svc:443
+          # AgentGateway only uses atunnel's CONNECT listener.
+          connectTargetPort: 8443
+          requestParking:
+            budget: {{ .Values.agentgateway.requestParking.budget | quote }}
+            max: {{ .Values.agentgateway.requestParking.max }}
+            retryInterval: {{ .Values.agentgateway.requestParking.retryInterval | quote }}
+            retryFactor: {{ .Values.agentgateway.requestParking.retryFactor }}
+          policies:
+            http:
+              requestTimeout: {{ .Values.agentgateway.requestTimeout | quote }}
+            backendTLS:
+              cert: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+              key: /run/podidentity.podcert.ate.dev/credential-bundle.pem
+              root: /run/servicedns-ca/trust-bundle.pem
+      backends:
+      - backend: /dynamic
+    - name: substrate-actors-grpc
+      gateways:
+      - http
+      - https
+      matches: &grpc-matches
+      - method: POST
+        headers:
+        - name: content-type
+          value:
+            regex: '(?i)^application/grpc([+;].*)?$'
+      policies: *substrate-ingress
+      backends: &grpc-backends
+      - backend: /dynamic
+        policies:
+          http:
+            version: HTTP/2.0
+
+    # Terminate client CONNECT before internal HTTP routing.
+    binds:
+    - port: 8081
+      tunnelProtocol: connect
+      listeners:
+      - protocol: HTTP
+        routes: []
+    - port: 8444
+      tunnelProtocol: connect
+      listeners:
+      - protocol: HTTPS
+        tls:
+          cert: /run/servicedns.podcert.ate.dev/credential-bundle.pem
+          key: /run/servicedns.podcert.ate.dev/credential-bundle.pem
+        routes: []
+    - mode: internal
+      listeners:
+      - protocol: HTTP
+        routes:
+        - name: substrate-actors-tunneled
+          matches:
+          - path:
+              pathPrefix: /
+          policies: *substrate-ingress
+          backends:
+          - backend: /dynamic
+        - name: substrate-actors-tunneled-grpc
+          matches: *grpc-matches
+          policies: *substrate-ingress
+          backends: *grpc-backends
+kind: ConfigMap
+metadata:
+  name: atenet-router-agentgateway-config
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atenet-router
+  namespace: {{ .Release.Namespace }}
+spec:
+  ipFamilyPolicy: PreferDualStack
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  - name: connect-tls
+    port: 8444
+    protocol: TCP
+    targetPort: 8444
+  - name: stats
+    port: 15020
+    protocol: TCP
+    targetPort: stats
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: connect
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: atenet-router
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: atenet-router
+  name: atenet-router
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atenet-router
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "15020"
+        prometheus.io/scrape: "true"
+      labels:
+        app: atenet-router
+    spec:
+      containers:
+      - args:
+        - -f
+        - /etc/agentgateway/config.yaml
+        env:
+        - name: AGENTGATEWAY_OTLP_ADDRESS
+          value: opentelemetry-collector.gke-managed-otel.svc.cluster.local:4317
+        image: {{ include "agent-substrate.agentgatewayImage" . }}
+        name: agentgateway
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8443
+          name: https
+        - containerPort: 8081
+          name: connect
+        - containerPort: 8444
+          name: connect-tls
+        - containerPort: 15021
+          name: readiness
+        - containerPort: 15020
+          name: stats
+        volumeMounts:
+        - mountPath: /etc/agentgateway
+          name: envoy-config
+        - mountPath: /run/servicedns.podcert.ate.dev
+          name: servicedns
+        - mountPath: /run/podidentity.podcert.ate.dev
+          name: podidentity
+        - mountPath: /run/servicedns-ca
+          name: servicedns-ca
+      serviceAccountName: atenet-router
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - configMap:
+          name: atenet-router-agentgateway-config
+        name: envoy-config
+      - emptyDir: {}
+        name: drain-signal
+      - name: servicedns
+        projected:
+          sources:
+          - podCertificate:
+              credentialBundlePath: credential-bundle.pem
+              keyType: ECDSAP256
+              signerName: servicedns.podcert.ate.dev/identity
+      - name: podidentity
+        projected:
+          sources:
+          - podCertificate:
+              credentialBundlePath: credential-bundle.pem
+              keyType: ECDSAP256
+              signerName: podidentity.podcert.ate.dev/identity
+          - clusterTrustBundle:
+              labelSelector:
+                matchLabels:
+                  podcert.ate.dev/canarying: live
+              path: trust-bundle.pem
+              signerName: podidentity.podcert.ate.dev/identity
+      - name: servicedns-ca
+        projected:
+          sources:
+          - clusterTrustBundle:
+              labelSelector:
+                matchLabels:
+                  podcert.ate.dev/canarying: live
+              path: trust-bundle.pem
+              signerName: servicedns.podcert.ate.dev/identity
+
+{{- end }}

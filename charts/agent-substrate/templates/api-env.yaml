@@ -1,0 +1,46 @@
+{{- if .Values.controlPlane.enabled }}
+{{- $snapshotLocation := include "agent-substrate.objectStore.snapshotLocation" . -}}
+{{- if not $snapshotLocation }}
+{{- fail "objectStore.snapshotLocation or objectStore.bucket is required (snapshotLocation becomes gs://{{ bucket }}/)" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ate-api-server-envvars
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-substrate.labels" . | nindent 4 }}
+data:
+  ATE_API_SNAPSHOT_LOCATION: {{ $snapshotLocation | quote }}
+  ATE_API_SNAPSHOT_TRANSFER_SERVICE_ACCOUNT: {{ .Values.objectStore.transferServiceAccount | quote }}
+  ATE_API_ACTOR_JWT_ISSUER: {{ .Values.api.actorJWTIssuer | quote }}
+  ATE_API_POSTGRES_READ_WRITE_ROLE: {{ .Values.api.postgres.readWriteRole | quote }}
+  ATE_API_POSTGRES_OWNER_ROLE: {{ .Values.api.postgres.ownerRole | quote }}
+  {{- if .Values.api.postgres.poolMaxConns }}
+  ATE_API_POSTGRES_POOL_MAX_CONNS: {{ .Values.api.postgres.poolMaxConns | quote }}
+  {{- end }}
+---
+{{- if and (not .Values.postgres.bundled) .Values.postgres.external.existingSecret }}
+# External Postgres: reference an existing Secret; do not duplicate keys here.
+{{- else if .Values.postgres.bundled }}
+# Bundled Postgres DSNs are filled by the operator after the StatefulSet is Ready,
+# or by scripts/bootstrap-postgres-env.sh. Placeholder Secret keeps envFrom valid.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ate-api-server-secret-envvars
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-substrate.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+type: Opaque
+stringData:
+  ATE_API_POSTGRES_SCHEMA: {{ .Values.api.postgres.schema | quote }}
+  # Replace after bundled postgres is Ready (see chart README).
+  ATE_API_POSTGRES_READ_WRITE_CONNECTION_STRING: ""
+  ATE_API_POSTGRES_OWNER_CONNECTION_STRING: ""
+{{- else }}
+{{- fail "Set postgres.bundled=true or postgres.external.existingSecret" }}
+{{- end }}
+{{- end }}
