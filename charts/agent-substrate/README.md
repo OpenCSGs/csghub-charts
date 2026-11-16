@@ -85,6 +85,18 @@ If CSGHub already has an `OBJECT_STORE_*` Secret in another namespace, copy it
 into `ate-system` (Helm cannot mount cross-namespace) and set `existingSecret`
 to that name.
 
+### PostgreSQL (bundled by default)
+
+Leave `postgres.bundled: true`. The chart:
+
+1. Deploys the Postgres StatefulSet
+2. Runs Substrate role/schema setup on the postgres `postStart` hook
+3. Writes cert-auth DSNs into `ate-api-server-secret-envvars`
+
+Keep `api.postgres.schema: substrate` and the default `substrate_*` roles.
+For an external database set `postgres.bundled: false` and
+`postgres.external.existingSecret` instead.
+
 ## Values (high level)
 
 | Key | Purpose |
@@ -96,8 +108,7 @@ to that name.
 | `agentgateway.requestTimeout` | Until response headers; size ≥ wakeupProbe + park budget (default `180s`) |
 | `actorDefaults.wakeupProbe.timeoutSeconds` | Suggested ActorTemplate probe timeout (default `120`) |
 | `actorDefaults.egress.allowAll` | Ships allow-all egress policy YAML in ConfigMap (default `true`) |
-| `postgres.bundled` | Upstream Postgres StatefulSet (stg/dev) |
-| `workerPools[]` | `WorkerPool` CRs (name, replicas, labels, resources) |
+| `postgres.bundled` | Bundled Postgres StatefulSet (default `true`); auto DSNs + role setup || `workerPools[]` | `WorkerPool` CRs (name, replicas, labels, resources) |
 | `workerPools[].hpa` | Optional HPA on the pool (`enabled: false` by default) |
 | `atenet.dataplane` | `agentgateway` (default) |
 
