@@ -105,14 +105,13 @@ postgres:
   ## api.postgres.schema/roles at Substrate defaults (substrate / substrate_*).
   bundled: true
   bundledStorageSize: 10Gi
-  ## Image for the bundled StatefulSet (main + tls-reloader). Prefer OpenCSG ACR;
-  ## pin is Substrate's upstream postgres:18-alpine digest (not CSGHub's 15.x).
-  ## Mirror once: skopeo copy docker://postgres@sha256:9a8afca… \
-  ##   docker://opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres:18-alpine
+  ## Image for the bundled StatefulSet (main + tls-reloader). Prefer OpenCSG ACR
+  ## (not CSGHub's 15.x). Mirrored from upstream postgres:18-alpine; pin the ACR
+  ## linux/amd64 manifest digest (differs from the Docker Hub multi-arch index).
   image:
     repository: opencsg-registry.cn-beijing.cr.aliyuncs.com/opencsghq/postgres
     tag: "18-alpine"
-    digest: sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+    digest: sha256:b6a16ed0eb96e2c362811f7eeb951eac8b459e7b40be4149ea5444aa7c65569b
     pullPolicy: IfNotPresent
   ## When bundled=false, point at an existing Secret with connection strings.
   external:
