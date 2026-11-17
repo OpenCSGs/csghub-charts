@@ -1,0 +1,375 @@
+# Test suite for external Casdoor support (global.casdoor.enabled=false).
+#
+# Covers the rendered surface that changes when the bundled Casdoor is skipped:
+# server configmap values, JWT certificate mounts, the FDW sync script, the
+# HTTP redirect hostnames, Temporal SSO credentials, and fail-fast validation.
+
+suite: Test external Casdoor
+templates:
+  - csghub/configmap.yaml
+  - csghub/server/deployment.yaml
+  - csghub/user/deployment.yaml
+  - csghub/executor/deployment.yaml
+  - csghub/server/configmap.yaml
+  - csghub/httproutes-redirect.yaml
+  - temporal/configmap.yaml
+  - casdoor/deployment.yaml
+  - casdoor/service.yaml
+  - casdoor/job.yaml
+  - casdoor/secret.yaml
+  - casdoor/configmap.yaml
+  - casdoor/httproutes.yaml
+  - validation.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: points the server at the external instance
+    template: csghub/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_ENDPOINT
+          value: "https://sso.example.com"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_CLIENT_ID
+          value: "csghub-client"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_CLIENT_SECRET
+          value: "csghub-secret"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_ORGANIZATION_NAME
+          value: "OpenCSG"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_APPLICATION_NAME
+          value: "CSGHub"
+      - matchRegex:
+          path: data.CSGHUB_PORTAL_LOGIN_URL
+          pattern: '^https://sso\.example\.com/login/oauth/authorize\?client_id=csghub-client'
+
+  - it: uses custom organization and application names
+    template: csghub/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          organization: "Acme"
+          application: "Portal"
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_ORGANIZATION_NAME
+          value: "Acme"
+      - equal:
+          path: data.STARHUB_SERVER_CASDOOR_APPLICATION_NAME
+          value: "Portal"
+
+  - it: fails when the CSGHub client credentials are missing
+    template: csghub/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+    asserts:
+      - failedTemplate:
+          errorMessage: "global.casdoor.external.applications.portal.clientId must be set when global.casdoor.enabled=false"
+
+  - it: mounts the external JWT certificate secret in the server deployment
+    template: csghub/server/deployment.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: "casdoor-init-certs"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: "csghub-casdoor-cert"
+      - equal:
+          path: spec.template.spec.volumes[0].secret.items
+          value:
+            - key: tls.crt
+              path: tls.crt
+
+  - it: mounts the external JWT certificate secret in the user deployment
+    template: csghub/user/deployment.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: "csghub-casdoor-cert"
+
+  - it: mounts the external JWT certificate secret in the executor deployment
+    template: csghub/executor/deployment.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: "csghub-casdoor-cert"
+
+  - it: skips the FDW role-mask sync script
+    template: csghub/server/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - notExists:
+          path: data["1789619535_sync_role_mask_admin.sql"]
+      - exists:
+          path: data["1793252833_grant_root_super_admin.sql"]
+
+  - it: drops the casdoor hostname from the HTTP to HTTPS redirect
+    template: csghub/httproutes-redirect.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - notContains:
+          path: spec.hostnames
+          content: "casdoor.example.com"
+      - contains:
+          path: spec.hostnames
+          content: "csghub.example.com"
+
+  - it: uses the configured Admin application credentials for Temporal SSO
+    template: temporal/configmap.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+              admin:
+                clientId: "admin-client"
+                clientSecret: "admin-secret"
+    asserts:
+      - equal:
+          path: data.TEMPORAL_AUTH_CLIENT_ID
+          value: "admin-client"
+      - equal:
+          path: data.TEMPORAL_AUTH_CLIENT_SECRET
+          value: "admin-secret"
+      - equal:
+          path: data.TEMPORAL_AUTH_PROVIDER_URL
+          value: "https://sso.example.com"
+
+  - it: fails when Temporal SSO is enabled without Admin application credentials
+    template: temporal/configmap.yaml
+    set:
+      temporal:
+        console:
+          enabled: true
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - failedTemplate:
+          errorMessage: "global.casdoor.external.applications.admin.clientId must be set when global.casdoor.enabled=false"
+
+  - it: does not render the bundled Casdoor Deployment
+    template: casdoor/deployment.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor Service
+    template: casdoor/service.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor bootstrap Job
+    template: casdoor/job.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor init Secret
+    template: casdoor/secret.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor ConfigMap
+    template: casdoor/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor HTTPRoute
+    template: casdoor/httproutes.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: rejects an external Casdoor combined with the CSGShip subchart
+    template: validation.yaml
+    set:
+      csgship:
+        enabled: true
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            existingSecret: "csghub-casdoor-cert"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - failedTemplate:
+          errorMessage: >-
+            global.casdoor.enabled=false cannot be combined with csgship.enabled=true:
+            the CSGShip subchart is pinned to a csgship release without external Casdoor support.
+            Keep csgship disabled or use the bundled Casdoor.

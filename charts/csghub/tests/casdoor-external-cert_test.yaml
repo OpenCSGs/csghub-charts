@@ -1,0 +1,30 @@
+# Test suite for the missing external Casdoor certificate Secret.
+#
+# The failure is asserted on a single template: the user and executor
+# deployments mount the same volume and would fail with the same message and
+# hide the document under test.
+
+suite: Test external Casdoor missing certificate
+templates:
+  - csghub/server/deployment.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: fails when the external certificate secret is missing
+    template: csghub/server/deployment.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              portal:
+                clientId: "csghub-client"
+                clientSecret: "csghub-secret"
+    asserts:
+      - failedTemplate:
+          errorMessage: "global.casdoor.external.existingSecret is required when global.casdoor.enabled=false"
