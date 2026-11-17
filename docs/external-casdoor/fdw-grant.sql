@@ -2,7 +2,8 @@
 -- Grants for the optional CSGHub administrator -> Casdoor is_admin sync.
 --
 -- Run this on the EXTERNAL Casdoor database (not the CSGHub database) when you
--- want to enable step 11 of docs/external-casdoor.md. The CSGHub server connects
+-- want to enable the optional administrator sync in the external Casdoor guide.
+-- The CSGHub server connects
 -- over postgres_fdw as csghub_server_fdw and updates public."user".is_admin when
 -- public.users.role_mask changes.
 --
