@@ -128,16 +128,7 @@ spec:
             - configMapRef:
                 name: {{ include "common.names.custom" (list . "core") }}
       volumes:
-        {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
-        - name: casdoor-init-certs
-          secret:
-            {{- $casdoorCert := printf "%s-init" $casdoorSvc.name }}
-            secretName: {{ include "common.names.custom" (list . $casdoorCert) }}
-            items:
-              - key: tls.crt
-                path: tls.crt
-              - key: tls.key
-                path: tls.key
+        {{- include "csghub.casdoor.certVolume" . | nindent 8 }}
       {{- if $service.volumes }}
         {{- toYaml $service.volumes | nindent 8 }}
       {{- end }}

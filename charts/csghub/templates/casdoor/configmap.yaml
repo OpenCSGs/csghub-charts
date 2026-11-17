@@ -3,6 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
 {{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
@@ -52,3 +53,4 @@ data:
   {{ base $path }}: |
   {{- $.Files.Get $path | nindent 4 }}
   {{- end }}
+{{- end }}

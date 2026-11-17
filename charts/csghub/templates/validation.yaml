@@ -1,0 +1,21 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- /*
+Reject combinations that cannot work at runtime.
+
+CSGShip resolves the Casdoor endpoint and client credentials from
+global.casdoor. The CSGShip subchart of this umbrella is pinned to a published
+csgship release that predates that setting, so an external Casdoor leaves
+CSGShip with a client id that does not exist in the external instance and its
+login fails with invalid_client. Remove this guard once charts/csghub/Chart.yaml
+pins a csgship release that supports global.casdoor.
+*/}}
+{{- $casdoorEnabled := dig "casdoor" "enabled" true (.Values.global | default dict) }}
+{{- if and (not $casdoorEnabled) .Values.csgship.enabled }}
+{{- $reason := "the CSGShip subchart is pinned to a csgship release without external Casdoor support." }}
+{{- $hint := "Keep csgship disabled or use the bundled Casdoor." }}
+{{- fail (printf "global.casdoor.enabled=false cannot be combined with csgship.enabled=true: %s %s" $reason $hint) }}
+{{- end }}

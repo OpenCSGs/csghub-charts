@@ -41,11 +41,13 @@ spec:
         certificateRefs:
           - kind: Secret
             name: {{ $gateway.tls.secretName }}
+          {{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
           {{- $casdoorSvc := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
           {{- $casdoorGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $casdoorSvc) | fromYaml }}
           {{- if ne $casdoorGatewayConfig.tls.secretName $gateway.tls.secretName }}
           - kind: Secret
             name: {{ $casdoorGatewayConfig.tls.secretName }}
+          {{- end }}
           {{- end }}
           {{- $minioSvc := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}
           {{- $minioGatewayConfig := include "common.gateway.config" (dict "ctx" . "service" $minioSvc) | fromYaml }}
