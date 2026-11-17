@@ -1,0 +1,14 @@
+# Baseline values for the pre-commit render check.
+#
+# agent-substrate requires an object store; without one the templates fail at
+# render time. The helm-template hook renders each chart with this file when it
+# exists, so these placeholders keep the check meaningful without committing
+# real credentials.
+
+objectStore:
+  backend: s3
+  endpoint: "https://s3.example.com"
+  accessKey: "test-access-key"
+  secretKey: "test-secret-key"
+  bucket: "test-bucket"
+  region: "us-east-1"
