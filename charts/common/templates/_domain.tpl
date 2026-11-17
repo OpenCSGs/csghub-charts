@@ -74,8 +74,22 @@ and composes it onto the base domain.
 
 Usage: {{ include "common.domain.<svc>" . }}
 */}}
+{{/*
+Casdoor domain, honoring the external Casdoor endpoint.
+
+When global.casdoor.external.endpoint is set, the domain is taken from that URL
+so callers that need a hostname (routes, redirects) stay consistent with the
+external instance.
+
+Usage: {{ include "common.domain.casdoor" . }}
+*/}}
 {{- define "common.domain.casdoor" -}}
+{{- $external := dig "casdoor" "external" (dict) (.Values.global | default dict) }}
+{{- if $external.endpoint }}
+{{- (urlParse $external.endpoint).host | splitList ":" | first -}}
+{{- else }}
 {{- include "common.domain.service" (dict "ctx" . "service" "casdoor") -}}
+{{- end }}
 {{- end }}
 
 {{- define "common.domain.loki" -}}

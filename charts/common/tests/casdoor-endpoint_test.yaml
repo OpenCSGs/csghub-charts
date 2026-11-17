@@ -1,0 +1,53 @@
+# Test suite for the common.endpoint.casdoor / common.domain.casdoor templates.
+#
+# Renders templates/fixtures/casdoor-endpoint.yaml. Baseline values come from
+# tests/values.yaml (global.gateway.external.domain = "csghub.example.com").
+# These tests pin the bundled derivation and the external endpoint override.
+
+suite: Test common.endpoint.casdoor
+templates:
+  - templates/fixtures/casdoor-endpoint.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: derives the bundled endpoint and domain when no override is set
+    asserts:
+      - equal:
+          path: casdoor_endpoint
+          value: "http://casdoor.example.com"
+      - equal:
+          path: casdoor_domain
+          value: "casdoor.example.com"
+
+  - it: uses the external endpoint verbatim when global.casdoor.external.endpoint is set
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com/casdoor"
+    asserts:
+      - equal:
+          path: casdoor_endpoint
+          value: "https://sso.example.com/casdoor"
+      - equal:
+          path: casdoor_domain
+          value: "sso.example.com"
+
+  - it: strips the port from the external endpoint when deriving the domain
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com:8443"
+    asserts:
+      - equal:
+          path: casdoor_endpoint
+          value: "https://sso.example.com:8443"
+      - equal:
+          path: casdoor_domain
+          value: "sso.example.com"
