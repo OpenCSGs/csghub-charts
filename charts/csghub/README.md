@@ -87,9 +87,10 @@ and Superset consoles, and `csgship` the CSGShip one.
 
 The chart then creates no Casdoor objects. You must pre-create the organization,
 applications, JWT signing certificate and first administrator in your Casdoor
-instance. The full step-by-step procedure, the FDW grants for administrator sync,
-and a read-only verification script are in
-[docs/external-casdoor.md](../../docs/external-casdoor.md).
+instance. The full step-by-step procedure is in the
+[external Casdoor guide](https://opencsg.com/docs/en/csghub/101/install/management/external-casdoor);
+the FDW grants and read-only verification script are in
+[`scripts/external-casdoor`](../../scripts/external-casdoor).
 
 ## Support
 

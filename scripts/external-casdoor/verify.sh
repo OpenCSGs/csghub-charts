@@ -4,7 +4,7 @@
 # Mirrors the verification steps in the external Casdoor guide.
 #
 # Usage:
-#   docs/external-casdoor/verify.sh
+#   scripts/external-casdoor/verify.sh
 #
 # Environment (override as needed):
 #   CASDOOR_ENDPOINT   external Casdoor URL           (required)
