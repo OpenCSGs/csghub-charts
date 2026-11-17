@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.opencsg.com/csghub
-  version: 0.3.3
+  version: 0.3.4
 - name: reloader
   repository: https://charts.opencsg.com/infra
   version: 2.2.14
@@ -35,5 +35,5 @@ dependencies:
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:46f18447d584f0627b76bf1bc2e89be0f4a65f395d6afe08393ce3872044e0c0
-generated: "2026-11-15T21:40:24.488211+08:00"
+digest: sha256:38773072edb94d1f0e92190a17aab48382345b2dab5a3237ddf16ef33dbf1bd5
+generated: "2026-11-16T10:53:39.997070+00:00"

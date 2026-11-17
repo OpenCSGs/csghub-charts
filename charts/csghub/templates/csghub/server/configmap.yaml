@@ -18,9 +18,13 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
 {{- $currentScope := . }}
+{{- $casdoorEnabled := dig "casdoor" "enabled" true (.Values.global | default dict) }}
 {{- range $path, $_ := .Files.Glob "scripts/server/*.sql" }}
+{{- $skipFdw := and (not $casdoorEnabled) (eq (base $path) "1789619535_sync_role_mask_admin.sql") }}
+{{- if not $skipFdw }}
 {{- with $currentScope }}
 {{- base $path | nindent 2 }}: |
 {{- .Files.Get $path | replace "__CASDOOR_DB__" $casdoorDb | replace "__SERVER_USER__" $serverUser | nindent 4 }}
+{{- end }}
 {{- end }}
 {{- end }}

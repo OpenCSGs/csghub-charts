@@ -20,18 +20,26 @@ APP VERSION: {{ .Chart.AppVersion }}
 Access your CSGHub or Casdoor or Temporal instance:
 
   🌐 CSGHub: {{ include "common.endpoint.csghub" . }}
+  {{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
   🔐 Casdoor Admin Console: {{ include "common.endpoint.casdoor" . }}
+  {{- else }}
+  🔐 Casdoor (external): {{ include "common.endpoint.casdoor" . }}
+  {{- end }}
   {{- if .Values.temporal.console.enabled }}
   🕓 Temporal Admin Console: {{ printf "%s/-/temporal" (include "common.endpoint.csghub" .) }}
   {{- end }}
+  {{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
   🔑 Credentials: {{ $defaultUser }} / {{ $adminPass | default $defaultPass }}
+  {{- end }}
 
+{{ if dig "casdoor" "enabled" true (.Values.global | default dict) -}}
 Retrieve the root/admin password with:
   kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
     -o jsonpath='{.data.INIT_ADMIN_USER}' | base64 -d && \
   echo -n " / " && \
   kubectl get secret -n {{ .Release.Namespace }} {{ $serviceName }} \
     -o jsonpath='{.data.INIT_ADMIN_PASSWORD}' | base64 -d
+{{ end }}
 
 {{- if .Values.global.objectStore.enabled }}
 {{- $minioSvc := include "common.service" (dict "ctx" . "service" "minio") | fromYaml }}

@@ -117,6 +117,35 @@ global:
       # user: ""                   # Omit user/password for unauthenticated NATS
       # password: ""
 
+  ## Casdoor configuration
+  casdoor:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## Organization and application CSGHub authenticates against. With the
+    ## bundled instance these must keep their defaults, which the bootstrap
+    ## creates; with an external instance set them to the objects you created.
+    organization: "OpenCSG"
+    application: "CSGHub"
+    ## External Casdoor configuration. Only honored when enabled=false.
+    ## The instance is shared with CSGShip, so these settings live in the
+    ## global scope.
+    ##
+    ## The keys under applications are roles, not Casdoor application names:
+    ## the applications of an external instance can be named anything.
+    external: {}
+      # endpoint: "https://sso.example.com"    # Base URL of the external instance
+      # existingSecret: "csghub-casdoor-cert"  # Secret holding the JWT signing cert under key tls.crt
+      # applications:
+      #   portal:                              # Credentials of the application the portal logs into
+      #     clientId: ""
+      #     clientSecret: ""
+      #   admin:                               # Credentials of the application used by Temporal/Superset SSO
+      #     clientId: ""
+      #     clientSecret: ""
+      #   csgship:                             # Credentials of the CSGShip application
+      #     clientId: ""
+      #     clientSecret: ""
+
   ## Object storage configuration
   objectStore:
     ## Use built-in (true) or external (false)
@@ -848,9 +877,14 @@ nats:
     # accessModes: ["ReadWriteOnce"]         # Volume access permissions
     # size: "10Gi"                             # Disk space allocation
 
-## Embedded Casdoor configuration
+## Bundled Casdoor configuration
+##
+## The switch, the organization/application names and the external Casdoor
+## settings live in global.casdoor, because the instance is shared with CSGShip.
+## The values below only configure the bundled instance and are ignored when
+## global.casdoor.enabled=false.
 casdoor:
-  admin: {}                                  # Initial admin user
+  admin: {}                                  # Initial admin user (bundled Casdoor only)
     # name: "root"                           # Admin username
     # password: ""                           # Admin password
   forceLanguage: "en"                        # Casdoor UI language, e.g. en or zh

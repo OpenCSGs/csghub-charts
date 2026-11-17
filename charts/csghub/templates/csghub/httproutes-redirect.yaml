@@ -24,7 +24,9 @@ spec:
       sectionName: http
   hostnames:
     - {{ include "common.domain.csghub" . | quote }}
+    {{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
     - {{ include "common.domain.casdoor" . | quote }}
+    {{- end }}
     - {{ include "common.domain.minio" . | quote }}
     - {{ printf "*.%s" (include "common.domain.public" .) | quote }}
   rules:

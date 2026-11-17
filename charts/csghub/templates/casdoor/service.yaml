@@ -3,6 +3,7 @@ Copyright OpenCSG, Inc. All Rights Reserved.
 SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
+{{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
 {{- $service := include "common.service" (dict "ctx" . "service" "casdoor") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
@@ -23,3 +24,4 @@ spec:
   selector:
     app.kubernetes.io/service: {{ $service.name }}
     {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}
