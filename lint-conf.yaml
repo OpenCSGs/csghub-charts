@@ -76,3 +76,6 @@ ignore:
 
   # Agent-sandbox related ignores
   - charts/agent-sandbox
+
+  # Agent-substrate related ignores
+  - charts/agent-substrate
