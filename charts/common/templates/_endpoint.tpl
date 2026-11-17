@@ -147,8 +147,21 @@ the matching domain helper.
 
 Usage: {{ include "common.endpoint.<svc>" . }}
 */}}
+{{/*
+Casdoor endpoint with an optional external override.
+
+1. If global.casdoor.external.endpoint is set → use it directly (external Casdoor)
+2. Otherwise → derive it from the bundled Casdoor gateway
+
+Usage: {{ include "common.endpoint.casdoor" . }}
+*/}}
 {{- define "common.endpoint.casdoor" }}
+{{- $external := dig "casdoor" "external" (dict) (.Values.global | default dict) }}
+{{- if $external.endpoint }}
+{{- $external.endpoint -}}
+{{- else }}
 {{- include "common.endpoint.service" (dict "ctx" . "service" "casdoor") -}}
+{{- end }}
 {{- end }}
 
 {{- define "common.endpoint.loki" }}

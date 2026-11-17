@@ -1,0 +1,3 @@
+{{- /* Render the casdoor endpoint/domain across bundled and external modes. */}}
+casdoor_endpoint: {{ include "common.endpoint.casdoor" . | quote }}
+casdoor_domain: {{ include "common.domain.casdoor" . | quote }}
