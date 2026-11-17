@@ -46,6 +46,33 @@
             }
           }
         },
+        "casdoor": {
+          "type": "object",
+          "description": "Casdoor configuration (bundled or external)",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true, "description": "Deploy the bundled Casdoor or connect to an external instance" },
+            "external": {
+              "type": "object",
+              "description": "External Casdoor configuration, only used when enabled=false",
+              "properties": {
+                "endpoint": { "type": "string", "description": "External Casdoor base URL" },
+                "applications": {
+                  "type": "object",
+                  "description": "Client credentials per role, not per Casdoor application name",
+                  "properties": {
+                    "csgship": {
+                      "type": "object",
+                      "properties": {
+                        "clientId": { "type": "string", "description": "CSGShip application client ID" },
+                        "clientSecret": { "type": "string", "description": "CSGShip application client secret" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "image": {
           "type": "object",
           "description": "Image management",

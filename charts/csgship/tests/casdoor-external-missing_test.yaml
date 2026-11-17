@@ -1,0 +1,26 @@
+# Test suite for the missing external Casdoor credentials in the CSGShip chart.
+#
+# The failure is asserted on a single template: every other template that
+# resolves the CSGShip client credentials would fail with the same message and
+# hide the document under test.
+
+suite: Test external Casdoor missing credentials
+templates:
+  - configmap.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: fails when the CSGShip client credentials are missing
+    template: configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+    asserts:
+      - failedTemplate:
+          errorMessage: "global.casdoor.external.applications.csgship.clientId must be set when global.casdoor.enabled=false"
