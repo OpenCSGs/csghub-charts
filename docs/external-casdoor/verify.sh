@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Read-only checks for an external-Casdoor CSGHub release.
-# Mirrors step 12 of docs/external-casdoor.md.
+# Mirrors the verification steps in the external Casdoor guide.
 #
 # Usage:
 #   docs/external-casdoor/verify.sh

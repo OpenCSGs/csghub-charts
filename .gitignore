@@ -13,5 +13,6 @@ charts/csghub/charts/*/
 **/.codesouler
 **/.claude
 **/.workbuddy/
+**/.multica/
 CLAUDE.md
 charts-*.md
