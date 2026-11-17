@@ -22,10 +22,15 @@ data:
 
   ## Web Configuration for Casdoor
   {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $serviceName).data | default dict }}
-  {{- $defaultClientID := include "common.secret.password" (list . "casdoor.CSGShip.clientId" 20) }}
-  {{- $defaultClientSecret := include "common.secret.password" (list . "casdoor.CSGShip.clientSecret" 40) }}
-  {{- $casdoorClientID := dig "CASDOOR_CLIENT_ID" $defaultClientID $data }}
-  {{- $casdoorClientSecret := dig "CASDOOR_SECRET_KEY" $defaultClientSecret $data }}
+  {{- $credential := dict "ctx" . "role" "csgship" "app" "CSGShip" }}
+  {{- $defaultClientID := include "common.casdoor.credential" (merge (dict) $credential (dict "field" "clientId" "length" 20)) }}
+  {{- $defaultClientSecret := include "common.casdoor.credential" (merge (dict) $credential (dict "field" "clientSecret" "length" 40)) }}
+  {{- $casdoorClientID := $defaultClientID }}
+  {{- $casdoorClientSecret := $defaultClientSecret }}
+  {{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
+  {{- $casdoorClientID = dig "CASDOOR_CLIENT_ID" $defaultClientID $data }}
+  {{- $casdoorClientSecret = dig "CASDOOR_SECRET_KEY" $defaultClientSecret $data }}
+  {{- end }}
   CASDOOR_ENDPOINT: {{ include "common.endpoint.casdoor" . | quote }}
   CASDOOR_REDIRECT_URI_PATH: "/api/v1/account/casdoor/login/callback/"
   CASDOOR_CLIENT_ID: {{ $casdoorClientID | quote }}

@@ -1,0 +1,158 @@
+# Test suite for external Casdoor support in the CSGShip chart.
+#
+# The Casdoor instance is shared with CSGHub, so the switch and the external
+# settings live in global.casdoor. In external mode the chart skips its own
+# Casdoor and uses the endpoint and the CSGShip application credentials from
+# global.casdoor.external.
+
+suite: Test external Casdoor
+templates:
+  - configmap.yaml
+  - frontend/configmap.yaml
+  - casdoor/configmap.yaml
+  - casdoor/deployment.yaml
+  - casdoor/httproutes.yaml
+  - casdoor/job.yaml
+  - casdoor/secret.yaml
+  - casdoor/service.yaml
+release:
+  name: csghub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: points the web service at the external instance
+    template: configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - equal:
+          path: data.CASDOOR_ENDPOINT
+          value: "https://sso.example.com"
+      - equal:
+          path: data.CASDOOR_CLIENT_ID
+          value: "ship-client"
+      - equal:
+          path: data.CASDOOR_SECRET_KEY
+          value: "ship-secret"
+
+  - it: points the frontend login at the external instance
+    template: frontend/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - matchRegex:
+          path: data["config.js"]
+          pattern: 'login/oauth/authorize\?client_id=ship-client'
+
+  - it: does not render the bundled Casdoor Deployment
+    template: casdoor/deployment.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor Service
+    template: casdoor/service.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor ConfigMap
+    template: casdoor/configmap.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor bootstrap Job
+    template: casdoor/job.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor init Secret
+    template: casdoor/secret.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render the bundled Casdoor HTTPRoute
+    template: casdoor/httproutes.yaml
+    set:
+      global:
+        casdoor:
+          enabled: false
+          external:
+            endpoint: "https://sso.example.com"
+            applications:
+              csgship:
+                clientId: "ship-client"
+                clientSecret: "ship-secret"
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -44,6 +44,21 @@ global:
       enabled: false                # Enable TLS termination on the Gateway
       # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
 
+  ## Casdoor configuration
+  casdoor:
+    ## Use built-in (true) or external (false)
+    enabled: true
+    ## External Casdoor configuration. Only honored when enabled=false.
+    ##
+    ## The keys under applications are roles, not Casdoor application names:
+    ## the applications of an external instance can be named anything.
+    external: {}
+      # endpoint: "https://sso.example.com"    # Base URL of the external instance
+      # applications:
+      #   csgship:                             # Credentials of the CSGShip application
+      #     clientId: ""
+      #     clientSecret: ""
+
   ## Image management
   image:
     registry: "docker.io"           # Image global registry, registry.opencsg.com for mainland

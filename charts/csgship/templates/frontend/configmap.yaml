@@ -17,8 +17,11 @@ metadata:
     {{- include "common.labels" . | nindent 4 }}
 data:
   {{- $data := (lookup "v1" "ConfigMap" .Release.Namespace $webSvcName).data | default dict }}
-  {{- $defaultClientID := include "common.secret.password" (list . "casdoor.CSGShip.clientId" 20) }}
-  {{- $casdoorClientID := dig "CASDOOR_CLIENT_ID" $defaultClientID $data }}
+  {{- $defaultClientID := include "common.casdoor.credential" (dict "ctx" . "role" "csgship" "app" "CSGShip" "field" "clientId" "length" 20) }}
+  {{- $casdoorClientID := $defaultClientID }}
+  {{- if dig "casdoor" "enabled" true (.Values.global | default dict) }}
+  {{- $casdoorClientID = dig "CASDOOR_CLIENT_ID" $defaultClientID $data }}
+  {{- end }}
   {{- $authorize := printf "%s/login/oauth/authorize" (include "common.endpoint.casdoor" .) }}
   {{- $client := printf "client_id=%s" $casdoorClientID }}
   {{- $redirectUri := printf "redirect_uri=%s/api/v1/account/casdoor/login/callback" (include "common.endpoint.webAPI" .) }}
