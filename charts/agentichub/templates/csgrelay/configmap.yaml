@@ -1,0 +1,41 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "csgrelay") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if and .Values.csgrelay.enabled (ne .Values.global.edition "ce") }}
+{{- $nats := include "csgrelay.natsConfig" . | fromYaml }}
+{{- $s3 := include "csgrelay.s3Config" . | fromYaml }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  config.toml: |
+    [server]
+    listen = '0.0.0.0:{{ dig "service" "port" 28080 $service }}'
+    tokens_file = '/etc/csgrelay/credentials/tokens.toml'
+
+    [nats]
+    mode = 'external'
+    url = {{ $nats.serverUrl | squote }}
+    namespace = {{ dig "namespace" "" .Values.csgrelay.config.nats | squote }}
+    replicas = {{ dig "replicas" 1 .Values.csgrelay.config.nats }}
+    record_ttl = {{ dig "recordTTL" "15m" .Values.csgrelay.config.nats | squote }}
+    advertisement_ttl = {{ dig "advertisementTTL" "10m" .Values.csgrelay.config.nats | squote }}
+
+    [oss]
+    endpoint = {{ $s3.endpoint | squote }}
+    bucket = {{ $s3.bucket | squote }}
+    region = {{ $s3.region | squote }}
+    enable_ssl = {{ $s3.secure }}
+    bucket_lookup = {{ $s3.bucketLookup | squote }}
+    prefix = {{ $s3.prefix | squote }}
+    credentials = {{ $s3.credentials | squote }}
+{{- end }}

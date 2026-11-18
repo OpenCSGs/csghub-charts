@@ -337,6 +337,157 @@ csgbot:
       # gitlabEpicId: "234"         # GitLab Epic ID
       # gitlabDefaultAssigneeId: 207 # Default GitLab assignee ID
 
+# CSGRelay configuration
+csgrelay:
+  enabled: true
+  replicas: 2
+
+  image:
+    # registry: "docker.io"
+    repository: "opencsghq/csgrelay"
+    tag: "4228a8ca"
+    pullPolicy: "IfNotPresent"
+    pullSecrets: []
+
+  ## Service Configuration
+  service:
+    type: "ClusterIP"
+    port: 28080
+    protocol: "TCP"
+
+  log:
+    format: "json"
+    color: "never"
+
+  ## CSGRelay runtime configuration
+  config:
+    nats:
+      # url: "nats://nats.example.com:4222"  # Falls back to CSGHub NATS when bundled
+      namespace: ""
+      replicas: 1
+      recordTTL: "15m"
+      advertisementTTL: "10m"
+
+    oss:
+      ## When global.objectStore is available, its endpoint, bucket, region,
+      ## credentials and TLS/path-style settings are reused automatically:
+      ## - global.objectStore.enabled=true: bundled MinIO
+      ## - global.objectStore.enabled=false: external S3-compatible storage,
+      ##   including Aliyun OSS
+      ##
+      ## Bundled MinIO example:
+      ## global.objectStore.enabled=true
+      ##
+      ## External Aliyun OSS example:
+      ## global.objectStore.enabled=false
+      ## global.objectStore.external.endpoint=oss-cn-hangzhou.aliyuncs.com
+      ## global.objectStore.external.bucket=csghub-relay
+      ## global.objectStore.external.region=cn-hangzhou
+      ## global.objectStore.external.pathStyle=false
+      ##
+      ## Explicit values below override the corresponding inherited field.
+      # endpoint: "oss-cn-hangzhou.aliyuncs.com"
+      bucket: "csghub-relay"
+      # region: "cn-hangzhou"
+      # enableSSL: true
+      # bucketLookup: "auto"               # MinIO normally uses path; Aliyun OSS uses auto
+      prefix: "csgrelay/"
+      credentials: "env"
+
+  ## Use an existing Secret containing nats-url, oss-access-key-id,
+  ## oss-access-key-secret and tokens.toml keys.
+  existingSecret: ""
+
+  ## Used when existingSecret is empty. In bundled mode NATS and object storage
+  ## credentials are derived from the CSGHub global configuration when omitted.
+  secret: {}
+    # natsUrl: "nats://user:password@nats.example.com:4222"
+    # ossAccessKeyId: ""
+    # ossAccessKeySecret: ""
+    # tokens: |
+    #   [tokens]
+
+  ## Additional environment variables
+  environments: {}
+
+  ## Deployment strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/service: csgrelay
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  livenessProbe:
+    httpGet:
+      path: /livez
+      port: http
+      scheme: HTTP
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+      scheme: HTTP
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+
+  startupProbe:
+    httpGet:
+      path: /healthz
+      port: http
+      scheme: HTTP
+    periodSeconds: 2
+    timeoutSeconds: 1
+    failureThreshold: 30
+    successThreshold: 1
+
+  route:
+    enabled: true
+    ## Defaults to the CSGHub domain in bundled mode and csgrelay.<domain>
+    ## in standalone mode.
+    # hostnames:
+    #   - opencsg-stg.com
+    #   - csgclaw.opencsg-stg.com
+
 #################################################################
 ##  Built-in Third-party Components                            ##
 #################################################################

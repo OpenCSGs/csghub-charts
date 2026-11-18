@@ -763,6 +763,8 @@ minio:
       policy: "none"
     - name: "csghub-llmlog"
       policy: "none"
+    - name: "csghub-relay"
+      policy: "none"
 
   persistence:
     # storageClass: ""                       # StorageClass for dynamic provisioning

@@ -299,6 +299,8 @@ minio:
       policy: "none"
     - name: "csghub-llmlog"
       policy: "none"
+    - name: "csghub-relay"
+      policy: "none"
   persistence:
     size: "500Gi"
 

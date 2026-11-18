@@ -1,0 +1,77 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "csgrelay") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $route := dig "route" dict $service }}
+{{- if and .Values.csgrelay.enabled (ne .Values.global.edition "ce") (dig "enabled" true $route) }}
+{{- $hostnames := dig "hostnames" list $route }}
+{{- if not $hostnames }}
+{{- if .Values.global.chartContext.isBuiltIn }}
+{{- $hostnames = list (include "common.domain.csghub" .) }}
+{{- else }}
+{{- $hostnames = list (include "common.domain.service" (dict "ctx" . "service" "csgrelay")) }}
+{{- end }}
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: listeners
+      {{- if .Values.global.gateway.tls.enabled }}
+      sectionName: https
+      {{- else }}
+      sectionName: http
+      {{- end }}
+  hostnames:
+  {{- range $hostnames }}
+    - {{ . | quote }}
+  {{- end }}
+  rules:
+  {{- if .Values.global.chartContext.isBuiltIn }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /relay
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: {{ $serviceName }}
+          port: {{ dig "service" "port" 28080 $service }}
+      timeouts:
+        request: 0s
+    {{- $serverSvc := include "common.service" (dict "ctx" . "service" "server") | fromYaml }}
+    {{- $serverSvcName := include "common.names.custom" (list . $serverSvc.name) }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1/relay
+      backendRefs:
+        - name: {{ $serverSvcName }}
+          port: {{ dig "service" "port" 8080 $serverSvc }}
+      timeouts:
+        request: 0s
+  {{- else }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ $serviceName }}
+          port: {{ dig "service" "port" 28080 $service }}
+      timeouts:
+        request: 0s
+  {{- end }}
+{{- end }}

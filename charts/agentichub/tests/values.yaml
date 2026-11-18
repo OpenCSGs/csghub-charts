@@ -146,6 +146,112 @@ csgbot:
     observability: {}
     userFacingErrors: {}
 
+## CSGRelay configuration
+csgrelay:
+  enabled: true
+  replicas: 2
+  image:
+    repository: opencsghq/csgrelay
+    tag: "4228a8ca"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  service:
+    type: ClusterIP
+    port: 28080
+    protocol: TCP
+  log:
+    format: json
+    color: never
+  config:
+    nats:
+      url: "nats://nats.example.com:4222"
+      namespace: ""
+      replicas: 1
+      recordTTL: "15m"
+      advertisementTTL: "10m"
+    oss:
+      endpoint: "minio.example.com"
+      bucket: "csghub-relay"
+      region: "us-east-1"
+      bucketLookup: "path"
+      prefix: "csgrelay/stg/"
+      credentials: "env"
+  existingSecret: ""
+  secret:
+    natsUrl: "nats://nats-user:nats-password@nats.example.com:4222"
+    ossAccessKeyId: "test-oss-access-key"
+    ossAccessKeySecret: "test-oss-secret-key"
+    tokens: |
+      [tokens]
+      test = "test-token"
+  environments: {}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/service: csgrelay
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  livenessProbe:
+    httpGet:
+      path: /livez
+      port: http
+      scheme: HTTP
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+      scheme: HTTP
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+  startupProbe:
+    httpGet:
+      path: /healthz
+      port: http
+      scheme: HTTP
+    periodSeconds: 2
+    timeoutSeconds: 1
+    failureThreshold: 30
+    successThreshold: 1
+  route:
+    enabled: true
+    hostnames:
+      - csghub.example.com
+      - csgclaw.example.com
+
 ## Embedded PostgreSQL configuration
 postgresql:
   image:

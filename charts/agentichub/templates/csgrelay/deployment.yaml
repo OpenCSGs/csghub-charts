@@ -1,0 +1,176 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "csgrelay") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- $secretName := include "csgrelay.secretName" . }}
+{{- if and .Values.csgrelay.enabled (ne .Values.global.edition "ce") }}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- if $service.labels }}
+      {{- toYaml $service.labels | nindent 4 }}
+    {{- else }}
+      {{- include "common.labels" . | nindent 4 }}
+    {{- end }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    {{- with $service.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ $service.replicas | default 2 }}
+  minReadySeconds: {{ $service.minReadySeconds | default 30 }}
+  revisionHistoryLimit: {{ $service.revisionHistoryLimit | default 3 }}
+  progressDeadlineSeconds: {{ $service.progressDeadlineSeconds | default 600 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/service: {{ $service.name }}
+      {{- if $service.selector }}
+        {{- toYaml $service.selector | nindent 6 }}
+      {{- else }}
+        {{- include "common.labels.selector" . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/service: {{ $service.name }}
+        {{- if $service.podLabels }}
+          {{- toYaml $service.podLabels | nindent 8 }}
+        {{- else }}
+          {{- include "common.labels" . | nindent 8 }}
+        {{- end }}
+      {{- with $service.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      {{- with $service.serviceAccountName }}
+      serviceAccountName: {{ . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ $service.terminationGracePeriodSeconds | default 30 }}
+      {{- with (or $service.image.pullSecrets .Values.global.image.pullSecrets) }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ $service.name }}
+          image: {{ include "common.image" (list . $service.image) }}
+          imagePullPolicy: {{ or $service.image.pullPolicy .Values.global.image.pullPolicy }}
+          args:
+          {{- if $service.args }}
+            {{- toYaml $service.args | nindent 12 }}
+          {{- else }}
+            - serve
+            - --config
+            - /etc/csgrelay/config.toml
+            - --log-format
+            - {{ dig "log" "format" "json" .Values.csgrelay | quote }}
+            - --color
+            - {{ dig "log" "color" "never" .Values.csgrelay | quote }}
+          {{- end }}
+          env:
+            - name: CSGRELAY_NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: nats-url
+            - name: OSS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: oss-access-key-id
+            - name: OSS_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: oss-access-key-secret
+          {{- with $service.environments }}
+          {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ dig "service" "port" 28080 $service }}
+              protocol: {{ dig "service" "protocol" "TCP" $service }}
+          {{- with $service.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $service.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $service.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $service.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $service.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/csgrelay/config.toml
+              subPath: config.toml
+              readOnly: true
+            - name: credentials
+              mountPath: /etc/csgrelay/credentials
+              readOnly: true
+          {{- with $service.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $serviceName }}
+        - name: credentials
+          secret:
+            secretName: {{ $secretName }}
+            defaultMode: 288
+            items:
+              - key: tokens.toml
+                path: tokens.toml
+      {{- with $service.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $service.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $service.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $service.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $service.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $service.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- with $service.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
