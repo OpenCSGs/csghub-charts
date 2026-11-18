@@ -161,6 +161,22 @@ tests:
       - equal:
           path: spec.rules[7].backendRefs[0].name
           value: "csghub-aigateway"
+      - equal:
+          path: spec.rules[7].timeouts.request
+          value: "5m"
+
+  - it: honors a custom request timeout for the /aigateway route
+    template: csghub/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              requestTimeout: 3600s
+    asserts:
+      - equal:
+          path: spec.rules[7].timeouts.request
+          value: "3600s"
 
   - it: omits the aigateway rules when a dedicated aigateway domain is used
     template: csghub/httproutes.yaml

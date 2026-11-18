@@ -71,6 +71,20 @@ tests:
           path: spec.hostnames[0]
           value: "ai.custom.com"
 
+  - it: honors a custom request timeout
+    template: csghub/aigateway/httproutes.yaml
+    set:
+      global:
+        gateway:
+          external:
+            aigateway:
+              useDomain: true
+              requestTimeout: 3600s
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: "3600s"
+
   - it: renders the route on the http parent section when TLS is disabled
     template: csghub/aigateway/httproutes.yaml
     set:

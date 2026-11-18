@@ -163,6 +163,7 @@ spec:
     {{- $aiGatewaySvcName := include "common.names.custom" (list . $aiGatewaySvc.name) }}
     {{- $external := .Values.global.gateway.external | default dict }}
     {{- $aigatewayConfig := $external.aigateway | default dict }}
+    {{- $aigatewayRequestTimeout := dig "requestTimeout" "5m" $aigatewayConfig }}
     {{- $aigatewayUseDomain := or ($aigatewayConfig.useDomain | default false) ($aigatewayConfig.domain | default "") }}
     {{- if not $aigatewayUseDomain }}
     - matches:
@@ -194,7 +195,7 @@ spec:
         - name: {{ $aiGatewaySvcName }}
           port: {{ dig "service" "port" "8094" $aiGatewaySvc.aigateway }}
       timeouts:
-        request: 5m
+        request: {{ $aigatewayRequestTimeout | quote }}
     {{- end }}
 {{- if .Values.superset.enabled }}
     # Superset 6.1.0 frontend hardcodes OAuth links as /login/<provider> (missing

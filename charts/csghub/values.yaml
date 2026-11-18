@@ -46,6 +46,7 @@ global:
                                      # When false and domain is not set, AIGateway uses basePath mode.
         # domain: ""                 # Optional custom domain for AIGateway (e.g., "ai.example.com")
                                      # If set, dedicated domain mode is always used regardless of useDomain.
+        requestTimeout: 5m           # HTTPRoute request timeout for AIGateway routes
 
       ## Whether to use the top-level domain directly when generating derived domains.
       ## If the domain is a multi-level domain (e.g. csghub.example.com):
