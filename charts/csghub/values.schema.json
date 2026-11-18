@@ -44,7 +44,8 @@
                   "type": "object",
                   "properties": {
                     "useDomain": {"type": "boolean"},
-                    "domain": {"type": "string"}
+                    "domain": {"type": "string"},
+                    "requestTimeout": {"type": "string", "default": "5m"}
                   }
                 }
               }

@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $external := .Values.global.gateway.external | default dict }}
 {{- $aigatewayConfig := $external.aigateway | default dict }}
+{{- $aigatewayRequestTimeout := dig "requestTimeout" "5m" $aigatewayConfig }}
 {{- $useDomain := $aigatewayConfig.useDomain | default false }}
 {{- $customDomain := $aigatewayConfig.domain | default "" }}
 {{- if or $useDomain $customDomain }}
@@ -41,5 +42,5 @@ spec:
         - name: {{ $serviceName }}
           port: {{ dig "service" "port" "8094" $service.aigateway }}
       timeouts:
-        request: 5m
+        request: {{ $aigatewayRequestTimeout | quote }}
 {{- end }}
