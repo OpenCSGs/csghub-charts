@@ -1,0 +1,200 @@
+# Test suite for the csgrelay ConfigMap.
+
+suite: Test CSGRelay ConfigMap
+templates:
+  - csgrelay/configmap.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the ConfigMap metadata and config key
+    template: csgrelay/configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgrelay"
+      - exists:
+          path: data["config.toml"]
+
+  - it: renders the server configuration
+    template: csgrelay/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "\\[server\\]\\nlisten = '0\\.0\\.0\\.0:28080'\\ntokens_file = '/etc/csgrelay/credentials/tokens\\.toml'"
+
+  - it: renders the NATS configuration without credentials
+    template: csgrelay/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "\\[nats\\]\\nmode = 'external'\\nurl = 'nats://nats\\.example\\.com:4222'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "namespace = ''\\nreplicas = 1\\nrecord_ttl = '15m'\\nadvertisement_ttl = '10m'"
+
+  - it: renders the OSS configuration
+    template: csgrelay/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "\\[oss\\]\\nendpoint = 'minio\\.example\\.com'\\nbucket = 'csghub-relay'\\nregion = 'us-east-1'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "enable_ssl = true\\nbucket_lookup = 'path'\\nprefix = 'csgrelay/stg/'\\ncredentials = 'env'"
+
+  - it: renders custom NATS and OSS settings
+    template: csgrelay/configmap.yaml
+    set:
+      csgrelay:
+        service:
+          port: 29080
+        config:
+          nats:
+            url: "nats://other-nats.example.com:4333"
+            namespace: "relay"
+            replicas: 3
+            recordTTL: "30m"
+            advertisementTTL: "20m"
+          oss:
+            endpoint: "https://objects.example.com"
+            bucket: "relay-files"
+            region: "cn-test-1"
+            enableSSL: true
+            bucketLookup: "virtual-hosted"
+            prefix: "custom/"
+        secret:
+          natsUrl: "nats://other-nats.example.com:4333"
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "listen = '0\\.0\\.0\\.0:29080'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "url = 'nats://other-nats\\.example\\.com:4333'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "namespace = 'relay'\\nreplicas = 3\\nrecord_ttl = '30m'\\nadvertisement_ttl = '20m'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "endpoint = 'objects\\.example\\.com'\\nbucket = 'relay-files'\\nregion = 'cn-test-1'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "bucket_lookup = 'virtual-hosted'\\nprefix = 'custom/'"
+
+  - it: auto-detects Aliyun OSS bucket lookup from the endpoint
+    template: csgrelay/configmap.yaml
+    set:
+      csgrelay:
+        config:
+          oss:
+            endpoint: "oss-cn-hangzhou.aliyuncs.com"
+            bucket: "csghub-relay"
+            region: "cn-hangzhou"
+            enableSSL: true
+            bucketLookup: ""
+            prefix: "csgrelay/stg/"
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "endpoint = 'oss-cn-hangzhou\\.aliyuncs\\.com'\\nbucket = 'csghub-relay'\\nregion = 'cn-hangzhou'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "enable_ssl = true\\nbucket_lookup = 'auto'"
+
+  - it: reuses the bundled MinIO configuration
+    template: csgrelay/configmap.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+        nats:
+          enabled: true
+        objectStore:
+          enabled: true
+      csgrelay:
+        config:
+          nats:
+            url: ""
+          oss:
+            endpoint: ""
+            region: ""
+            bucketLookup: ""
+        secret:
+          natsUrl: ""
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "url = 'nats://agentichub-nats:4222'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "endpoint = 'agentichub-minio:9000'\\nbucket = 'csghub-relay'\\nregion = 'cn-north-1'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "enable_ssl = false\\nbucket_lookup = 'path'\\nprefix = 'csgrelay/stg/'"
+
+  - it: reuses an external Aliyun OSS configuration
+    template: csgrelay/configmap.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+        nats:
+          enabled: true
+        objectStore:
+          enabled: false
+          external:
+            endpoint: "https://objects.example.com"
+            accessKey: "access-key"
+            secretKey: "secret-key"
+            bucket: "relay-files"
+            region: "cn-test-1"
+            secure: true
+            pathStyle: false
+      csgrelay:
+        config:
+          nats:
+            url: ""
+          oss:
+            endpoint: ""
+            bucket: ""
+            region: ""
+            bucketLookup: ""
+        secret:
+          natsUrl: ""
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "url = 'nats://agentichub-nats:4222'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "endpoint = 'objects\\.example\\.com'\\nbucket = 'relay-files'\\nregion = 'cn-test-1'"
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "enable_ssl = true\\nbucket_lookup = 'auto'"
+
+  - it: renders nothing when csgrelay is disabled
+    template: csgrelay/configmap.yaml
+    set:
+      csgrelay:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: csgrelay/configmap.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

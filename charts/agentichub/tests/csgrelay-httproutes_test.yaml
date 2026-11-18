@@ -1,0 +1,137 @@
+# Test suite for the csgrelay HTTPRoute.
+
+suite: Test CSGRelay HTTPRoutes
+templates:
+  - csgrelay/httproutes.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the standalone HTTPRoute on the configured hostnames
+    template: csgrelay/httproutes.yaml
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgrelay"
+      - equal:
+          path: spec.parentRefs[0].name
+          value: "listeners"
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "http"
+      - equal:
+          path: spec.hostnames
+          value:
+            - "csghub.example.com"
+            - "csgclaw.example.com"
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: "/"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 28080
+      - equal:
+          path: spec.rules[0].timeouts.request
+          value: "0s"
+
+  - it: uses the https parent section when TLS is enabled
+    template: csgrelay/httproutes.yaml
+    set:
+      global:
+        gateway:
+          tls:
+            enabled: true
+            secretName: test-tls
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: "https"
+
+  - it: renders the CSGHub relay paths in built-in mode
+    template: csgrelay/httproutes.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+      csgrelay:
+        route:
+          hostnames: []
+    asserts:
+      - equal:
+          path: spec.hostnames
+          value:
+            - "csghub.example.com"
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: "/relay"
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: "URLRewrite"
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.replacePrefixMatch
+          value: "/"
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: spec.rules[1].matches[0].path.value
+          value: "/api/v1/relay"
+      - equal:
+          path: spec.rules[1].backendRefs[0].name
+          value: "agentichub-server"
+      - equal:
+          path: spec.rules[1].backendRefs[0].port
+          value: 8080
+
+  - it: uses the csgrelay service domain by default in standalone mode
+    template: csgrelay/httproutes.yaml
+    set:
+      csgrelay:
+        route:
+          hostnames: []
+    asserts:
+      - equal:
+          path: spec.hostnames
+          value:
+            - "csgrelay.example.com"
+
+  - it: renders nothing when the route is disabled
+    template: csgrelay/httproutes.yaml
+    set:
+      csgrelay:
+        route:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when csgrelay is disabled
+    template: csgrelay/httproutes.yaml
+    set:
+      csgrelay:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: csgrelay/httproutes.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

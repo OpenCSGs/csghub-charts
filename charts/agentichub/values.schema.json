@@ -111,6 +111,42 @@
             }
           }
         },
+        "nats": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "external": {
+              "type": "object",
+              "properties": {
+                "url": { "type": "string" },
+                "host": { "type": "string" },
+                "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                "user": { "type": "string" },
+                "password": { "type": "string" }
+              }
+            }
+          }
+        },
+        "objectStore": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "existingSecret": { "type": "string" },
+            "external": {
+              "type": "object",
+              "properties": {
+                "endpoint": { "type": "string" },
+                "region": { "type": "string" },
+                "accessKey": { "type": "string" },
+                "secretKey": { "type": "string" },
+                "bucket": { "type": "string" },
+                "pathStyle": { "type": "boolean" },
+                "secure": { "type": "boolean" },
+                "encrypt": { "type": "boolean" }
+              }
+            }
+          }
+        },
         "chartContext": {
           "type": "object",
           "properties": {
@@ -480,6 +516,91 @@
                 "gitlabDefaultAssigneeId": { "type": "integer", "minimum": 0 }
               }
             }
+          }
+        }
+      }
+    },
+    "csgrelay": {
+      "type": "object",
+      "description": "CSGRelay service configuration",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "image": {
+          "type": "object",
+          "properties": {
+            "registry": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*(:[0-9]+)?$" },
+            "repository": { "type": "string" },
+            "tag": { "type": "string" },
+            "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+            "pullSecrets": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+            "protocol": { "type": "string", "enum": ["TCP", "UDP", "SCTP"] }
+          }
+        },
+        "log": {
+          "type": "object",
+          "properties": {
+            "format": { "type": "string" },
+            "color": { "type": "string" }
+          }
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "nats": {
+              "type": "object",
+              "properties": {
+                "url": { "type": "string" },
+                "namespace": { "type": "string" },
+                "replicas": { "type": "integer", "minimum": 0 },
+                "recordTTL": { "type": "string" },
+                "advertisementTTL": { "type": "string" }
+              }
+            },
+            "oss": {
+              "type": "object",
+              "properties": {
+                "endpoint": { "type": "string" },
+                "bucket": { "type": "string" },
+                "region": { "type": "string" },
+                "enableSSL": { "type": "boolean" },
+                "bucketLookup": { "type": "string" },
+                "prefix": { "type": "string" },
+                "credentials": { "type": "string" }
+              }
+            }
+          }
+        },
+        "existingSecret": { "type": "string" },
+        "secret": {
+          "type": "object",
+          "properties": {
+            "natsUrl": { "type": "string" },
+            "ossAccessKeyId": { "type": "string" },
+            "ossAccessKeySecret": { "type": "string" },
+            "tokens": { "type": "string" }
+          }
+        },
+        "environments": { "type": "object" },
+        "resources": { "type": "object" },
+        "affinity": { "type": "object" },
+        "podSecurityContext": { "type": "object" },
+        "securityContext": { "type": "object" },
+        "livenessProbe": { "type": "object" },
+        "readinessProbe": { "type": "object" },
+        "startupProbe": { "type": "object" },
+        "route": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "hostnames": { "type": "array", "items": { "type": "string" } }
           }
         }
       }

@@ -1,0 +1,231 @@
+# Test suite for the csgrelay Deployment.
+
+suite: Test CSGRelay Deployment
+templates:
+  - csgrelay/deployment.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Deployment metadata and selector
+    template: csgrelay/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgrelay"
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/service"]
+          value: "csgrelay"
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/service"]
+          value: "csgrelay"
+
+  - it: renders the default replica and rollout settings
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0
+
+  - it: renders the csgrelay container
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: "csgrelay"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/opencsghq/csgrelay:4228a8ca"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "IfNotPresent"
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - serve
+            - --config
+            - /etc/csgrelay/config.toml
+            - --log-format
+            - json
+            - --color
+            - never
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: "http"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 28080
+
+  - it: references the generated Secret for runtime credentials
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "CSGRELAY_NATS_URL"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.key
+          value: "nats-url"
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.key
+          value: "oss-access-key-id"
+      - equal:
+          path: spec.template.spec.containers[0].env[2].valueFrom.secretKeyRef.key
+          value: "oss-access-key-secret"
+
+  - it: references an existing Secret when configured
+    template: csgrelay/deployment.yaml
+    set:
+      csgrelay:
+        existingSecret: "existing-csgrelay"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: "existing-csgrelay"
+      - equal:
+          path: spec.template.spec.volumes[1].secret.secretName
+          value: "existing-csgrelay"
+
+  - it: mounts the configuration and credentials
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: "/etc/csgrelay/config.toml"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPath
+          value: "config.toml"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: "/etc/csgrelay/credentials"
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: spec.template.spec.volumes[1].secret.defaultMode
+          value: 288
+      - equal:
+          path: spec.template.spec.volumes[1].secret.items[0].key
+          value: "tokens.toml"
+
+  - it: renders the hardened pod and container security context
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 65532
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: "RuntimeDefault"
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
+          value: "ALL"
+
+  - it: renders the health probes and resource limits
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: "/livez"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: "/healthz"
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: "/healthz"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "100m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "1Gi"
+
+  - it: renders pod anti-affinity by default
+    template: csgrelay/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight
+          value: 100
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey
+          value: "kubernetes.io/hostname"
+
+  - it: renders additional environment variables and pull secrets
+    template: csgrelay/deployment.yaml
+    set:
+      csgrelay:
+        image:
+          pullSecrets:
+            - ali-registry-secret
+        environments:
+          EXTRA_SETTING: "enabled"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "ali-registry-secret"
+      - equal:
+          path: spec.template.spec.containers[0].env[3].name
+          value: "EXTRA_SETTING"
+      - equal:
+          path: spec.template.spec.containers[0].env[3].value
+          value: "enabled"
+
+  - it: renders nothing when csgrelay is disabled
+    template: csgrelay/deployment.yaml
+    set:
+      csgrelay:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: csgrelay/deployment.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0

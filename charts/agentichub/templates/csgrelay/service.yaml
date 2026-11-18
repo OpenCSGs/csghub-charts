@@ -1,0 +1,27 @@
+{{- /*
+Copyright OpenCSG, Inc. All Rights Reserved.
+SPDX-License-Identifier: APACHE-2.0
+*/ -}}
+
+{{- $service := include "common.service" (dict "ctx" . "service" "csgrelay") | fromYaml }}
+{{- $serviceName := include "common.names.custom" (list . $service.name) }}
+{{- if and .Values.csgrelay.enabled (ne .Values.global.edition "ce") }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: {{ dig "service" "type" "ClusterIP" $service }}
+  ports:
+    - name: http
+      port: {{ dig "service" "port" 28080 $service }}
+      targetPort: http
+      protocol: {{ dig "service" "protocol" "TCP" $service }}
+  selector:
+    app.kubernetes.io/service: {{ $service.name }}
+    {{- include "common.labels.selector" . | nindent 4 }}
+{{- end }}

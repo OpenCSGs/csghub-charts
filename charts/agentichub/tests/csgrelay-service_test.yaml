@@ -1,0 +1,87 @@
+# Test suite for the csgrelay Service.
+
+suite: Test CSGRelay Service
+templates:
+  - csgrelay/service.yaml
+release:
+  name: agentichub
+  namespace: csghub
+values:
+  - values.yaml
+tests:
+  - it: renders the Service metadata and labels
+    template: csgrelay/service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "agentichub-csgrelay"
+      - equal:
+          path: metadata.namespace
+          value: "csghub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/service"]
+          value: "csgrelay"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: "agentichub"
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: "Helm"
+
+  - it: renders the default Service spec
+    template: csgrelay/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: "ClusterIP"
+      - equal:
+          path: spec.ports[0].name
+          value: "http"
+      - equal:
+          path: spec.ports[0].port
+          value: 28080
+      - equal:
+          path: spec.ports[0].targetPort
+          value: "http"
+      - equal:
+          path: spec.ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.selector["app.kubernetes.io/service"]
+          value: "csgrelay"
+
+  - it: renders a custom service port and type
+    template: csgrelay/service.yaml
+    set:
+      csgrelay:
+        service:
+          type: NodePort
+          port: 29080
+    asserts:
+      - equal:
+          path: spec.type
+          value: "NodePort"
+      - equal:
+          path: spec.ports[0].port
+          value: 29080
+
+  - it: renders nothing when csgrelay is disabled
+    template: csgrelay/service.yaml
+    set:
+      csgrelay:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the edition is ce
+    template: csgrelay/service.yaml
+    set:
+      global:
+        edition: "ce"
+    asserts:
+      - hasDocuments:
+          count: 0
