@@ -149,7 +149,7 @@ csgbot:
 ## CSGRelay configuration
 csgrelay:
   enabled: true
-  replicas: 2
+  replicas: 1
   image:
     repository: opencsghq/csgrelay
     tag: "4228a8ca"
@@ -182,8 +182,10 @@ csgrelay:
     ossAccessKeyId: "test-oss-access-key"
     ossAccessKeySecret: "test-oss-secret-key"
     tokens: |
-      [tokens]
-      test = "test-token"
+      [server.tokens.test]
+      user_id = "publisher"
+      client_id = "cli"
+      admin = false
   environments: {}
   strategy:
     type: RollingUpdate

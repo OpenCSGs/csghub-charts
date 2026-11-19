@@ -181,6 +181,27 @@ tests:
           path: data["config.toml"]
           pattern: "enable_ssl = true\\nbucket_lookup = 'auto'"
 
+  - it: reuses external NATS configuration from common.nats.config
+    template: csgrelay/configmap.yaml
+    set:
+      global:
+        chartContext:
+          isBuiltIn: true
+        nats:
+          enabled: false
+          external:
+            url: "nats://user:password@external-nats.example.com:4333"
+      csgrelay:
+        config:
+          nats:
+            url: ""
+        secret:
+          natsUrl: ""
+    asserts:
+      - matchRegex:
+          path: data["config.toml"]
+          pattern: "url = 'nats://external-nats\\.example\\.com:4333'"
+
   - it: renders nothing when csgrelay is disabled
     template: csgrelay/configmap.yaml
     set:
