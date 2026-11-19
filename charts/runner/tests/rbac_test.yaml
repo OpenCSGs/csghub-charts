@@ -158,7 +158,7 @@ tests:
           value:
             apiGroups: ["batch"]
             resources: ["jobs"]
-            verbs: ["create"]
+            verbs: ["get", "list", "create", "delete"]
 
   - it: renders the runner RoleBinding in the spaces namespace
     template: rbac.yaml
@@ -231,6 +231,21 @@ tests:
       - contains:
           path: rules[4].resources
           content: "persistentvolumeclaims"
+      - equal:
+          path: rules[4].verbs
+          value: ["create", "get", "list", "delete", "patch"]
+      - equal:
+          path: rules[5]
+          value:
+            apiGroups: ["storage.k8s.io"]
+            resources: ["storageclasses"]
+            verbs: ["get"]
+      - equal:
+          path: rules[6]
+          value:
+            apiGroups: [""]
+            resources: ["nodes/proxy"]
+            verbs: ["get"]
 
   - it: binds the runner ServiceAccount with the ClusterRole
     template: rbac.yaml
