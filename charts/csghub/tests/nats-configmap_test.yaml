@@ -28,12 +28,15 @@ tests:
           path: metadata.labels["app.kubernetes.io/service"]
           value: "nats"
 
-  - it: configures the client port, monitoring port and jetstream
+  - it: configures the client port, monitoring port, payload limit and jetstream
     template: nats/configmap.yaml
     asserts:
       - matchRegex:
           path: data["nats-server.conf"]
           pattern: "(?m)^\\s*port: 4222\\s*$"
+      - matchRegex:
+          path: data["nats-server.conf"]
+          pattern: "(?m)^\\s*max_payload: 2097152\\s*$"
       - matchRegex:
           path: data["nats-server.conf"]
           pattern: "(?m)^\\s*monitor_port: 8222\\s*$"
@@ -43,6 +46,17 @@ tests:
       - matchRegex:
           path: data["nats-server.conf"]
           pattern: "(?m)^\\s*store_dir: /data/jetstream\\s*$"
+
+  - it: honors a custom max payload
+    template: nats/configmap.yaml
+    set:
+      global:
+        nats:
+          maxPayload: 4194304
+    asserts:
+      - matchRegex:
+          path: data["nats-server.conf"]
+          pattern: "(?m)^\\s*max_payload: 4194304\\s*$"
 
   - it: writes the natsadmin user with a generated password
     template: nats/configmap.yaml

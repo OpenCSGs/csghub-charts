@@ -95,6 +95,7 @@
           "type": "object",
           "properties": {
             "enabled": {"type": "boolean"},
+            "maxPayload": {"type": "integer", "minimum": 1, "default": 2097152},
             "external": {
               "type": "object",
               "properties": {

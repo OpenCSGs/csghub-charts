@@ -110,6 +110,8 @@ global:
   nats:
     ## Use built-in (true) or external (false). External NATS must enable JetStream.
     enabled: true
+    ## Maximum payload size accepted by the built-in NATS server, in bytes.
+    maxPayload: 2097152
     ## A complete URL takes precedence over host/port/user/password.
     external: {}
       # url: "nats://user:password@nats.example.com:4222"
