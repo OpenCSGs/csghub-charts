@@ -38,7 +38,7 @@ tests:
     asserts:
       - equal:
           path: spec.replicas
-          value: 2
+          value: 1
       - equal:
           path: spec.minReadySeconds
           value: 30
@@ -129,6 +129,12 @@ tests:
           path: spec.template.spec.containers[0].volumeMounts[1].mountPath
           value: "/etc/csgrelay/credentials"
       - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].name
+          value: "tmp"
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].mountPath
+          value: "/tmp"
+      - equal:
           path: spec.template.spec.volumes[0].configMap.name
           value: "agentichub-csgrelay"
       - equal:
@@ -137,6 +143,12 @@ tests:
       - equal:
           path: spec.template.spec.volumes[1].secret.items[0].key
           value: "tokens.toml"
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: "tmp"
+      - equal:
+          path: spec.template.spec.volumes[2].emptyDir
+          value: {}
 
   - it: renders the hardened pod and container security context
     template: csgrelay/deployment.yaml
@@ -211,6 +223,18 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].env[3].value
           value: "enabled"
+
+  - it: reuses global image pull secrets
+    template: csgrelay/deployment.yaml
+    set:
+      global:
+        image:
+          pullSecrets:
+            - global-registry-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "global-registry-secret"
 
   - it: renders nothing when csgrelay is disabled
     template: csgrelay/deployment.yaml

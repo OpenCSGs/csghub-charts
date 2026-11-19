@@ -340,14 +340,14 @@ csgbot:
 # CSGRelay configuration
 csgrelay:
   enabled: true
-  replicas: 2
+  replicas: 1
 
   image:
     # registry: "docker.io"
     repository: "opencsghq/csgrelay"
     tag: "4228a8ca"
     pullPolicy: "IfNotPresent"
-    pullSecrets: []
+    pullSecrets: []                 # Empty falls back to global.image.pullSecrets
 
   ## Service Configuration
   service:
@@ -362,18 +362,27 @@ csgrelay:
   ## CSGRelay runtime configuration
   config:
     nats:
-      # url: "nats://nats.example.com:4222"  # Falls back to CSGHub NATS when bundled
+      ## In bundled mode this falls back to the CSGHub NATS configuration.
+      ## In standalone mode set this when not using existingSecret.
+      ## The authenticated URL is injected through CSGRELAY_NATS_URL and
+      ## overrides this credential-free URL at runtime.
+      # url: "nats://nats.example.com:4222"
       namespace: ""
       replicas: 1
       recordTTL: "15m"
       advertisementTTL: "10m"
 
     oss:
-      ## When global.objectStore is available, its endpoint, bucket, region,
-      ## credentials and TLS/path-style settings are reused automatically:
+      ## When bundled with csghub, global.objectStore is inherited and its
+      ## endpoint, bucket, region, credentials and TLS/path-style settings are
+      ## reused automatically:
       ## - global.objectStore.enabled=true: bundled MinIO
       ## - global.objectStore.enabled=false: external S3-compatible storage,
       ##   including Aliyun OSS
+      ##
+      ## Standalone agentichub does not deploy MinIO and has no
+      ## global.objectStore. In standalone mode set endpoint and bucket below,
+      ## or provide oss-endpoint/oss-bucket in existingSecret.
       ##
       ## Bundled MinIO example:
       ## global.objectStore.enabled=true
@@ -394,8 +403,22 @@ csgrelay:
       prefix: "csgrelay/"
       credentials: "env"
 
-  ## Use an existing Secret containing nats-url, oss-access-key-id,
-  ## oss-access-key-secret and tokens.toml keys.
+  ## Use an existing Secret instead of the generated Secret. Required keys:
+  ## - tokens.toml
+  ## - nats-url
+  ## - oss-access-key-id
+  ## - oss-access-key-secret
+  ## Optional object-store keys override config.oss or inherited
+  ## global.objectStore values:
+  ## - oss-endpoint, oss-bucket, oss-region, oss-enable-ssl,
+  ##   oss-bucket-lookup, oss-prefix, oss-credentials
+  ## Endpoint and bucket must still resolve from the Secret, config.oss, or
+  ## global.objectStore.
+  ## tokens.toml must use the csgrelay token-file format, for example:
+  ##   [server.tokens.<token>]
+  ##   user_id = "publisher"
+  ##   client_id = "cli"
+  ##   admin = false
   existingSecret: ""
 
   ## Used when existingSecret is empty. In bundled mode NATS and object storage
@@ -405,7 +428,10 @@ csgrelay:
     # ossAccessKeyId: ""
     # ossAccessKeySecret: ""
     # tokens: |
-    #   [tokens]
+    #   [server.tokens.<token>]
+    #   user_id = "publisher"
+    #   client_id = "cli"
+    #   admin = false
 
   ## Additional environment variables
   environments: {}

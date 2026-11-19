@@ -7,6 +7,7 @@ SPDX-License-Identifier: APACHE-2.0
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 {{- $secretName := include "csgrelay.secretName" . }}
 {{- if and .Values.csgrelay.enabled (ne .Values.global.edition "ce") }}
+{{- include "csgrelay.validateExistingSecret" . }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -25,7 +26,7 @@ metadata:
       {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  replicas: {{ $service.replicas | default 2 }}
+  replicas: {{ $service.replicas | default 1 }}
   minReadySeconds: {{ $service.minReadySeconds | default 30 }}
   revisionHistoryLimit: {{ $service.revisionHistoryLimit | default 3 }}
   progressDeadlineSeconds: {{ $service.progressDeadlineSeconds | default 600 }}
@@ -79,6 +80,8 @@ spec:
             - {{ dig "log" "color" "never" .Values.csgrelay | quote }}
           {{- end }}
           env:
+            # CSGRELAY_NATS_URL overrides [nats].url and keeps credentials out
+            # of the ConfigMap.
             - name: CSGRELAY_NATS_URL
               valueFrom:
                 secretKeyRef:
@@ -132,6 +135,8 @@ spec:
             - name: credentials
               mountPath: /etc/csgrelay/credentials
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
           {{- with $service.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -146,6 +151,8 @@ spec:
             items:
               - key: tokens.toml
                 path: tokens.toml
+        - name: tmp
+          emptyDir: {}
       {{- with $service.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
