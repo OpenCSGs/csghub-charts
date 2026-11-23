@@ -83,7 +83,10 @@ jobs:
             find "$configs" -name '*.toml' -print0 \
               | xargs -0 -r grep -hoE '^[[:space:]]*image[[:space:]]*=[[:space:]]*"[^"]+"' \
               | sed -E 's/.*"([^"]+)"/\1/' || true
-          } | sed '/^$/d' | sort -u > engine-images.txt
+          } | sed '/^$/d' | sort -u \
+            | awk '$0 != "opencsghq/swift-agentic-npu:latest"' > engine-images.txt
+          # swift-agentic-npu is a private image: the OpenCSG mirror answers
+          # UNAUTHORIZED for it, so it is skipped instead of failing the check.
           echo "collected $(wc -l < engine-images.txt) images"
           cat engine-images.txt
 
