@@ -9,10 +9,14 @@
 **/__snapshot__
 # Extracted subchart dependencies, needed only to run the umbrella chart tests
 charts/csghub/charts/*/
+# Subsidy chart, not published yet
+charts/subsidy/
 **/.debug/
 **/.codesouler
-**/.claude
+**/.claude/
 **/.workbuddy/
 **/.multica/
+**/.claude-flow/
+**/.swarm/
 CLAUDE.md
 charts-*.md
