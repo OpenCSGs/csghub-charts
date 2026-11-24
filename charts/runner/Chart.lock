@@ -10,7 +10,7 @@ dependencies:
   version: 29.14.0
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
-  version: 1.7.5
+  version: 1.10.0
 - name: lws
   repository: https://charts.opencsg.com/infra
   version: v0.6.1
@@ -26,5 +26,5 @@ dependencies:
 - name: agent-sandbox
   repository: https://charts.opencsg.com/csghub
   version: 0.5.4
-digest: sha256:07e32717928dda9c32e2be509938ad3e2259cc850a1a65638365fd4284310192
-generated: "2026-09-11T14:07:04.661882+08:00"
+digest: sha256:f720f8b93402ddc01a59ef94562d229499cfe0ac8a340a39bb89f2adbfcae732
+generated: "2026-11-24T14:12:07.964143+08:00"

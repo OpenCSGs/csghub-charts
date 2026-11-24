@@ -28,12 +28,12 @@ dependencies:
   version: 0.1.0
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
-  version: 1.7.5
+  version: 1.10.0
 - name: agentichub
   repository: https://charts.opencsg.com/csghub
   version: 0.11.0
 - name: superset
   repository: https://charts.opencsg.com/infra
   version: 0.20.0
-digest: sha256:ea5598fc4486e3ba8cd30febe06c0e09ee095a9f537a47d319207431ad7502a0
-generated: "2026-11-23T12:08:00.44943+08:00"
+digest: sha256:e15ce24f39fb03b6bb4e5f0a79c4332e5fc8a2c528b6e0e42afbbe14b3af14bc
+generated: "2026-11-24T14:11:23.013039+08:00"
