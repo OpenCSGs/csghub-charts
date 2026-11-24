@@ -61,6 +61,13 @@ global:
       enabled: false                # Enable TLS termination on the Gateway
       # secretName: ""              # Kubernetes TLS secret name (required if TLS is enabled)
 
+    ## TCPRoute apiVersion used by the Git SSH route (gitlab-shell).
+    ## Empty means auto-detect from the target cluster: gateway.networking.k8s.io/v1
+    ## when the cluster serves it, otherwise v1alpha2.
+    ## Set explicitly when rendering without cluster access (helm template / GitOps),
+    ## e.g. "gateway.networking.k8s.io/v1" for clusters on newer Gateway API bundles.
+    # tcpRouteAPIVersion: ""
+
   ## Image management
   image:
     registry: "docker.io"           # Image global registry, registry.opencsg.com for mainland

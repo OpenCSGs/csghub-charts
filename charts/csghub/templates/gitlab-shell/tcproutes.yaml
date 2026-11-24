@@ -5,7 +5,30 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- $service := include "common.service" (dict "ctx" . "service" "gitlabShell") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
-apiVersion: gateway.networking.k8s.io/v1alpha2
+{{- /*
+TCPRoute is served as gateway.networking.k8s.io/v1 by Gateway API v1.6+
+(present in the CRD bundle this chart installs) and only as v1alpha2 by
+older bundles. Prefer the served version reported by the CRD itself, fall
+back to discovery for render-only pipelines, and let operators override it
+with global.gateway.tcpRouteAPIVersion when neither is reliable.
+*/}}
+{{- $tcpRouteAPIVersion := dig "gateway" "tcpRouteAPIVersion" "" .Values.global }}
+{{- if not $tcpRouteAPIVersion }}
+{{- $tcpRouteCRD := lookup "apiextensions.k8s.io/v1" "CustomResourceDefinition" "" "tcproutes.gateway.networking.k8s.io" }}
+{{- if $tcpRouteCRD }}
+{{- range $tcpRouteCRD.spec.versions }}
+{{- if and (eq .name "v1") .served }}
+{{- $tcpRouteAPIVersion = "gateway.networking.k8s.io/v1" }}
+{{- end }}
+{{- end }}
+{{- if not $tcpRouteAPIVersion }}
+{{- $tcpRouteAPIVersion = "gateway.networking.k8s.io/v1alpha2" }}
+{{- end }}
+{{- else }}
+{{- $tcpRouteAPIVersion = ternary "gateway.networking.k8s.io/v1" "gateway.networking.k8s.io/v1alpha2" (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/TCPRoute") }}
+{{- end }}
+{{- end }}
+apiVersion: {{ $tcpRouteAPIVersion }}
 kind: TCPRoute
 metadata:
   name: {{ $serviceName }}
