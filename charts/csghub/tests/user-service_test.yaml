@@ -47,3 +47,17 @@ tests:
       - equal:
           path: spec.selector["app.kubernetes.io/service"]
           value: "user"
+
+  - it: uses the configured user port
+    template: csghub/user/service.yaml
+    set:
+      user:
+        service:
+          port: 18080
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18080
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18080

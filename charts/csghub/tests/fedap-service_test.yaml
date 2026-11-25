@@ -64,3 +64,19 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: uses the configured fedap port
+    template: csghub/fedap/service.yaml
+    set:
+      global:
+        edition: "saas"
+      fedap:
+        service:
+          port: 18099
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18099
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18099

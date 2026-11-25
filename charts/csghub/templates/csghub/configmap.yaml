@@ -225,7 +225,10 @@ data:
   {{- $aigatewayLogSync := $aigatewayLog.sync | default dict }}
   {{- $aigatewayLogSyncDataset := $aigatewayLogSync.dataset | default dict }}
   {{- $aigatewayTrace := $aigatewayLLM.trace | default dict }}
-  OPENCSG_AIGATEWAY_PORT: {{ dig "service" "port" 8094 $aigatewaySvc | quote }}
+  {{- $aigatewaySvcName := include "common.names.custom" (list . $aiGatewaySvc.name) }}
+  {{- $aigatewayPort := dig "service" "port" 8094 $aigatewaySvc }}
+  OPENCSG_AIGATEWAY_PORT: {{ $aigatewayPort | quote }}
+  OPENCSG_AIGATEWAY_INTERNAL_URL: {{ printf "http://%s:%v" $aigatewaySvcName $aigatewayPort | quote }}
   OPENCSG_AIGATEWAY_PUBLIC_URL: {{ printf "%s/v1" (include "common.endpoint.aigateway" .) | quote }}
   {{- if ne .Values.global.edition "ce" }}
   OPENCSG_AIGATEWAY_LLMLOG_ENABLE: {{ dig "enabled" true $aigatewayLog | quote }}

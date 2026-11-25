@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "ctx" . "service" "user") | fromYaml }}
+{{- $userPort := dig "service" "port" 8080 $service }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
@@ -16,8 +17,8 @@ metadata:
 spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
-    - port: {{ dig "service" "port" 8080 $service }}
-      targetPort: 8080
+    - port: {{ $userPort }}
+      targetPort: {{ $userPort }}
       protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
   selector:

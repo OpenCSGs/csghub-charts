@@ -4,6 +4,8 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "ctx" . "service" "aigateway") | fromYaml }}
+{{- $moderationPort := dig "service" "port" 8089 $service.moderation }}
+{{- $aigatewayPort := dig "service" "port" 8094 $service.aigateway }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
@@ -17,13 +19,13 @@ spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
     {{- if $service.moderation.enabled }}
-    - port: {{ dig "service" "port" 8089 $service.moderation }}
-      targetPort: 8089
+    - port: {{ $moderationPort }}
+      targetPort: {{ $moderationPort }}
       protocol: {{ dig "service" "protocol" "TCP" $service.moderation }}
       name: {{ printf "%s-moderation" $service.name }}
     {{- end }}
-    - port: {{ dig "service" "port" 8094 $service.aigateway }}
-      targetPort: 8094
+    - port: {{ $aigatewayPort }}
+      targetPort: {{ $aigatewayPort }}
       protocol: {{ dig "service" "protocol" "TCP" $service.aigateway }}
       name: {{ printf "%s-aigateway" $service.name }}
   selector:

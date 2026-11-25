@@ -82,3 +82,19 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: uses the configured trustregistry port
+    template: csghub/trustregistry/deployment.yaml
+    set:
+      global:
+        edition: "saas"
+      trustregistry:
+        service:
+          port: 18098
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 18098
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 18098

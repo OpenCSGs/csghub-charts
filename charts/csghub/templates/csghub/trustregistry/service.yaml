@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- if and (eq .Values.global.edition "saas") (dig "enabled" true .Values.trustregistry) }}
 {{- $service := include "common.service" (dict "ctx" . "service" "trustregistry") | fromYaml }}
+{{- $trustregistryPort := dig "service" "port" 8098 $service }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
@@ -17,8 +18,8 @@ metadata:
 spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
-    - port: {{ dig "service" "port" 8098 $service }}
-      targetPort: 8098
+    - port: {{ $trustregistryPort }}
+      targetPort: {{ $trustregistryPort }}
       protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
   selector:

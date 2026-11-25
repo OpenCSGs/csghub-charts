@@ -419,9 +419,19 @@ notifier:
     # appId: ""                            # FeiShu bot Application ID
     # appSecret: ""                        # FeiShu bot Application Secret
 
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8095                           # Process listen port, container port and Service port
+
 ## Payment service configuration
 payment:
   billingBucket: "csghub-billing"          # Bucket for storing billing data
+
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8090                           # Process listen port, container port and Service port
 
 ## AIGateway service configuration
 aigateway:
@@ -444,6 +454,11 @@ aigateway:
         # contentCapture: "metadata_only"       # Capture mode: metadata_only, full
         # contentLength: 256                    # Max content length
         # maxInputUserMessages: 1               # Max input user messages
+
+    ## Service configuration
+    ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+    service: {}
+      # port: 8094                         # Process listen port, container port and Service port
 
   ## Content moderation configuration
   moderation:
@@ -478,6 +493,11 @@ aigateway:
         # model: "Qwen/Qwen3Guard-Gen-Stream-0.6B"  # Guard model for stream
         # endpoint: ""                              # Guard stream endpoint URL (defaults to aigateway endpoint)
         # headers: ""                               # Additional headers for guard stream request
+
+    ## Service configuration
+    ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+    service: {}
+      # port: 8089                         # Process listen port, container port and Service port
 
 ## XNet service configuration
 xnet:
@@ -637,22 +657,46 @@ llmlog: {}
   # bucket: "csghub-llmlog"
 
 ## Accounting service configuration
-accounting: {}
+accounting:
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8086                           # Process listen port, container port and Service port
 
 ## User service configuration
-user: {}
+user:
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8080                           # Process listen port, container port and Service port
 
 ## Data viewer configuration
-dataviewer: {}
+dataviewer:
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8093                           # Process listen port, container port and Service port
 
 ## FedAP service configuration
-fedap: {}
+fedap:
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8099                           # Process listen port, container port and Service port
 
 ## TrustRegistry service configuration
-trustregistry: {}
+trustregistry:
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8098                           # Process listen port, container port and Service port
 
 ## Mirror service configuration
-mirror: {}
+mirror:
+  ## Service configuration
+  ## A custom livenessProbe is rendered as-is: update its port when overriding the port below.
+  service: {}
+    # port: 8092                           # Process listen port, container port and Service port
 
 ## Executor service configuration
 executor: {}

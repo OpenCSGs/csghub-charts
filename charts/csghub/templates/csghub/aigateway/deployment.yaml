@@ -63,6 +63,7 @@ spec:
         {{- include "wait-for-server" . | nindent 8 }}
       containers:
         {{- $moderation := $service.moderation }}
+        {{- $moderationPort := dig "service" "port" 8089 $moderation }}
         {{- if $moderation.enabled }}
         - name: {{ $moderation.name | default (printf "%s-moderation" $service.name) }}
           image: {{ include "common.image" (list . $serverImage) }}
@@ -74,7 +75,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8089
+            - containerPort: {{ $moderationPort }}
               name: {{ $moderation.name | default "moderation" }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
@@ -101,7 +102,7 @@ spec:
           {{- else }}
           livenessProbe:
             tcpSocket:
-              port: 8089
+              port: {{ $moderationPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
           {{- end }}
@@ -112,7 +113,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /healthz
-              port: 8089
+              port: {{ $moderationPort }}
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 5
@@ -137,6 +138,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- $aigateway := $service.aigateway }}
+        {{- $aigatewayPort := dig "service" "port" 8094 $aigateway }}
         - name: {{ $aigateway.name | default (printf "%s-aigateway" $service.name) }}
           image: {{ include "common.image" (list . $serverImage) }}
           imagePullPolicy: {{ or $serverImage.pullPolicy .Values.global.image.pullPolicy }}
@@ -147,7 +149,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8094
+            - containerPort: {{ $aigatewayPort }}
               name: {{ $aigateway.name | default "aigateway" }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
@@ -178,7 +180,7 @@ spec:
           {{- else }}
           livenessProbe:
             tcpSocket:
-              port: 8094
+              port: {{ $aigatewayPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
           {{- end }}

@@ -47,3 +47,17 @@ tests:
       - equal:
           path: spec.selector["app.kubernetes.io/service"]
           value: "dataviewer"
+
+  - it: uses the configured dataviewer port
+    template: csghub/dataviewer/service.yaml
+    set:
+      dataviewer:
+        service:
+          port: 18093
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18093
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18093

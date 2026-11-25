@@ -125,3 +125,33 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
           value: 18086
+
+  - it: uses the configured payment port in the saas edition
+    template: csghub/accounting/deployment.yaml
+    set:
+      global:
+        edition: "saas"
+      payment:
+        service:
+          port: 18090
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 18090
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.tcpSocket.port
+          value: 18090
+
+  - it: keeps a custom liveness probe when the accounting port is overridden
+    template: csghub/accounting/deployment.yaml
+    set:
+      accounting:
+        service:
+          port: 18086
+        livenessProbe:
+          tcpSocket:
+            port: 19999
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 19999

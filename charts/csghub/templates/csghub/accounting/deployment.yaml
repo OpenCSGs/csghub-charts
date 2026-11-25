@@ -127,6 +127,7 @@ spec:
           tty: {{ $service.tty }}
           {{- end }}
         {{- $paymentSvc := include "common.service" (dict "ctx" . "service" "payment") | fromYaml }}
+        {{- $paymentPort := dig "service" "port" 8090 $paymentSvc }}
         {{- if eq .Values.global.edition "saas" }}
         - name: {{ $paymentSvc.name }}
           image: {{ include "common.image" (list . $serverImage) }}
@@ -138,7 +139,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8090
+            - containerPort: {{ $paymentPort }}
               name: {{ dig "service" "name" $paymentSvc.name $paymentSvc }}
               protocol: {{ dig "service" "protocol" "TCP" $paymentSvc }}
           envFrom:
@@ -165,7 +166,7 @@ spec:
           {{- else }}
           livenessProbe:
             tcpSocket:
-              port: 8090
+              port: {{ $paymentPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
           {{- end }}

@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- if and (eq .Values.global.edition "saas") (dig "enabled" true .Values.trustregistry) }}
 {{- $service := include "common.service" (dict "ctx" . "service" "trustregistry") | fromYaml }}
+{{- $trustregistryPort := dig "service" "port" 8098 $service }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -73,7 +74,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8098
+            - containerPort: {{ $trustregistryPort }}
               name: {{ dig "service" "name" $service.name $service }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
@@ -100,7 +101,7 @@ spec:
           {{- else }}
           livenessProbe:
             tcpSocket:
-              port: 8098
+              port: {{ $trustregistryPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
           {{- end }}
