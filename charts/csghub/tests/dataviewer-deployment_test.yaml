@@ -81,3 +81,17 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: "registry.opencsg.com/opencsghq/csghub-server:v2.6.0-ee"
+
+  - it: uses the configured dataviewer port
+    template: csghub/dataviewer/deployment.yaml
+    set:
+      dataviewer:
+        service:
+          port: 18093
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 18093
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 18093

@@ -64,3 +64,19 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: uses the configured trustregistry port
+    template: csghub/trustregistry/service.yaml
+    set:
+      global:
+        edition: "saas"
+      trustregistry:
+        service:
+          port: 18098
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18098
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18098

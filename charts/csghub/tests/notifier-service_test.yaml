@@ -47,3 +47,17 @@ tests:
       - equal:
           path: spec.selector["app.kubernetes.io/service"]
           value: "notifier"
+
+  - it: uses the configured notifier port
+    template: csghub/notifier/service.yaml
+    set:
+      notifier:
+        service:
+          port: 18095
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18095
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18095

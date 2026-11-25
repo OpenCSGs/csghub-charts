@@ -71,3 +71,34 @@ tests:
       - equal:
           path: spec.ports[1].name
           value: "aigateway-aigateway"
+
+  - it: uses the configured aigateway port
+    template: csghub/aigateway/service.yaml
+    set:
+      aigateway:
+        aigateway:
+          service:
+            port: 18094
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18094
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18094
+
+  - it: uses the configured moderation port
+    template: csghub/aigateway/service.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+          service:
+            port: 18089
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18089
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18089

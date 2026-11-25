@@ -118,3 +118,34 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: "registry.opencsg.com/opencsghq/csghub-server:v2.6.0-ee"
+
+  - it: uses the configured aigateway port
+    template: csghub/aigateway/deployment.yaml
+    set:
+      aigateway:
+        aigateway:
+          service:
+            port: 18094
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 18094
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 18094
+
+  - it: uses the configured moderation port
+    template: csghub/aigateway/deployment.yaml
+    set:
+      aigateway:
+        moderation:
+          enabled: true
+          service:
+            port: 18089
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 18089
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 18089

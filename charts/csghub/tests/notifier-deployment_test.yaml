@@ -81,3 +81,17 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: "registry.opencsg.com/opencsghq/csghub-server:v2.6.0-ee"
+
+  - it: uses the configured notifier port
+    template: csghub/notifier/deployment.yaml
+    set:
+      notifier:
+        service:
+          port: 18095
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 18095
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 18095

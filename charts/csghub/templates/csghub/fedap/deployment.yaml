@@ -5,6 +5,7 @@ SPDX-License-Identifier: APACHE-2.0
 
 {{- if and (eq .Values.global.edition "saas") (dig "enabled" true .Values.fedap) }}
 {{- $service := include "common.service" (dict "ctx" . "service" "fedap") | fromYaml }}
+{{- $fedapPort := dig "service" "port" 8099 $service }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -73,7 +74,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8099
+            - containerPort: {{ $fedapPort }}
               name: {{ dig "service" "name" $service.name $service }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
@@ -100,7 +101,7 @@ spec:
           {{- else }}
           livenessProbe:
             tcpSocket:
-              port: 8099
+              port: {{ $fedapPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
           {{- end }}

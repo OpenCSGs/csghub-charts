@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "ctx" . "service" "notifier") | fromYaml }}
+{{- $notifierPort := dig "service" "port" 8095 $service }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
 kind: Service
@@ -16,8 +17,8 @@ metadata:
 spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
-    - port: {{ dig "service" "port" 8095 $service }}
-      targetPort: 8095
+    - port: {{ $notifierPort }}
+      targetPort: {{ $notifierPort }}
       protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
   selector:

@@ -47,3 +47,17 @@ tests:
       - equal:
           path: spec.selector["app.kubernetes.io/service"]
           value: "mirror"
+
+  - it: uses the configured mirror port
+    template: csghub/mirror/service.yaml
+    set:
+      mirror:
+        service:
+          port: 18092
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 18092
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 18092

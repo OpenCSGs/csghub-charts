@@ -94,3 +94,17 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].image
           value: "registry.opencsg.com/opencsghq/csghub-server:v2.6.0-ee"
+
+  - it: uses the configured mirror port
+    template: csghub/mirror/deployment.yaml
+    set:
+      mirror:
+        service:
+          port: 18092
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 18092
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.tcpSocket.port
+          value: 18092
