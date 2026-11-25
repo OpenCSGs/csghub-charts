@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "ctx" . "service" "accounting") | fromYaml }}
+{{- $accountingPort := dig "service" "port" 8086 $service }}
 {{- $paymentSvc := include "common.service" (dict "ctx" . "service" "payment") | fromYaml }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: v1
@@ -17,8 +18,8 @@ metadata:
 spec:
   type: {{ dig "service" "type" "ClusterIP" $service }}
   ports:
-    - port: {{ dig "service" "port" 8086 $service }}
-      targetPort: 8086
+    - port: {{ $accountingPort }}
+      targetPort: {{ $accountingPort }}
       protocol: {{ dig "service" "protocol" "TCP" $service }}
       name: {{ $service.name }}
     {{- if eq .Values.global.edition "saas" }}

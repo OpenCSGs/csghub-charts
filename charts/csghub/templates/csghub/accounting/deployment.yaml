@@ -4,6 +4,7 @@ SPDX-License-Identifier: APACHE-2.0
 */ -}}
 
 {{- $service := include "common.service" (dict "ctx" . "service" "accounting") | fromYaml }}
+{{- $accountingPort := dig "service" "port" 8086 $service }}
 {{- $serviceName := include "common.names.custom" (list . $service.name) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -72,7 +73,7 @@ spec:
             - "-l"
             - {{ .Values.logging.level | default "info" | quote }}
           ports:
-            - containerPort: 8086
+            - containerPort: {{ $accountingPort }}
               name: {{ dig "service" "name" $service.name $service }}
               protocol: {{ dig "service" "protocol" "TCP" $service }}
           envFrom:
@@ -99,7 +100,7 @@ spec:
           {{- else }}
           livenessProbe:
             tcpSocket:
-              port: 8086
+              port: {{ $accountingPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
           {{- end }}
