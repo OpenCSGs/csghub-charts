@@ -78,3 +78,19 @@ tests:
       - equal:
           path: spec.ports[0].targetPort
           value: 18086
+
+  - it: uses the configured payment port in the saas edition
+    template: csghub/accounting/service.yaml
+    set:
+      global:
+        edition: "saas"
+      payment:
+        service:
+          port: 18090
+    asserts:
+      - equal:
+          path: spec.ports[1].port
+          value: 18090
+      - equal:
+          path: spec.ports[1].targetPort
+          value: 18090
