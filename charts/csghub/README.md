@@ -92,6 +92,44 @@ instance. The full step-by-step procedure is in the
 the FDW grants and read-only verification script are in
 [`scripts/external-casdoor`](../../scripts/external-casdoor).
 
+## Gateway API and CRDs
+
+The chart bundles Envoy Gateway (`gateway-helm`) together with the Gateway API
+CRDs it ships (`v1.6.1` as of `gateway-helm` 1.10.0).
+
+Clusters that manage Gateway API themselves — including Kubernetes 1.33+ clusters
+that ship the `safe-upgrades.gateway.networking.k8s.io` admission policy — must
+not let the chart reinstall an older bundle. Either disable the bundled CRDs:
+
+```yaml
+envoy:
+  crds:
+    enabled: false
+```
+
+or install with `--skip-crds` after confirming the cluster bundle is `v1.5.0` or
+newer:
+
+```bash
+kubectl get crd gateways.gateway.networking.k8s.io \
+  -o jsonpath='{.metadata.annotations.gateway\.networking\.k8s\.io/bundle-version}{"\n"}'
+```
+
+The Git SSH route is a `TCPRoute`. Its `apiVersion` is detected from the target
+cluster (`gateway.networking.k8s.io/v1` when served, otherwise `v1alpha2`). For
+render-only pipelines (`helm template`, GitOps) where the cluster is not
+reachable, set it explicitly:
+
+```yaml
+global:
+  gateway:
+    tcpRouteAPIVersion: gateway.networking.k8s.io/v1
+```
+
+Air-gapped installations must mirror the Envoy Gateway control-plane and
+rate-limit images of the bundled release (`envoyproxy/gateway:v1.10.0`,
+`envoyproxy/ratelimit:5ae0682e`).
+
 ## Support
 
 For issues related to upgrades, deployments, or data migration, please [create an issue](https://github.com/OpenCSGs/csghub-charts/issues) in this repository.

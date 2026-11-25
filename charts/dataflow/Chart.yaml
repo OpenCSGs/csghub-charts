@@ -44,7 +44,7 @@ dependencies:
       - reloader
   - name: gateway-helm
     alias: envoy
-    version: 1.7.5
+    version: 1.10.0
     repository: oci://docker.io/envoyproxy
     condition: envoy.enabled
     tags:

@@ -7,9 +7,9 @@ dependencies:
   version: 2.2.14
 - name: gateway-helm
   repository: oci://docker.io/envoyproxy
-  version: 1.7.5
+  version: 1.10.0
 - name: memmachine
   repository: https://charts.opencsg.com/infra
   version: 0.1.0
-digest: sha256:ccd6b6e26397dd65081d0d49400e29b5cda66dd917fcd4421f86218093d11e55
-generated: "2026-11-19T02:20:00Z"
+digest: sha256:7a3f8dea6690da28c7d5eb9db726aecbdbbf814a62597384715b33c2c052123f
+generated: "2026-11-24T14:16:30.653912+08:00"
