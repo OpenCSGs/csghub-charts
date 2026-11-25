@@ -149,3 +149,6 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
           value: 18089
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 18089
