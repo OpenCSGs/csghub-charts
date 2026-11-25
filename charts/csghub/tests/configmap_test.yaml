@@ -284,6 +284,9 @@ tests:
       - equal:
           path: data.OPENCSG_AIGATEWAY_PORT
           value: "8094"
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_INTERNAL_URL
+          value: "http://csghub-aigateway:8094"
       - matchRegex:
           path: data.OPENCSG_AIGATEWAY_PUBLIC_URL
           pattern: "https://.*/aigateway/v1"
@@ -305,6 +308,21 @@ tests:
       - equal:
           path: data.OPENCSG_LLMLOG_FLUSH_INTERVAL_SECONDS
           value: "60"
+
+  - it: derives the aigateway internal URL from the configured port
+    template: csghub/configmap.yaml
+    set:
+      aigateway:
+        aigateway:
+          service:
+            port: 18094
+    asserts:
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_PORT
+          value: "18094"
+      - equal:
+          path: data.OPENCSG_AIGATEWAY_INTERNAL_URL
+          value: "http://csghub-aigateway:18094"
 
   - it: renders the prometheus and loki endpoints
     template: csghub/configmap.yaml
